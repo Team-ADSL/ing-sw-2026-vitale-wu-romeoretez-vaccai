@@ -1,3 +1,5 @@
+package org.example.model;
+
 import java.util.Optional;
 
 public class Inventor extends Card implements Charachter {

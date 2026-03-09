@@ -1,13 +1,14 @@
+package org.example.model;
+
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Set;
 
-public class OrderCell extends Game {
+public class OfferTile extends Game {
     private Optional<Player> player;
-    private int bonus;
-    private boolean isMalus;
+    private Action action;
 
-public OrderCell(Optional<Player> player, int bonus, boolean isMalus, int round, int turn, int era, Phase phase,
+public OfferTile(Optional<Player> player, Action action, int round, int turn, int era, Phase phase,
                  ArrayList<Card> lowRow, ArrayList<Card> upRow, ArrayList<OfferTile> offerQueue,
                  ArrayList<OrderCell> orderQueue, Set<Building> buildings, Set<Player> players) {
 
@@ -15,8 +16,7 @@ public OrderCell(Optional<Player> player, int bonus, boolean isMalus, int round,
             offerQueue, orderQueue, buildings, players);
 
     this.player = player;
-    this.bonus = bonus;
-    this.isMalus = isMalus;
+    this.action = action;
 }
 
 }

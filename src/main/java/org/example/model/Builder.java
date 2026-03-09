@@ -1,3 +1,5 @@
+package org.example.model;
+
 import java.util.Optional;
 
 public class Builder extends Card implements Charachter {

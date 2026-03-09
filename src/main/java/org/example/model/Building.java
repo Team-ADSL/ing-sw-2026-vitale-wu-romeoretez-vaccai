@@ -1,3 +1,5 @@
+package org.example.model;
+
 import java.util.Optional;
 import java.util.Set;
 

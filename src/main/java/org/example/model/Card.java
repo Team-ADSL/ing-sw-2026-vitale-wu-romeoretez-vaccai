@@ -1,6 +1,8 @@
+package org.example.model;
+
 import java.util.Optional;
 
-public class Card {
+public abstract class Card {
     private final int id; //final???
     private int era;
     private Optional<Integer> numPlayers;
