@@ -2,7 +2,7 @@ package org.example.model;
 
 import java.util.Optional;
 
-public class Event extends Card{
+public abstract class Event extends Card{
 
     private boolean isFinal;
 

@@ -4,9 +4,9 @@ import java.util.Optional;
 
 public abstract class Card {
     private final int id; //final???
-    private int era;
-    private Optional<Integer> numPlayers;
-    private boolean isEvent;
+    private final int era;
+    private final Optional<Integer> numPlayers;
+    private final boolean isEvent;
 
 public Card (int id, int era, Optional<Integer> numPlayers, boolean isEvent) {
 
