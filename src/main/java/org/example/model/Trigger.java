@@ -8,5 +8,7 @@ public enum Trigger {
     END_GAME,
     END_ROUND,
     END_TURN,
-    NEW_CHARACTER
+    DRAWING,
+    CHECK_BUILDINGS,
+    EVENT_EXECUTION
 }
