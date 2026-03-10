@@ -8,12 +8,12 @@ public class Building extends Card {
     private int endGamePP;
     private int cost;
     private Trigger trigger;
-    private Set<Charachter> characterUse;
+    private Set<Character> characterUse;
 
-public Building (int endGamePP, int cost, Trigger trigger, Set<Charachter> characterUse,
-                 int id, int era, Optional<Integer> numPlayers, boolean isEvent) {
+public Building (int endGamePP, int cost, Trigger trigger,
+                 Set<Character> characterUse, int era, Optional<Integer> numPlayers) {
 
-        super(id, era, numPlayers, isEvent);
+        super(era, numPlayers);
 
         this.endGamePP = endGamePP;
         this.cost = cost;

@@ -2,13 +2,13 @@ package org.example.model;
 
 import java.util.Optional;
 
-public class Inventor extends Card implements Charachter {
+public class Inventor extends Character {
 
     private Icon icon;
 
-public Inventor (Icon icon, int id, int era, Optional<Integer> numPlayers, boolean isEvent) {
+public Inventor (Icon icon, int era, Optional<Integer> numPlayers) {
 
-    super(id, era, numPlayers, isEvent);
+    super(era, numPlayers);
 
     this.icon = icon;
 

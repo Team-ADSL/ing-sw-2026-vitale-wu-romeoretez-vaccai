@@ -6,9 +6,9 @@ public class Hunt extends Event {
 
     private int multiplierPP;
 
-public Hunt (int multiplierPP, boolean isFinal, int id, int era, Optional<Integer> numPlayers, boolean isEvent) {
+public Hunt (int multiplierPP, boolean isFinal, int era, Optional<Integer> numPlayers) {
 
-    super(isFinal, id, era, numPlayers, isEvent);
+    super(isFinal, era, numPlayers);
 
     this.multiplierPP = multiplierPP;
 

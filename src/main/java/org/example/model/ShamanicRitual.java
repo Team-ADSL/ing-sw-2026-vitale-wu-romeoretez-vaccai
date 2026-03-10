@@ -7,10 +7,10 @@ public class ShamanicRitual extends Event {
     private int lostPP;
     private int gainedPP;
 
-public ShamanicRitual (int lostPP, int gainedPP, boolean isFinal, int id,
-                       int era, Optional<Integer> numPlayers, boolean isEvent) {
+public ShamanicRitual (int lostPP, int gainedPP, boolean isFinal,
+                       int era, Optional<Integer> numPlayers) {
 
-    super(isFinal, id, era, numPlayers, isEvent);
+    super(isFinal, era, numPlayers);
 
     this.lostPP = lostPP;
     this.gainedPP = gainedPP;

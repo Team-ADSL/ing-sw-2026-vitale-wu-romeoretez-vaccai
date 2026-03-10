@@ -2,13 +2,13 @@ package org.example.model;
 
 import java.util.Optional;
 
-public class Hunter extends Card implements Charachter {
+public class Hunter extends Character {
 
     private boolean extraFood;
 
-public Hunter (boolean extraFood, int id, int era, Optional<Integer> numPlayers, boolean isEvent) {
+public Hunter (boolean extraFood, int era, Optional<Integer> numPlayers) {
 
-    super(id, era, numPlayers, isEvent);
+    super(era, numPlayers);
 
     this.extraFood = extraFood;
 

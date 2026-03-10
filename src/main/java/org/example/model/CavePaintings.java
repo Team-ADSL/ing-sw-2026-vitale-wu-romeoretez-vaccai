@@ -8,10 +8,10 @@ public class CavePaintings extends Event {
     private int lostPP;
     private int multiplierPP;
 
-public CavePaintings (int minArtists, int lostPP, int multiplierPP, boolean isFinal, int id,
-                      int era, Optional<Integer> numPlayers, boolean isEvent) {
+public CavePaintings (int minArtists, int lostPP, int multiplierPP,
+                      boolean isFinal, int era, Optional<Integer> numPlayers) {
 
-    super(isFinal, id, era, numPlayers, isEvent);
+    super(isFinal, era, numPlayers);
 
     this.minArtists = minArtists;
     this.lostPP = lostPP;

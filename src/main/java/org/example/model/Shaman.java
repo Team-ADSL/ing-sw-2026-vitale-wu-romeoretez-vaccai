@@ -2,13 +2,13 @@ package org.example.model;
 
 import java.util.Optional;
 
-public class Shaman extends Card implements Charachter {
+public class Shaman extends Character {
 
     private int starNUm;
 
-public Shaman(int starNUm, int id, int era, Optional<Integer> numPlayers, boolean isEvent) {
+public Shaman(int starNUm, int era, Optional<Integer> numPlayers) {
 
-    super(id, era, numPlayers, isEvent);
+    super(era, numPlayers);
 
     this.starNUm = starNUm;
 

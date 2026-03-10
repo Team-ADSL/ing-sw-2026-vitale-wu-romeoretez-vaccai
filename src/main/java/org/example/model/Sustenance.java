@@ -6,9 +6,9 @@ public class Sustenance extends Event {
 
     private int lostPP;
 
-public Sustenance(int lostPP, boolean isFinal, int id, int era, Optional<Integer> numPlayers, boolean isEvent) {
+public Sustenance(int lostPP, boolean isFinal, int era, Optional<Integer> numPlayers) {
 
-    super(isFinal, id, era, numPlayers, isEvent);
+    super(isFinal, era, numPlayers);
 
     this.lostPP = lostPP;
 

@@ -1,12 +1,16 @@
 package org.example.model;
 
-public class Gatherer implements Charachter {
+import java.util.Optional;
+
+public class Gatherer extends Character {
 
     private int discount;
 
-public Gatherer (int discount) {
+public Gatherer (int discount, int era, Optional<Integer> numPlayers) {
 
-   this.discount = discount;
+    super(era, numPlayers);
+
+    this.discount = discount;
 
 }
 
