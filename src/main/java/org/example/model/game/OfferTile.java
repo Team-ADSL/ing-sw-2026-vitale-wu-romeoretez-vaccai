@@ -11,4 +11,7 @@ public class OfferTile {
         this.action = action;
     }
 
+    public Optional<Player> getPlayer() {
+        return player;
+    }
 }

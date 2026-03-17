@@ -26,4 +26,6 @@ public class Building extends Card {
 
     }
 
+    public Building() {
+    }
 }

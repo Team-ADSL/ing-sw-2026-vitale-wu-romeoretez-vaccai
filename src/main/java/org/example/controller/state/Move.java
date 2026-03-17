@@ -1,4 +1,4 @@
-package org.example.model.state;
+package org.example.controller.state;
 
 public class Move {
 
@@ -10,4 +10,11 @@ public class Move {
         this.row = row;
     }
 
+    public int getRowIndex(){
+        return rowIndex;
+    }
+
+    public Row getRow() {
+        return row;
+    }
 }

@@ -1,6 +1,10 @@
 package org.example.model.card;
 
+import org.example.model.game.Player;
+
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public abstract class Card {
 
@@ -14,4 +18,7 @@ public abstract class Card {
 
     }
 
+    public abstract boolean canBeDrawn(Player p);
+    public abstract void insert(Map<CardType, Set<Card>> cards);
+    public abstract void activeEffect(Set<Player> players, Trigger t);
 }

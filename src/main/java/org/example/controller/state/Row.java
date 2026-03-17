@@ -1,4 +1,4 @@
-package org.example.model.state;
+package org.example.controller.state;
 
 public enum Row {
     UPPER,
