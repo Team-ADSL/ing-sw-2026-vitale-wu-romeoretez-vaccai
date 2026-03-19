@@ -8,10 +8,8 @@ public class OrderCell {
     private boolean isMalus;
 
     public OrderCell(Optional<Player> player, int bonus, boolean isMalus) {
-
         this.player = player;
         this.bonus = bonus;
         this.isMalus = isMalus;
     }
-
 }

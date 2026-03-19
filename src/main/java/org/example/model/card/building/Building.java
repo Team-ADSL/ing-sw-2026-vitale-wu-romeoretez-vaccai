@@ -1,9 +1,12 @@
 package org.example.model.card.building;
 
+import org.example.model.card.CardType;
 import org.example.model.card.character.Character;
 import org.example.model.card.Trigger;
 import org.example.model.card.Card;
+import org.example.model.game.Player;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -26,6 +29,18 @@ public class Building extends Card {
 
     }
 
-    public Building() {
+    @Override
+    public boolean canBeDrawn(Player p) {
+        return false;
+    }
+
+    @Override
+    public void insert(Map<CardType, Set<Card>> cards) {
+
+    }
+
+    @Override
+    public void activeEffect(Set<Player> players, Trigger t) {
+
     }
 }

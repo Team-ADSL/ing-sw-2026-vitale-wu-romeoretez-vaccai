@@ -2,6 +2,7 @@ package org.example.model.game;
 
 import org.example.model.card.Card;
 import org.example.model.card.CardType;
+import org.example.model.card.building.BuildingBonus;
 
 import java.util.Map;
 import java.util.Set;
@@ -12,6 +13,7 @@ public class Player {
     private int pp;
     private Color color;
     private Map<CardType, Set<Card>> cards;
+    private BuildingBonus buildingBonus;
 
     public Player(String name, int food, int pp, Color color, Map<CardType, Set<Card>> cards) {
 

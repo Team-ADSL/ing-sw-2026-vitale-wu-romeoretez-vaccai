@@ -8,17 +8,15 @@ import java.util.Collections;
 import java.util.Set;
 
 public class Board {
-
-    private ArrayList<Card> lowRow;
-    private ArrayList<Card> topRow;
+    private CardRow lowRow;
+    private CardRow topRow;
     private ArrayList<OfferTile> offerQueue;
     private ArrayList<OrderCell> orderQueue;
     private Set<Building> remainingBuildings;
-    private ArrayList<Card> deck;
+    private Deck deck;
 
-    public Board (ArrayList<Card> lowRow, ArrayList<Card> topRow, ArrayList<OfferTile> offerQueue,
-                  ArrayList<OrderCell> orderQueue, Set<Building> activeBuildings,
-                  Set<Building> remainingBuildings, ArrayList<Card> deck) {
+    public Board (CardRow lowRow, CardRow topRow, ArrayList<OfferTile> offerQueue,
+                  ArrayList<OrderCell> orderQueue, Set<Building> remainingBuildings, Deck deck) {
         this.lowRow = lowRow;
         this.topRow = topRow;
         this.offerQueue = offerQueue;
@@ -29,7 +27,7 @@ public class Board {
 
     //sets of card already sized for players number (a json for each number))
     public void makeDeck(ArrayList<Set<Card>> cards){
-         this.deck = new ArrayList<>();
+         this.deck = new Deck();
          //for all sets of card renamed 'era' present in 'cards'...
          for (Set<Card> era : cards) {
              //...make an arraylist to use shuffle method...
@@ -37,7 +35,7 @@ public class Board {
              //...shuffle era cards in the eraList array...
              Collections.shuffle(eraList);
              //...adding in the final deck the new shuffled eraLists in order
-             this.deck.addAll(eraList);
+             getDeck().addTailCards(eraList);
          }
     }
 
@@ -61,7 +59,6 @@ public class Board {
     // Solo init
     public void fillLowRow(){
 
-
     }
 
     public void makeBuildingDeck(Set<Building> buildings){
@@ -76,10 +73,6 @@ public class Board {
         //
     }
 
-    public void placeInOfferTile(Player p, int arrayIndex){
-        //
-    }
-
     // Aspetta
     public void changeRows(){
         //
@@ -89,7 +82,7 @@ public class Board {
         return offerQueue;
     }
 
-    public ArrayList<Card> getDeck() {
+    public Deck getDeck() {
         return deck;
     }
 

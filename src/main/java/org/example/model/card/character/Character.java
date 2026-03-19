@@ -9,4 +9,7 @@ public abstract class Character extends Card {
     public Character (int era, Optional<Integer> numPlayers){
         super(era, numPlayers);
     }
+
+    // MANCA IL METODO ISPICKABLE
+
 }

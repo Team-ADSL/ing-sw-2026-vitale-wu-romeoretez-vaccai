@@ -1,31 +1,16 @@
 package org.example.controller.state;
 
-import org.example.model.game.Action;
 import org.example.model.game.Game;
-import org.example.model.game.Player;
 
 public class EventsState extends State {
 
     //
-    public EventsState(Player activePlayer) {
-        super(activePlayer);
+    public EventsState(Game game) {
+        super(game);
     }
 
     @Override
-    public void notifyClients(Game game) {
-    }
-
-    @Override
-    public boolean checkInput(Move move, Game game) {
-        return false;
-    }
-
-    @Override
-    public State transition(Move move, Game game) {
+    public State transition(Move move) {
         return null;
-    }
-
-    public void doEvents(){
-
     }
 }

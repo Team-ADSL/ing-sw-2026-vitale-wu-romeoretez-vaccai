@@ -16,5 +16,9 @@ public class DuringEvent extends Building {
 
     }
 
+    //
+    //if (trigger giusto)
+        // execute
+
 }
 

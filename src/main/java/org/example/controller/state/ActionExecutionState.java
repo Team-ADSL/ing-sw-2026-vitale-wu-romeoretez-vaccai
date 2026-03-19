@@ -12,22 +12,14 @@ public class ActionExecutionState extends State {
     private int offerIndex;
     private int remainingMoves;
 
-    public ActionExecutionState(int offerIndex, int remainingMoves) {
+    public ActionExecutionState(Game game, int offerIndex, int remainingMoves) {
+        super(game);
         this.offerIndex = offerIndex;
         this.remainingMoves = remainingMoves;
     }
 
     @Override
-    public void notifyClients(Game game) {
-    }
-
-    @Override
-    public boolean checkInput(Move move, Game game) {
-        return false;
-    }
-
-    @Override
-    public State transition(Move move, Game game) {
+    public State transition(Move move) {
         ArrayList<Card> selectedRow = null;
         if(move.getRow() == Row.UPPER) {
             selectedRow = game.getBoard().getTopRow();

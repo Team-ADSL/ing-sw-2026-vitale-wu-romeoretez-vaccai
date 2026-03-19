@@ -1,26 +1,16 @@
 package org.example.controller.state;
 
-import org.example.model.game.Action;
 import org.example.model.game.Game;
-import org.example.model.game.Player;
 
 public class EndRoundState extends State {
 
-    public EndRoundState(Player activePlayer) {
-        super(activePlayer);
+    public EndRoundState(Game game) {
+        super(game);
     }
 
-    @Override
-    public void notifyClients(Game game) {
-    }
 
     @Override
-    public boolean checkInput(Move move, Game game) {
-        return false;
-    }
-
-    @Override
-    public State transition(Move move, Game game) {
+    public State transition(Move move) {
         return null;
     }
 
