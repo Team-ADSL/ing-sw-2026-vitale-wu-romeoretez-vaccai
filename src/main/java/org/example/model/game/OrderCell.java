@@ -12,4 +12,8 @@ public class OrderCell {
         this.bonus = bonus;
         this.isMalus = isMalus;
     }
+
+    public Optional<Player> getPlayer() {
+        return player;
+    }
 }

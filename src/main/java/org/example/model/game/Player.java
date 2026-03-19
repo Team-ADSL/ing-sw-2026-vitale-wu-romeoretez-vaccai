@@ -40,4 +40,8 @@ public class Player {
     public Map<CardType, Set<Card>> getCards() {
         return cards;
     }
+
+    public BuildingBonus getBuildingBonus() {
+        return buildingBonus;
+    }
 }

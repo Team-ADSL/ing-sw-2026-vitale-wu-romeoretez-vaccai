@@ -5,45 +5,65 @@ import org.example.model.card.Card;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 public class Board {
     private CardRow lowRow;
     private CardRow topRow;
-    private ArrayList<OfferTile> offerQueue;
-    private ArrayList<OrderCell> orderQueue;
-    private Set<Building> remainingBuildings;
+    private OfferTrack offerTrack;
+    private OrderTile orderQueue;
+    private ArrayList<Set<Building>> remainingBuildings;
     private Deck deck;
 
-    public Board (CardRow lowRow, CardRow topRow, ArrayList<OfferTile> offerQueue,
-                  ArrayList<OrderCell> orderQueue, Set<Building> remainingBuildings, Deck deck) {
+    public Board (CardRow lowRow, CardRow topRow, OfferTrack offerTrack,
+                  OrderTile orderQueue, ArrayList<Set<Building>> remainingBuildings, ArrayList<Set<Card>> cards) {
         this.lowRow = lowRow;
         this.topRow = topRow;
-        this.offerQueue = offerQueue;
+        this.offerTrack = offerTrack;
         this.orderQueue = orderQueue;
         this.remainingBuildings = remainingBuildings;
-        this.deck = deck;
+        this.deck = Deck.createDeck(cards);
     }
 
-    //sets of card already sized for players number (a json for each number))
-    public void makeDeck(ArrayList<Set<Card>> cards){
-         this.deck = new Deck();
-         //for all sets of card renamed 'era' present in 'cards'...
-         for (Set<Card> era : cards) {
-             //...make an arraylist to use shuffle method...
-             ArrayList<Card> eraList = new ArrayList<>(era);
-             //...shuffle era cards in the eraList array...
-             Collections.shuffle(eraList);
-             //...adding in the final deck the new shuffled eraLists in order
-             getDeck().addTailCards(eraList);
-         }
+    // Initialiser
+    public Board (int numPlayer, OfferTrack offerTrack,
+                  OrderTile orderQueue, ArrayList<Set<Building>> remainingBuildings, ArrayList<Set<Card>> cards) {
+        this.lowRow = new CardRow(calcNumLowCard(numPlayer));
+        this.topRow = new CardRow(calcNumTopCard(numPlayer));
+        this.offerTrack = offerTrack;
+        this.orderQueue = orderQueue;
+        this.remainingBuildings = new ArrayList<Set<Building>>();
+        this.deck = Deck.createDeck(cards);
     }
 
-    // Solo init
+    // init only
+    public void fillLowRow(int numPlayers){
+        int targetSize = numPlayers + 1;
+        int cardsDrawn = 0;
+
+        while (cardsDrawn < targetSize) {
+            if (deck.isEmpty()) {
+                break;
+            }
+
+            // draw from the top of the deck and save in 'drawn'
+            Card drawn = deck.drawCard();
+
+            if (!drawn.canBeDrawn(null)) {
+                // if event (canBeDrawn = false), send it to the top row
+                topRow.add(drawn);
+            } else {
+                lowRow.add(drawn);
+                cardsDrawn++;
+            }
+        }
+    }
+
+    // init only
     public void fillTopRow(int numPlayers){
-        // Calculate how many cards the upper row should contain
         int targetSize = numPlayers + 4;
-        // How many cards we still need to draw
+        // cards
         int cardsToDraw = targetSize - topRow.size();
 
         for (int i = 0; i < cardsToDraw; i++) {
@@ -52,45 +72,85 @@ public class Board {
                 break;
             }
             // Draw from the top of the deck and add to the upper row
-            topRow.add(deck.remove(0));
+            topRow.add(deck.drawCard());
         }
     }
 
-    // Solo init
-    public void fillLowRow(){
+    public void makeBuildingDecks(Set<Building> buildings, int numPlayers){
+        // Cards per era based on player count (rulebook step 6)
+        int[] eraCounts = {0, 0, 0}; // index 0 = era1, 1 = era2, 2 = era3
+        if (numPlayers == 2) { eraCounts = new int[]{1, 2, 3}; }
+        else if (numPlayers == 3) { eraCounts = new int[]{2, 2, 4}; }
+        else if (numPlayers == 4) { eraCounts = new int[]{2, 3, 4}; }
+        else if (numPlayers == 5) { eraCounts = new int[]{2, 3, 5}; }
 
-    }
+        // Separate buildings by era
+        ArrayList<Building> era1 = new ArrayList<>();
+        ArrayList<Building> era2 = new ArrayList<>();
+        ArrayList<Building> era3 = new ArrayList<>();
 
-    public void makeBuildingDeck(Set<Building> buildings){
-        //
-    }
+        for (Building b : buildings) {
+            if (b.getEra() == 1) era1.add(b);
+            else if (b.getEra() == 2) era2.add(b);
+            else if (b.getEra() == 3) era3.add(b);
+        }
 
-    public void randomPlacement(){
-        //
+        // Shuffle each era independently
+        Collections.shuffle(era1);
+        Collections.shuffle(era2);
+        Collections.shuffle(era3);
+
+        // Pick only the required number of cards per era (rulebook step 6)
+        ArrayList<Building> buildingDeckEra1 = new ArrayList<>(era1.subList(0, eraCounts[0]));
+        Set<Building> buildingDeckEra2 = new HashSet<>(era2.subList(0, eraCounts[1]));
+        Set<Building> buildingDeckEra3 = new HashSet<>(era3.subList(0, eraCounts[2]));
+
+        // Keep era 2 (index 0) and era 3 (index 1) aside for later (rulebook step 6b)
+        remainingBuildings.add(buildingDeckEra2); // index 0 = era 2
+        remainingBuildings.add(buildingDeckEra3); // index 1 = era 3
+
+        // Place era 1 buildings face up at the end of the top row (rulebook step 6a)
+        for (Building b : buildingDeckEra1) {
+            topRow.add(b);
+        }
     }
 
     public void placeInOrder(Player p, int arrayIndex){
         //
     }
 
-    // Aspetta
+    // wait Master Andrea approval
     public void changeRows(){
-        //
+        //changing era buildings here or elsewhere?
     }
 
-    public ArrayList<OfferTile> getOfferQueue() {
-        return offerQueue;
+    public int calcNumTopCard(int numPlayer){
+        return numPlayer + 4;
+    }
+
+    public int calcNumLowCard(int numPlayer){
+        return numPlayer + 1;
+    }
+
+    public OfferTrack getOfferTrack() {
+        return offerTrack;
+    }
+
+    public OrderTile getOrderTile() {
+        return orderQueue;
     }
 
     public Deck getDeck() {
         return deck;
     }
 
-    public ArrayList<Card> getLowRow() {
+    public CardRow getLowRow() {
         return lowRow;
     }
 
-    public ArrayList<Card> getTopRow() {
+    public CardRow getTopRow() {
         return topRow;
     }
+
+
 }

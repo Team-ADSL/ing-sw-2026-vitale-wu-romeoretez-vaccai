@@ -21,4 +21,8 @@ public abstract class Card {
     public abstract boolean canBeDrawn(Player p);
     public abstract void insert(Map<CardType, Set<Card>> cards);
     public abstract void activeEffect(Set<Player> players, Trigger t);
+
+    public int getEra() {
+        return era;
+    }
 }

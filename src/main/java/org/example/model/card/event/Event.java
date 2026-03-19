@@ -1,6 +1,7 @@
 package org.example.model.card.event;
 
 import org.example.model.card.Card;
+import org.example.model.game.Player;
 
 import java.util.Optional;
 
@@ -16,4 +17,8 @@ public abstract class Event extends Card {
 
     }
 
+    @Override
+    public boolean canBeDrawn(Player p) {
+        return false;
+    }
 }

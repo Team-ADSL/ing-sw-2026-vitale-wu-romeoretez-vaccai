@@ -10,4 +10,8 @@ public class Shaman extends Character {
         super(era, numPlayers);
         this.starNum = starNum;
     }
+
+    public int getStarNum() {
+        return starNum;
+    }
 }

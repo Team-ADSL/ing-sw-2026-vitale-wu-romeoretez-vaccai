@@ -8,7 +8,7 @@ import org.example.model.game.Player;
 import java.util.Optional;
 import java.util.Set;
 
-public class DuringEvent extends Building {
+public abstract class DuringEvent extends Building {
     public DuringEvent (int endGamePP, int cost, Trigger trigger,
                         Set<Character> characterUse, int era, Optional<Integer> numPlayers) {
         super(endGamePP, cost, trigger, characterUse, era, numPlayers);
@@ -16,9 +16,12 @@ public class DuringEvent extends Building {
 
     }
 
-    //
-    //if (trigger giusto)
-        // execute
-
+    @Override
+    public void activeEffect(Set<Player> players, Trigger t) {
+        if (t == Trigger.EVENT_EXECUTION){
+            execute(players,t);
+        }
+    }
+    public abstract void execute(Set<Player> players, Trigger t);
 }
 

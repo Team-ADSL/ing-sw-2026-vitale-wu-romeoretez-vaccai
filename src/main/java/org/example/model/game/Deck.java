@@ -3,13 +3,11 @@ package org.example.model.game;
 import org.example.model.card.Card;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Set;
 
 public class Deck {
     private ArrayList<Card> cards;
-
-    public Deck(ArrayList<Card> cards) {
-        this.cards = cards;
-    }
 
     public Deck() {
         this.cards = new ArrayList<>();
@@ -26,14 +24,30 @@ public class Deck {
     }
 
     public Card drawCard(){
-        Card toReturn = getCards().getFirst();
-        getCards().removeFirst();
-        return toReturn;
+        return cards.removeFirst();
     }
 
 
+    public static Deck createDeck(ArrayList<Set<Card>> cards){
+        //for all sets of card renamed 'era' present in 'cards'...
+        Deck deck = new Deck();
+        for (Set<Card> era : cards) {
+            //...make an arraylist to use shuffle method...
+            ArrayList<Card> eraList = new ArrayList<>(era);
+            //...shuffle era cards in the eraList array...
+            Collections.shuffle(eraList);
+            //...adding in the final deck the new shuffled eraLists in order
+            deck.addTailCards(eraList);
+        }
+        return deck;
+    }
 
     public ArrayList<Card> getCards() {
         return cards;
     }
+
+    public boolean isEmpty() {
+        return cards.isEmpty();
+    }
+
 }

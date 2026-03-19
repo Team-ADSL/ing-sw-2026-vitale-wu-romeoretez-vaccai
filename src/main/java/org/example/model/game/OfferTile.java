@@ -19,4 +19,12 @@ public class OfferTile {
     public Optional<Player> getPlayer() {
         return player;
     }
+
+    public int getNumMoves(){
+        return moves.values().stream().mapToInt(Integer::intValue).sum();
+    }
+
+    public Map<Row, Integer> getMoves() {
+        return moves;
+    }
 }

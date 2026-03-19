@@ -9,7 +9,7 @@ import org.example.model.game.Player;
 import java.util.Optional;
 import java.util.Set;
 
-public class DuringSustenance extends Building{
+public class DuringSustenance extends DuringEvent{
     private CardType typeMultiplier;
     public CardType getTypeMultiplier() {
         return typeMultiplier;
@@ -23,8 +23,12 @@ public class DuringSustenance extends Building{
 
     }
     @Override
-    public void activeEffect(Set<Player> players, Trigger t) {
-        if (t == Trigger.SUSTENANCE){
+    public void execute(Set<Player> players, Trigger t) {
+        if (t != Trigger.SUSTENANCE){
+            return;
+        }
+        for (Player p : players){
+            p.getBuildingBonus().setSustenanceDiscount(p.getCards().get(typeMultiplier).size());
         }
     }
 }
