@@ -32,6 +32,22 @@ public class BuildingBonus {
         artistFood = false;
     }
 
+    public void setHunterPP(int hunterPP) {
+        this.hunterPP = hunterPP;
+    }
+
+    public void setHunterFood(int hunterFood) {
+        this.hunterFood = hunterFood;
+    }
+
+    public void setExtraMove(boolean extraMove) {
+        this.extraMove = extraMove;
+    }
+
+    public void setArtistFood(boolean artistFood) {
+        this.artistFood = artistFood;
+    }
+
     public void setSustenanceDiscount(int sustenanceDiscount) {
         this.sustenanceDiscount = sustenanceDiscount;
     }
