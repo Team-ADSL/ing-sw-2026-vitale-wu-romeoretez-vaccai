@@ -1,4 +1,4 @@
-package org.example.controller.state;
+package org.example.controller.state.utils;
 
 public class Move {
 

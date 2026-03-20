@@ -1,6 +1,6 @@
 package org.example.model.game;
 
-import org.example.controller.state.Row;
+import org.example.controller.state.utils.Row;
 
 import java.util.Map;
 import java.util.Optional;

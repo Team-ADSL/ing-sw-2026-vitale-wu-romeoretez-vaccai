@@ -2,7 +2,7 @@ package org.example.model.game;
 
 import org.example.model.card.Card;
 import org.example.model.card.CardType;
-import org.example.model.card.building.BuildingBonus;
+import org.example.model.card.building.utils.BuildingBonus;
 
 import java.util.Map;
 import java.util.Set;

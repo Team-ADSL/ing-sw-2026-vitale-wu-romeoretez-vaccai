@@ -2,7 +2,7 @@ package org.example.model.card.event;
 
 import org.example.model.card.CardType;
 import org.example.model.card.Trigger;
-import org.example.model.card.building.BuildingBonus;
+import org.example.model.card.building.utils.BuildingBonus;
 import org.example.model.game.Player;
 
 import java.util.Optional;

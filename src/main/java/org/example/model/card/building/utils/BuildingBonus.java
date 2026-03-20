@@ -1,4 +1,4 @@
-package org.example.model.card.building;
+package org.example.model.card.building.utils;
 
 public class BuildingBonus {
     private int extraStars;
@@ -44,7 +44,7 @@ public class BuildingBonus {
     }
 
     public void setSustenanceDiscount(int sustenanceDiscount) {
-        this.sustenanceDiscount = sustenanceDiscount;
+        this.sustenanceDiscount += sustenanceDiscount;
     }
 
     public void setNoRitualLostPP(boolean noRitualLostPP) {
