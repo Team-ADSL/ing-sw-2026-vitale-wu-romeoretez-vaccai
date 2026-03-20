@@ -12,10 +12,8 @@ public abstract class Card {
     private final Optional<Integer> numPlayers;
 
     public Card (int era, Optional<Integer> numPlayers) {
-
-    this.era = era;
-    this.numPlayers = numPlayers;
-
+        this.era = era;
+        this.numPlayers = numPlayers;
     }
 
     public abstract boolean canBeDrawn(Player p);

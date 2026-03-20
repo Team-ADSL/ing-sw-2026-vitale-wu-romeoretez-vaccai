@@ -3,12 +3,10 @@ package org.example.model.card.event;
 import org.example.model.card.CardType;
 import org.example.model.card.Trigger;
 import org.example.model.card.building.BuildingBonus;
+import org.example.model.card.character.Shaman;
 import org.example.model.game.Player;
 
-import javax.smartcardio.Card;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class ShamanicRitual extends Event {
 
@@ -24,33 +22,45 @@ public class ShamanicRitual extends Event {
 
     }
 
-    public int getLostPP() { return lostPP; }
-    public int getGainedPP() { return gainedPP; }
-
-    public void checkBuildings(Player player) {
-
-    }
-
     @Override
     public void activeEffect(Set<Player> players, Trigger t) {
-        if(t == Trigger.EVENT_EXECUTION) {
-            boolean mostStars;
-            boolean leastStars;
-            for(Player p : players) {
-                checkBuildings(p);
+        if (t == Trigger.EVENT_EXECUTION) {
+            Map<Player, Integer> starMap = new HashMap<>();
+            for (Player p : players) {
+                activateBuildings(p, Trigger.SHAMANIC_RITUAL);
                 BuildingBonus bonus = p.getBuildingBonus();
-                int totalStars = p.getCards().get(CardType.SHAMAN). //conta stelle +p.getBuildingBonus().getExtraStars();
-                if(leastStars & !p.getBuildingBonus().isNoRitualLostPP()){
-                    p.changePP(-lostPP);
-                }
-                if(mostStars) {
-                    p.changePP(gainedPP * p.getBuildingBonus().getShamanMulitiplierPP());
+                int totalStars = p.getCards().get(CardType.SHAMAN).stream()
+                        .map(card -> (Shaman) card)
+                        .mapToInt(Shaman::getStarNum)
+                        .sum() + bonus.getExtraStars();
+                starMap.put(p, totalStars);
+            }
+            int maxStars = Collections.max(starMap.values());
+            int minStars = Collections.min(starMap.values());
+            if (maxStars == minStars) {
+                players.forEach(p -> p.getBuildingBonus().reset());
+                return;
+            }
+            for (Player p : players) {
+                BuildingBonus bonus = p.getBuildingBonus();
+                int stars = starMap.get(p);
+                if (stars == maxStars) { // DA MODIFICARE: SE E' PRESENTE UN ALTRO GIOCATORE CON MASSIMO NUMERO
+                                        // DI STELLE NON DEVE RICEVERE IL BONUS
+                    p.changePP(gainedPP * bonus.getShamanMulitiplierPP());
+                } else if (stars == minStars) {
+                    if (!bonus.isNoRitualLostPP()) {
+                        p.changePP(-lostPP);
+                    }
                 }
                 bonus.reset();
             }
         }
-        // Check dei building
-        // Player1 Starts = stars del player + bonusStars
-        // Reset bonusBuilding
+    }
+
+    public int getLostPP() {
+        return lostPP;
+    }
+    public int getGainedPP() {
+        return gainedPP;
     }
 }

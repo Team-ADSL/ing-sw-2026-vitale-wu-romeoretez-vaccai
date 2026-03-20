@@ -18,8 +18,7 @@ public class DuringHunt extends DuringEvent{
             return;
         }
         for (Player p : players) {
-            p.getBuildingBonus().setHunterFood(1);
-            p.getBuildingBonus().setHunterPP(1);
+            p.getBuildingBonus().setHuntEventBonus(true);
         }
     }
 }

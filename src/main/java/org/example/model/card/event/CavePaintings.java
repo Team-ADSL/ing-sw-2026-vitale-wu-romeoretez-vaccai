@@ -2,7 +2,6 @@ package org.example.model.card.event;
 
 import org.example.model.card.CardType;
 import org.example.model.card.Trigger;
-import org.example.model.card.building.Building;
 import org.example.model.card.building.BuildingBonus;
 import org.example.model.game.Player;
 
@@ -25,19 +24,11 @@ public class CavePaintings extends Event {
         this.multiplierPP = multiplierPP;
     }
 
-    public int getMinArtists()   { return minArtists; }
-    public int getLostPP()       { return lostPP; }
-    public int getMultiplierPP() { return multiplierPP; }
-    
-    public void checkBuildings(Player player) {
-
-    }
-
     @Override
     public void activeEffect(Set<Player> players, Trigger t) {
-        if(t == Trigger.EVENT_EXECUTION) {
-            for(Player p : players) {
-                checkBuildings(p);
+        if (t == Trigger.EVENT_EXECUTION) {
+            for (Player p : players) {
+                activateBuildings(p, Trigger.CAVE_PAINTINGS);
                 BuildingBonus bonus = p.getBuildingBonus();
                 int artistCount = p.getCards().get(CardType.ARTIST).size();
                 if (artistCount >= minArtists) {
@@ -46,7 +37,7 @@ public class CavePaintings extends Event {
                 else {
                     p.changePP(-lostPP);
                 }
-                if(p.getBuildingBonus().isArtistFood()) {
+                if (p.getBuildingBonus().isArtistFood()) {
                     p.changeFood(artistCount);
                 };
                 bonus.reset();
@@ -54,4 +45,13 @@ public class CavePaintings extends Event {
         }
     }
 
+    public int getMinArtists()   {
+        return minArtists;
+    }
+    public int getLostPP()       {
+        return lostPP;
+    }
+    public int getMultiplierPP() {
+        return multiplierPP;
+    }
 }

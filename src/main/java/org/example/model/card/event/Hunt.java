@@ -17,23 +17,25 @@ public class Hunt extends Event {
         this.multiplierPP = multiplierPP;
     }
 
-    public int getMultiplierPP() { return multiplierPP; }
-
-    public void checkBuildings(Player player) {
-
-    }
-
     @Override
     public void activeEffect(Set<Player> players, Trigger t) {
-        if(t == Trigger.EVENT_EXECUTION) {
-            for(Player p : players) {
-                checkBuildings(p);
+        if (t == Trigger.EVENT_EXECUTION) {
+            for (Player p : players) {
+                activateBuildings(p, Trigger.HUNT);
                 BuildingBonus bonus = p.getBuildingBonus();
                 int hunterCount = p.getCards().get(CardType.HUNTER).size();
-                p.changePP(hunterCount * (multiplierPP + p.getBuildingBonus().getHunterPP()));
-                p.changeFood(hunterCount + p.getBuildingBonus().getHunterFood());
+                p.changePP(hunterCount * multiplierPP);
+                p.changeFood(hunterCount);
+                if(bonus.isHuntEventBonus()){
+                    p.changePP(hunterCount);
+                    p.changeFood(hunterCount);
+                }
                 bonus.reset();
             }
         }
+    }
+
+    public int getMultiplierPP() {
+        return multiplierPP;
     }
 }

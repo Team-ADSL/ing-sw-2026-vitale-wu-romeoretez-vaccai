@@ -44,4 +44,8 @@ public class Player {
     public BuildingBonus getBuildingBonus() {
         return buildingBonus;
     }
+
+    public int getFood() {
+        return food;
+    }
 }

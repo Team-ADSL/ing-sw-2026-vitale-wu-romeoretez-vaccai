@@ -4,20 +4,18 @@ public class BuildingBonus {
     private int extraStars;
     private int shamanMulitiplierPP;
     private int sustenanceDiscount;
-    private int hunterPP;
-    private int hunterFood;
+    private boolean huntEventBonus;
     private boolean extraMove;
     private boolean noRitualLostPP;
     private boolean artistFood;
 
     public BuildingBonus(int extraStars, int shamanMulitiplierPP, int sustenanceDiscount,
-                         int hunterPP, int hunterFood, boolean extraMove, boolean noRitualLostPP,
+                         boolean huntEventBonus, boolean extraMove, boolean noRitualLostPP,
                          boolean artistFood) {
         this.extraStars = extraStars;
         this.shamanMulitiplierPP = shamanMulitiplierPP;
         this.sustenanceDiscount = sustenanceDiscount;
-        this.hunterPP = hunterPP;
-        this.hunterFood = hunterFood;
+        this.huntEventBonus = huntEventBonus;
         this.extraMove = extraMove;
         this.noRitualLostPP = noRitualLostPP;
         this.artistFood = artistFood;
@@ -27,17 +25,14 @@ public class BuildingBonus {
         extraStars = 0;
         shamanMulitiplierPP = 1;
         sustenanceDiscount = 0;
+        huntEventBonus = false;
         extraMove = false;
         noRitualLostPP = false;
         artistFood = false;
     }
 
-    public void setHunterPP(int hunterPP) {
-        this.hunterPP = hunterPP;
-    }
-
-    public void setHunterFood(int hunterFood) {
-        this.hunterFood = hunterFood;
+    public void setHuntEventBonus(boolean huntEventBonus) {
+        this.huntEventBonus = huntEventBonus;
     }
 
     public void setExtraMove(boolean extraMove) {
@@ -68,12 +63,8 @@ public class BuildingBonus {
         return sustenanceDiscount;
     }
 
-    public int getHunterPP() {
-        return hunterPP;
-    }
-
-    public int getHunterFood() {
-        return hunterFood;
+    public boolean isHuntEventBonus() {
+        return huntEventBonus;
     }
 
     public boolean isExtraMove() {
