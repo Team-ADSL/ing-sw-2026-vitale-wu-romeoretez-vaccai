@@ -23,6 +23,9 @@ public class SinceBuilt extends Building {
     @Override
     public void activeEffect(Set<Player> players, Trigger t) {
         Optional<Player> playerContainer = players.stream().findFirst();
+        if (playerContainer.isEmpty()) {
+            return; // ERRORE DA GESTIRE?
+        }
         Player p = playerContainer.get();
         // if per distringuere i due casi, poi conta i character nel set per capire se dare i punti
         if (buildingEffect == BuildingEffect.FOOD_COMPLETE_SET) {

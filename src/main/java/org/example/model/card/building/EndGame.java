@@ -50,4 +50,12 @@ public class EndGame extends Building {
 
         }
     }
+
+    public CardType getCharacterTypeForMultiplier() {
+        return characterTypeForMultiplier;
+    }
+
+    public void setCharacterTypeForMultiplier(CardType characterTypeForMultiplier) {
+        this.characterTypeForMultiplier = characterTypeForMultiplier;
+    }
 }
