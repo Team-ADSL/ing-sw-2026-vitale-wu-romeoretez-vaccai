@@ -1,7 +1,6 @@
 package org.example.model.card.building;
 
 import org.example.model.card.Trigger;
-import org.example.model.card.character.Character;
 import org.example.model.game.Player;
 
 import java.util.Optional;
@@ -16,5 +15,8 @@ public class BonusTotem extends Building {
     @Override
     public void activeEffect(Set<Player> players, Trigger t) {
         // Semplice set di un attributo di BuildingBonus a true (viene chiamato dal controller a fine turno)
+        players.stream().findFirst().ifPresent(p -> {
+            p.getBuildingBonus().setBonusFoodTile(true);
+        });
     }
 }

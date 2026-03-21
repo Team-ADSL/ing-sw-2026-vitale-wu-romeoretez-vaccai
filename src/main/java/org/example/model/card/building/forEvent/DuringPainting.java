@@ -1,7 +1,6 @@
 package org.example.model.card.building.forEvent;
 
 import org.example.model.card.Trigger;
-import org.example.model.card.character.Character;
 import org.example.model.game.Player;
 
 import java.util.Optional;
@@ -14,11 +13,11 @@ public class DuringPainting extends DuringEvent {
 
     @Override
     public void execute(Set<Player> players, Trigger t) {
-        if (t!=Trigger.CAVE_PAINTINGS){
+        if (t != Trigger.CAVE_PAINTINGS) {
             return;
         }
         Optional<Player> playerContainer = players.stream().findFirst();
-        if(playerContainer.isEmpty()) {
+        if (playerContainer.isEmpty()) {
             return; // ERRORE DA GESTIRE?
         }
         Player p = playerContainer.get();

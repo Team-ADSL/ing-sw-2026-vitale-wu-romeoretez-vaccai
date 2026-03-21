@@ -17,21 +17,21 @@ public class DuringRitual extends DuringEvent {
 
     @Override
     public void execute(Set<Player> players, Trigger t) {
-        if (t!=Trigger.SHAMANIC_RITUAL){
+        if (t != Trigger.SHAMANIC_RITUAL) {
             return;
         }
         Optional<Player> playerContainer = players.stream().findFirst();
-        if(playerContainer.isEmpty()) {
+        if (playerContainer.isEmpty()) {
             return; // ERRORE DA GESTIRE?
         }
         Player p = playerContainer.get();
-        if (buildingEffect== BuildingEffect.RITUAL_IMMUNITY){
+        if (buildingEffect == BuildingEffect.RITUAL_IMMUNITY) {
             p.getBuildingBonus().setNoRitualLostPP(true);
         }
-        if (buildingEffect== BuildingEffect.RITUAL_STARS_BONUS){
+        if (buildingEffect == BuildingEffect.RITUAL_STARS_BONUS) {
             p.getBuildingBonus().setExtraStars(3);
         }
-        if (buildingEffect== BuildingEffect.RITUAL_DOUBLE_PP){
+        if (buildingEffect == BuildingEffect.RITUAL_DOUBLE_PP) {
             p.getBuildingBonus().setShamanMulitiplierPP(2);
         }
     }
