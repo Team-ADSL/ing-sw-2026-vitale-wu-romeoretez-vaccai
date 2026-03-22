@@ -1,10 +1,8 @@
 package org.example.model.game;
 
-import java.util.Optional;
 import java.util.Set;
 
 public class Game {
-
     private int round;
     private int era;
     private Set<Player> players;
@@ -17,19 +15,19 @@ public class Game {
         this.board = board;
     }
 
-    public void checkBuildings(Optional<Player> player){
-
-    }
-
-    public void declareWinner(){
-
-    }
-
     public Board getBoard(){
         return this.board;
     }
 
     public Set<Player> getPlayers() {
         return players;
+    }
+
+    public int getEra() {
+        return era;
+    }
+
+    public int getRound() {
+        return round;
     }
 }

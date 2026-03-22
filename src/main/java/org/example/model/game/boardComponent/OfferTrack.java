@@ -1,10 +1,11 @@
-package org.example.model.game;
+package org.example.model.game.boardComponent;
+
+import org.example.model.game.Player;
 
 import java.util.ArrayList;
-import java.util.Optional;
 
 public class OfferTrack {
-    private ArrayList<OfferTile> offerQueue;
+    private final ArrayList<OfferTile> offerQueue;
 
     public OfferTrack(ArrayList<OfferTile> offerQueue) {
         this.offerQueue = offerQueue;

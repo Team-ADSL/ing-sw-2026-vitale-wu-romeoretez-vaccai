@@ -1,7 +1,6 @@
-package org.example.model.game;
+package org.example.model.game.boardComponent;
 
 import org.example.model.card.Card;
-
 
 public class CardRow {
     private final Card[] cards;
@@ -14,19 +13,10 @@ public class CardRow {
     }
 
 
-    public void addTailCard(Card card){
-        int i = getCards().length;
-        getCards()[i] = card;
-    }
-
-    public Card pickCartAt(int index){
-        Card toReturn = getCards()[index];
-        getCards()[index] = null;
+    public Card pickCardAt(int index){
+        Card toReturn = cards[index];
+        cards[index] = null;
         return toReturn;
-    }
-
-    public Card[] getCards() {
-        return cards;
     }
 
     public int size() {
@@ -48,5 +38,3 @@ public class CardRow {
         }
     }
 }
-
-

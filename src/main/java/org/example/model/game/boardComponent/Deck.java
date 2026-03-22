@@ -1,4 +1,4 @@
-package org.example.model.game;
+package org.example.model.game.boardComponent;
 
 import org.example.model.card.Card;
 
@@ -27,7 +27,6 @@ public class Deck {
         return cards.removeFirst();
     }
 
-
     public static Deck createDeck(ArrayList<Set<Card>> cards){
         //for all sets of card renamed 'era' present in 'cards'...
         Deck deck = new Deck();
@@ -45,9 +44,7 @@ public class Deck {
     public ArrayList<Card> getCards() {
         return cards;
     }
-
     public boolean isEmpty() {
         return cards.isEmpty();
     }
-
 }

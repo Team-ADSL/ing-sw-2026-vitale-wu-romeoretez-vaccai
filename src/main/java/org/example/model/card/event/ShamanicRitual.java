@@ -10,16 +10,14 @@ import java.util.*;
 
 public class ShamanicRitual extends Event {
 
-    private int lostPP;
-    private int gainedPP;
+    private final int lostPP;
+    private final int gainedPP;
 
     public ShamanicRitual (int lostPP, int gainedPP, boolean isFinal,
                        int era, Optional<Integer> numPlayers) {
-
         super(isFinal, era, numPlayers);
         this.lostPP = lostPP;
         this.gainedPP = gainedPP;
-
     }
 
     @Override
@@ -55,12 +53,5 @@ public class ShamanicRitual extends Event {
                 bonus.reset();
             }
         }
-    }
-
-    public int getLostPP() {
-        return lostPP;
-    }
-    public int getGainedPP() {
-        return gainedPP;
     }
 }

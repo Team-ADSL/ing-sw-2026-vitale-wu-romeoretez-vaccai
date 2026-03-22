@@ -3,6 +3,8 @@ package org.example.controller.state;
 import org.example.controller.state.utils.Move;
 import org.example.exception.InvalidMoveException;
 import org.example.model.game.*;
+import org.example.model.game.boardComponent.OfferTrack;
+import org.example.model.game.boardComponent.OrderTile;
 
 import java.util.Optional;
 import java.util.Set;
@@ -16,12 +18,6 @@ public class TotemPlacementState extends State {
         this.orderIndex = orderIndex;
     }
 
-
-    public boolean checkInput(Move move, Game game) {
-        int i = move.getRowIndex();
-        Optional<Player> playerContainer = game.getBoard().getOfferTrack().getPlayerAt(i);
-        return playerContainer.isEmpty();
-    }
 
     @Override
     public State transition(Set<Move> moves) throws InvalidMoveException {

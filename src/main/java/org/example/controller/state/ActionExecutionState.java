@@ -4,9 +4,8 @@ import org.example.controller.state.utils.Move;
 import org.example.controller.state.utils.Row;
 import org.example.exception.InvalidMoveException;
 import org.example.model.card.Card;
-import org.example.model.game.CardRow;
 import org.example.model.game.Game;
-import org.example.model.game.OfferTile;
+import org.example.model.game.boardComponent.OfferTile;
 
 import java.util.Map;
 import java.util.Set;
@@ -52,7 +51,7 @@ public class ActionExecutionState extends State {
 
 
         // Cicla sulle azioni richieste ed eseguile. Ricorda di controllare se puo essere pescata
-        CardRow selectedRow = null;
+        OfferTile.CardRow selectedRow = null;
         if(move.getRow() == Row.UPPER) {
             selectedRow = getGame().getBoard().getTopRow();
         } else {

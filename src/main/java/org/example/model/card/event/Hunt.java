@@ -34,8 +34,4 @@ public class Hunt extends Event {
             }
         }
     }
-
-    public int getMultiplierPP() {
-        return multiplierPP;
-    }
 }

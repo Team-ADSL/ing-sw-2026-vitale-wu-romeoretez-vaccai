@@ -38,7 +38,6 @@ public class BuildingBonus {
     public boolean isBonusFoodTile() {
         return bonusFoodTile;
     }
-
     public void setBonusFoodTile(boolean bonusFoodTile) {
         this.bonusFoodTile = bonusFoodTile;
     }
@@ -46,7 +45,6 @@ public class BuildingBonus {
     public int getExtraStars() {
         return extraStars;
     }
-
     public void setExtraStars(int extraStars) {
         this.extraStars = extraStars;
     }
@@ -54,7 +52,6 @@ public class BuildingBonus {
     public int getShamanMulitiplierPP() {
         return shamanMulitiplierPP;
     }
-
     public void setShamanMulitiplierPP(int shamanMulitiplierPP) {
         this.shamanMulitiplierPP = shamanMulitiplierPP;
     }
@@ -62,7 +59,6 @@ public class BuildingBonus {
     public int getBuilderMultiplierPP() {
         return builderMultiplierPP;
     }
-
     public void setBuilderMultiplierPP(int builderMultiplierPP) {
         this.builderMultiplierPP = builderMultiplierPP;
     }
@@ -70,7 +66,6 @@ public class BuildingBonus {
     public int getSustenanceDiscount() {
         return sustenanceDiscount;
     }
-
     public void setSustenanceDiscount(int sustenanceDiscount) {
         this.sustenanceDiscount += sustenanceDiscount;
     }
@@ -78,7 +73,6 @@ public class BuildingBonus {
     public boolean isHuntEventBonus() {
         return huntEventBonus;
     }
-
     public void setHuntEventBonus(boolean huntEventBonus) {
         this.huntEventBonus = huntEventBonus;
     }
@@ -86,7 +80,6 @@ public class BuildingBonus {
     public boolean isExtraMove() {
         return extraMove;
     }
-
     public void setExtraMove(boolean extraMove) {
         this.extraMove = extraMove;
     }
@@ -94,7 +87,6 @@ public class BuildingBonus {
     public boolean isNoRitualLostPP() {
         return noRitualLostPP;
     }
-
     public void setNoRitualLostPP(boolean noRitualLostPP) {
         this.noRitualLostPP = noRitualLostPP;
     }
@@ -102,7 +94,6 @@ public class BuildingBonus {
     public boolean isArtistFood() {
         return artistFood;
     }
-
     public void setArtistFood(boolean artistFood) {
         this.artistFood = artistFood;
     }

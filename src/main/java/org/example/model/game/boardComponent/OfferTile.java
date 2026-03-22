@@ -1,14 +1,16 @@
-package org.example.model.game;
+package org.example.model.game.boardComponent;
 
 import org.example.controller.state.utils.Row;
+import org.example.model.card.Card;
+import org.example.model.game.Player;
 
 import java.util.Map;
 import java.util.Optional;
 
 public class OfferTile {
     private Optional<Player> player;
-    private Map<Row,Integer> moves;
-    private boolean givesFood;
+    private final Map<Row,Integer> moves;
+    private final boolean givesFood;
 
     public OfferTile(Optional<Player> player, Map<Row,Integer> moves, boolean givesFood) {
         this.player = player;

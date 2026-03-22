@@ -10,7 +10,7 @@ import java.util.Set;
 
 public class Sustenance extends Event {
 
-    private int lostPP;
+    private final int lostPP;
 
     public Sustenance(int lostPP, boolean isFinal, int era, Optional<Integer> numPlayers) {
         super(isFinal, era, numPlayers);

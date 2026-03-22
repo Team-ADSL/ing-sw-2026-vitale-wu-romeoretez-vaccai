@@ -14,9 +14,10 @@ public class BonusTotem extends Building {
 
     @Override
     public void activeEffect(Set<Player> players, Trigger t) {
-        // Semplice set di un attributo di BuildingBonus a true (viene chiamato dal controller a fine turno)
-        players.stream().findFirst().ifPresent(p -> {
-            p.getBuildingBonus().setBonusFoodTile(true);
-        });
+        if(t == Trigger.END_TURN){
+            players.stream().findFirst().ifPresent(p -> {
+                p.getBuildingBonus().setBonusFoodTile(true);
+            });
+        }
     }
 }

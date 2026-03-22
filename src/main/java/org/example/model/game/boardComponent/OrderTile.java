@@ -1,10 +1,12 @@
-package org.example.model.game;
+package org.example.model.game.boardComponent;
+
+import org.example.model.game.Player;
 
 import java.util.ArrayList;
 import java.util.Optional;
 
 public class OrderTile {
-    private ArrayList<OrderCell> orderQueue;
+    private final ArrayList<OrderCell> orderQueue;
 
     public OrderTile() {
         this.orderQueue = new ArrayList<>();

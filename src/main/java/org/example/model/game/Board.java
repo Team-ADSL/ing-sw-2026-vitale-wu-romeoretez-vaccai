@@ -2,6 +2,7 @@ package org.example.model.game;
 
 import org.example.model.card.building.Building;
 import org.example.model.card.Card;
+import org.example.model.game.boardComponent.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -115,19 +116,9 @@ public class Board {
         }
     }
 
-    public void placeInOrder(Player p, int arrayIndex){
-        //
-    }
-
-    // wait Master Andrea approval
-    public void changeRows(){
-        //changing era buildings here or elsewhere?
-    }
-
     public int calcNumTopCard(int numPlayer){
         return numPlayer + 4;
     }
-
     public int calcNumLowCard(int numPlayer){
         return numPlayer + 1;
     }
@@ -135,19 +126,15 @@ public class Board {
     public OfferTrack getOfferTrack() {
         return offerTrack;
     }
-
     public OrderTile getOrderTile() {
         return orderQueue;
     }
-
     public Deck getDeck() {
         return deck;
     }
-
     public CardRow getLowRow() {
         return lowRow;
     }
-
     public CardRow getTopRow() {
         return topRow;
     }

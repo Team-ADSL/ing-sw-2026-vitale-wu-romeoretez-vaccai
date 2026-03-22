@@ -16,9 +16,10 @@ public class ExtraMove extends Building {
 
     @Override
     public void activeEffect(Set<Player> players, Trigger t) {
-        // Semplice set di un attributo di BuildingBonus a true (viene chiamato dal controller a fine round)
-        players.stream().findFirst().ifPresent(p -> {
-            p.getBuildingBonus().setExtraMove(true);
-        });
+        if(t == Trigger.END_ROUND){
+            players.stream().findFirst().ifPresent(p -> {
+                p.getBuildingBonus().setExtraMove(true);
+            });
+        }
     }
 }

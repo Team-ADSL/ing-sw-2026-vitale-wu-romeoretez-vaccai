@@ -23,4 +23,8 @@ public abstract class Card {
     public int getEra() {
         return era;
     }
+
+    public Optional<Integer> getNumPlayers() {
+        return numPlayers;
+    }
 }

@@ -10,15 +10,13 @@ import java.util.Set;
 
 public class CavePaintings extends Event {
 
-    private int minArtists;
-    private int lostPP;
-    private int multiplierPP;
+    private final int minArtists;
+    private final int lostPP;
+    private final int multiplierPP;
 
     public CavePaintings (int minArtists, int lostPP, int multiplierPP,
                       boolean isFinal, int era, Optional<Integer> numPlayers) {
-
         super(isFinal, era, numPlayers);
-
         this.minArtists = minArtists;
         this.lostPP = lostPP;
         this.multiplierPP = multiplierPP;
@@ -43,15 +41,5 @@ public class CavePaintings extends Event {
                 bonus.reset();
             }
         }
-    }
-
-    public int getMinArtists()   {
-        return minArtists;
-    }
-    public int getLostPP()       {
-        return lostPP;
-    }
-    public int getMultiplierPP() {
-        return multiplierPP;
     }
 }

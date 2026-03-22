@@ -1,43 +1,73 @@
 package org.example.model.card.building;
 
+import org.example.model.card.Card;
+import org.example.model.card.CardType;
 import org.example.model.card.Trigger;
 import org.example.model.card.building.utils.BuildingEffect;
-import org.example.model.card.character.Character;
 import org.example.model.game.Player;
 
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class SinceBuilt extends Building {
-    private BuildingEffect buildingEffect;
-    private Set<Character> characterInUse;
-    //private BuildingTypeCounter (distinguere tra coppie di artist e full set) // bro che cosa significa? intendi buildingEffect?
+    private final BuildingEffect buildingEffect;
+    private Map<CardType, Set<Card>> characterInUse;
 
-    public SinceBuilt(int endGamePP, int cost, Trigger trigger, Set<Character> characterInUse, int era, Optional<Integer> numPlayers) {
+    public SinceBuilt(int endGamePP, int cost, Trigger trigger,
+                      int era, Optional<Integer> numPlayers, BuildingEffect buildingEffect) {
+        super(endGamePP, cost, era, numPlayers);
+        this.characterInUse = new HashMap<>();
+        this.characterInUse.put(CardType.HUNTER, new HashSet<>());
+        this.characterInUse.put(CardType.GATHERER, new HashSet<>());
+        this.characterInUse.put(CardType.SHAMAN, new HashSet<>());
+        this.characterInUse.put(CardType.BUILDER, new HashSet<>());
+        this.characterInUse.put(CardType.INVENTOR, new HashSet<>());
+        this.characterInUse.put(CardType.ARTIST, new HashSet<>());
+        this.buildingEffect = buildingEffect;
+    }
+
+    public SinceBuilt(int endGamePP, int cost, Trigger trigger, Map<CardType, Set<Card>> characterInUse,
+                      int era, Optional<Integer> numPlayers, BuildingEffect buildingEffect) {
         super(endGamePP, cost, era, numPlayers);
         this.characterInUse = characterInUse;
         this.buildingEffect = buildingEffect;
     }
 
-
     @Override
     public void activeEffect(Set<Player> players, Trigger t) {
-        Optional<Player> playerContainer = players.stream().findFirst();
-        if (playerContainer.isEmpty()) {
-            return; // ERRORE DA GESTIRE?
-        }
-        Player p = playerContainer.get();
-        // if per distringuere i due casi, poi conta i character nel set per capire se dare i punti
-        if (buildingEffect == BuildingEffect.FOOD_COMPLETE_SET) {
-            /*qui non saprei come muovermi, avevo pensato di contare i set già presenti alla chiamata di questo metodo
-            e segnarli da qualche parte per poi contare ogni volta i set nuovi e sottrarre i set precedenti, ma quando
-            viene chiamato questo metodo? ogni quante volte viene fatto il check? sicuramente mi sfugge qualcosa, probabilmente
-            non ce ne occupiamo in buildings e io devo solo aggiungere 5 a ogni chiamata, tipo così?
-             */
-            p.changeFood(5);
-        }
-        if (buildingEffect == BuildingEffect.COUPLE_INVENTOR) {
-            p.changeFood(3);
+        if(t == Trigger.DRAWING){
+            Optional<Player> playerContainer = players.stream().findFirst();
+            if (playerContainer.isEmpty()) {
+                return; // ERRORE DA GESTIRE?
+            }
+
+            Player p = playerContainer.get();
+            Card lastPick = p.getLastPick();
+            if(lastPick != null) {
+                lastPick.insert(characterInUse);
+
+                if (buildingEffect == BuildingEffect.FOOD_COMPLETE_SET) {
+                    int numDifferentType = (int)characterInUse.entrySet().stream()
+                            .filter(e -> !e.getValue().isEmpty())
+                            .count();
+                    if(numDifferentType == 6){
+                        p.changeFood(5);
+                        characterInUse.values().forEach(set -> {
+                            Iterator<Card> it = set.iterator();
+                            if (it.hasNext()) {
+                                it.next();
+                                it.remove();
+                            }
+                        });
+                    }
+
+                } else if (buildingEffect == BuildingEffect.COUPLE_INVENTOR) {
+                    int numInventor = characterInUse.get(CardType.INVENTOR).size();
+                    if(numInventor == 2){
+                        p.changeFood(3);
+                        characterInUse = new HashMap<>();
+                    }
+                }
+            }
         }
     }
 }
