@@ -7,9 +7,8 @@ import org.example.model.game.Player;
 
 import java.util.Set;
 
-public class InitGameState extends State {
-
-    public InitGameState(Game game) {
+public class RecoverState extends State{
+    public RecoverState(Game game) {
         super(game);
     }
 
@@ -27,5 +26,4 @@ public class InitGameState extends State {
     public State nextState() {
         return null;
     }
-
 }

@@ -5,6 +5,8 @@ import org.example.controller.state.utils.Row;
 import org.example.exception.InvalidMoveException;
 import org.example.model.card.Card;
 import org.example.model.game.Game;
+import org.example.model.game.Player;
+import org.example.model.game.boardComponent.CardRow;
 import org.example.model.game.boardComponent.OfferTile;
 
 import java.util.Map;
@@ -25,11 +27,11 @@ public class ActionExecutionState extends State {
     }
 
     @Override
-    public State transition(Set<Move> moves) throws InvalidMoveException {
+    public void checkMove(Set<Move> moves, Player p) throws InvalidMoveException {
         if(moves.size() != remainingMoves){
             throw new InvalidMoveException(
                     "Number of cards mismatch. Requires " + moves.size()
-                    + ", Allowed: " + remainingMoves);
+                            + ", Allowed: " + remainingMoves);
         }
 
         OfferTile offerTile = getGame().getBoard().getOfferTrack().getTileAt(offerIndex);
@@ -47,25 +49,24 @@ public class ActionExecutionState extends State {
                                 + allowedMoves.get(Row.LOWER) + " draws from the low row");
             }
         }
+    }
 
-
-
-        // Cicla sulle azioni richieste ed eseguile. Ricorda di controllare se puo essere pescata
-        OfferTile.CardRow selectedRow = null;
-        if(move.getRow() == Row.UPPER) {
-            selectedRow = getGame().getBoard().getTopRow();
-        } else {
-            selectedRow = getGame().getBoard().getLowRow();
+    @Override
+    public void execute(Set<Move> moves, Player p) {
+        for(Move move : moves){
+            CardRow selectedRow = null;
+            if(move.getRow() == Row.UPPER) {
+                selectedRow = getGame().getBoard().getTopRow();
+            } else {
+                selectedRow = getGame().getBoard().getLowRow();
+            }
+            Card selectedCard = selectedRow.pickCardAt(move.getRowIndex());
+            selectedCard.insert(p.getCards());
         }
+    }
 
-        for(Move m : moves){
-
-        }
-
-        Card selectedCard = selectedRow.get(move.getRowIndex());
-        selectedCard.insert(getActivePlayer().getCards());
-
-        // Controllo fine fase: prima check di eventuali mosse bonus
+    @Override
+    public State nextState() {
         return null;
     }
 }

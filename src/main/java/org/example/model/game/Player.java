@@ -67,6 +67,15 @@ public class Player {
     public Card getLastPick() {
         return lastPick;
     }
+    public Color getColor() {
+        return color;
+    }
+    public int getPp() {
+        return pp;
+    }
+    public String getName() {
+        return name;
+    }
 
     public void setLastPick(Card lastPick) {
         this.lastPick = lastPick;

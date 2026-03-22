@@ -20,32 +20,37 @@ public class TotemPlacementState extends State {
 
 
     @Override
-    public State transition(Set<Move> moves) throws InvalidMoveException {
+    public void checkMove(Set<Move> moves, Player p) throws  InvalidMoveException{
         if(moves.size() != 1){
             throw new InvalidMoveException("Invalid input, only 1 move allowed");
         }
 
         OrderTile orderTile = getGame().getBoard().getOrderTile();
-        Optional<Player> playerContainer = getGame().getBoard().getOrderTile().getPlayerAt(orderIndex);
-        if(playerContainer.isEmpty()) {
-            throw new InvalidMoveException("Player not present in the order queue");
+        Optional<Player> playerContainer = orderTile.getPlayerAt(orderIndex);
+        assert playerContainer.isPresent(); // NOTE: the current state always point to the next player
+                                            // that needs to play.
+        Player currentPlayer = playerContainer.get();
+        if(!currentPlayer.equals(p) ) {
+            throw new InvalidMoveException("The current player is " + currentPlayer.getName());
         }
-        Player player = playerContainer.get();
 
         Move move = moves.stream().findFirst().orElse(null);
-        if(move == null){
+        if(move == null) {
             throw new InvalidMoveException("Move is null");
         }
+    }
 
+    @Override
+    public void execute(Set<Move> moves, Player p) {
+        Move move = moves.stream().findFirst().orElse(null);
         OfferTrack offerTrack = getGame().getBoard().getOfferTrack();
-        playerContainer = offerTrack.getTileAt(move.getRowIndex()).getPlayer();
-        if(playerContainer.isPresent()){
-            throw new InvalidMoveException("Tiles already occupied in the offer track");
-        }
+        assert move != null; // Already checked in checkMove()
+        offerTrack.placeInOfferTile(p, move.getRowIndex());
+    }
 
-        offerTrack.placeInOfferTile(player, move.getRowIndex());
-
-        // Control end phase
+    @Override
+    public State nextState() {
+        OfferTrack offerTrack = getGame().getBoard().getOfferTrack();
         if(getOrderIndex() != getGame().getPlayers().size() - 1){
             setOrderIndex(getOrderIndex() + 1);
             return this;
