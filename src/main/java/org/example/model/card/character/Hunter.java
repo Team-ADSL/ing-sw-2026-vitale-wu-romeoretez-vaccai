@@ -26,7 +26,7 @@ public class Hunter extends Character {
     // NOTE: to call after inserting in player's deck
     @Override
     public void activeEffect(Set<Player> players, Trigger t) {
-        if(t == Trigger.DRAWING){
+        if(t == Trigger.DRAWING && extraFood){
             Player p = players.stream()
                     .findFirst()
                     .orElse(null);
@@ -35,9 +35,5 @@ public class Hunter extends Character {
                 p.changeFood(numHunter);
             }
         }
-    }
-
-    public boolean isExtraFood() {
-        return extraFood;
     }
 }
