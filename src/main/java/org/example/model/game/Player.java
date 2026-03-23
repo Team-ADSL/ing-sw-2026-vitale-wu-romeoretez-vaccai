@@ -24,6 +24,7 @@ public class Player {
         this.pp = pp;
         this.color = color;
         this.lastPick = null;
+        this.buildingBonus = new BuildingBonus(0, 1, 1, 0, false, false, false, false, false);
         this.cards = new HashMap<>();
         this.cards.put(CardType.HUNTER, new HashSet<>());
         this.cards.put(CardType.GATHERER, new HashSet<>());
@@ -41,6 +42,7 @@ public class Player {
         this.color = color;
         this.cards = cards;
         this.lastPick = null;
+        this.buildingBonus = new BuildingBonus(0, 1, 1, 0, false, false, false, false, false);
     }
 
     public void changePP(int pp){

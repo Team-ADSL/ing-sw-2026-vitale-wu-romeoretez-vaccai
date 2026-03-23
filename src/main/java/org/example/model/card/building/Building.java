@@ -28,7 +28,7 @@ public abstract class Building extends Card {
                 .map(c -> (Builder)c)
                 .mapToInt(Builder::getDiscount)
                 .sum();
-        return p.getFood() - discount >= cost;
+        return p.getFood() + discount >= cost;
     }
 
     @Override
