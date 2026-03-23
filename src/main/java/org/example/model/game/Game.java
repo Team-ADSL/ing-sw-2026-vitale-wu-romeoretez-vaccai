@@ -30,4 +30,8 @@ public class Game {
     public int getRound() {
         return round;
     }
+
+    public void changeEra() {
+        this.era = era + 1;
+    }
 }

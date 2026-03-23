@@ -4,6 +4,7 @@ import org.example.model.card.Card;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.Set;
 
 public class Deck {
@@ -39,6 +40,10 @@ public class Deck {
             deck.addTailCards(eraList);
         }
         return deck;
+    }
+
+    public boolean isNewEra(int currentEra){
+        return cards.getFirst().getEra() != currentEra;
     }
 
     public ArrayList<Card> getCards() {

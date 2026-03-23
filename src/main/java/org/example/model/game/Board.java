@@ -14,11 +14,11 @@ public class Board {
     private CardRow topRow;
     private OfferTrack offerTrack;
     private OrderTile orderQueue;
-    private ArrayList<Set<Building>> remainingBuildings;
+    private ArrayList<Set<Card>> remainingBuildings;
     private Deck deck;
 
     public Board (CardRow lowRow, CardRow topRow, OfferTrack offerTrack,
-                  OrderTile orderQueue, ArrayList<Set<Building>> remainingBuildings, ArrayList<Set<Card>> cards) {
+                  OrderTile orderQueue, ArrayList<Set<Card>> remainingBuildings, ArrayList<Set<Card>> cards) {
         this.lowRow = lowRow;
         this.topRow = topRow;
         this.offerTrack = offerTrack;
@@ -29,12 +29,12 @@ public class Board {
 
     // Initialiser
     public Board (int numPlayer, OfferTrack offerTrack,
-                  OrderTile orderQueue, ArrayList<Set<Building>> remainingBuildings, ArrayList<Set<Card>> cards) {
-        this.lowRow = new CardRow(calcNumLowCard(numPlayer));
-        this.topRow = new CardRow(calcNumTopCard(numPlayer));
+                  OrderTile orderQueue, ArrayList<Set<Card>> cards, int nonBuildingCards) {
+        this.lowRow = new CardRow(calcNumLowCard(numPlayer), nonBuildingCards);
+        this.topRow = new CardRow(calcNumTopCard(numPlayer), nonBuildingCards);
         this.offerTrack = offerTrack;
         this.orderQueue = orderQueue;
-        this.remainingBuildings = new ArrayList<Set<Building>>();
+        this.remainingBuildings = new ArrayList<Set<Card>>();
         this.deck = Deck.createDeck(cards);
     }
 
@@ -139,5 +139,7 @@ public class Board {
         return topRow;
     }
 
-
+    public ArrayList<Set<Card>> getRemainingBuildings() {
+        return remainingBuildings;
+    }
 }

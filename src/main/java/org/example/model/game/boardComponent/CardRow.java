@@ -1,15 +1,20 @@
 package org.example.model.game.boardComponent;
-
 import org.example.model.card.Card;
+import java.util.HashSet;
+import java.util.Set;
 
 public class CardRow {
     private final Card[] cards;
+    private int nonBuildingCard;
 
-    public CardRow(Card[] cards) {
+    public CardRow(Card[] cards, int nonBuildingCard) {
         this.cards = cards;
+        this.nonBuildingCard = nonBuildingCard;
     }
-    public CardRow(int numCard) {
+
+    public CardRow(int numCard, int nonBuildingCard) {
         this.cards = new Card[numCard];
+        this.nonBuildingCard = nonBuildingCard;
     }
 
 
@@ -36,5 +41,42 @@ public class CardRow {
                 return;
             }
         }
+    }
+
+    public void addCards(Card[] newCards) {
+        if (nonBuildingCard >= 0) System.arraycopy(newCards, 0, cards, 0, nonBuildingCard);
+    }
+
+    public void addCardsFrom(Set<Card> newCards, int index) {
+        for(Card c : newCards){
+
+        }
+    }
+
+    public void clear(){
+        for (int i = 0; i < nonBuildingCard; i++) {
+            cards[i] = null;
+        }
+    }
+
+    public Set<Card> extractBuilding(){
+        Set<Card> buildings = new HashSet<>();
+        for (int i = nonBuildingCard; i < cards.length; i++) {
+            if(cards[i] != null){
+                buildings.add(cards[i]);
+                cards[i] = null;
+            }
+        }
+        return buildings;
+    }
+
+    public Card[] getCards() {
+        Card[] cardToReturn = new Card[cards.length];
+        System.arraycopy(cards, 0, cardToReturn, 0, cards.length);
+        return cardToReturn;
+    }
+
+    public int getNonBuildingCard() {
+        return nonBuildingCard;
     }
 }

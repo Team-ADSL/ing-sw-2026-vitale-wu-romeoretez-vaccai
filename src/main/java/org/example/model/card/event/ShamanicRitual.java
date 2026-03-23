@@ -39,12 +39,16 @@ public class ShamanicRitual extends Event {
                 players.forEach(p -> p.getBuildingBonus().reset());
                 return;
             }
+            long playersAtMax = starMap.values().stream().filter(s -> s == maxStars).count();
             for (Player p : players) {
                 BuildingBonus bonus = p.getBuildingBonus();
                 int stars = starMap.get(p);
-                if (stars == maxStars) { // DA MODIFICARE: SE E' PRESENTE UN ALTRO GIOCATORE CON MASSIMO NUMERO
-                                        // DI STELLE NON DEVE RICEVERE IL BONUS
-                    p.changePP(gainedPP * bonus.getShamanMulitiplierPP());
+                if (stars == maxStars) {
+                    boolean aloneAtTop = playersAtMax == 1;
+                    int multiplier = aloneAtTop ? bonus.getShamanMulitiplierPP() : 1;
+                    if (aloneAtTop && bonus.isDoubleRitualPP()) {
+                        p.changePP(gainedPP * multiplier);
+                    }
                 } else if (stars == minStars) {
                     if (!bonus.isNoRitualLostPP()) {
                         p.changePP(-lostPP);

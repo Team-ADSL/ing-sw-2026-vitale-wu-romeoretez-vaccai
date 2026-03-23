@@ -37,7 +37,7 @@ public class CavePaintings extends Event {
                 }
                 if (p.getBuildingBonus().isArtistFood()) {
                     p.changeFood(artistCount);
-                };
+                }
                 bonus.reset();
             }
         }

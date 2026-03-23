@@ -29,4 +29,8 @@ public class OfferTile {
     public Map<Row, Integer> getMoves() {
         return moves;
     }
+
+    public void setPlayer(Optional<Player> player) {
+        this.player = player;
+    }
 }

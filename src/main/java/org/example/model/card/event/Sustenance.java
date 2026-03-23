@@ -29,8 +29,7 @@ public class Sustenance extends Event {
                 BuildingBonus bonus = p.getBuildingBonus();
                 int totalCharacters = p.getCards().entrySet().stream()
                         .filter(e -> e.getKey() != CardType.BUILDINGS)
-                        .mapToInt(e -> e.getValue().size())
-                        .sum();
+                        .mapToInt(e -> e.getValue().size()).sum();
                 int discount = p.getCards().get(CardType.GATHERER).size() * 3 + bonus.getSustenanceDiscount();
                 int foodToPay = Math.max(0, totalCharacters - discount);
                 int foodAvailable = p.getFood();

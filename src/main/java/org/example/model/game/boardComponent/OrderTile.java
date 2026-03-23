@@ -8,8 +8,8 @@ import java.util.Optional;
 public class OrderTile {
     private final ArrayList<OrderCell> orderQueue;
 
-    public OrderTile() {
-        this.orderQueue = new ArrayList<>();
+    public OrderTile(ArrayList<OrderCell> orderQueue) {
+        this.orderQueue = orderQueue;
     }
 
     public Optional<Player> getPlayerAt(int i){
@@ -18,5 +18,18 @@ public class OrderTile {
 
     public void randomPlacement(){
         //
+    }
+
+    public int placePlayerAtNext(Player p){
+        int i = 0;
+        while(i < orderQueue.size() && orderQueue.get(i).getPlayer().isPresent()){
+            i++;
+        }
+        orderQueue.get(i).setPlayer(Optional.of(p));
+        return i;
+    }
+
+    public OrderCell getCellAt(int i){
+        return orderQueue.get(i);
     }
 }

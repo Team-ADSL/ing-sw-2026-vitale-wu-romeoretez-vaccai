@@ -15,7 +15,18 @@ public class OrderCell {
         this.isMalus = isMalus;
     }
 
+    public void setPlayer(Optional<Player> player) {
+        this.player = player;
+    }
+
     public Optional<Player> getPlayer() {
         return player;
+    }
+    public int getBonus() {
+        return bonus;
+    }
+
+    public boolean isMalus() {
+        return isMalus;
     }
 }
