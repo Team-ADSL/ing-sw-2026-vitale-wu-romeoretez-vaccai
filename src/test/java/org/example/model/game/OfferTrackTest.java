@@ -1,5 +1,5 @@
 package org.example.model.game;
-import org.example.controller.state.utils.Row;
+import org.example.controller.utils.Row;
 import org.example.model.game.boardComponent.OfferTile;
 import org.example.model.game.boardComponent.OfferTrack;
 import org.junit.jupiter.api.BeforeEach;

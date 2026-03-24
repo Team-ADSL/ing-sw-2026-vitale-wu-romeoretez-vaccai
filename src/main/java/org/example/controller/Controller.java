@@ -1,7 +1,7 @@
 package org.example.controller;
 
 import org.example.controller.state.State;
-import org.example.controller.state.utils.Move;
+import org.example.controller.utils.Move;
 import org.example.model.game.Player;
 
 import java.util.Set;

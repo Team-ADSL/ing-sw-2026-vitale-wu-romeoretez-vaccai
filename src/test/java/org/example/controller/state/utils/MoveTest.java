@@ -1,5 +1,7 @@
 package org.example.controller.state.utils;
 
+import org.example.controller.utils.Move;
+import org.example.controller.utils.Row;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

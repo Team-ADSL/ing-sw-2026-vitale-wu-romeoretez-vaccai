@@ -1,7 +1,6 @@
 package org.example.model.game.boardComponent;
 
-import org.example.controller.state.utils.Row;
-import org.example.model.card.Card;
+import org.example.controller.utils.Row;
 import org.example.model.game.Player;
 
 import java.util.Map;

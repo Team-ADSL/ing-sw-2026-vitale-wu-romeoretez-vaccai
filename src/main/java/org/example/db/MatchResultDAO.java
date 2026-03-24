@@ -1,4 +1,4 @@
-package org.example.database;
+package org.example.db;
 import org.example.model.MatchResult;
 
 import java.sql.*;

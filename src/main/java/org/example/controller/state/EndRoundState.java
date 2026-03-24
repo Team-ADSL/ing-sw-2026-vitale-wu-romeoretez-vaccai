@@ -1,15 +1,13 @@
 package org.example.controller.state;
 
-import org.example.controller.state.utils.Move;
+import org.example.controller.utils.Move;
 import org.example.exception.InvalidMoveException;
 import org.example.model.card.Card;
-import org.example.model.card.building.Building;
 import org.example.model.game.Game;
 import org.example.model.game.Player;
 import org.example.model.game.boardComponent.CardRow;
 import org.example.model.game.boardComponent.Deck;
 
-import java.util.Arrays;
 import java.util.Set;
 
 public class EndRoundState extends State {

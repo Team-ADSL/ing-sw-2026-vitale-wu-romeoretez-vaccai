@@ -1,10 +1,9 @@
 package org.example.controller.state;
 
-import org.example.controller.state.utils.Move;
+import org.example.controller.utils.Move;
 import org.example.exception.InvalidMoveException;
 import org.example.model.card.Card;
 import org.example.model.card.Trigger;
-import org.example.model.card.building.EndGame;
 import org.example.model.game.Game;
 import org.example.model.game.Player;
 
