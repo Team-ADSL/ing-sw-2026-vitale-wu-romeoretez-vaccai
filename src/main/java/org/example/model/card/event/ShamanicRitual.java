@@ -46,9 +46,9 @@ public class ShamanicRitual extends Event {
                 if (stars == maxStars) {
                     boolean aloneAtTop = playersAtMax == 1;
                     int multiplier = aloneAtTop ? bonus.getShamanMulitiplierPP() : 1;
-                    if (aloneAtTop && bonus.isDoubleRitualPP()) {
+                    //if (aloneAtTop && bonus.isDoubleRitualPP()) {
                         p.changePP(gainedPP * multiplier);
-                    }
+                    //}
                 } else if (stars == minStars) {
                     if (!bonus.isNoRitualLostPP()) {
                         p.changePP(-lostPP);

@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toSet;
 
 public class Board {
     private CardRow lowRow;
@@ -105,10 +108,14 @@ public class Board {
         ArrayList<Building> buildingDeckEra1 = new ArrayList<>(era1.subList(0, eraCounts[0]));
         Set<Building> buildingDeckEra2 = new HashSet<>(era2.subList(0, eraCounts[1]));
         Set<Building> buildingDeckEra3 = new HashSet<>(era3.subList(0, eraCounts[2]));
+        Set<Card> buildingCardsEra2 = buildingDeckEra2.stream()
+                .map(b -> (Card)b).collect(Collectors.toSet());
+        Set<Card> buildingCardsEra3 = buildingDeckEra3.stream()
+                .map(b -> (Card)b).collect(Collectors.toSet());
 
         // Keep era 2 (index 0) and era 3 (index 1) aside for later (rulebook step 6b)
-        remainingBuildings.add(buildingDeckEra2); // index 0 = era 2
-        remainingBuildings.add(buildingDeckEra3); // index 1 = era 3
+        remainingBuildings.add(buildingCardsEra2); // index 0 = era 2
+        remainingBuildings.add(buildingCardsEra3); // index 1 = era 3
 
         // Place era 1 buildings face up at the end of the top row (rulebook step 6a)
         for (Building b : buildingDeckEra1) {
