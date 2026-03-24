@@ -16,10 +16,15 @@ public abstract class State {
         this.game = game;
     }
 
-    public State transition(Set<Move> moves, Player p) throws InvalidMoveException {
-        checkMove(moves, p);
-        execute(moves, p);
-        return nextState();
+    public State transition(Set<Move> moves, Player p) {
+        try {
+            checkMove(moves, p);
+            execute(moves, p);
+            return nextState();
+        } catch (InvalidMoveException e) {
+            getGame().updateAll(e.getMessage());
+            return null;
+        }
     }
 
     public State onEntry(){

@@ -18,6 +18,7 @@ public class Player {
     private BuildingBonus buildingBonus;
     private Card lastPick; // For SinceBuild building (see activeEffect)
 
+
     public Player(String name, int food, int pp, Color color) {
         this.name = name;
         this.food = food;
@@ -51,10 +52,6 @@ public class Player {
 
     public void changeFood(int food){
         this.food += food;
-    }
-
-    public void calculateFinalPP(){
-        //
     }
 
     public Map<CardType, Set<Card>> getCards() {
