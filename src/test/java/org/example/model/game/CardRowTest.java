@@ -21,33 +21,6 @@ public class CardRowTest {
         card3 = new FakeCard();
     }
 
-    // --- size() tests ---
-
-    @Test
-    void testSizeEmptyRow() {
-        // empty row should have size 0
-        assertEquals(0, row.size());
-    }
-
-    @Test
-    void testSizeAfterAdd() {
-        // size should increase as cards are added
-        row.add(card1);
-        assertEquals(1, row.size());
-
-        row.add(card2);
-        assertEquals(2, row.size());
-    }
-
-    @Test
-    void testSizeFullRow() {
-        // size should equal capacity when full
-        row.add(card1);
-        row.add(card2);
-        row.add(card3);
-        assertEquals(3, row.size());
-    }
-
     // --- add() tests ---
 
     @Test
@@ -83,14 +56,6 @@ public class CardRowTest {
         // should return the card at the given index
         row.add(card1);
         assertEquals(card1, row.pickCardAt(0));
-    }
-
-    @Test
-    void testPickCardAtRemovesCard() {
-        // after picking, slot should be null and size should decrease
-        row.add(card1);
-        row.pickCardAt(0);
-        assertEquals(0, row.size());
     }
 
     @Test

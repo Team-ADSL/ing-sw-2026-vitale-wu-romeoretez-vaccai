@@ -39,4 +39,8 @@ public abstract class Building extends Card {
     public int getCost() {
         return cost;
     }
+
+    public int getEndGamePP() {
+        return endGamePP;
+    }
 }

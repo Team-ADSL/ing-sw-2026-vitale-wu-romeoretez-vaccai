@@ -23,29 +23,35 @@ public class EndRoundState extends State {
         CardRow lowRow = getGame().getBoard().getLowRow();
         CardRow topRow = getGame().getBoard().getTopRow();
 
-        getGame().getBoard().getLowRow().clear();
+        // Move cards from top to low row
+        lowRow.clearTribeCards();
+        Card[] cardsToMove= topRow.getTribeCards();
+        topRow.clearTribeCards();
+        lowRow.addTribeCards(cardsToMove);
 
-        Card[] cardsTopRow = topRow.getCards();
-        Card[] cardsToMove = Arrays.copyOf(cardsTopRow, topRow.getNonBuildingCard());
-        lowRow.addCards(cardsToMove);
-
+        // Re-fill top row
         Deck deck = getGame().getBoard().getDeck();
-        for(int i=0; i < topRow.getNonBuildingCard(); i++){
+        for(int i=0; i < topRow.getNumTribeCard(); i++){
             Card newCard = deck.drawCard();
             topRow.add(newCard);
         }
 
+        // Handle new era
         if(deck.isNewEra(getGame().getEra())){
             getGame().changeEra();
-            if(getGame().getEra() != 3){
-                Set<Card> buildingToMove = topRow.extractBuilding();
-                lowRow.addCardsFrom(buildingToMove, lowRow.getNonBuildingCard());
 
-                Set<Card> newBuildings = getGame().getBoard().getRemainingBuildings().removeFirst();
-                topRow.addCardsFrom(newBuildings, topRow.getNonBuildingCard());
-            } else {
-                
+            if(getGame().getEra() == 3){
+                lowRow.clearBuildings();
             }
+
+            // Move top buildings
+            Set<Card> buildingToMove = topRow.getBuildings();
+            lowRow.addBuildings(buildingToMove);
+            topRow.clearBuildings();
+            lowRow.addBuildings(buildingToMove);
+
+            Set<Card> newBuildings = getGame().getBoard().getRemainingBuildings().removeFirst();
+            topRow.addBuildings(newBuildings);
         }
         return nextState();
     }

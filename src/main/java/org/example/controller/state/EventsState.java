@@ -19,7 +19,7 @@ public class EventsState extends State {
     @Override
     public State onEntry(){
         Set<Player> players = getGame().getPlayers();
-        Card[] cards = getGame().getBoard().getLowRow().getCards();
+        Card[] cards = getGame().getBoard().getLowRow().getTribeCards();
         for(Card c : cards){
             if(c != null){
                 c.activeEffect(players, Trigger.EVENT_EXECUTION);

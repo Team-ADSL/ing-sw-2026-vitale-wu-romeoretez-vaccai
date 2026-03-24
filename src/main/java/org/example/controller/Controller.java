@@ -30,7 +30,6 @@ public class Controller {
         try {
             State newState = state.transition(moves, p);
             updateViews();
-            blockAllView();
             changeState(newState);
         } catch (InvalidMoveException e) {
             views.get(p).showErrorMessage(e.getMessage());
@@ -49,9 +48,6 @@ public class Controller {
     }
 
     private void notifyActionsForPlayers(){
-
-    }
-    private void blockAllView(){
 
     }
     private void updateViews(){

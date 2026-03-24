@@ -4,7 +4,6 @@ import org.example.model.card.Card;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.Set;
 
 public class Deck {

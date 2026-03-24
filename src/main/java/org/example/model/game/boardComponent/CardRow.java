@@ -5,18 +5,21 @@ import java.util.Set;
 
 public class CardRow {
     private final Card[] cards;
-    private int nonBuildingCard;
+    private final int numTribeCards;
 
-    public CardRow(Card[] cards, int nonBuildingCard) {
+    public CardRow(Card[] cards, int numTribeCards) {
         this.cards = cards;
-        this.nonBuildingCard = nonBuildingCard;
+        this.numTribeCards = numTribeCards;
     }
 
-    public CardRow(int numCard, int nonBuildingCard) {
+    public CardRow(int numCard, int numTribeCards) {
         this.cards = new Card[numCard];
-        this.nonBuildingCard = nonBuildingCard;
+        this.numTribeCards = numTribeCards;
     }
 
+    public int size(){
+        return cards.length;
+    }
 
     public Card pickCardAt(int index){
         Card toReturn = cards[index];
@@ -24,17 +27,7 @@ public class CardRow {
         return toReturn;
     }
 
-    public int size() {
-        // Count non-null slots in the array
-        int count = 0;
-        for (Card c : cards) {
-            if (c != null) count++;
-        }
-        return count;
-    }
-
     public void add(Card card) {
-        // Find the first empty slot and insert the card
         for (int i = 0; i < cards.length; i++) {
             if (cards[i] == null) {
                 cards[i] = card;
@@ -43,40 +36,49 @@ public class CardRow {
         }
     }
 
-    public void addCards(Card[] newCards) {
-        if (nonBuildingCard >= 0) System.arraycopy(newCards, 0, cards, 0, nonBuildingCard);
+    public Card[] getTribeCards() {
+        Card[] cardToReturn = new Card[numTribeCards];
+        System.arraycopy(cards, 0, cardToReturn, 0, numTribeCards);
+        return cardToReturn;
     }
 
-    public void addCardsFrom(Set<Card> newCards, int index) {
-        for(Card c : newCards){
-
-        }
+    public void addTribeCards(Card[] newCards) {
+        System.arraycopy(newCards, 0, cards, 0, numTribeCards);
     }
 
-    public void clear(){
-        for (int i = 0; i < nonBuildingCard; i++) {
+    public void clearTribeCards(){
+        for (int i = 0; i < numTribeCards; i++) {
             cards[i] = null;
         }
     }
 
-    public Set<Card> extractBuilding(){
+    public Set<Card> getBuildings(){
         Set<Card> buildings = new HashSet<>();
-        for (int i = nonBuildingCard; i < cards.length; i++) {
+        for (int i = numTribeCards; i < cards.length; i++) {
             if(cards[i] != null){
                 buildings.add(cards[i]);
-                cards[i] = null;
             }
         }
         return buildings;
     }
 
-    public Card[] getCards() {
-        Card[] cardToReturn = new Card[cards.length];
-        System.arraycopy(cards, 0, cardToReturn, 0, cards.length);
-        return cardToReturn;
+    public void addBuildings(Set<Card> newCards) {
+        int i = numTribeCards;
+        for(Card c : newCards){
+            while(cards[i] != null){
+                i++;
+            }
+            cards[i] = c;
+        }
     }
 
-    public int getNonBuildingCard() {
-        return nonBuildingCard;
+    public void clearBuildings(){
+        for (int i = numTribeCards; i < cards.length; i++) {
+            cards[i] = null;
+        }
+    }
+
+    public int getNumTribeCard() {
+        return numTribeCards;
     }
 }

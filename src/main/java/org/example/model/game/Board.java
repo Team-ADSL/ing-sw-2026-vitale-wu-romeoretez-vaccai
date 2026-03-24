@@ -1,24 +1,18 @@
 package org.example.model.game;
 
-import org.example.model.card.building.Building;
 import org.example.model.card.Card;
 import org.example.model.game.boardComponent.*;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
-
-import static java.util.stream.Collectors.toSet;
 
 public class Board {
-    private CardRow lowRow;
-    private CardRow topRow;
-    private OfferTrack offerTrack;
-    private OrderTile orderQueue;
-    private ArrayList<Set<Card>> remainingBuildings;
-    private Deck deck;
+    private final CardRow lowRow;
+    private final CardRow topRow;
+    private final OfferTrack offerTrack;
+    private final OrderTile orderQueue;
+    private final ArrayList<Set<Card>> remainingBuildings;
+    private final Deck deck;
 
     public Board (CardRow lowRow, CardRow topRow, OfferTrack offerTrack,
                   OrderTile orderQueue, ArrayList<Set<Card>> remainingBuildings, ArrayList<Set<Card>> cards) {
@@ -31,103 +25,14 @@ public class Board {
     }
 
     // Initialiser
-    public Board (int numPlayer, OfferTrack offerTrack,
+    public Board (int numLowCard, int numTopCard, OfferTrack offerTrack,
                   OrderTile orderQueue, ArrayList<Set<Card>> cards, int nonBuildingCards) {
-        this.lowRow = new CardRow(calcNumLowCard(numPlayer), nonBuildingCards);
-        this.topRow = new CardRow(calcNumTopCard(numPlayer), nonBuildingCards);
+        this.lowRow = new CardRow(numLowCard, nonBuildingCards);
+        this.topRow = new CardRow(numTopCard, nonBuildingCards);
         this.offerTrack = offerTrack;
         this.orderQueue = orderQueue;
         this.remainingBuildings = new ArrayList<Set<Card>>();
         this.deck = Deck.createDeck(cards);
-    }
-
-    // init only
-    public void fillLowRow(int numPlayers){
-        int targetSize = numPlayers + 1;
-        int cardsDrawn = 0;
-
-        while (cardsDrawn < targetSize) {
-            if (deck.isEmpty()) {
-                break;
-            }
-
-            // draw from the top of the deck and save in 'drawn'
-            Card drawn = deck.drawCard();
-
-            if (!drawn.canBeDrawn(null)) {
-                // if event (canBeDrawn = false), send it to the top row
-                topRow.add(drawn);
-            } else {
-                lowRow.add(drawn);
-                cardsDrawn++;
-            }
-        }
-    }
-
-    // init only
-    public void fillTopRow(int numPlayers){
-        int targetSize = numPlayers + 4;
-        // cards
-        int cardsToDraw = targetSize - topRow.size();
-
-        for (int i = 0; i < cardsToDraw; i++) {
-            // Stop drawing if the deck is empty
-            if (deck.isEmpty()) {
-                break;
-            }
-            // Draw from the top of the deck and add to the upper row
-            topRow.add(deck.drawCard());
-        }
-    }
-
-    public void makeBuildingDecks(Set<Building> buildings, int numPlayers){
-        // Cards per era based on player count (rulebook step 6)
-        int[] eraCounts = {0, 0, 0}; // index 0 = era1, 1 = era2, 2 = era3
-        if (numPlayers == 2) { eraCounts = new int[]{1, 2, 3}; }
-        else if (numPlayers == 3) { eraCounts = new int[]{2, 2, 4}; }
-        else if (numPlayers == 4) { eraCounts = new int[]{2, 3, 4}; }
-        else if (numPlayers == 5) { eraCounts = new int[]{2, 3, 5}; }
-
-        // Separate buildings by era
-        ArrayList<Building> era1 = new ArrayList<>();
-        ArrayList<Building> era2 = new ArrayList<>();
-        ArrayList<Building> era3 = new ArrayList<>();
-
-        for (Building b : buildings) {
-            if (b.getEra() == 1) era1.add(b);
-            else if (b.getEra() == 2) era2.add(b);
-            else if (b.getEra() == 3) era3.add(b);
-        }
-
-        // Shuffle each era independently
-        Collections.shuffle(era1);
-        Collections.shuffle(era2);
-        Collections.shuffle(era3);
-
-        // Pick only the required number of cards per era (rulebook step 6)
-        ArrayList<Building> buildingDeckEra1 = new ArrayList<>(era1.subList(0, eraCounts[0]));
-        Set<Building> buildingDeckEra2 = new HashSet<>(era2.subList(0, eraCounts[1]));
-        Set<Building> buildingDeckEra3 = new HashSet<>(era3.subList(0, eraCounts[2]));
-        Set<Card> buildingCardsEra2 = buildingDeckEra2.stream()
-                .map(b -> (Card)b).collect(Collectors.toSet());
-        Set<Card> buildingCardsEra3 = buildingDeckEra3.stream()
-                .map(b -> (Card)b).collect(Collectors.toSet());
-
-        // Keep era 2 (index 0) and era 3 (index 1) aside for later (rulebook step 6b)
-        remainingBuildings.add(buildingCardsEra2); // index 0 = era 2
-        remainingBuildings.add(buildingCardsEra3); // index 1 = era 3
-
-        // Place era 1 buildings face up at the end of the top row (rulebook step 6a)
-        for (Building b : buildingDeckEra1) {
-            topRow.add(b);
-        }
-    }
-
-    public int calcNumTopCard(int numPlayer){
-        return numPlayer + 4;
-    }
-    public int calcNumLowCard(int numPlayer){
-        return numPlayer + 1;
     }
 
     public OfferTrack getOfferTrack() {
