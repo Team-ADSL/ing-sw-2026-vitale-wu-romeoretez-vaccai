@@ -64,7 +64,7 @@ public class EndRoundState extends State {
 
     @Override
     public State nextState() {
-        return new TotemPlacementState(getGame(), 0);
+        return new TotemPlacementState(getGame());
     }
 
 

@@ -32,4 +32,8 @@ public class OrderTile {
     public OrderCell getCellAt(int i){
         return orderQueue.get(i);
     }
+
+    public int size(){
+        return orderQueue.size();
+    }
 }

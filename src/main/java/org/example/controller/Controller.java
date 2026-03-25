@@ -17,6 +17,7 @@ public class Controller {
 
     public synchronized void handleMoveRequest(Set<Move> moves, Player p){
         State newState = state.transition(moves, p);
+        state.getGame().updateAll(null);
         changeState(newState);
     }
 
@@ -26,6 +27,7 @@ public class Controller {
         while (nextState != state) {
             state = nextState;
             nextState = state.onEntry();
+            state.getGame().updateAll(null);
         }
     }
 }

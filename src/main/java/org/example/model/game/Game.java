@@ -10,13 +10,15 @@ public class Game {
     private int round;
     private int era;
     private Set<Player> players;
+    private Player currentPlayer; // Usefull for extraMove actions
     private Board board;
     private final List<ModelObserver> observers = new ArrayList<>();
 
-    public Game (int round, int era, Set<Player> players, Board board) {
+    public Game (int round, int era, Set<Player> players, Player currentPlayer, Board board) {
         this.round = round;
         this.era = era;
         this.players = players;
+        this.currentPlayer = currentPlayer;
         this.board = board;
     }
 
@@ -43,6 +45,10 @@ public class Game {
 
     public Set<Player> getPlayers() {
         return players;
+    }
+
+    public Player getCurrentPlayer() {
+        return currentPlayer;
     }
 
     public int getEra() {

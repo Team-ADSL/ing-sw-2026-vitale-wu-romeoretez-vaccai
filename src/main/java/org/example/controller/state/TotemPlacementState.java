@@ -11,11 +11,8 @@ import java.util.Set;
 
 public class TotemPlacementState extends State {
 
-    private int orderIndex;
-
-    public TotemPlacementState(Game game, int orderIndex) {
+    public TotemPlacementState(Game game) {
         super(game);
-        this.orderIndex = orderIndex;
     }
 
 
@@ -26,6 +23,10 @@ public class TotemPlacementState extends State {
         }
 
         OrderTile orderTile = getGame().getBoard().getOrderTile();
+        int orderIndex = 0;
+        while(orderTile.getPlayerAt(orderIndex).isEmpty() && orderIndex < orderTile.size()){
+            orderIndex++;
+        }
         Optional<Player> playerContainer = orderTile.getPlayerAt(orderIndex);
         assert playerContainer.isPresent(); // NOTE: the current state always point to the next player
                                             // that needs to play.
@@ -50,12 +51,16 @@ public class TotemPlacementState extends State {
 
     @Override
     public State nextState() {
-        OfferTrack offerTrack = getGame().getBoard().getOfferTrack();
-        if(getOrderIndex() != getGame().getPlayers().size() - 1){
-            setOrderIndex(getOrderIndex() + 1);
+        OrderTile orderTile = getGame().getBoard().getOrderTile();
+        int orderIndex = 0;
+        while(orderTile.getPlayerAt(orderIndex).isEmpty() && orderIndex < orderTile.size()){
+            orderIndex++;
+        }
+        if(orderIndex != getGame().getPlayers().size() - 1){
             return this;
         } else {
             // Create new state with first player
+            OfferTrack offerTrack = getGame().getBoard().getOfferTrack();
             Optional<Player> firstPlayer = Optional.empty();
             int offerIndex = 0;
             int queueSize = offerTrack.size();
@@ -65,15 +70,7 @@ public class TotemPlacementState extends State {
                     offerIndex++;
                 }
             }
-            int remainingMoves = offerTrack.getTileAt(offerIndex).getNumMoves();
-            return new ActionExecutionState(getGame(), offerIndex, remainingMoves);
+            return new ActionExecutionState(getGame());
         }
-    }
-
-    public int getOrderIndex() {
-        return orderIndex;
-    }
-    public void setOrderIndex(int orderIndex) {
-        this.orderIndex = orderIndex;
     }
 }
