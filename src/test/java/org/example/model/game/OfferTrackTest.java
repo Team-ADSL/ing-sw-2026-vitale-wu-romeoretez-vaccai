@@ -1,7 +1,9 @@
 package org.example.model.game;
-import org.example.controller.utils.Row;
-import org.example.model.game.boardComponent.OfferTile;
-import org.example.model.game.boardComponent.OfferTrack;
+import org.example.shared.enums.Row;
+import org.example.model.Player;
+import org.example.model.board.OfferTile;
+import org.example.model.board.OfferTrack;
+import org.example.shared.enums.Color;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.util.ArrayList;

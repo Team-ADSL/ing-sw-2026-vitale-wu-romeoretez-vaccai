@@ -1,7 +1,8 @@
 package org.example.model.game;
-import org.example.model.card.Card;
-import org.example.model.card.CardType;
-import org.example.model.card.Trigger;
+import org.example.model.Player;
+import org.example.model.cards.Card;
+import org.example.shared.enums.CardType;
+import org.example.shared.enums.Trigger;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;

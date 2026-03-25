@@ -1,7 +1,7 @@
 //package org.example.model.game;
 //import org.example.model.card.Card;
-//import org.example.model.card.CardType;
-//import org.example.model.card.Trigger;
+//import org.example.model.card.util.CardType;
+//import org.example.model.card.util.Trigger;
 //import org.example.model.card.building.Building;
 //import org.example.model.game.boardComponent.*;
 //import org.junit.jupiter.api.Test;
