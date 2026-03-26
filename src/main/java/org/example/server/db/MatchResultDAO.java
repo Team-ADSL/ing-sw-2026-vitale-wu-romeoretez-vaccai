@@ -11,7 +11,7 @@ public class MatchResultDAO {
     /**
      * Saves a completed match. For each player:
      * - creates a new entry if the nickname is new
-     * - updates best_score, matches_played and last_played if it already exists
+     * - inserts the result (match_id, player_id, score)
      */
     public static void saveMatch(int playerCount,
                                  List<String> nicknames,
@@ -20,20 +20,14 @@ public class MatchResultDAO {
         String sqlMatch =
                 "INSERT INTO matches (player_count) VALUES (?)";
 
-        String sqlUpsertPlayer = """
-            INSERT INTO players (nickname, best_score, matches_played, last_played)
-            VALUES (?, ?, 1, NOW())
-            ON DUPLICATE KEY UPDATE
-                best_score     = GREATEST(best_score, VALUES(best_score)),
-                matches_played = matches_played + 1,
-                last_played    = NOW()
-            """;
+        String sqlUpsertPlayer =
+                "INSERT IGNORE INTO players (nickname) VALUES (?)";
 
         String sqlGetPlayerId =
                 "SELECT id FROM players WHERE nickname = ?";
 
         String sqlResult =
-                "INSERT INTO results (player_id, match_id, score) VALUES (?, ?, ?)";
+                "INSERT INTO results (match_id, player_id, score) VALUES (?, ?, ?)";
 
         try (Connection conn = DatabaseConfig.getConnection()) {
             conn.setAutoCommit(false);
@@ -56,7 +50,6 @@ public class MatchResultDAO {
 
                     try (PreparedStatement ps = conn.prepareStatement(sqlUpsertPlayer)) {
                         ps.setString(1, nickname);
-                        ps.setInt(2, score);
                         ps.executeUpdate();
                     }
 
@@ -69,8 +62,8 @@ public class MatchResultDAO {
                     }
 
                     try (PreparedStatement ps = conn.prepareStatement(sqlResult)) {
-                        ps.setInt(1, playerId);
-                        ps.setInt(2, matchId);
+                        ps.setInt(1, matchId);
+                        ps.setInt(2, playerId);
                         ps.setInt(3, score);
                         ps.executeUpdate();
                     }
@@ -138,29 +131,5 @@ public class MatchResultDAO {
             }
         }
         return leaderboard;
-    }
-
-    /**
-     * Prints global stats for a given nickname.
-     */
-    public static void printPlayerStats(String nickname) throws SQLException {
-        String sql = """
-            SELECT nickname, best_score, matches_played, last_played
-            FROM players
-            WHERE nickname = ?
-            """;
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, nickname);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                System.out.println("Player       : " + rs.getString("nickname"));
-                System.out.println("Best score   : " + rs.getInt("best_score"));
-                System.out.println("Matches played: " + rs.getInt("matches_played"));
-                System.out.println("Last played  : " + rs.getTimestamp("last_played"));
-            } else {
-                System.out.println("Player not found.");
-            }
-        }
     }
 }

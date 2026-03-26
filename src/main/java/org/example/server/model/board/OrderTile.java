@@ -16,10 +16,6 @@ public class OrderTile {
         return orderQueue.get(i).getPlayer();
     }
 
-    public void randomPlacement(){
-        //
-    }
-
     public int placePlayerAtNext(Player p){
         int i = 0;
         while(i < orderQueue.size() && orderQueue.get(i).getPlayer().isPresent()){
