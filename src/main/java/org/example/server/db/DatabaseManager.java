@@ -22,12 +22,9 @@ public class DatabaseManager {
 
             stmt.executeUpdate("""
                 CREATE TABLE IF NOT EXISTS players (
-                    id            INT         NOT NULL AUTO_INCREMENT,
-                    nickname      VARCHAR(50) UNIQUE NOT NULL,
-                    best_score    INT         NOT NULL DEFAULT 0,
-                    matches_played INT        NOT NULL DEFAULT 0,
-                    last_played   DATETIME,
-                    PRIMARY KEY (id), 
+                    id       INT         AUTO_INCREMENT,
+                    nickname VARCHAR(50) NOT NULL,
+                    PRIMARY KEY (id),
                     UNIQUE INDEX idx_nickname (nickname)
                 )
             """);
@@ -44,11 +41,10 @@ public class DatabaseManager {
 
             stmt.executeUpdate("""
                 CREATE TABLE IF NOT EXISTS results (
-                    id          INT NOT NULL AUTO_INCREMENT,
-                    player_id   INT NOT NULL,
                     match_id    INT NOT NULL,
+                    player_id   INT NOT NULL,
                     score       INT NOT NULL,
-                    PRIMARY KEY (id),
+                    PRIMARY KEY (match_id, player_id),
                     FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE,
                     FOREIGN KEY (match_id)  REFERENCES matches(id)  ON DELETE CASCADE,
                     INDEX idx_score (score DESC)
