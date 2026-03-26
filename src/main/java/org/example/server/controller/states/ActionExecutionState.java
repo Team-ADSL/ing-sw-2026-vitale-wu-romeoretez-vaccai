@@ -91,6 +91,8 @@ public class ActionExecutionState extends State {
         while(offerTrack.getTileAt(offerIndex).getPlayer().isEmpty() && offerIndex < offerTrack.size()){
             offerIndex++;
         }
+
+        // NEED TO ADD AUTOMATION TO GIVES FODD IN CASE OF TILE.GIVESFODD = TRUE
         if(offerTrack.getTileAt(offerIndex).getPlayer().isPresent()){
             return this;
         }
