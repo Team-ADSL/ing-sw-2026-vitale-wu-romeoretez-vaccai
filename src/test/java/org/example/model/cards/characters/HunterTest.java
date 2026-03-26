@@ -1,10 +1,11 @@
 package org.example.model.cards.characters;
 
-import org.example.model.cards.Card;
+import org.example.server.model.cards.Card;
+import org.example.server.model.cards.characters.Hunter;
 import org.example.shared.enums.CardType;
 import org.example.shared.enums.Trigger;
 import org.example.shared.enums.Color;
-import org.example.model.Player;
+import org.example.server.model.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

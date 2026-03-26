@@ -1,10 +1,11 @@
 package org.example.model.cards.events;
 
+import org.example.server.model.cards.events.CavePaintings;
 import org.example.shared.enums.CardType;
 import org.example.shared.enums.Trigger;
-import org.example.model.cards.characters.Artist;
+import org.example.server.model.cards.characters.Artist;
 import org.example.shared.enums.Color;
-import org.example.model.Player;
+import org.example.server.model.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

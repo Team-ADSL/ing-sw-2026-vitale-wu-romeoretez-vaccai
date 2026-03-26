@@ -1,5 +1,5 @@
 package org.example.model.game;
-import org.example.model.Player;
+import org.example.server.model.Player;
 import org.example.shared.enums.Color;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

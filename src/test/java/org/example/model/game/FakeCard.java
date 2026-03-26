@@ -1,6 +1,6 @@
 package org.example.model.game;
-import org.example.model.Player;
-import org.example.model.cards.Card;
+import org.example.server.model.Player;
+import org.example.server.model.cards.Card;
 import org.example.shared.enums.CardType;
 import org.example.shared.enums.Trigger;
 import java.util.Map;

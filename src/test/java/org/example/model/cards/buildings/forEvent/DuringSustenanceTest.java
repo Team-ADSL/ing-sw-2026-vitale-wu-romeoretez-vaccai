@@ -1,12 +1,13 @@
 package org.example.model.cards.buildings.forEvent;
 
+import org.example.server.model.cards.buildings.forEvent.DuringSustenance;
 import org.example.shared.enums.CardType;
 import org.example.shared.enums.Trigger;
-import org.example.model.cards.characters.Hunter;
-import org.example.model.cards.characters.Inventor;
+import org.example.server.model.cards.characters.Hunter;
+import org.example.server.model.cards.characters.Inventor;
 import org.example.shared.enums.Icon;
 import org.example.shared.enums.Color;
-import org.example.model.Player;
+import org.example.server.model.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

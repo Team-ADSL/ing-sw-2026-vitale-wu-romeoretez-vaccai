@@ -1,6 +1,6 @@
 package org.example.model.game;
-import org.example.model.cards.Card;
-import org.example.model.board.Deck;
+import org.example.server.model.cards.Card;
+import org.example.server.model.board.Deck;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.util.*;

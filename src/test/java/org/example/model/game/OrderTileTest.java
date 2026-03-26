@@ -1,7 +1,7 @@
 package org.example.model.game;
-import org.example.model.Player;
-import org.example.model.board.OrderCell;
-import org.example.model.board.OrderTile;
+import org.example.server.model.Player;
+import org.example.server.model.board.OrderCell;
+import org.example.server.model.board.OrderTile;
 import org.example.shared.enums.Color;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

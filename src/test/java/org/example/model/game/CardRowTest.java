@@ -1,5 +1,5 @@
 package org.example.model.game;
-import org.example.model.board.CardRow;
+import org.example.server.model.board.CardRow;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
