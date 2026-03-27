@@ -15,8 +15,8 @@ public class GameController {
         this.state = state;
     }
 
-    public synchronized void handleMoveRequest(Set<Move> moves, Player p){
-        State newState = state.transition(moves, p);
+    public synchronized void handleRequest(Set<Move> moves, String username){
+        State newState = state.transition(moves, username);
         state.getGame().updateAll(null);
         changeState(newState);
     }
@@ -29,5 +29,9 @@ public class GameController {
             nextState = state.onEntry();
             state.getGame().updateAll(null);
         }
+    }
+
+    public State getState() {
+        return state;
     }
 }

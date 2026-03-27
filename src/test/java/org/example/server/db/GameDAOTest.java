@@ -15,12 +15,12 @@ import static org.junit.jupiter.api.Assertions.*;
  * Run manually or in a CI environment with a database service.
  */
 @Disabled("Requires a live MySQL database — run manually")
-public class MatchResultDAOTest {
+public class GameDAOTest {
 
     @Test
     void saveMatch_doesNotThrow() throws SQLException {
         DatabaseManager.initDatabase();
-        MatchResultDAO.saveMatch(
+        GameDAO.saveMatch(
                 2,
                 List.of("Alice", "Bob"),
                 List.of(30, 20)
@@ -30,16 +30,16 @@ public class MatchResultDAOTest {
     @Test
     void getLeaderboard_returnsResults() throws SQLException {
         DatabaseManager.initDatabase();
-        MatchResultDAO.saveMatch(2, List.of("Alice", "Bob"), List.of(30, 20));
-        List<MatchResult> leaderboard = MatchResultDAO.getLeaderboard(2);
+        GameDAO.saveMatch(2, List.of("Alice", "Bob"), List.of(30, 20));
+        List<MatchResult> leaderboard = GameDAO.getLeaderboard(2);
         assertFalse(leaderboard.isEmpty());
     }
 
     @Test
     void getRank_returnsPositiveRank() throws SQLException {
         DatabaseManager.initDatabase();
-        MatchResultDAO.saveMatch(2, List.of("Alice", "Bob"), List.of(30, 20));
-        int rank = MatchResultDAO.getRank(25, 2);
+        GameDAO.saveMatch(2, List.of("Alice", "Bob"), List.of(30, 20));
+        int rank = GameDAO.getRank(25, 2);
         assertTrue(rank >= 1);
     }
 }

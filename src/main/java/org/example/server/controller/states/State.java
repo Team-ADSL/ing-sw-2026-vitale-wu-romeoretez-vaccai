@@ -16,10 +16,14 @@ public abstract class State {
         this.game = game;
     }
 
-    public State transition(Set<Move> moves, Player p) {
+    public State transition(Set<Move> moves, String username) {
         try {
-            checkMove(moves, p);
-            execute(moves, p);
+            Player player = getGame().getPlayers().stream()
+                    .filter(p -> p.getName().equals(username))
+                    .findFirst()
+                    .orElseThrow(() -> new InvalidMoveException("Player not present"));
+            checkMove(moves, player);
+            execute(moves, player);
             return nextState();
         } catch (InvalidMoveException e) {
             getGame().updateAll(e.getMessage());
