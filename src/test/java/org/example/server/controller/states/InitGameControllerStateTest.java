@@ -9,7 +9,6 @@ import org.example.server.model.board.OrderTile;
 import org.example.server.model.cards.buildings.Building;
 import org.example.shared.enums.Color;
 import org.example.shared.enums.Trigger;
-import org.example.shared.exceptions.InvalidMoveException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +16,7 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class InitGameStateTest {
+public class InitGameControllerStateTest {
 
     private static class StubBuilding extends Building {
         public StubBuilding(int era) {
@@ -27,7 +26,7 @@ public class InitGameStateTest {
         public void activeEffect(Set<Player> players, Trigger t) {}
     }
 
-    private InitGameState state;
+    private InitGameControllerState state;
     private Game game;
 
     @BeforeEach
@@ -41,7 +40,7 @@ public class InitGameStateTest {
         Set<Player> players = new HashSet<>();
         players.add(p);
         game = new Game(1, 1, players, p, board);
-        state = new InitGameState(game);
+        state = new InitGameControllerState(game);
     }
 
     @Test

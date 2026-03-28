@@ -11,21 +11,21 @@ import java.util.function.Function;
 import static org.example.shared.enums.Phase.*;
 
 public class StateFactory {
-    private static final Map<Phase, Function<Game, State>> mapper = new HashMap<>();
+    private static final Map<Phase, Function<Game, ControllerState>> mapper = new HashMap<>();
 
     static{
-        mapper.put(INIT, InitGameState::new);
-        mapper.put(RECOVER, RecoverState::new);
-        mapper.put(TOTEM_PLACEMENT, TotemPlacementState::new);
-        mapper.put(ACTION_EXECUTION, ActionExecutionState::new);
-        mapper.put(EXTRA_MOVE, ExtraMoveState::new);
-        mapper.put(EVENTS_EXECUTION, EventsState::new);
-        mapper.put(END_ROUND, EndRoundState::new);
-        mapper.put(END_GAME, EndGameState::new);
+        mapper.put(INIT, InitGameControllerState::new);
+        mapper.put(RECOVER, RecoverControllerState::new);
+        mapper.put(TOTEM_PLACEMENT, TotemPlacementControllerState::new);
+        mapper.put(ACTION_EXECUTION, ActionExecutionControllerState::new);
+        mapper.put(EXTRA_MOVE, ExtraMoveControllerState::new);
+        mapper.put(EVENTS_EXECUTION, EventsControllerState::new);
+        mapper.put(END_ROUND, EndRoundControllerState::new);
+        mapper.put(END_GAME, EndGameControllerState::new);
     }
 
-    public static State recover(Game game){
-        Function<Game, State> func = mapper.get(game.getPhase());
+    public static ControllerState recover(Game game){
+        Function<Game, ControllerState> func = mapper.get(game.getPhase());
         return func.apply(game);
     }
 }

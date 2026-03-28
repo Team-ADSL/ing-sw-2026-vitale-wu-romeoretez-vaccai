@@ -10,9 +10,9 @@ import org.example.server.model.board.OrderTile;
 import java.util.Optional;
 import java.util.Set;
 
-public class TotemPlacementState extends State {
+public class TotemPlacementControllerState extends ControllerState {
 
-    public TotemPlacementState(Game game) {
+    public TotemPlacementControllerState(Game game) {
         super(game);
     }
 
@@ -51,7 +51,7 @@ public class TotemPlacementState extends State {
     }
 
     @Override
-    public State nextState() {
+    public ControllerState nextState() {
         OrderTile orderTile = getGame().getBoard().getOrderTile();
         int orderIndex = 0;
         while(orderTile.getPlayerAt(orderIndex).isEmpty() && orderIndex < orderTile.size()){
@@ -71,7 +71,7 @@ public class TotemPlacementState extends State {
                     offerIndex++;
                 }
             }
-            return new ActionExecutionState(getGame());
+            return new ActionExecutionControllerState(getGame());
         }
     }
 }

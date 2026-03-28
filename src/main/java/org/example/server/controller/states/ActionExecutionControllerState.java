@@ -18,9 +18,9 @@ import java.util.Optional;
 import java.util.Set;
 
 
-public class ActionExecutionState extends State {
+public class ActionExecutionControllerState extends ControllerState {
 
-    public ActionExecutionState(Game game) {
+    public ActionExecutionControllerState(Game game) {
         super(game);
     }
 
@@ -85,7 +85,7 @@ public class ActionExecutionState extends State {
     }
 
     @Override
-    public State nextState() {
+    public ControllerState nextState() {
         OfferTrack offerTrack = getGame().getBoard().getOfferTrack();
         int offerIndex = 0;
         while(offerTrack.getTileAt(offerIndex).getPlayer().isEmpty() && offerIndex < offerTrack.size()){
@@ -107,9 +107,9 @@ public class ActionExecutionState extends State {
                 .findFirst();
 
         if(playerExtraMove.isEmpty()){
-            return new EventsState(getGame());
+            return new EventsControllerState(getGame());
         } else {
-            return new ExtraMoveState(getGame());
+            return new ExtraMoveControllerState(getGame());
         }
     }
 }

@@ -15,9 +15,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class InitGameState extends State {
+public class InitGameControllerState extends ControllerState {
 
-    public InitGameState(Game game) {
+    public InitGameControllerState(Game game) {
         super(game);
     }
 
@@ -131,7 +131,7 @@ public class InitGameState extends State {
     }
 
     @Override
-    public State nextState() {
+    public ControllerState nextState() {
         return null;
     }
 

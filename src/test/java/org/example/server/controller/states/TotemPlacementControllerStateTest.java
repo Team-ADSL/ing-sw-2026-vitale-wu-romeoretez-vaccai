@@ -14,10 +14,10 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TotemPlacementStateTest {
+public class TotemPlacementControllerStateTest {
 
     private Player player;
-    private TotemPlacementState state;
+    private TotemPlacementControllerState state;
 
     @BeforeEach
     void setUp() {
@@ -36,7 +36,7 @@ public class TotemPlacementStateTest {
         Set<Player> players = new HashSet<>();
         players.add(player);
         Game game = new Game(1, 1, players, player, board);
-        state = new TotemPlacementState(game);
+        state = new TotemPlacementControllerState(game);
     }
 
     @Test

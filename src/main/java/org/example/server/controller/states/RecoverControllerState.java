@@ -7,8 +7,8 @@ import org.example.server.model.Player;
 
 import java.util.Set;
 
-public class RecoverState extends State {
-    public RecoverState(Game game) {
+public class RecoverControllerState extends ControllerState {
+    public RecoverControllerState(Game game) {
         super(game);
     }
 
@@ -23,7 +23,7 @@ public class RecoverState extends State {
     }
 
     @Override
-    public State nextState() {
+    public ControllerState nextState() {
         return null;
     }
 }

@@ -9,14 +9,14 @@ import org.example.server.model.Player;
 
 import java.util.Set;
 
-public class EventsState extends State {
+public class EventsControllerState extends ControllerState {
 
-    public EventsState(Game game) {
+    public EventsControllerState(Game game) {
         super(game);
     }
 
     @Override
-    public State onEntry(){
+    public ControllerState onEntry(){
         Set<Player> players = getGame().getPlayers();
         Card[] cards = getGame().getBoard().getLowRow().getTribeCards();
         for(Card c : cards){
@@ -36,8 +36,8 @@ public class EventsState extends State {
     public void execute(Set<Move> moves, Player p) {}
 
     @Override
-    public State nextState() {
-        return getGame().getRound() == 10 ? new EndRoundState(getGame()) : new EndGameState(getGame());
+    public ControllerState nextState() {
+        return getGame().getRound() == 10 ? new EndRoundControllerState(getGame()) : new EndGameControllerState(getGame());
     }
 
 }

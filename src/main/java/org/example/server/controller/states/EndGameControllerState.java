@@ -12,13 +12,13 @@ import org.example.server.model.Player;
 
 import java.util.Set;
 
-public class EndGameState extends State {
-    public EndGameState(Game game) {
+public class EndGameControllerState extends ControllerState {
+    public EndGameControllerState(Game game) {
         super(game);
     }
 
     @Override
-    public State onEntry(){
+    public ControllerState onEntry(){
         Set<Player> players = getGame().getPlayers();
         for(Player p : players){
             p.getCards().get(CardType.BUILDINGS)
@@ -59,7 +59,7 @@ public class EndGameState extends State {
     public void execute(Set<Move> moves, Player p) {}
 
     @Override
-    public State nextState() {
+    public ControllerState nextState() {
         return null;
     }
 }

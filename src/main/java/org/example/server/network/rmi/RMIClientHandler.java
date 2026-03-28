@@ -1,18 +1,20 @@
 package org.example.server.network.rmi;
 
+import org.example.server.controller.ServerController;
 import org.example.server.network.VirtualClient;
-import org.example.shared.model.GameDTO;
+import org.example.shared.model.DatasourceDTO;
 import org.example.shared.network.RemoteClientStub;
 
-public class RMIClientHandler implements VirtualClient {
+public class RMIClientHandler extends VirtualClient {
     private final RemoteClientStub clientStub;
 
-    public RMIClientHandler(RemoteClientStub clientStub) {
+    public RMIClientHandler(ServerController serverController, RemoteClientStub clientStub) {
         this.clientStub = clientStub;
+        super(serverController);
     }
 
     @Override
-    public void update(GameDTO game, String error) {
+    public void update(DatasourceDTO datasource) {
 
     }
 }

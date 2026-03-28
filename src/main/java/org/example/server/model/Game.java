@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-public class Game {
+public class Game implements Datasource {
     private int round;
     private int era;
     private Set<Player> players;
@@ -27,15 +27,19 @@ public class Game {
     }
 
 
+    @Override
     public void addObserver(ModelObserver o) {
         observers.add(o);
     }
-    public void removeListener(ModelObserver o) {
+    @Override
+    public void removeObserver(ModelObserver o) {
         observers.remove(o);
     }
+    @Override
     public void updateAll(String error){
-        for(ModelObserver o : observers) o.update(createDTO(), error);
+        for(ModelObserver o : observers) o.update(createDTO());
     }
+
     public GameDTO createDTO() {
         return null;
     }

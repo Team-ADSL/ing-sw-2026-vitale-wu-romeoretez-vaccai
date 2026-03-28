@@ -16,9 +16,9 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class EndRoundStateTest {
+public class EndRoundControllerStateTest {
 
-    private EndRoundState state;
+    private EndRoundControllerState state;
 
     @BeforeEach
     void setUp() {
@@ -37,7 +37,7 @@ public class EndRoundStateTest {
         Set<Player> players = new HashSet<>();
         players.add(p);
         Game game = new Game(1, 1, players, p, board);
-        state = new EndRoundState(game);
+        state = new EndRoundControllerState(game);
     }
 
     @Test
@@ -48,7 +48,7 @@ public class EndRoundStateTest {
 
     @Test
     void nextState_returnsTotemPlacementState() {
-        assertInstanceOf(TotemPlacementState.class, state.nextState());
+        assertInstanceOf(TotemPlacementControllerState.class, state.nextState());
     }
 
     @Test

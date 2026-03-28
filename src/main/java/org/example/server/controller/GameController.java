@@ -1,29 +1,35 @@
 package org.example.server.controller;
 
-import org.example.server.controller.states.State;
-import org.example.shared.utils.Move;
-import org.example.server.model.Player;
+import org.example.server.controller.states.ControllerState;
+import org.example.server.network.VirtualClient;
+import org.example.shared.exceptions.InvalidMoveException;
+import org.example.shared.network.requests.ClientRequest;
 
-import java.util.Set;
 
 public class GameController {
     private final int gameId;
-    private State state;
+    private ControllerState state;
 
-    public GameController(int gameId, State state) {
+    public GameController(int gameId, ControllerState state) {
         this.gameId = gameId;
         this.state = state;
     }
 
-    public synchronized void handleRequest(Set<Move> moves, String username){
-        State newState = state.transition(moves, username);
-        state.getGame().updateAll(null);
-        changeState(newState);
+    public synchronized void handleClientRequest(ClientRequest req, VirtualClient virtualClient){
+        try {
+            req.accept(state, virtualClient);
+            state.getGame().updateAll(null);
+            ControllerState newState = state.nextState();
+            changeState(newState);
+        } catch(InvalidMoveException e){
+            System.out.println(e.getMessage());
+            state.getGame().updateAll(e.getMessage());
+        }
     }
 
     // To handle automatics states
-    private void changeState(State newState) {
-        State nextState = newState;
+    private void changeState(ControllerState newControllerState) {
+        ControllerState nextState = newControllerState;
         while (nextState != state) {
             state = nextState;
             nextState = state.onEntry();
@@ -31,7 +37,7 @@ public class GameController {
         }
     }
 
-    public State getState() {
+    public ControllerState getState() {
         return state;
     }
 }

@@ -10,14 +10,14 @@ import org.example.server.model.board.Deck;
 
 import java.util.Set;
 
-public class EndRoundState extends State {
+public class EndRoundControllerState extends ControllerState {
 
-    public EndRoundState(Game game) {
+    public EndRoundControllerState(Game game) {
         super(game);
     }
 
     @Override
-    public State onEntry(){
+    public ControllerState onEntry(){
         CardRow lowRow = getGame().getBoard().getLowRow();
         CardRow topRow = getGame().getBoard().getTopRow();
 
@@ -63,8 +63,8 @@ public class EndRoundState extends State {
     public void execute(Set<Move> moves, Player p) {}
 
     @Override
-    public State nextState() {
-        return new TotemPlacementState(getGame());
+    public ControllerState nextState() {
+        return new TotemPlacementControllerState(getGame());
     }
 
 

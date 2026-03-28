@@ -16,7 +16,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class EventsStateTest {
+public class EventsControllerStateTest {
 
     private Game buildGame(int round) {
         CardRow lowRow = new CardRow(3, 3);
@@ -32,27 +32,27 @@ public class EventsStateTest {
 
     @Test
     void checkMove_alwaysThrowsInvalidMoveException() {
-        EventsState state = new EventsState(buildGame(1));
+        EventsControllerState state = new EventsControllerState(buildGame(1));
         assertThrows(InvalidMoveException.class,
                 () -> state.checkMove(new HashSet<>(), null));
     }
 
     @Test
     void nextState_round10_returnsEndRoundState() {
-        EventsState state = new EventsState(buildGame(10));
-        assertInstanceOf(EndRoundState.class, state.nextState());
+        EventsControllerState state = new EventsControllerState(buildGame(10));
+        assertInstanceOf(EndRoundControllerState.class, state.nextState());
     }
 
     @Test
     void nextState_roundNot10_returnsEndGameState() {
-        EventsState state = new EventsState(buildGame(5));
-        assertInstanceOf(EndGameState.class, state.nextState());
+        EventsControllerState state = new EventsControllerState(buildGame(5));
+        assertInstanceOf(EndGameControllerState.class, state.nextState());
     }
 
     @Test
     void onEntry_emptyLowRow_doesNotThrow() {
         // Empty low row (all null) — activeEffect is guarded by null check
-        EventsState state = new EventsState(buildGame(5));
+        EventsControllerState state = new EventsControllerState(buildGame(5));
         assertDoesNotThrow(state::onEntry);
     }
 }

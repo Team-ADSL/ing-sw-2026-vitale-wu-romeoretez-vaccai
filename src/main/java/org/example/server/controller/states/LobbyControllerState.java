@@ -7,8 +7,8 @@ import org.example.shared.utils.Move;
 
 import java.util.Set;
 
-public class LobbyState extends State{
-    public LobbyState(Game game) {
+public class LobbyControllerState extends ControllerState {
+    public LobbyControllerState(Game game) {
         super(game);
     }
 
@@ -23,7 +23,7 @@ public class LobbyState extends State{
     }
 
     @Override
-    public State nextState() {
+    public ControllerState nextState() {
         return null;
     }
 }

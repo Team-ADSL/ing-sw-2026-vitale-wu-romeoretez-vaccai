@@ -16,9 +16,9 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class RecoverStateTest {
+public class RecoverControllerStateTest {
 
-    private RecoverState state;
+    private RecoverControllerState state;
     private Player player;
 
     @BeforeEach
@@ -32,7 +32,7 @@ public class RecoverStateTest {
         Set<Player> players = new HashSet<>();
         players.add(player);
         Game game = new Game(1, 1, players, player, board);
-        state = new RecoverState(game);
+        state = new RecoverControllerState(game);
     }
 
     @Test

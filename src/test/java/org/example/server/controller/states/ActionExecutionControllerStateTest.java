@@ -14,10 +14,10 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ActionExecutionStateTest {
+public class ActionExecutionControllerStateTest {
 
     private Player player;
-    private ActionExecutionState state;
+    private ActionExecutionControllerState state;
 
     @BeforeEach
     void setUp() {
@@ -39,7 +39,7 @@ public class ActionExecutionStateTest {
         Set<Player> players = new HashSet<>();
         players.add(player);
         Game game = new Game(1, 1, players, player, board);
-        state = new ActionExecutionState(game);
+        state = new ActionExecutionControllerState(game);
     }
 
     @Test

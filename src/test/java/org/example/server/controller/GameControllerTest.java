@@ -1,6 +1,6 @@
 package org.example.server.controller;
 
-import org.example.server.controller.states.State;
+import org.example.server.controller.states.ControllerState;
 import org.example.server.model.Game;
 import org.example.server.model.Player;
 import org.example.server.model.board.Board;
@@ -22,15 +22,15 @@ import static org.junit.jupiter.api.Assertions.*;
 public class GameControllerTest {
 
     // Spy state: tracks whether transition was called and returns itself
-    private static class SpyState extends State {
+    private static class SpyControllerState extends ControllerState {
         boolean transitionCalled = false;
 
-        public SpyState(Game game) {
+        public SpyControllerState(Game game) {
             super(game);
         }
 
         @Override
-        public State transition(Set<Move> moves, Player p) {
+        public ControllerState transition(Set<Move> moves, Player p) {
             transitionCalled = true;
             return this;
         }
@@ -42,14 +42,14 @@ public class GameControllerTest {
         public void execute(Set<Move> moves, Player p) {}
 
         @Override
-        public State nextState() { return this; }
+        public ControllerState nextState() { return this; }
 
         @Override
-        public State onEntry() { return this; }
+        public ControllerState onEntry() { return this; }
     }
 
     private Player player;
-    private SpyState spyState;
+    private SpyControllerState spyState;
     private GameController controller;
 
     @BeforeEach
@@ -64,7 +64,7 @@ public class GameControllerTest {
         players.add(player);
         Game game = new Game(1, 1, players, player, board);
 
-        spyState = new SpyState(game);
+        spyState = new SpyControllerState(game);
         controller = new GameController(1, spyState);
     }
 

@@ -1,7 +1,7 @@
 package org.example.server.model;
 
-import org.example.shared.model.GameDTO;
+import org.example.shared.model.DatasourceDTO;
 
 public interface ModelObserver {
-    void update(GameDTO game, String error);
+    void update(DatasourceDTO datasource);
 }

@@ -11,8 +11,8 @@ import org.example.server.model.board.OfferTrack;
 
 import java.util.Set;
 
-public class ExtraMoveState extends State {
-    public ExtraMoveState(Game game) {
+public class ExtraMoveControllerState extends ControllerState {
+    public ExtraMoveControllerState(Game game) {
         super(game);
     }
 
@@ -40,7 +40,7 @@ public class ExtraMoveState extends State {
     }
 
     @Override
-    public State nextState() {
-        return new EventsState(getGame());
+    public ControllerState nextState() {
+        return new EventsControllerState(getGame());
     }
 }

@@ -1,11 +1,20 @@
 package org.example.server.network.socket;
 
+import org.example.server.controller.ServerController;
 import org.example.server.network.VirtualClient;
-import org.example.shared.model.GameDTO;
+import org.example.shared.model.DatasourceDTO;
 
-public class SockerClientHandler implements VirtualClient {
+import java.net.Socket;
+
+public class SockerClientHandler extends VirtualClient {
+    private final Socket socket;
+    public SockerClientHandler(ServerController serverController, Socket socket) {
+        this.socket = socket;
+        super(serverController);
+    }
+
     @Override
-    public void update(GameDTO game, String error) {
+    public void update(DatasourceDTO datasource) {
 
     }
 }
