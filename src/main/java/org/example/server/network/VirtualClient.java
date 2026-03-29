@@ -21,8 +21,11 @@ public abstract class VirtualClient implements ModelObserver {
             gameController.get().handleClientRequest(req, this);
         } else if(req.getGameId() != 0) {
             serverController.handleClientRequest(req, this);
+            gameController.ifPresent(controller -> controller.handleClientRequest(req, this));
         }
     }
+
+    public abstract void sendErrorMessage(String error);
 
     public void setGameController(Optional<GameController> gameController) {
         this.gameController = gameController;

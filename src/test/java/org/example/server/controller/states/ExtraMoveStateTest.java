@@ -8,7 +8,7 @@ import org.example.server.model.board.OfferTrack;
 import org.example.server.model.board.OrderTile;
 import org.example.shared.enums.Color;
 import org.example.shared.enums.Row;
-import org.example.shared.exceptions.InvalidMoveException;
+import org.example.shared.exceptions.InvalidRequestException;
 import org.example.shared.utils.Move;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,10 +19,10 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ExtraMoveControllerStateTest {
+public class ExtraMoveStateTest {
 
     private Player player;
-    private ExtraMoveControllerState state;
+    private ExtraMoveState state;
 
     @BeforeEach
     void setUp() {
@@ -35,12 +35,12 @@ public class ExtraMoveControllerStateTest {
         Set<Player> players = new HashSet<>();
         players.add(player);
         Game game = new Game(1, 1, players, player, board);
-        state = new ExtraMoveControllerState(game);
+        state = new ExtraMoveState(game);
     }
 
     @Test
     void checkMove_emptyMoves_throwsInvalidMoveException() {
-        assertThrows(InvalidMoveException.class,
+        assertThrows(InvalidRequestException.class,
                 () -> state.checkMove(new HashSet<>(), player));
     }
 
@@ -49,7 +49,7 @@ public class ExtraMoveControllerStateTest {
         Set<Move> moves = new HashSet<>();
         moves.add(new Move(0, Row.UPPER));
         moves.add(new Move(1, Row.UPPER));
-        assertThrows(InvalidMoveException.class,
+        assertThrows(InvalidRequestException.class,
                 () -> state.checkMove(moves, player));
     }
 
@@ -57,7 +57,7 @@ public class ExtraMoveControllerStateTest {
     void checkMove_moveFromLowerRow_throwsInvalidMoveException() {
         Set<Move> moves = new HashSet<>();
         moves.add(new Move(0, Row.LOWER));
-        assertThrows(InvalidMoveException.class,
+        assertThrows(InvalidRequestException.class,
                 () -> state.checkMove(moves, player));
     }
 
@@ -70,6 +70,6 @@ public class ExtraMoveControllerStateTest {
 
     @Test
     void nextState_returnsEventsState() {
-        assertInstanceOf(EventsControllerState.class, state.nextState());
+        assertInstanceOf(EventsState.class, state.nextState());
     }
 }

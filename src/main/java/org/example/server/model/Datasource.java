@@ -1,7 +1,7 @@
 package org.example.server.model;
 
 public interface Datasource {
-    void updateAll(String error);
+    void updateAll();
     void addObserver(ModelObserver o);
     void removeObserver(ModelObserver o);
 }

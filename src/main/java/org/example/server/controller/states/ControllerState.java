@@ -1,10 +1,13 @@
 package org.example.server.controller.states;
 
+import org.example.server.model.Player;
 import org.example.server.network.VirtualClient;
 import org.example.shared.network.RequestVisitor;
 import org.example.shared.network.requests.*;
-import org.example.shared.exceptions.InvalidMoveException;
+import org.example.shared.exceptions.InvalidRequestException;
 import org.example.server.model.Game;
+
+import java.util.Optional;
 
 
 public abstract class ControllerState implements RequestVisitor<VirtualClient> {
@@ -14,29 +17,46 @@ public abstract class ControllerState implements RequestVisitor<VirtualClient> {
         this.game = game;
     }
 
-    public ControllerState onEntry(){
-        return this;
-    }
+    public abstract ControllerState onEntry();
+
     public abstract ControllerState nextState();
+
+    public Player controlIfPlayerTurn(ClientRequest req) throws InvalidRequestException{
+        Optional<Player> reqPlayer = getGame().getPlayers().stream()
+                .filter(p -> p.getName().equals(req.getUsername()))
+                .findFirst();
+        if(reqPlayer.isEmpty()){
+            throw new InvalidRequestException("Player not in current game");
+        }
+
+        Optional<Player> currentPlayerContainer = getGame().getCurrentPlayer();
+        assert currentPlayerContainer.isPresent(); // Setted on creation
+        if(!currentPlayerContainer.get().equals(reqPlayer.get()) ) {
+            throw new InvalidRequestException("The current player is " + currentPlayerContainer.get().getName());
+        }
+
+        return reqPlayer.get();
+    }
+
     @Override
-    public void visit(CreateGameRequest req, VirtualClient virtualClient) throws InvalidMoveException {
-        throw new InvalidMoveException("Move not allowed in this phase");
+    public void visit(CreateGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
+        throw new InvalidRequestException("Create game request rejected:");
     }
     @Override
-    public void visit(ConnectToGameRequest req, VirtualClient virtualClient) throws InvalidMoveException {
-        throw new InvalidMoveException("Move not allowed in this phase");
+    public void visit(ConnectToGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
+        throw new InvalidRequestException("Connection rejected:");
     }
     @Override
-    public void visit(StartGameRequest req, VirtualClient virtualClient) throws InvalidMoveException {
-        throw new InvalidMoveException("Move not allowed in this phase");
+    public void visit(StartGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
+        throw new InvalidRequestException("Start request rejected:");
     }
     @Override
-    public void visit(MakeMoveRequest req, VirtualClient virtualClient) throws InvalidMoveException {
-        throw new InvalidMoveException("Move not allowed in this phase");
+    public void visit(MakeMoveRequest req, VirtualClient virtualClient) throws InvalidRequestException {
+        throw new InvalidRequestException("Move request rejected:");
     }
     @Override
-    public void visit(ClientDisconnected req, VirtualClient virtualClient) throws InvalidMoveException {
-        throw new InvalidMoveException("Move not allowed in this phase");
+    public void visit(ClientDisconnected req, VirtualClient virtualClient) throws InvalidRequestException {
+        throw new InvalidRequestException("Disconnection unespected:");
     }
 
     public Game getGame() {

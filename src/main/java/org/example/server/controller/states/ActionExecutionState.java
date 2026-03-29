@@ -1,8 +1,11 @@
 package org.example.server.controller.states;
 
+import org.example.server.network.VirtualClient;
+import org.example.shared.enums.Phase;
+import org.example.shared.network.requests.MakeMoveRequest;
 import org.example.shared.utils.Move;
 import org.example.shared.enums.Row;
-import org.example.shared.exceptions.InvalidMoveException;
+import org.example.shared.exceptions.InvalidRequestException;
 import org.example.server.model.cards.Card;
 import org.example.shared.enums.CardType;
 import org.example.shared.enums.Trigger;
@@ -18,39 +21,62 @@ import java.util.Optional;
 import java.util.Set;
 
 
-public class ActionExecutionControllerState extends ControllerState {
+public class ActionExecutionState extends ControllerState {
 
-    public ActionExecutionControllerState(Game game) {
+    public ActionExecutionState(Game game) {
         super(game);
     }
 
     @Override
-    public void checkMove(Set<Move> moves, Player p) throws InvalidMoveException {
-        // ADD CONTROL CANBEPICKED FOR EVERY CARD TO PICK
+    public ControllerState onEntry(){
+        getGame().setPhase(Phase.ACTION_EXECUTION);
+        return nextState();
+    }
+
+    @Override
+    public void visit(MakeMoveRequest req, VirtualClient virtualClient) throws InvalidRequestException {
+        Player reqPlayer = controlIfPlayerTurn(req);
+
         OfferTrack offerTrack = getGame().getBoard().getOfferTrack();
         int offerIndex = 0;
         while(offerTrack.getTileAt(offerIndex).getPlayer().isEmpty() && offerIndex < offerTrack.size()){
             offerIndex++;
         }
         int remainingMoves = offerTrack.getTileAt(offerIndex).getNumMoves();
+        Set<Move> moves = req.getMoves();
         if(moves.size() != remainingMoves){
-            throw new InvalidMoveException(
+            throw new InvalidRequestException(
                     "Number of cards mismatch. Requires " + moves.size()
                             + ", Allowed: " + remainingMoves);
         }
+
         OfferTile offerTile = getGame().getBoard().getOfferTrack().getTileAt(offerIndex);
         Map<Row, Integer> allowedMoves = offerTile.getMoves();
         int numLowDraw = (int) moves.stream().filter(m -> m.getRow() == Row.LOWER).count();
         int numUpDraw = (int) moves.stream().filter(m -> m.getRow() == Row.UPPER).count();
         if(numUpDraw != allowedMoves.get(Row.UPPER) || numLowDraw != allowedMoves.get(Row.LOWER)){
-            throw new InvalidMoveException(
+            throw new InvalidRequestException(
                     "Wrong moves: you can do "
                             + allowedMoves.get(Row.UPPER) + " draws from the up row and "
                             + allowedMoves.get(Row.LOWER) + " draws from the low row");
         }
+
+        for(Move move : moves){
+            CardRow selectedRow = null;
+            if(move.getRow() == Row.UPPER) {
+                selectedRow = getGame().getBoard().getTopRow();
+            } else {
+                selectedRow = getGame().getBoard().getLowRow();
+            }
+            Card selectedCard = selectedRow.pickCardAt(move.getRowIndex());
+            if(!selectedCard.canBeDrawn(reqPlayer)){
+                throw new InvalidRequestException("Invalid picking: some selected cards cannot be picked");
+            }
+        }
+
+        execute(moves, reqPlayer);
     }
 
-    @Override
     public void execute(Set<Move> moves, Player p) {
         for(Move move : moves){
             CardRow selectedRow = null;
@@ -62,7 +88,10 @@ public class ActionExecutionControllerState extends ControllerState {
             Card selectedCard = selectedRow.pickCardAt(move.getRowIndex());
             selectedCard.insert(p.getCards());
         }
+        placeTotem(p);
+    }
 
+    public void placeTotem(Player p){
         int i = getGame().getBoard().getOrderTile().placePlayerAtNext(p);
 
         // Eventual bonus for totem placement in order tile
@@ -92,24 +121,19 @@ public class ActionExecutionControllerState extends ControllerState {
             offerIndex++;
         }
 
-        // NEED TO ADD AUTOMATION TO GIVES FODD IN CASE OF TILE.GIVESFODD = TRUE
-        if(offerTrack.getTileAt(offerIndex).getPlayer().isPresent()){
-            return this;
-        }
-
-        // Control eventual extra move
-        getGame().getPlayers().forEach(
-                p -> p.getCards().get(CardType.BUILDINGS).forEach(
-                        b -> b.activeEffect(Set.of(p), Trigger.END_ROUND)));
-
-        Optional<Player> playerExtraMove = getGame().getPlayers().stream()
-                .filter(p -> p.getBuildingBonus().isExtraMove())
-                .findFirst();
-
-        if(playerExtraMove.isEmpty()){
-            return new EventsControllerState(getGame());
+        Optional<Player> currPlayer = offerTrack.getTileAt(offerIndex).getPlayer();
+        if(currPlayer.isPresent()){
+            if(offerTrack.getTileAt(offerIndex).isGivesFood()){
+                currPlayer.get().changeFood(3);
+                placeTotem(currPlayer.get());
+                return nextState();
+            } else {
+                getGame().setCurrentPlayer(currPlayer);
+                return this;
+            }
         } else {
-            return new ExtraMoveControllerState(getGame());
+            getGame().setCurrentPlayer(Optional.empty());
+            return new ExtraMoveState(getGame());
         }
     }
 }

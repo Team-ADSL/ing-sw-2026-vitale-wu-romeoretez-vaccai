@@ -4,28 +4,38 @@ import org.example.server.model.board.Board;
 import org.example.shared.enums.Phase;
 import org.example.shared.model.GameDTO;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class Game implements Datasource {
     private int round;
     private int era;
     private Set<Player> players;
-    private Optional<Player> currentPlayer; // Usefull for extraMove action
+    private Optional<Player> currentPlayer;
     private Board board;
     private Phase phase;
     private final List<ModelObserver> observers = new ArrayList<>();
+    private boolean isInitialized;
 
-    public Game (int round, int era, Set<Player> players, Optional<Player> currentPlayer, Board board) {
+
+    public Game() {
+        this.round = 0;
+        this.era = 1;
+        this.players = new HashSet<>();
+        this.currentPlayer = Optional.empty();
+        this.board = null; // TO modify
+        this.phase = Phase.LOBBY;
+        this.isInitialized = false;
+    }
+
+    public Game(int round, int era, Set<Player> players, Optional<Player> currentPlayer, Board board, Phase phase) {
         this.round = round;
         this.era = era;
         this.players = players;
         this.currentPlayer = currentPlayer;
         this.board = board;
+        this.phase = phase;
+        this.isInitialized = true;
     }
-
 
     @Override
     public void addObserver(ModelObserver o) {
@@ -36,7 +46,7 @@ public class Game implements Datasource {
         observers.remove(o);
     }
     @Override
-    public void updateAll(String error){
+    public void updateAll(){
         for(ModelObserver o : observers) o.update(createDTO());
     }
 
@@ -65,5 +75,17 @@ public class Game implements Datasource {
     }
     public Phase getPhase() {
         return phase;
+    }
+
+    public boolean isInitialized() {
+        return isInitialized;
+    }
+
+    public void setCurrentPlayer(Optional<Player> currentPlayer) {
+        this.currentPlayer = currentPlayer;
+    }
+
+    public void setPhase(Phase phase) {
+        this.phase = phase;
     }
 }

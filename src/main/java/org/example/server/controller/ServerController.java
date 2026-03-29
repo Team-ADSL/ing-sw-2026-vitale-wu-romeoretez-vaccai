@@ -1,12 +1,12 @@
 package org.example.server.controller;
 
-import org.example.server.controller.states.LobbyControllerState;
+import org.example.server.controller.states.LobbyState;
 import org.example.server.db.GameDAO;
 import org.example.server.model.Game;
 import org.example.server.model.Lobby;
 import org.example.server.model.Player;
 import org.example.server.network.VirtualClient;
-import org.example.shared.exceptions.InvalidMoveException;
+import org.example.shared.exceptions.InvalidRequestException;
 import org.example.shared.network.RequestVisitor;
 import org.example.shared.network.requests.*;
 
@@ -26,37 +26,38 @@ public class ServerController implements RequestVisitor<VirtualClient> {
     public void handleClientRequest(ClientRequest req, VirtualClient virtualClient){
         try {
             req.accept(this, virtualClient);
+            lobby.updateAll();
         } catch (Exception e) {
             System.out.println(e.getMessage());
-            lobby.updateAll(e.getMessage());
+            virtualClient.sendErrorMessage(e.getMessage());
         }
     }
 
     @Override
-    public void visit(CreateGameRequest req, VirtualClient virtualClient) throws InvalidMoveException {
+    public void visit(CreateGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
         // Implement
     }
     @Override
-    public void visit(ConnectToGameRequest req, VirtualClient virtualClient) throws InvalidMoveException {
+    public void visit(ConnectToGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
         // Implement
     }
     @Override
-    public void visit(ClientDisconnected req, VirtualClient virtualClient) throws InvalidMoveException {
+    public void visit(ClientDisconnected req, VirtualClient virtualClient) throws InvalidRequestException {
         // Implement
     }
     @Override
-    public void visit(StartGameRequest req, VirtualClient virtualClient) throws InvalidMoveException {
-        throw new InvalidMoveException("Move not allowed in this phase");
+    public void visit(StartGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
+        throw new InvalidRequestException("Move not allowed in this phase");
     }
     @Override
-    public void visit(MakeMoveRequest req, VirtualClient virtualClient) throws InvalidMoveException {
-        throw new InvalidMoveException("Move not allowed in this phase");
+    public void visit(MakeMoveRequest req, VirtualClient virtualClient) throws InvalidRequestException {
+        throw new InvalidRequestException("Move not allowed in this phase");
     }
 
     public synchronized GameController createGame(){
         try{
             int newId =  GameDAO.createMatch();
-            GameController newGameController = new GameController(newId, new LobbyControllerState(null));
+            GameController newGameController = new GameController(newId, new LobbyState(null));
             games.put(newId, newGameController); // Need to handle
             return newGameController;
         } catch (SQLException e){

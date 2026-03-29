@@ -1,7 +1,6 @@
 package org.example.server.controller.states;
 
-import org.example.shared.utils.Move;
-import org.example.shared.exceptions.InvalidMoveException;
+import org.example.shared.enums.Phase;
 import org.example.shared.enums.CardType;
 import org.example.shared.enums.Trigger;
 import org.example.server.model.cards.buildings.Building;
@@ -12,13 +11,14 @@ import org.example.server.model.Player;
 
 import java.util.Set;
 
-public class EndGameControllerState extends ControllerState {
-    public EndGameControllerState(Game game) {
+public class EndGameState extends ControllerState {
+    public EndGameState(Game game) {
         super(game);
     }
 
     @Override
     public ControllerState onEntry(){
+        getGame().setPhase(Phase.END_GAME);
         Set<Player> players = getGame().getPlayers();
         for(Player p : players){
             p.getCards().get(CardType.BUILDINGS)
@@ -49,14 +49,6 @@ public class EndGameControllerState extends ControllerState {
         }
         return nextState();
     }
-
-    @Override
-    public void checkMove(Set<Move> moves, Player p) throws InvalidMoveException {
-        throw new InvalidMoveException("Automatic state: EndGame execution. No action allowed");
-    }
-
-    @Override
-    public void execute(Set<Move> moves, Player p) {}
 
     @Override
     public ControllerState nextState() {

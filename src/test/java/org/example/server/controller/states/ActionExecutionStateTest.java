@@ -5,7 +5,7 @@ import org.example.server.model.Player;
 import org.example.server.model.board.*;
 import org.example.shared.enums.Color;
 import org.example.shared.enums.Row;
-import org.example.shared.exceptions.InvalidMoveException;
+import org.example.shared.exceptions.InvalidRequestException;
 import org.example.shared.utils.Move;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,10 +14,10 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ActionExecutionControllerStateTest {
+public class ActionExecutionStateTest {
 
     private Player player;
-    private ActionExecutionControllerState state;
+    private ActionExecutionState state;
 
     @BeforeEach
     void setUp() {
@@ -39,7 +39,7 @@ public class ActionExecutionControllerStateTest {
         Set<Player> players = new HashSet<>();
         players.add(player);
         Game game = new Game(1, 1, players, player, board);
-        state = new ActionExecutionControllerState(game);
+        state = new ActionExecutionState(game);
     }
 
     @Test
@@ -48,7 +48,7 @@ public class ActionExecutionControllerStateTest {
         Set<Move> moves = new HashSet<>();
         moves.add(new Move(0, Row.UPPER));
         moves.add(new Move(1, Row.UPPER));
-        assertThrows(InvalidMoveException.class,
+        assertThrows(InvalidRequestException.class,
                 () -> state.checkMove(moves, player));
     }
 
@@ -57,7 +57,7 @@ public class ActionExecutionControllerStateTest {
         // Offer tile allows 1 UPPER + 0 LOWER; we provide 0 UPPER + 1 LOWER
         Set<Move> moves = new HashSet<>();
         moves.add(new Move(0, Row.LOWER));
-        assertThrows(InvalidMoveException.class,
+        assertThrows(InvalidRequestException.class,
                 () -> state.checkMove(moves, player));
     }
 

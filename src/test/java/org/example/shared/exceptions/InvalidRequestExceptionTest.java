@@ -4,24 +4,24 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class InvalidMoveExceptionTest {
+public class InvalidRequestExceptionTest {
 
     @Test
     void isException() {
-        InvalidMoveException e = new InvalidMoveException("msg");
+        InvalidRequestException e = new InvalidRequestException("msg");
         assertInstanceOf(Exception.class, e);
     }
 
     @Test
     void getMessage_returnsProvidedMessage() {
-        InvalidMoveException e = new InvalidMoveException("invalid move");
+        InvalidRequestException e = new InvalidRequestException("invalid move");
         assertEquals("invalid move", e.getMessage());
     }
 
     @Test
     void canBeThrownAndCaught() {
-        assertThrows(InvalidMoveException.class, () -> {
-            throw new InvalidMoveException("test");
+        assertThrows(InvalidRequestException.class, () -> {
+            throw new InvalidRequestException("test");
         });
     }
 }

@@ -8,7 +8,7 @@ import org.example.server.model.board.CardRow;
 import org.example.server.model.board.OfferTrack;
 import org.example.server.model.board.OrderTile;
 import org.example.shared.enums.Color;
-import org.example.shared.exceptions.InvalidMoveException;
+import org.example.shared.exceptions.InvalidRequestException;
 import org.example.shared.utils.Move;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,7 +36,7 @@ public class GameControllerTest {
         }
 
         @Override
-        public void checkMove(Set<Move> moves, Player p) throws InvalidMoveException {}
+        public void checkMove(Set<Move> moves, Player p) throws InvalidRequestException {}
 
         @Override
         public void execute(Set<Move> moves, Player p) {}

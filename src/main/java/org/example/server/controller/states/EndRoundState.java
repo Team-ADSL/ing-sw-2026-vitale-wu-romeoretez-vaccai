@@ -1,23 +1,22 @@
 package org.example.server.controller.states;
 
-import org.example.shared.utils.Move;
-import org.example.shared.exceptions.InvalidMoveException;
+import org.example.shared.enums.Phase;
 import org.example.server.model.cards.Card;
 import org.example.server.model.Game;
-import org.example.server.model.Player;
 import org.example.server.model.board.CardRow;
 import org.example.server.model.board.Deck;
 
 import java.util.Set;
 
-public class EndRoundControllerState extends ControllerState {
+public class EndRoundState extends ControllerState {
 
-    public EndRoundControllerState(Game game) {
+    public EndRoundState(Game game) {
         super(game);
     }
 
     @Override
     public ControllerState onEntry(){
+        getGame().setPhase(Phase.END_ROUND);
         CardRow lowRow = getGame().getBoard().getLowRow();
         CardRow topRow = getGame().getBoard().getTopRow();
 
@@ -55,17 +54,7 @@ public class EndRoundControllerState extends ControllerState {
     }
 
     @Override
-    public void checkMove(Set<Move> moves, Player p) throws InvalidMoveException {
-        throw new InvalidMoveException("Automatic state: EndRound execution. No action allowed");
-    }
-
-    @Override
-    public void execute(Set<Move> moves, Player p) {}
-
-    @Override
     public ControllerState nextState() {
-        return new TotemPlacementControllerState(getGame());
+        return new TotemPlacementState(getGame());
     }
-
-
 }

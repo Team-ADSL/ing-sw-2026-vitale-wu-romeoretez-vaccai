@@ -1,6 +1,6 @@
 package org.example.shared.network.requests;
 
-import org.example.shared.exceptions.InvalidMoveException;
+import org.example.shared.exceptions.InvalidRequestException;
 import org.example.shared.network.RequestVisitor;
 
 public abstract class ClientRequest {
@@ -12,7 +12,7 @@ public abstract class ClientRequest {
         this.username = username;
     }
 
-    public abstract <T> void accept(RequestVisitor<T> visitor, T context) throws InvalidMoveException;
+    public abstract <T> void accept(RequestVisitor<T> visitor, T context) throws InvalidRequestException;
 
     public int getGameId() {
         return gameId;

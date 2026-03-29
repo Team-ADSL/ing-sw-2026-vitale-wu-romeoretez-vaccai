@@ -1,24 +1,34 @@
 package org.example.server.controller.states;
 
-import org.example.shared.utils.Move;
-import org.example.shared.exceptions.InvalidMoveException;
 import org.example.server.model.cards.Card;
 import org.example.server.model.cards.buildings.Building;
 import org.example.server.model.Game;
-import org.example.server.model.Player;
 import org.example.server.model.board.CardRow;
 import org.example.server.model.board.Deck;
+import org.example.shared.enums.Phase;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
-public class InitGameControllerState extends ControllerState {
+public class InitGameState extends ControllerState {
 
-    public InitGameControllerState(Game game) {
+    public InitGameState(Game game) {
         super(game);
+    }
+
+    @Override
+    public ControllerState onEntry(){
+        getGame().setPhase(Phase.INIT);
+        if(getGame().isInitialized()){
+            return nextState();
+        }
+        // Initialization logic
+        return nextState();
+    }
+
+    @Override
+    public ControllerState nextState() {
+        return new TotemPlacementState(getGame());
     }
 
     public int calcNumTopCard(int numPlayer){
@@ -119,20 +129,4 @@ public class InitGameControllerState extends ControllerState {
             topRow.add(b);
         }
     }
-
-    @Override
-    public void checkMove(Set<Move> moves, Player p) throws InvalidMoveException {
-
-    }
-
-    @Override
-    public void execute(Set<Move> moves, Player p) {
-
-    }
-
-    @Override
-    public ControllerState nextState() {
-        return null;
-    }
-
 }

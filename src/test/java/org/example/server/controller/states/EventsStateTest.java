@@ -7,7 +7,7 @@ import org.example.server.model.board.CardRow;
 import org.example.server.model.board.OfferTrack;
 import org.example.server.model.board.OrderTile;
 import org.example.shared.enums.Color;
-import org.example.shared.exceptions.InvalidMoveException;
+import org.example.shared.exceptions.InvalidRequestException;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -16,7 +16,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class EventsControllerStateTest {
+public class EventsStateTest {
 
     private Game buildGame(int round) {
         CardRow lowRow = new CardRow(3, 3);
@@ -32,27 +32,27 @@ public class EventsControllerStateTest {
 
     @Test
     void checkMove_alwaysThrowsInvalidMoveException() {
-        EventsControllerState state = new EventsControllerState(buildGame(1));
-        assertThrows(InvalidMoveException.class,
+        EventsState state = new EventsState(buildGame(1));
+        assertThrows(InvalidRequestException.class,
                 () -> state.checkMove(new HashSet<>(), null));
     }
 
     @Test
     void nextState_round10_returnsEndRoundState() {
-        EventsControllerState state = new EventsControllerState(buildGame(10));
-        assertInstanceOf(EndRoundControllerState.class, state.nextState());
+        EventsState state = new EventsState(buildGame(10));
+        assertInstanceOf(EndRoundState.class, state.nextState());
     }
 
     @Test
     void nextState_roundNot10_returnsEndGameState() {
-        EventsControllerState state = new EventsControllerState(buildGame(5));
-        assertInstanceOf(EndGameControllerState.class, state.nextState());
+        EventsState state = new EventsState(buildGame(5));
+        assertInstanceOf(EndGameState.class, state.nextState());
     }
 
     @Test
     void onEntry_emptyLowRow_doesNotThrow() {
         // Empty low row (all null) — activeEffect is guarded by null check
-        EventsControllerState state = new EventsControllerState(buildGame(5));
+        EventsState state = new EventsState(buildGame(5));
         assertDoesNotThrow(state::onEntry);
     }
 }

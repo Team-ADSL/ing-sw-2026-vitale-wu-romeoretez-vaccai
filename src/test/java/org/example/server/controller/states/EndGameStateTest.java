@@ -7,7 +7,7 @@ import org.example.server.model.board.CardRow;
 import org.example.server.model.board.OfferTrack;
 import org.example.server.model.board.OrderTile;
 import org.example.shared.enums.Color;
-import org.example.shared.exceptions.InvalidMoveException;
+import org.example.shared.exceptions.InvalidRequestException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -17,10 +17,10 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class EndGameControllerStateTest {
+public class EndGameStateTest {
 
     private Player player;
-    private EndGameControllerState state;
+    private EndGameState state;
 
     @BeforeEach
     void setUp() {
@@ -33,12 +33,12 @@ public class EndGameControllerStateTest {
         Set<Player> players = new HashSet<>();
         players.add(player);
         Game game = new Game(1, 1, players, player, board);
-        state = new EndGameControllerState(game);
+        state = new EndGameState(game);
     }
 
     @Test
     void checkMove_alwaysThrowsInvalidMoveException() {
-        assertThrows(InvalidMoveException.class,
+        assertThrows(InvalidRequestException.class,
                 () -> state.checkMove(new HashSet<>(), player));
     }
 

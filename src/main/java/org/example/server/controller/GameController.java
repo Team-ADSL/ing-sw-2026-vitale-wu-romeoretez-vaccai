@@ -2,7 +2,7 @@ package org.example.server.controller;
 
 import org.example.server.controller.states.ControllerState;
 import org.example.server.network.VirtualClient;
-import org.example.shared.exceptions.InvalidMoveException;
+import org.example.shared.exceptions.InvalidRequestException;
 import org.example.shared.network.requests.ClientRequest;
 
 
@@ -18,12 +18,16 @@ public class GameController {
     public synchronized void handleClientRequest(ClientRequest req, VirtualClient virtualClient){
         try {
             req.accept(state, virtualClient);
-            state.getGame().updateAll(null);
+            state.getGame().updateAll();
             ControllerState newState = state.nextState();
-            changeState(newState);
-        } catch(InvalidMoveException e){
+            if(newState != null){
+                changeState(newState);
+            } else {
+                // Save game and remove from lobby
+            }
+        } catch(InvalidRequestException e){
             System.out.println(e.getMessage());
-            state.getGame().updateAll(e.getMessage());
+            virtualClient.sendErrorMessage(e.getMessage());
         }
     }
 
@@ -33,7 +37,7 @@ public class GameController {
         while (nextState != state) {
             state = nextState;
             nextState = state.onEntry();
-            state.getGame().updateAll(null);
+            state.getGame().updateAll();
         }
     }
 

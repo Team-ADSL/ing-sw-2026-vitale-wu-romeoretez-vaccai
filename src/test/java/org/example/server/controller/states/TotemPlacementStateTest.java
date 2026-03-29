@@ -5,7 +5,7 @@ import org.example.server.model.Player;
 import org.example.server.model.board.*;
 import org.example.shared.enums.Color;
 import org.example.shared.enums.Row;
-import org.example.shared.exceptions.InvalidMoveException;
+import org.example.shared.exceptions.InvalidRequestException;
 import org.example.shared.utils.Move;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,10 +14,10 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TotemPlacementControllerStateTest {
+public class TotemPlacementStateTest {
 
     private Player player;
-    private TotemPlacementControllerState state;
+    private TotemPlacementState state;
 
     @BeforeEach
     void setUp() {
@@ -36,12 +36,12 @@ public class TotemPlacementControllerStateTest {
         Set<Player> players = new HashSet<>();
         players.add(player);
         Game game = new Game(1, 1, players, player, board);
-        state = new TotemPlacementControllerState(game);
+        state = new TotemPlacementState(game);
     }
 
     @Test
     void checkMove_emptyMoves_throwsInvalidMoveException() {
-        assertThrows(InvalidMoveException.class,
+        assertThrows(InvalidRequestException.class,
                 () -> state.checkMove(new HashSet<>(), player));
     }
 
@@ -50,7 +50,7 @@ public class TotemPlacementControllerStateTest {
         Player other = new Player("Other", 5, 0, Color.BLUE);
         Set<Move> moves = new HashSet<>();
         moves.add(new Move(0, Row.OFFER));
-        assertThrows(InvalidMoveException.class,
+        assertThrows(InvalidRequestException.class,
                 () -> state.checkMove(moves, other));
     }
 

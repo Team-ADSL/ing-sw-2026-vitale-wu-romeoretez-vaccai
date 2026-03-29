@@ -15,8 +15,8 @@ public class Lobby implements Datasource {
     }
 
     @Override
-    public void updateAll(String error) {
-        for(ModelObserver o : observers) o.update(createDto(error));
+    public void updateAll() {
+        for(ModelObserver o : observers) o.update(createDto());
     }
 
     @Override
@@ -29,7 +29,7 @@ public class Lobby implements Datasource {
         this.observers.remove(observer);
     }
 
-    public LobbyDTO createDto(String error){
+    public LobbyDTO createDto(){
         return null;
     }
 

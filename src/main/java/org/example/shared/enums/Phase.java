@@ -8,5 +8,5 @@ public enum Phase {
     EXTRA_MOVE,
     EVENTS_EXECUTION,
     END_ROUND,
-    END_GAME
+    LOBBY, END_GAME
 }

@@ -17,4 +17,9 @@ public class SockerClientHandler extends VirtualClient {
     public void update(DatasourceDTO datasource) {
 
     }
+
+    @Override
+    public void sendErrorMessage(String error) {
+
+    }
 }

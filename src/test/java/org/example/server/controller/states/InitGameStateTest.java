@@ -16,7 +16,7 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class InitGameControllerStateTest {
+public class InitGameStateTest {
 
     private static class StubBuilding extends Building {
         public StubBuilding(int era) {
@@ -26,7 +26,7 @@ public class InitGameControllerStateTest {
         public void activeEffect(Set<Player> players, Trigger t) {}
     }
 
-    private InitGameControllerState state;
+    private InitGameState state;
     private Game game;
 
     @BeforeEach
@@ -40,7 +40,7 @@ public class InitGameControllerStateTest {
         Set<Player> players = new HashSet<>();
         players.add(p);
         game = new Game(1, 1, players, p, board);
-        state = new InitGameControllerState(game);
+        state = new InitGameState(game);
     }
 
     @Test
