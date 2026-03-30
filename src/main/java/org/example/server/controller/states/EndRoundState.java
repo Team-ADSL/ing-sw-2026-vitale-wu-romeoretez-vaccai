@@ -1,5 +1,6 @@
 package org.example.server.controller.states;
 
+import org.example.server.controller.GameController;
 import org.example.shared.enums.Phase;
 import org.example.server.model.cards.Card;
 import org.example.server.model.Game;
@@ -10,12 +11,12 @@ import java.util.Set;
 
 public class EndRoundState extends ControllerState {
 
-    public EndRoundState(Game game) {
-        super(game);
+    public EndRoundState(Game game, GameController context) {
+        super(game, context);
     }
 
     @Override
-    public ControllerState onEntry(){
+    public ControllerState onEntry() {
         getGame().setPhase(Phase.END_ROUND);
         CardRow lowRow = getGame().getBoard().getLowRow();
         CardRow topRow = getGame().getBoard().getTopRow();
@@ -50,11 +51,12 @@ public class EndRoundState extends ControllerState {
             Set<Card> newBuildings = getGame().getBoard().getRemainingBuildings().removeFirst();
             topRow.addBuildings(newBuildings);
         }
+        getGame().changeRound();
         return nextState();
     }
 
     @Override
     public ControllerState nextState() {
-        return new TotemPlacementState(getGame());
+        return new TotemPlacementState(getGame(), getContext());
     }
 }

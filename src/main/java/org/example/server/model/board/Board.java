@@ -30,7 +30,7 @@ public class Board {
         this.topRow = new CardRow(numTopCard, nonBuildingCards);
         this.offerTrack = offerTrack;
         this.orderQueue = orderQueue;
-        this.remainingBuildings = new ArrayList<Set<Card>>();
+        this.remainingBuildings = new ArrayList<>();
         this.deck = Deck.createDeck(cards);
     }
 

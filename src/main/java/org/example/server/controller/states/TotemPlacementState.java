@@ -1,5 +1,6 @@
 package org.example.server.controller.states;
 
+import org.example.server.controller.GameController;
 import org.example.server.network.VirtualClient;
 import org.example.shared.enums.Phase;
 import org.example.shared.network.requests.MakeMoveRequest;
@@ -16,8 +17,8 @@ import java.util.Set;
 
 public class TotemPlacementState extends ControllerState {
 
-    public TotemPlacementState(Game game) {
-        super(game);
+    public TotemPlacementState(Game game, GameController context) {
+        super(game, context);
     }
 
     @Override
@@ -56,7 +57,7 @@ public class TotemPlacementState extends ControllerState {
             return this;
         } else {
             getGame().setCurrentPlayer(Optional.empty());
-            return new ActionExecutionState(getGame());
+            return new ActionExecutionState(getGame(), getContext());
         }
     }
 }

@@ -1,6 +1,7 @@
 package org.example.shared.enums;
 
 public enum Phase {
+    LOBBY,
     INIT,
     RECOVER,
     TOTEM_PLACEMENT,
@@ -8,5 +9,5 @@ public enum Phase {
     EXTRA_MOVE,
     EVENTS_EXECUTION,
     END_ROUND,
-    LOBBY, END_GAME
+    END_GAME
 }

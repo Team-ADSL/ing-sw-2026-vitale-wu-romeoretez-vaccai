@@ -1,5 +1,6 @@
 package org.example.server.controller.states;
 
+import org.example.server.controller.GameController;
 import org.example.shared.enums.Phase;
 import org.example.server.model.cards.Card;
 import org.example.shared.enums.Trigger;
@@ -10,8 +11,8 @@ import java.util.Set;
 
 public class EventsState extends ControllerState {
 
-    public EventsState(Game game) {
-        super(game);
+    public EventsState(Game game, GameController context) {
+        super(game, context);
     }
 
     @Override
@@ -29,6 +30,7 @@ public class EventsState extends ControllerState {
 
     @Override
     public ControllerState nextState() {
-        return getGame().getRound() == 10 ? new EndRoundState(getGame()) : new EndGameState(getGame());
+        return getGame().getRound() == 10 ?
+                new EndRoundState(getGame(), getContext()) : new EndGameState(getGame(), getContext());
     }
 }

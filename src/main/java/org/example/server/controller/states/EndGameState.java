@@ -1,5 +1,8 @@
 package org.example.server.controller.states;
 
+import org.example.server.controller.GameController;
+import org.example.server.persistence.GameDAO;
+import org.example.server.persistence.SqlGameDAO;
 import org.example.shared.enums.Phase;
 import org.example.shared.enums.CardType;
 import org.example.shared.enums.Trigger;
@@ -8,16 +11,19 @@ import org.example.server.model.cards.characters.Builder;
 import org.example.server.model.cards.characters.Inventor;
 import org.example.server.model.Game;
 import org.example.server.model.Player;
+import org.example.shared.model.MatchResult;
 
+import java.sql.SQLException;
+import java.util.List;
 import java.util.Set;
 
 public class EndGameState extends ControllerState {
-    public EndGameState(Game game) {
-        super(game);
+    public EndGameState(Game game, GameController context) {
+        super(game, context);
     }
 
     @Override
-    public ControllerState onEntry(){
+    public ControllerState onEntry() throws Exception {
         getGame().setPhase(Phase.END_GAME);
         Set<Player> players = getGame().getPlayers();
         for(Player p : players){
@@ -47,11 +53,23 @@ public class EndGameState extends ControllerState {
                     .sum();
             p.changePP(buildingPoints * p.getBuildingBonus().getBuilderMultiplierPP());
         }
+
+        GameDAO gameDAO = getContext().getGameDAO();
+        List<String> nicknames = players.stream()
+                .map(Player::getName)
+                .toList();
+        List<Integer> scores = players.stream()
+                .map(Player::getPp)
+                .toList();
+        gameDAO.saveMatch(getGame().getGameId(), players.size(), nicknames, scores);
+        List<MatchResult> matchResults = gameDAO.getLeaderboard(players.size());
+
+        getGame().notifyEndGame(matchResults);
         return nextState();
     }
 
     @Override
     public ControllerState nextState() {
-        return null;
+        return this;
     }
 }

@@ -6,14 +6,15 @@ import org.example.shared.enums.Phase;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 import static org.example.shared.enums.Phase.*;
 
 public class StateFactory {
-    private static final Map<Phase, Function<Game, ControllerState>> mapper = new HashMap<>();
+    private static final Map<Phase, BiFunction<Game, GameController, ControllerState>> mapper = new HashMap<>();
 
     static{
+        mapper.put(LOBBY, LobbyState::new);
         mapper.put(INIT, InitGameState::new);
         mapper.put(RECOVER, RecoverState::new);
         mapper.put(TOTEM_PLACEMENT, TotemPlacementState::new);
@@ -24,8 +25,8 @@ public class StateFactory {
         mapper.put(END_GAME, EndGameState::new);
     }
 
-    public static ControllerState recover(Game game){
-        Function<Game, ControllerState> func = mapper.get(game.getPhase());
-        return func.apply(game);
+    public static ControllerState recover(Game game, GameController context){
+        BiFunction<Game, GameController, ControllerState> func = mapper.get(game.getPhase());
+        return func.apply(game, context);
     }
 }

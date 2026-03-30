@@ -14,17 +14,17 @@ public class Player {
     private final String name;
     private int food;
     private int pp;
-    private final Color color;
+    private Color color;
     private final Map<CardType, Set<Card>> cards;
-    private BuildingBonus buildingBonus;
+    private final BuildingBonus buildingBonus;
     private Card lastPick; // For SinceBuild building (see activeEffect)
 
 
-    public Player(String name, int food, int pp, Color color) {
+    public Player(String name) {
         this.name = name;
-        this.food = food;
-        this.pp = pp;
-        this.color = color;
+        this.food = 0;
+        this.pp = 0;
+        this.color = null;
         this.lastPick = null;
         this.buildingBonus = new BuildingBonus(0, 1, 1, 0, false, false, false, false, false);
         this.cards = new HashMap<>();
@@ -79,5 +79,8 @@ public class Player {
 
     public void setLastPick(Card lastPick) {
         this.lastPick = lastPick;
+    }
+    public void setColor(Color color) {
+        this.color = color;
     }
 }

@@ -2,12 +2,13 @@ package org.example.server.network;
 
 import org.example.server.controller.GameController;
 import org.example.server.controller.ServerController;
+import org.example.server.model.EndGameObserver;
 import org.example.server.model.ModelObserver;
 import org.example.shared.network.requests.ClientRequest;
 
 import java.util.Optional;
 
-public abstract class VirtualClient implements ModelObserver {
+public abstract class VirtualClient implements ModelObserver, EndGameObserver {
     private final ServerController serverController;
     private Optional<GameController> gameController;
 
@@ -17,11 +18,10 @@ public abstract class VirtualClient implements ModelObserver {
     }
 
     public void processRequest(ClientRequest req){
-        if(gameController.isPresent()) {
-            gameController.get().handleClientRequest(req, this);
-        } else if(req.getGameId() != 0) {
+        if(gameController.isEmpty()){
             serverController.handleClientRequest(req, this);
-            gameController.ifPresent(controller -> controller.handleClientRequest(req, this));
+        } else{
+            gameController.get().handleClientRequest(req, this);
         }
     }
 

@@ -1,5 +1,6 @@
 package org.example.server.controller.states;
 
+import org.example.server.controller.GameController;
 import org.example.server.network.VirtualClient;
 import org.example.shared.enums.CardType;
 import org.example.shared.enums.Phase;
@@ -17,9 +18,10 @@ import org.example.server.model.board.OfferTrack;
 import java.util.Optional;
 import java.util.Set;
 
+
 public class ExtraMoveState extends ControllerState {
-    public ExtraMoveState(Game game) {
-        super(game);
+    public ExtraMoveState(Game game, GameController context) {
+        super(game, context);
     }
 
     @Override
@@ -72,7 +74,7 @@ public class ExtraMoveState extends ControllerState {
             return this;
         } else {
             getGame().setCurrentPlayer(Optional.empty());
-            return new EventsState(getGame());
+            return new EventsState(getGame(), getContext());
         }
     }
 }

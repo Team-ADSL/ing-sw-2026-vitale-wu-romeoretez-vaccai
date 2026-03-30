@@ -1,5 +1,6 @@
 package org.example.server.controller.states;
 
+import org.example.server.controller.GameController;
 import org.example.server.network.VirtualClient;
 import org.example.shared.enums.Phase;
 import org.example.shared.network.requests.MakeMoveRequest;
@@ -23,8 +24,8 @@ import java.util.Set;
 
 public class ActionExecutionState extends ControllerState {
 
-    public ActionExecutionState(Game game) {
-        super(game);
+    public ActionExecutionState(Game game, GameController context) {
+        super(game, context);
     }
 
     @Override
@@ -77,7 +78,7 @@ public class ActionExecutionState extends ControllerState {
         execute(moves, reqPlayer);
     }
 
-    public void execute(Set<Move> moves, Player p) {
+    private void execute(Set<Move> moves, Player p) {
         for(Move move : moves){
             CardRow selectedRow = null;
             if(move.getRow() == Row.UPPER) {
@@ -91,7 +92,7 @@ public class ActionExecutionState extends ControllerState {
         placeTotem(p);
     }
 
-    public void placeTotem(Player p){
+    private void placeTotem(Player p){
         int i = getGame().getBoard().getOrderTile().placePlayerAtNext(p);
 
         // Eventual bonus for totem placement in order tile
@@ -133,7 +134,7 @@ public class ActionExecutionState extends ControllerState {
             }
         } else {
             getGame().setCurrentPlayer(Optional.empty());
-            return new ExtraMoveState(getGame());
+            return new ExtraMoveState(getGame(), getContext());
         }
     }
 }

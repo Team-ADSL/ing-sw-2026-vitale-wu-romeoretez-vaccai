@@ -1,18 +1,25 @@
-package org.example.server.db;
+package org.example.server.persistence;
 
+import org.example.server.db.ConnectionProvider;
+import org.example.server.db.DatabaseConfig;
 import org.example.shared.model.MatchResult;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GameDAO {
+public class SqlGameDAO implements GameDAO{
+    private ConnectionProvider connectionProvider;
+
+    SqlGameDAO(ConnectionProvider connectionProvider){
+        this.connectionProvider = connectionProvider;
+    }
 
     // Game creation for the lobby before starting (the number of player is unknown)
-    public static int createMatch() throws SQLException {
+    public int createMatch() throws SQLException {
         String sql = "INSERT INTO matches () VALUES ()";
 
-        try (Connection conn = DatabaseConfig.getConnection();
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.executeUpdate();
             ResultSet keys = ps.getGeneratedKeys();
@@ -25,10 +32,10 @@ public class GameDAO {
     }
 
     // For game created but where all player quit the lobby before starting
-    public static void deleteMatch(int gameId) throws SQLException {
+    public void deleteMatch(int gameId) throws SQLException {
         String sql = "DELETE FROM matches WHERE id = ?";
 
-        try (Connection conn = DatabaseConfig.getConnection();
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, gameId);
 
@@ -39,7 +46,7 @@ public class GameDAO {
         }
     }
 
-    public static void saveMatch(int gameId, int playerCount,
+    public void saveMatch(int gameId, int playerCount,
                                  List<String> nicknames,
                                  List<Integer> scores) throws SQLException {
 
@@ -48,7 +55,7 @@ public class GameDAO {
         String sqlGetPlayerId = "SELECT id FROM players WHERE nickname = ?";
         String sqlResult = "INSERT INTO results (match_id, player_id, score) VALUES (?, ?, ?)";
 
-        try (Connection conn = DatabaseConfig.getConnection()) {
+        try (Connection conn = connectionProvider.getConnection()) {
             conn.setAutoCommit(false);
 
             try (PreparedStatement psMatch = conn.prepareStatement(sqlMatch);
@@ -97,23 +104,7 @@ public class GameDAO {
         }
     }
 
-    public static int getRank(int score, int playerCount) throws SQLException {
-        String sql = """
-            SELECT COUNT(*) + 1 AS rank
-            FROM results r
-            JOIN matches m ON r.match_id = m.id
-            WHERE m.player_count = ? AND r.score > ?
-            """;
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, playerCount);
-            ps.setInt(2, score);
-            ResultSet rs = ps.executeQuery();
-            return rs.next() ? rs.getInt("rank") : -1;
-        }
-    }
-
-    public static List<MatchResult> getLeaderboard(int playerCount) throws SQLException {
+    public List<MatchResult> getLeaderboard(int playerCount) throws SQLException {
         String sql = """
             SELECT
                 RANK() OVER (ORDER BY r.score DESC) AS rank,
@@ -128,7 +119,7 @@ public class GameDAO {
             LIMIT 100
             """;
         List<MatchResult> leaderboard = new ArrayList<>();
-        try (Connection conn = DatabaseConfig.getConnection();
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, playerCount);
             ResultSet rs = ps.executeQuery();

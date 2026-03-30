@@ -16,7 +16,7 @@ public class Lobby implements Datasource {
 
     @Override
     public void updateAll() {
-        for(ModelObserver o : observers) o.update(createDto());
+        for(ModelObserver o : observers) o.update(this);
     }
 
     @Override

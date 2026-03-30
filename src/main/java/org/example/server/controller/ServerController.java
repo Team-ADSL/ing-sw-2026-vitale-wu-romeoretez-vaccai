@@ -1,26 +1,32 @@
 package org.example.server.controller;
 
-import org.example.server.controller.states.LobbyState;
-import org.example.server.db.GameDAO;
+import org.example.server.config.BoardConfigLoader;
+import org.example.server.persistence.GameDAO;
+import org.example.server.model.EndGameObserver;
 import org.example.server.model.Game;
 import org.example.server.model.Lobby;
-import org.example.server.model.Player;
 import org.example.server.network.VirtualClient;
+import org.example.server.persistence.GamePersistenceManager;
 import org.example.shared.exceptions.InvalidRequestException;
+import org.example.shared.model.MatchResult;
 import org.example.shared.network.RequestVisitor;
 import org.example.shared.network.requests.*;
 
-import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Collectors;
 
-public class ServerController implements RequestVisitor<VirtualClient> {
+public class ServerController implements RequestVisitor<VirtualClient>, EndGameObserver {
     private final Map<Integer, GameController> games;
     private final Lobby lobby;
+    private final GameDAO gameDAO;
+    private final BoardConfigLoader boardConfigLoader;
+    private final GamePersistenceManager gamePersistenceManager;
 
-    public ServerController() {
+    public ServerController(GameDAO gameDAO, BoardConfigLoader boardConfigLoader, GamePersistenceManager gamePersistenceManager) {
         this.games = new HashMap<>();
         this.lobby = new Lobby();
+        this.gameDAO = gameDAO;
+        this.boardConfigLoader = boardConfigLoader;
+        this.gamePersistenceManager = gamePersistenceManager;
     }
 
     public void handleClientRequest(ClientRequest req, VirtualClient virtualClient){
@@ -35,59 +41,72 @@ public class ServerController implements RequestVisitor<VirtualClient> {
 
     @Override
     public void visit(CreateGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
-        // Implement
+        createGame(req, virtualClient);
     }
     @Override
     public void visit(ConnectToGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
-        // Implement
+        connectToGame(req, virtualClient);
     }
     @Override
     public void visit(ClientDisconnected req, VirtualClient virtualClient) throws InvalidRequestException {
-        // Implement
+        throw new InvalidRequestException("Server received invalid request");
     }
     @Override
     public void visit(StartGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
-        throw new InvalidRequestException("Move not allowed in this phase");
+        throw new InvalidRequestException("Server received invalid request");
     }
     @Override
     public void visit(MakeMoveRequest req, VirtualClient virtualClient) throws InvalidRequestException {
-        throw new InvalidRequestException("Move not allowed in this phase");
+        throw new InvalidRequestException("Server received invalid request");
     }
 
-    public synchronized GameController createGame(){
-        try{
-            int newId =  GameDAO.createMatch();
-            GameController newGameController = new GameController(newId, new LobbyState(null));
-            games.put(newId, newGameController); // Need to handle
-            return newGameController;
-        } catch (SQLException e){
+    @Override
+    public void update(int gameId, List<MatchResult> matchResults) {
+        synchronized (games){
+            games.remove(gameId);
+        }
+        try {
+            gamePersistenceManager.removeGame(gameId);
+        } catch(Exception e){
             System.out.println(e.getMessage());
-            return null;
+        }
+        // If game terminates before starting we clean the database
+        if(matchResults == null){
+            try {
+                gameDAO.deleteMatch(gameId);
+            } catch(Exception e){
+                System.out.println(e.getMessage());
+            }
         }
     }
 
-    public void deleteGame(int gameId){
+    public void createGame(ClientRequest req, VirtualClient virtualClient){
         try{
-            GameDAO.deleteMatch(gameId);
-            games.remove(gameId);
-        } catch (SQLException e){
+            int newId =  gameDAO.createMatch();
+            Game newGame = new Game(newId, this, gamePersistenceManager);
+            GameController newGameController = new GameController(newGame, gameDAO, boardConfigLoader);
+            synchronized (games){
+                games.put(newId, newGameController);
+            }
+            ConnectToGameRequest newReq = new ConnectToGameRequest(newId, req.getUsername());
+            newGameController.handleClientRequest(newReq, virtualClient);
+        } catch (Exception e){
             System.out.println(e.getMessage());
+            virtualClient.sendErrorMessage(e.getMessage());
         }
     }
 
-    public void saveAndQuitGame(int gameId){
-        Game game = games.get(gameId).getState().getGame();
-        List<String> nicknames = game.getPlayers().stream()
-                .map(Player::getName)
-                .collect(Collectors.toList());
-        List<Integer> scores = game.getPlayers().stream()
-                .map(Player::getPp)
-                .collect(Collectors.toList());
+    public void connectToGame(ClientRequest req, VirtualClient virtualClient){
         try{
-            GameDAO.saveMatch(gameId, game.getPlayers().size(), nicknames, scores);
-            games.remove(gameId);
-        } catch (SQLException e){
+            if(games.containsKey(req.getGameId())){
+                GameController reqGame = games.get(req.getGameId());
+                reqGame.handleClientRequest(req, virtualClient);
+            } else {
+                throw new InvalidRequestException("The requested game does not exists");
+            }
+        } catch (Exception e){
             System.out.println(e.getMessage());
+            virtualClient.sendErrorMessage(e.getMessage());
         }
     }
 }
