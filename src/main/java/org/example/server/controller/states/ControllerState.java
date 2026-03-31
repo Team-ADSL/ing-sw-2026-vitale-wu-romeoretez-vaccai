@@ -24,9 +24,9 @@ public abstract class ControllerState implements RequestVisitor<VirtualClient> {
 
     public abstract ControllerState nextState();
 
-    public Player controlIfPlayerTurn(ClientRequest req) throws InvalidRequestException{
+    public Player controlIfPlayerTurn(ClientRequest req, VirtualClient virtualClient) throws InvalidRequestException{
         Optional<Player> reqPlayer = getGame().getPlayers().stream()
-                .filter(p -> p.getName().equals(req.getUsername()))
+                .filter(p -> p.getName().equals(virtualClient.getClientUsername()))
                 .findFirst();
         if(reqPlayer.isEmpty()){
             throw new InvalidRequestException("Player not in current game");
@@ -42,11 +42,19 @@ public abstract class ControllerState implements RequestVisitor<VirtualClient> {
     }
 
     @Override
+    public void visit(ClientConnection req, VirtualClient virtualClient) throws InvalidRequestException {
+        throw new InvalidRequestException("New connection not allowed:");
+    }
+    @Override
+    public void visit(SetUsernameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
+        throw new InvalidRequestException("You can't change username here:");
+    }
+    @Override
     public void visit(CreateGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
         throw new InvalidRequestException("Create game request rejected:");
     }
     @Override
-    public void visit(ConnectToGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
+    public void visit(EnterGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
         throw new InvalidRequestException("Connection rejected:");
     }
     @Override

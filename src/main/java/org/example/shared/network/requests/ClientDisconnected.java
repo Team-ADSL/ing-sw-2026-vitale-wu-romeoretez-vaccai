@@ -4,8 +4,8 @@ import org.example.shared.exceptions.InvalidRequestException;
 import org.example.shared.network.RequestVisitor;
 
 public class ClientDisconnected extends ClientRequest{
-    public ClientDisconnected(int gameId, String username) {
-        super(gameId, username);
+    public ClientDisconnected(int gameId) {
+        super(gameId);
     }
 
     @Override

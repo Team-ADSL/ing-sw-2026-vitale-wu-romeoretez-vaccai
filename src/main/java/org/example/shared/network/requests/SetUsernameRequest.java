@@ -3,9 +3,10 @@ package org.example.shared.network.requests;
 import org.example.shared.exceptions.InvalidRequestException;
 import org.example.shared.network.RequestVisitor;
 
-public class ConnectToGameRequest extends ClientRequest{
-    public ConnectToGameRequest(int gameId, String username) {
-        super(gameId, username);
+public class SetUsernameRequest extends ClientRequest{
+
+    public SetUsernameRequest(int gameId) {
+        super(gameId);
     }
 
     @Override

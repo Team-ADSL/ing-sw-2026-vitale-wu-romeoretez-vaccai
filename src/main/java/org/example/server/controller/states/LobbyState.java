@@ -7,7 +7,7 @@ import org.example.server.network.VirtualClient;
 import org.example.shared.enums.Phase;
 import org.example.shared.exceptions.InvalidRequestException;
 import org.example.shared.network.requests.ClientDisconnected;
-import org.example.shared.network.requests.ConnectToGameRequest;
+import org.example.shared.network.requests.EnterGameRequest;
 import org.example.shared.network.requests.StartGameRequest;
 
 import java.util.Optional;
@@ -27,10 +27,10 @@ public class LobbyState extends ControllerState {
     }
 
     @Override
-    public void visit(ConnectToGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
+    public void visit(EnterGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
         if(getGame().getPlayers().size() < 5){
             getGame().addVirtualClient(virtualClient);
-            getGame().getPlayers().add(new Player(req.getUsername()));
+            getGame().getPlayers().add(new Player(virtualClient.getClientUsername()));
             virtualClient.setGameController(Optional.of(getContext()));
         } else {
             throw new InvalidRequestException("The lobby is full");
@@ -41,7 +41,7 @@ public class LobbyState extends ControllerState {
     public void visit(ClientDisconnected req, VirtualClient virtualClient) throws InvalidRequestException {
         getGame().removeVirtualClient(virtualClient);
         Optional<Player> reqPlayer = getGame().getPlayers().stream()
-                .filter(p -> p.getName().equals(req.getUsername()))
+                .filter(p -> p.getName().equals(virtualClient.getClientUsername()))
                 .findFirst();
         if(reqPlayer.isEmpty()){
             throw new InvalidRequestException("Player not in current game");

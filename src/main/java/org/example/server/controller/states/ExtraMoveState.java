@@ -32,7 +32,7 @@ public class ExtraMoveState extends ControllerState {
 
     @Override
     public void visit(MakeMoveRequest req, VirtualClient virtualClient) throws InvalidRequestException {
-        Player reqPlayer = controlIfPlayerTurn(req);
+        Player reqPlayer = controlIfPlayerTurn(req, virtualClient);
 
         Set<Move> moves = req.getMoves();
         if(moves.size() != 1){

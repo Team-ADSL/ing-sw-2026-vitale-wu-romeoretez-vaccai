@@ -36,7 +36,7 @@ public class ActionExecutionState extends ControllerState {
 
     @Override
     public void visit(MakeMoveRequest req, VirtualClient virtualClient) throws InvalidRequestException {
-        Player reqPlayer = controlIfPlayerTurn(req);
+        Player reqPlayer = controlIfPlayerTurn(req, virtualClient);
 
         OfferTrack offerTrack = getGame().getBoard().getOfferTrack();
         int offerIndex = 0;

@@ -3,9 +3,9 @@ package org.example.server.model;
 import org.example.server.network.VirtualClient;
 import org.example.server.model.board.Board;
 import org.example.shared.enums.Phase;
+import org.example.shared.model.DatasourceDTO;
 import org.example.shared.model.MatchResult;
 
-import java.sql.SQLException;
 import java.util.*;
 
 public class Game implements Datasource, EndGameData {
@@ -70,6 +70,11 @@ public class Game implements Datasource, EndGameData {
     @Override
     public void removeObserver(ModelObserver o) {
         modelObservers.remove(o);
+    }
+
+    @Override
+    public DatasourceDTO createDTO() {
+        return null; // TO IMPLEMENT
     }
 
     @Override

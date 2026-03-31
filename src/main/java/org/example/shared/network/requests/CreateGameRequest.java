@@ -4,8 +4,8 @@ import org.example.shared.exceptions.InvalidRequestException;
 import org.example.shared.network.RequestVisitor;
 
 public class CreateGameRequest extends ClientRequest{
-    public CreateGameRequest(int gameId, String username) {
-        super(gameId, username);
+    public CreateGameRequest(int gameId) {
+        super(gameId);
     }
 
     @Override

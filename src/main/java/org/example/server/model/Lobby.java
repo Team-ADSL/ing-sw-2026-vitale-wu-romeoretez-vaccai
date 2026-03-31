@@ -1,5 +1,6 @@
 package org.example.server.model;
 
+import org.example.shared.model.DatasourceDTO;
 import org.example.shared.model.LobbyDTO;
 
 import java.util.ArrayList;
@@ -29,8 +30,9 @@ public class Lobby implements Datasource {
         this.observers.remove(observer);
     }
 
-    public LobbyDTO createDto(){
-        return null;
+    @Override
+    public DatasourceDTO createDTO() {
+        return null; // TO IMPLEMENT
     }
 
     public List<Integer> getGames() {

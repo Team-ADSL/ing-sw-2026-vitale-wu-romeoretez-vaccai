@@ -40,16 +40,24 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
     }
 
     @Override
+    public void visit(ClientConnection req, VirtualClient virtualClient) throws InvalidRequestException {
+        // Handle initial connection
+    }
+    @Override
+    public void visit(SetUsernameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
+        // Setting of username
+    }
+    @Override
     public void visit(CreateGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
         createGame(req, virtualClient);
     }
     @Override
-    public void visit(ConnectToGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
+    public void visit(EnterGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
         connectToGame(req, virtualClient);
     }
     @Override
     public void visit(ClientDisconnected req, VirtualClient virtualClient) throws InvalidRequestException {
-        throw new InvalidRequestException("Server received invalid request");
+        // Handle disconnection
     }
     @Override
     public void visit(StartGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
@@ -88,7 +96,7 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
             synchronized (games){
                 games.put(newId, newGameController);
             }
-            ConnectToGameRequest newReq = new ConnectToGameRequest(newId, req.getUsername());
+            EnterGameRequest newReq = new EnterGameRequest(newId);
             newGameController.handleClientRequest(newReq, virtualClient);
         } catch (Exception e){
             System.out.println(e.getMessage());
