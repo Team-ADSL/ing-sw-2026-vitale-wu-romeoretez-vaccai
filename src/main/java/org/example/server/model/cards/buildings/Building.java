@@ -1,3 +1,4 @@
+
 package org.example.server.model.cards.buildings;
 
 import org.example.server.model.cards.Card;

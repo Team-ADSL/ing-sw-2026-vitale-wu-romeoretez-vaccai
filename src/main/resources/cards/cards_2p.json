@@ -1,0 +1,48 @@
+{
+  "numPlayers": 2,
+  "era1": {
+    "characters and events": [
+      { "id": "builder_01",         "type": "BUILDER",         "name": "Builder",          "image": "", "discount": 1, "pp": 2 },
+      { "id": "hunter_01",          "type": "HUNTER",          "name": "Hunter",           "image": "", "extraFood": false },
+      { "id": "gatherer_01",        "type": "GATHERER",        "name": "Gatherer",         "image": "", "discount": 1 },
+      { "id": "coartist_01",          "type": "ARTIST",          "name": "Artist",           "image": "" },
+      { "id": "shaman_01",          "type": "SHAMAN",          "name": "Shaman",           "image": "", "starNum": 1 },
+      { "id": "inventor_01",        "type": "INVENTOR",        "name": "Inventor",         "image": "", "icon": "BOAT" },
+
+      { "id": "hunt_01",            "type": "HUNT",            "name": "The Great Hunt",   "image": "", "isFinal": false, "multiplierPP": 2 },
+      { "id": "sustenance_01",      "type": "SUSTENANCE",      "name": "Sustenance",       "image": "", "isFinal": false, "lostPP": 3 },
+      { "id": "cave_paintings_01",  "type": "CAVE_PAINTINGS",  "name": "Cave Paintings",   "image": "", "isFinal": false, "minArtists": 2, "lostPP": 2, "multiplierPP": 3 },
+      { "id": "shamanic_ritual_01", "type": "SHAMANIC_RITUAL", "name": "Shamanic Ritual",  "image": "", "isFinal": false, "lostPP": 3, "gainedPP": 5 }
+    ]
+  },
+  "era2": {
+    "characters and events": [
+      { "id": "builder_02",         "type": "BUILDER",         "name": "Builder",          "image": "", "discount": 2, "pp": 3 },
+      { "id": "hunter_02",          "type": "HUNTER",          "name": "Hunter",           "image": "", "extraFood": true },
+      { "id": "gatherer_02",        "type": "GATHERER",        "name": "Gatherer",         "image": "", "discount": 2 },
+      { "id": "artist_02",          "type": "ARTIST",          "name": "Artist",           "image": "" },
+      { "id": "shaman_02",          "type": "SHAMAN",          "name": "Shaman",           "image": "", "starNum": 2 },
+      { "id": "inventor_02",        "type": "INVENTOR",        "name": "Inventor",         "image": "", "icon": "SPEARHEAD" },
+
+      { "id": "hunt_02",            "type": "HUNT",            "name": "The Great Hunt",   "image": "", "isFinal": false, "multiplierPP": 3 },
+      { "id": "sustenance_02",      "type": "SUSTENANCE",      "name": "Sustenance",       "image": "", "isFinal": false, "lostPP": 4 },
+      { "id": "cave_paintings_02",  "type": "CAVE_PAINTINGS",  "name": "Cave Paintings",   "image": "", "isFinal": false, "minArtists": 2, "lostPP": 3, "multiplierPP": 4 },
+      { "id": "shamanic_ritual_02", "type": "SHAMANIC_RITUAL", "name": "Shamanic Ritual",  "image": "", "isFinal": false, "lostPP": 4, "gainedPP": 6 }
+    ]
+  },
+  "era3": {
+    "characters and events": [
+      { "id": "builder_03",         "type": "BUILDER",         "name": "Builder",              "image": "", "discount": 3, "pp": 4 },
+      { "id": "hunter_03",          "type": "HUNTER",          "name": "Hunter",               "image": "", "extraFood": true },
+      { "id": "gatherer_03",        "type": "GATHERER",        "name": "Gatherer",             "image": "", "discount": 3 },
+      { "id": "artist_03",          "type": "ARTIST",          "name": "Artist",               "image": "" },
+      { "id": "shaman_03",          "type": "SHAMAN",          "name": "Shaman",               "image": "", "starNum": 3 },
+      { "id": "inventor_03",        "type": "INVENTOR",        "name": "Inventor",             "image": "", "icon": "TOTEM" },
+
+      { "id": "hunt_03",            "type": "HUNT",            "name": "The Final Hunt",       "image": "", "isFinal": true, "multiplierPP": 4 },
+      { "id": "sustenance_03",      "type": "SUSTENANCE",      "name": "Final Sustenance",     "image": "", "isFinal": true, "lostPP": 5 },
+      { "id": "cave_paintings_03",  "type": "CAVE_PAINTINGS",  "name": "Final Cave Paintings", "image": "", "isFinal": true, "minArtists": 2, "lostPP": 4, "multiplierPP": 5 },
+      { "id": "shamanic_ritual_03", "type": "SHAMANIC_RITUAL", "name": "Grand Ritual",         "image": "", "isFinal": true, "lostPP": 5, "gainedPP": 8 }
+    ]
+  }
+}

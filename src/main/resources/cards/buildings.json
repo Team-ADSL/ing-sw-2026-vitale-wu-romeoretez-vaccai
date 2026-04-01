@@ -1,0 +1,21 @@
+{
+  "era1": [
+    { "id": "bonus_totem_01",       "type": "BONUS_TOTEM",      "name": "Totem Shrine",      "image": "", "endGamePP": 2, "cost": 3 },
+    { "id": "during_hunt_01",       "type": "DURING_HUNT",      "name": "Hunter's Lodge",    "image": "", "endGamePP": 2, "cost": 3 }
+  ],
+  "era2": [
+    { "id": "extra_move_01",        "type": "EXTRA_MOVE",       "name": "Trading Post",      "image": "", "endGamePP": 2, "cost": 4 },
+    { "id": "since_built_01",       "type": "SINCE_BUILT",      "name": "Gathering Hut",     "image": "", "endGamePP": 3, "cost": 5, "buildingEffect": "FOOD_COMPLETE_SET" },
+    { "id": "during_ritual_01",     "type": "DURING_RITUAL",    "name": "Spirit Temple",     "image": "", "endGamePP": 3, "cost": 5, "buildingEffect": "RITUAL_STARS_BONUS" }
+  ],
+  "era3": [
+    { "id": "during_painting_01",   "type": "DURING_PAINTING",  "name": "Cave Gallery",      "image": "", "endGamePP": 3, "cost": 5 },
+    { "id": "during_sustenance_01", "type": "DURING_SUSTENANCE","name": "Granary",           "image": "", "endGamePP": 3, "cost": 5, "typeMultiplier": "GATHERER" },
+    { "id": "end_game_01",          "type": "END_GAME",         "name": "Great Monument",    "image": "", "endGamePP": 6, "cost": 8, "buildingEffect": "END_BUILDER_MULTIPLIER", "characterTypeMultiplier": null },
+    { "id": "since_built_02",       "type": "SINCE_BUILT",      "name": "Inventor's Workshop","image": "", "endGamePP": 4, "cost": 6, "buildingEffect": "COUPLE_INVENTOR" },
+    { "id": "end_game_02",          "type": "END_GAME",         "name": "Sacred Grounds",    "image": "", "endGamePP": 7, "cost": 9, "buildingEffect": "PP_COMPLETE_SET", "characterTypeMultiplier": null },
+    { "id": "end_game_03",          "type": "END_GAME",         "name": "Hall of Ancestors", "image": "", "endGamePP": 5, "cost": 7, "buildingEffect": "END_CHARACTER_MULTIPLIER", "characterTypeMultiplier": "HUNTER" },
+    { "id": "during_ritual_02",     "type": "DURING_RITUAL",    "name": "Grand Temple",      "image": "", "endGamePP": 5, "cost": 7, "buildingEffect": "RITUAL_DOUBLE_PP" },
+    { "id": "end_game_04",          "type": "END_GAME",         "name": "Ancestor's Vault",  "image": "", "endGamePP": 6, "cost": 8, "buildingEffect": "END_PP_BONUS", "characterTypeMultiplier": null }
+  ]
+}
