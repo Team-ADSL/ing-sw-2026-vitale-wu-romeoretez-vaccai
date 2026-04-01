@@ -5,7 +5,7 @@
       { "id": "builder_01",         "type": "BUILDER",         "name": "Builder",          "image": "", "discount": 1, "pp": 2 },
       { "id": "hunter_01",          "type": "HUNTER",          "name": "Hunter",           "image": "", "extraFood": false },
       { "id": "gatherer_01",        "type": "GATHERER",        "name": "Gatherer",         "image": "", "discount": 1 },
-      { "id": "coartist_01",          "type": "ARTIST",          "name": "Artist",           "image": "" },
+      { "id": "artist_01",          "type": "ARTIST",          "name": "Artist",           "image": "" },
       { "id": "shaman_01",          "type": "SHAMAN",          "name": "Shaman",           "image": "", "starNum": 1 },
       { "id": "inventor_01",        "type": "INVENTOR",        "name": "Inventor",         "image": "", "icon": "BOAT" },
 
