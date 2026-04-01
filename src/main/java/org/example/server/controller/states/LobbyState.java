@@ -23,6 +23,7 @@ public class LobbyState extends ControllerState {
     @Override
     public ControllerState onEntry() {
         getGame().setPhase(Phase.LOBBY);
+        getGame().sendUpdateLobby();
         return this;
     }
 
@@ -32,6 +33,7 @@ public class LobbyState extends ControllerState {
             getGame().addVirtualClient(virtualClient);
             getGame().getPlayers().add(new Player(virtualClient.getClientUsername()));
             virtualClient.setGameController(Optional.of(getContext()));
+            getGame().sendUpdateGame();
         } else {
             throw new InvalidRequestException("The lobby is full");
         }
@@ -50,7 +52,9 @@ public class LobbyState extends ControllerState {
         virtualClient.setGameController(Optional.empty());
 
         if(getGame().getPlayers().isEmpty()){
-            getGame().notifyEndGame(null);
+            getGame().sendEndGameResults(null);
+        } else {
+            getGame().sendUpdateLobby();
         }
     }
 
@@ -58,6 +62,7 @@ public class LobbyState extends ControllerState {
     public void visit(StartGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
         if(getGame().getPlayers().size() >= 2){
             readyToStart = true;
+            getGame().sendUpdateLobby();
         } else {
             throw new InvalidRequestException("At least 2 players required to start the game");
         }

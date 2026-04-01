@@ -25,6 +25,7 @@ public class EventsState extends ControllerState {
                 c.activeEffect(players, Trigger.EVENT_EXECUTION);
             }
         }
+        getGame().sendUpdateGame();
         return nextState();
     }
 

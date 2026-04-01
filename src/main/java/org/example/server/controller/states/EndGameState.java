@@ -2,7 +2,6 @@ package org.example.server.controller.states;
 
 import org.example.server.controller.GameController;
 import org.example.server.persistence.GameDAO;
-import org.example.server.persistence.SqlGameDAO;
 import org.example.shared.enums.Phase;
 import org.example.shared.enums.CardType;
 import org.example.shared.enums.Trigger;
@@ -13,7 +12,6 @@ import org.example.server.model.Game;
 import org.example.server.model.Player;
 import org.example.shared.model.MatchResult;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 
@@ -64,7 +62,8 @@ public class EndGameState extends ControllerState {
         gameDAO.saveMatch(getGame().getGameId(), players.size(), nicknames, scores);
         List<MatchResult> matchResults = gameDAO.getLeaderboard(players.size());
 
-        getGame().notifyEndGame(matchResults);
+        getGame().sendEndGameResults(matchResults);
+        getGame().sendUpdateGame();
         return nextState();
     }
 

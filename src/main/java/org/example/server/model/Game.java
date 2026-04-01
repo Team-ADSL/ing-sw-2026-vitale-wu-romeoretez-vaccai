@@ -3,37 +3,37 @@ package org.example.server.model;
 import org.example.server.network.VirtualClient;
 import org.example.server.model.board.Board;
 import org.example.shared.enums.Phase;
-import org.example.shared.model.DatasourceDTO;
+import org.example.shared.model.GameDTO;
 import org.example.shared.model.MatchResult;
+
 
 import java.util.*;
 
-public class Game implements Datasource, EndGameData {
+public class Game {
     private final int gameId;
+    private final List<ModelObserver> modelObservers = new ArrayList<>();
+    private final List<EndGameObserver> endGameObservers = new ArrayList<>();
+    private final Set<Player> players;
 
+    private Board board;
     private int round;
     private int era;
-    private final Set<Player> players;
     private Optional<Player> currentPlayer;
-    private Board board;
     private Phase phase;
     private boolean isInitialized;
 
-    private final List<ModelObserver> modelObservers = new ArrayList<>();
-    private final List<EndGameObserver> endGameObservers = new ArrayList<>();
-
     // For initial istantiation
-    public Game(int gameId, EndGameObserver endGameObserver, ModelObserver gamePersistenceManager) {
+    public Game(int gameId, EndGameObserver endGameObserver) {
         this.gameId = gameId;
+        addObserver(endGameObserver);
+        this.players = new HashSet<>();
+
+        this.board = null;
         this.round = 0;
         this.era = 1;
-        this.players = new HashSet<>();
         this.currentPlayer = Optional.empty();
-        this.board = null;
         this.phase = Phase.LOBBY;
         this.isInitialized = false;
-        addObserver(endGameObserver);
-        addObserver(gamePersistenceManager);
     }
 
     // For recover after crash
@@ -41,6 +41,9 @@ public class Game implements Datasource, EndGameData {
                 Board board, Phase phase, boolean isInitialized,
                 EndGameObserver endGameObserver, ModelObserver gamePersistenceManager) {
         this.gameId = gameId;
+        addObserver(endGameObserver);
+        addObserver(gamePersistenceManager);
+
         this.round = round;
         this.era = era;
         this.players = players;
@@ -48,53 +51,43 @@ public class Game implements Datasource, EndGameData {
         this.board = board;
         this.phase = phase;
         this.isInitialized = isInitialized;
-        addObserver(endGameObserver);
-        addObserver(gamePersistenceManager);
     }
 
     public void addVirtualClient(VirtualClient virtualClient){
         addObserver((ModelObserver) virtualClient);
         addObserver((EndGameObserver) virtualClient);
     }
-
     public void removeVirtualClient(VirtualClient virtualClient){
         removeObserver((ModelObserver) virtualClient);
         removeObserver((EndGameObserver) virtualClient);
     }
 
-    @Override
     public void addObserver(ModelObserver o) {
         modelObservers.add(o);
     }
-
-    @Override
     public void removeObserver(ModelObserver o) {
         modelObservers.remove(o);
     }
-
-    @Override
-    public DatasourceDTO createDTO() {
+    public GameDTO createDTO() {
         return null; // TO IMPLEMENT
     }
 
-    @Override
-    public void updateAll(){
-        for(ModelObserver o : modelObservers) o.update(this);
-    }
-
-    @Override
     public void addObserver(EndGameObserver o) {
         endGameObservers.add(o);
     }
-
-    @Override
     public void removeObserver(EndGameObserver o) {
         endGameObservers.remove(o);
     }
 
-    @Override
-    public void notifyEndGame(List<MatchResult> matchResults) {
-        for(EndGameObserver o : endGameObservers) o.update(gameId, matchResults);
+    public void sendUpdateLobby(){
+        List<String> playerNames = players.stream().map(Player::getName).toList();
+        for(ModelObserver o : modelObservers) o.updateLobby(playerNames);
+    }
+    public void sendUpdateGame(){
+        for(ModelObserver o : modelObservers) o.updateGame(createDTO());
+    }
+    public void sendEndGameResults(List<MatchResult> results){
+        for(EndGameObserver o : endGameObservers) o.notifyEndGame(gameId, results);
     }
 
     public void changeEra() {

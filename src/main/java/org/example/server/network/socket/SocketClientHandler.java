@@ -1,16 +1,14 @@
 package org.example.server.network.socket;
 
 import org.example.server.controller.ServerController;
-import org.example.server.model.Datasource;
 import org.example.server.network.VirtualClient;
-import org.example.shared.model.MatchResult;
 import org.example.shared.network.requests.ClientRequest;
+import org.example.shared.network.responses.ServerResponse;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.List;
 
 public class SocketClientHandler extends VirtualClient implements Runnable {
     private final Socket socket;
@@ -49,29 +47,9 @@ public class SocketClientHandler extends VirtualClient implements Runnable {
     }
 
     @Override
-    public void update(Datasource datasource) {
+    public void sendResponse(ServerResponse response) {
         try {
-            out.writeObject(datasource.createDTO());
-            out.flush();
-        } catch (IOException e) {
-            System.err.println("Impossible to send the message.");
-        }
-    }
-
-    @Override
-    public void sendErrorMessage(String error) {
-        try {
-            out.writeObject(error);
-            out.flush();
-        } catch (IOException e) {
-            System.err.println("Impossible to send the message.");
-        }
-    }
-
-    @Override
-    public void update(int gameId, List<MatchResult> matchResults) {
-        try {
-            out.writeObject(matchResults);
+            out.writeObject(response);
             out.flush();
         } catch (IOException e) {
             System.err.println("Impossible to send the message.");

@@ -1,4 +1,4 @@
-package org.example.shared.network;
+package org.example.shared.network.remote;
 
 import org.example.shared.network.requests.ClientRequest;
 

@@ -27,7 +27,9 @@ public class InitGameState extends ControllerState {
 
         BoardConfigLoader boardConfigLoader = getContext().getBoardConfigLoader();
         // Initialization logic
+        getGame().addObserver(getContext().getPersistenceManager());
         getGame().setInitialized(true);
+        getGame().sendUpdateGame();
         return nextState();
     }
 

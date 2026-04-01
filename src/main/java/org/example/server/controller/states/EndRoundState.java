@@ -52,6 +52,7 @@ public class EndRoundState extends ControllerState {
             topRow.addBuildings(newBuildings);
         }
         getGame().changeRound();
+        getGame().sendUpdateGame();
         return nextState();
     }
 

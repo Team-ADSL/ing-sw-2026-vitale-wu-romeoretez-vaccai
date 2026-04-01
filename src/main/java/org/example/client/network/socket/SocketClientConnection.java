@@ -1,9 +1,10 @@
 package org.example.client.network.socket;
 
+import org.example.client.AppCoordinator;
 import org.example.client.network.ServerConnection;
-import org.example.client.view.ClientListener;
-import org.example.shared.model.DatasourceDTO;
 import org.example.shared.network.requests.ClientRequest;
+import org.example.shared.network.responses.ServerDisconnected;
+import org.example.shared.network.responses.ServerResponse;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -13,11 +14,11 @@ public class SocketClientConnection implements ServerConnection {
     private Socket socket;
     private ObjectOutputStream out;
     private ObjectInputStream in;
-    private final ClientListener listener;
+    private final AppCoordinator coordinator;
     private boolean isRunning;
 
-    public SocketClientConnection(ClientListener listener) {
-        this.listener = listener;
+    public SocketClientConnection(AppCoordinator coordinator) {
+        this.coordinator = coordinator;
     }
 
     @Override
@@ -32,14 +33,15 @@ public class SocketClientConnection implements ServerConnection {
     private void listenToServer() {
         try {
             while (isRunning && !socket.isClosed()) {
-                DatasourceDTO incomingData = (DatasourceDTO) in.readObject();
-                if (listener != null) {
-                    listener.onDataReceived(incomingData);
+                ServerResponse response = (ServerResponse) in.readObject();
+                if (coordinator != null) {
+                    response.accept(coordinator);
                 }
             }
         } catch (Exception e) {
-            if (isRunning && listener != null) {
-                listener.onDisconnected();
+            if (isRunning && coordinator != null) {
+                ServerResponse disconnection = new ServerDisconnected();
+                disconnection.accept(coordinator);
             }
         }
     }

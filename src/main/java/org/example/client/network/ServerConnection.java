@@ -1,6 +1,5 @@
 package org.example.client.network;
 
-import org.example.client.view.ClientListener;
 import org.example.shared.network.requests.ClientRequest;
 
 public interface ServerConnection {

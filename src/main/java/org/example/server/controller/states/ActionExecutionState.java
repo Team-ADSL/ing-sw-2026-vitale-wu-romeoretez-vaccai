@@ -31,6 +31,7 @@ public class ActionExecutionState extends ControllerState {
     @Override
     public ControllerState onEntry(){
         getGame().setPhase(Phase.ACTION_EXECUTION);
+        getGame().sendUpdateGame();
         return nextState();
     }
 
@@ -90,6 +91,7 @@ public class ActionExecutionState extends ControllerState {
             selectedCard.insert(p.getCards());
         }
         placeTotem(p);
+        getGame().sendUpdateGame();
     }
 
     private void placeTotem(Player p){

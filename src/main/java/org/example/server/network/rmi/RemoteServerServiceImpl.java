@@ -1,8 +1,8 @@
 package org.example.server.network.rmi;
 
 import org.example.server.controller.ServerController;
-import org.example.shared.network.RemoteClientStub;
-import org.example.shared.network.RemoteServerService;
+import org.example.shared.network.remote.RemoteClientStub;
+import org.example.shared.network.remote.RemoteServerService;
 import org.example.shared.network.requests.ClientRequest;
 
 import java.rmi.RemoteException;

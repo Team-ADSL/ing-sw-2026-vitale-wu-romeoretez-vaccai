@@ -24,6 +24,7 @@ public class TotemPlacementState extends ControllerState {
     @Override
     public ControllerState onEntry(){
         getGame().setPhase(Phase.TOTEM_PLACEMENT);
+        getGame().sendUpdateGame();
         return nextState();
     }
 
@@ -43,6 +44,7 @@ public class TotemPlacementState extends ControllerState {
     public void execute(Move move, Player p) {
         OfferTrack offerTrack = getGame().getBoard().getOfferTrack();
         offerTrack.placeInOfferTile(p, move.getRowIndex());
+        getGame().sendUpdateGame();
     }
 
     @Override

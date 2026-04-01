@@ -27,6 +27,7 @@ public class ExtraMoveState extends ControllerState {
     @Override
     public ControllerState onEntry(){
         getGame().setPhase(Phase.EXTRA_MOVE);
+        getGame().sendUpdateGame();
         return nextState();
     }
 
@@ -57,6 +58,7 @@ public class ExtraMoveState extends ControllerState {
         CardRow selectedRow = getGame().getBoard().getTopRow();
         Card selectedCard = selectedRow.pickCardAt(move.getRowIndex());
         selectedCard.insert(p.getCards());
+        getGame().sendUpdateGame();
     }
 
     @Override

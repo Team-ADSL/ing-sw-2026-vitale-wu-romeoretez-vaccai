@@ -1,42 +1,22 @@
 package org.example.client.network.rmi;
 
-import org.example.client.view.ClientListener;
-import org.example.shared.model.DatasourceDTO;
-import org.example.shared.model.MatchResult;
-import org.example.shared.network.RemoteClientStub;
-
-import java.util.List;
+import org.example.client.AppCoordinator;
+import org.example.shared.network.remote.RemoteClientStub;
+import org.example.shared.network.responses.*;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
 
 public class RemoteClientStubImpl extends UnicastRemoteObject implements RemoteClientStub {
-    private final transient ClientListener listener;
+    private final transient AppCoordinator coordinator;
 
-    public RemoteClientStubImpl(ClientListener listener) throws RemoteException {
+    public RemoteClientStubImpl(AppCoordinator coordinator) throws RemoteException {
         super();
-        this.listener = listener;
+        this.coordinator = coordinator;
     }
 
-    @Override
-    public void updateModel(DatasourceDTO data) throws RemoteException {
-        if (listener != null) {
-            listener.onDataReceived(data);
-        }
-    }
-
-    @Override
-    public void sendErrorMessage(String error) throws RemoteException {
-        if (listener != null) {
-            listener.onErrorReceived(error);
-        }
-    }
-
-    @Override
-    public void updateMatchResults(List<MatchResult> matchResults) throws RemoteException {
-        if (listener != null) {
-            listener.onEndGame(matchResults);
-        }
+    public void sendResponse(ServerResponse response){
+        response.accept(coordinator);
     }
 }

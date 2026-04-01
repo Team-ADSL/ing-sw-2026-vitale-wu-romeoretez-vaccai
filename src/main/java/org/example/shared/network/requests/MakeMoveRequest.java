@@ -1,16 +1,16 @@
 package org.example.shared.network.requests;
 
 import org.example.shared.exceptions.InvalidRequestException;
-import org.example.shared.network.RequestVisitor;
 import org.example.shared.utils.Move;
 
 import java.util.Set;
 
 public class MakeMoveRequest extends ClientRequest{
+    private final int gameId;
     private final Set<Move> moves;
 
     public MakeMoveRequest(int gameId, Set<Move> moves) {
-        super(gameId);
+        this.gameId = gameId;
         this.moves = moves;
     }
 
@@ -21,5 +21,8 @@ public class MakeMoveRequest extends ClientRequest{
 
     public Set<Move> getMoves() {
         return moves;
+    }
+    public int getGameId() {
+        return gameId;
     }
 }

@@ -6,13 +6,18 @@ import org.example.shared.enums.Phase;
 
 
 public class RecoverState extends ControllerState {
-    public RecoverState(Game game, GameController context) {
+    private final int gameId;
+
+    public RecoverState(Game game, GameController context, int gameId) {
         super(game, context);
+        this.gameId = gameId;
     }
 
     @Override
     public ControllerState onEntry() {
         getGame().setPhase(Phase.RECOVER);
+        // Recover logic
+        getGame().sendUpdateGame();
         return null;
     }
 

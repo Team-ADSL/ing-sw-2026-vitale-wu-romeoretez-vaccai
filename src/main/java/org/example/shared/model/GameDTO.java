@@ -13,4 +13,4 @@ public record GameDTO (
         Optional<PlayerDTO> currentPlayer,
         BoardDTO board,
         Phase phase
-) implements Serializable, DatasourceDTO{ }
+) implements Serializable { }

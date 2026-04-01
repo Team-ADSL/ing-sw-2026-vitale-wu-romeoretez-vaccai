@@ -1,15 +1,20 @@
 package org.example.shared.network.requests;
 
 import org.example.shared.exceptions.InvalidRequestException;
-import org.example.shared.network.RequestVisitor;
 
 public class EnterGameRequest extends ClientRequest{
+    private final int gameId;
+
     public EnterGameRequest(int gameId) {
-        super(gameId);
+        this.gameId = gameId;
     }
 
     @Override
     public <T> void accept(RequestVisitor<T> visitor, T context) throws InvalidRequestException {
         visitor.visit(this, context);
+    }
+
+    public int getGameId() {
+        return gameId;
     }
 }

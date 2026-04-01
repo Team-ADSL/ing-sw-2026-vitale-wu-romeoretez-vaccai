@@ -4,26 +4,26 @@ import org.example.server.config.BoardConfigLoader;
 import org.example.server.persistence.GameDAO;
 import org.example.server.model.EndGameObserver;
 import org.example.server.model.Game;
-import org.example.server.model.Lobby;
+import org.example.server.model.Home;
 import org.example.server.network.VirtualClient;
 import org.example.server.persistence.GamePersistenceManager;
 import org.example.shared.exceptions.InvalidRequestException;
 import org.example.shared.model.MatchResult;
-import org.example.shared.network.RequestVisitor;
+import org.example.shared.network.requests.RequestVisitor;
 import org.example.shared.network.requests.*;
 
 import java.util.*;
 
 public class ServerController implements RequestVisitor<VirtualClient>, EndGameObserver {
     private final Map<Integer, GameController> games;
-    private final Lobby lobby;
+    private final Home home;
     private final GameDAO gameDAO;
     private final BoardConfigLoader boardConfigLoader;
     private final GamePersistenceManager gamePersistenceManager;
 
     public ServerController(GameDAO gameDAO, BoardConfigLoader boardConfigLoader, GamePersistenceManager gamePersistenceManager) {
         this.games = new HashMap<>();
-        this.lobby = new Lobby();
+        this.home = new Home();
         this.gameDAO = gameDAO;
         this.boardConfigLoader = boardConfigLoader;
         this.gamePersistenceManager = gamePersistenceManager;
@@ -32,7 +32,7 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
     public void handleClientRequest(ClientRequest req, VirtualClient virtualClient){
         try {
             req.accept(this, virtualClient);
-            lobby.updateAll();
+            home.updateHome();
         } catch (Exception e) {
             System.out.println(e.getMessage());
             virtualClient.sendErrorMessage(e.getMessage());
@@ -42,6 +42,7 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
     @Override
     public void visit(ClientConnection req, VirtualClient virtualClient) throws InvalidRequestException {
         // Handle initial connection
+        home.updateHome();
     }
     @Override
     public void visit(SetUsernameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
@@ -69,7 +70,7 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
     }
 
     @Override
-    public void update(int gameId, List<MatchResult> matchResults) {
+    public void notifyEndGame(int gameId, List<MatchResult> matchResults) {
         synchronized (games){
             games.remove(gameId);
         }
@@ -91,8 +92,8 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
     public void createGame(ClientRequest req, VirtualClient virtualClient){
         try{
             int newId =  gameDAO.createMatch();
-            Game newGame = new Game(newId, this, gamePersistenceManager);
-            GameController newGameController = new GameController(newGame, gameDAO, boardConfigLoader);
+            Game newGame = new Game(newId, this);
+            GameController newGameController = new GameController(newGame, boardConfigLoader, gamePersistenceManager,gameDAO);
             synchronized (games){
                 games.put(newId, newGameController);
             }
@@ -104,7 +105,7 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         }
     }
 
-    public void connectToGame(ClientRequest req, VirtualClient virtualClient){
+    public void connectToGame(EnterGameRequest req, VirtualClient virtualClient){
         try{
             if(games.containsKey(req.getGameId())){
                 GameController reqGame = games.get(req.getGameId());
