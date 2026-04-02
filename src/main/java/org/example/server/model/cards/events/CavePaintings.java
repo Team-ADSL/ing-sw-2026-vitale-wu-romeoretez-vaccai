@@ -11,7 +11,7 @@ import java.util.Set;
 public class CavePaintings extends Event {
 
     private final int minArtists;
-    private final int lostPP;
+    private final int lostPP; //just use 2 instead of variable???
     private final int multiplierPP;
 
     public CavePaintings (int minArtists, int lostPP, int multiplierPP,

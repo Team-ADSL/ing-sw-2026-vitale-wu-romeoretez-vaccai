@@ -45,3 +45,4 @@ public class EndGame extends Building {
         }
     }
 }
+//GESTIRE IL CAMBIO DI PP MULTIPLIER IN BASE AL PERSONAGGIO
