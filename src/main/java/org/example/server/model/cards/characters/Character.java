@@ -9,8 +9,8 @@ import java.util.Set;
 
 public abstract class Character extends Card {
 
-    public Character (int era, Optional<Integer> numPlayers){
-        super(era, numPlayers);
+    public Character (String id, int era, Optional<Integer> numPlayers){
+        super(id, era, numPlayers);
     }
 
     @Override

@@ -1,7 +1,6 @@
 package org.example.server.model.cards.characters;
 
 import org.example.server.model.cards.Card;
-import org.example.server.model.cards.characters.Builder;
 import org.example.shared.enums.CardType;
 import org.example.shared.enums.Color;
 import org.example.server.model.Player;
@@ -15,38 +14,44 @@ public class BuilderTest {
 
     @Test
     void getDiscount_returnsCorrectValue() {
-        Builder b = new Builder(2, 5, 1, Optional.empty());
+        Builder b = new Builder("b", 2, 5, 1, Optional.empty());
         assertEquals(2, b.getDiscount());
     }
 
     @Test
     void getPP_returnsCorrectValue() {
-        Builder b = new Builder(2, 5, 1, Optional.empty());
+        Builder b = new Builder("b", 2, 5, 1, Optional.empty());
         assertEquals(5, b.getPP());
     }
 
     @Test
     void getEra_returnsCorrectValue() {
-        Builder b = new Builder(2, 5, 3, Optional.empty());
+        Builder b = new Builder("b", 2, 5, 3, Optional.empty());
         assertEquals(3, b.getEra());
     }
 
     @Test
+    void getId_returnsCorrectId() {
+        Builder b = new Builder("builder_01", 2, 5, 1, Optional.empty());
+        assertEquals("builder_01", b.getId());
+    }
+
+    @Test
     void getNumPlayers_returnsCorrectValue() {
-        Builder b = new Builder(2, 5, 1, Optional.of(4));
+        Builder b = new Builder("b", 2, 5, 1, Optional.of(4));
         assertEquals(Optional.of(4), b.getNumPlayers());
     }
 
     @Test
     void canBeDrawn_alwaysTrue() {
-        Builder b = new Builder(2, 5, 1, Optional.empty());
+        Builder b = new Builder("b", 2, 5, 1, Optional.empty());
         Player p = new Player("Test", 0, 0, Color.RED);
         assertTrue(b.canBeDrawn(p));
     }
 
     @Test
     void insert_addsToBuilderSet() {
-        Builder b = new Builder(2, 5, 1, Optional.empty());
+        Builder b = new Builder("b", 2, 5, 1, Optional.empty());
         Map<CardType, Set<Card>> cards = initCardsMap();
         b.insert(cards);
         assertTrue(cards.get(CardType.BUILDER).contains(b));
@@ -54,7 +59,7 @@ public class BuilderTest {
 
     @Test
     void insert_doesNotAddToOtherSets() {
-        Builder b = new Builder(2, 5, 1, Optional.empty());
+        Builder b = new Builder("b", 2, 5, 1, Optional.empty());
         Map<CardType, Set<Card>> cards = initCardsMap();
         b.insert(cards);
         for (CardType type : CardType.values()) {

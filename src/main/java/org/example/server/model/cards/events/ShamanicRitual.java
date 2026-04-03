@@ -13,9 +13,9 @@ public class ShamanicRitual extends Event {
     private final int lostPP;
     private final int gainedPP;
 
-    public ShamanicRitual (int lostPP, int gainedPP, boolean isFinal,
+    public ShamanicRitual (String id, int lostPP, int gainedPP, boolean isFinal,
                        int era, Optional<Integer> numPlayers) {
-        super(isFinal, era, numPlayers);
+        super(id, isFinal, era, numPlayers);
         this.lostPP = lostPP;
         this.gainedPP = gainedPP;
     }

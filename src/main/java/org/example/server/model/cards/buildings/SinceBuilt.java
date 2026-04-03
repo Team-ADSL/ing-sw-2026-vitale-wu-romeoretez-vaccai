@@ -12,9 +12,9 @@ public class SinceBuilt extends Building {
     private final BuildingEffect buildingEffect;
     private Map<CardType, Set<Card>> characterInUse;
 
-    public SinceBuilt(int endGamePP, int cost, Trigger trigger,
+    public SinceBuilt(String id, int endGamePP, int cost, Trigger trigger,
                       int era, Optional<Integer> numPlayers, BuildingEffect buildingEffect) {
-        super(endGamePP, cost, era, numPlayers);
+        super(id, endGamePP, cost, era, numPlayers);
         this.characterInUse = new HashMap<>();
         this.characterInUse.put(CardType.HUNTER, new HashSet<>());
         this.characterInUse.put(CardType.GATHERER, new HashSet<>());
@@ -25,9 +25,9 @@ public class SinceBuilt extends Building {
         this.buildingEffect = buildingEffect;
     }
 
-    public SinceBuilt(int endGamePP, int cost, Trigger trigger, Map<CardType, Set<Card>> characterInUse,
+    public SinceBuilt(String id, int endGamePP, int cost, Trigger trigger, Map<CardType, Set<Card>> characterInUse,
                       int era, Optional<Integer> numPlayers, BuildingEffect buildingEffect) {
-        super(endGamePP, cost, era, numPlayers);
+        super(id, endGamePP, cost, era, numPlayers);
         this.characterInUse = characterInUse;
         this.buildingEffect = buildingEffect;
     }

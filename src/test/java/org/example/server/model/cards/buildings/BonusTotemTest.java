@@ -1,6 +1,5 @@
 package org.example.server.model.cards.buildings;
 
-import org.example.server.model.cards.buildings.BonusTotem;
 import org.example.shared.enums.Trigger;
 import org.example.shared.enums.Color;
 import org.example.server.model.Player;
@@ -20,7 +19,12 @@ public class BonusTotemTest {
     @BeforeEach
     void setUp() {
         player = new Player("Tester", 10, 0, Color.RED);
-        bonusTotem = new BonusTotem(3, 2, 1, Optional.empty());
+        bonusTotem = new BonusTotem("bt_01", 3, 2, 1, Optional.empty());
+    }
+
+    @Test
+    void getId_returnsCorrectId() {
+        assertEquals("bt_01", bonusTotem.getId());
     }
 
     @Test

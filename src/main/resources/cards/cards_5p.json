@@ -1,10 +1,10 @@
- {
+{
   "numPlayers": 5,
   "era1": {
     "characters": [
-      { "id": "builder_04",         "type": "BUILDER",         "discount": 2, "pp": 1 },
+      { "id": "builder_03",         "type": "BUILDER",         "discount": 2, "pp": 1 },
       { "id": "gatherer_04",        "type": "GATHERER",        "discount": 3 },
-      { "id": "shaman_04",          "type": "SHAMAN",          "starNum": 2 }
+      { "id": "shaman_01",          "type": "SHAMAN",          "starNum": 2 }
     ]
   },
   "era2": {
@@ -17,10 +17,10 @@
   },
   "era3": {
     "characters": [
-      { "id": "hunter_15",          "type": "HUNTER",          "extraFood": true },
-      { "id": "builder_12",         "type": "BUILDER",         "discount": 1, "pp": 4 },
+      { "id": "hunter_12",          "type": "HUNTER",          "extraFood": true },
+      { "id": "builder_09",         "type": "BUILDER",         "discount": 1, "pp": 4 },
       { "id": "gatherer_11",        "type": "GATHERER",        "discount": 3 },
-      { "id": "artist_13",          "type": "ARTIST" }
+      { "id": "artist_10",          "type": "ARTIST" }
     ]
   }
 }
