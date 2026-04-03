@@ -11,8 +11,8 @@ public class Shaman extends Character {
 
     private final int starNum;
 
-    public Shaman(int starNum, int era, Optional<Integer> numPlayers) {
-        super(era, numPlayers);
+    public Shaman(String id, int starNum, int era, Optional<Integer> numPlayers) {
+        super(id, era, numPlayers);
         this.starNum = starNum;
     }
 

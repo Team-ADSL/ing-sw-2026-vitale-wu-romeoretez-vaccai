@@ -14,8 +14,8 @@ public abstract class DuringEvent extends Building {
             Trigger.HUNT,
             Trigger.CAVE_PAINTINGS);
 
-    public DuringEvent(int endGamePP, int cost, int era, Optional<Integer> numPlayers) {
-        super(endGamePP, cost, era, numPlayers);
+    public DuringEvent(String id, int endGamePP, int cost, int era, Optional<Integer> numPlayers) {
+        super(id, endGamePP, cost, era, numPlayers);
     }
 
     @Override

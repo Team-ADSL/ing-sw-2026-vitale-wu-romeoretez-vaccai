@@ -1,23 +1,19 @@
 package org.example.server.model.cards.buildings.forEvent;
 
-import org.example.shared.enums.CardType;
 import org.example.shared.enums.Trigger;
 import org.example.server.model.Player;
 
 import java.util.Optional;
 import java.util.Set;
 
-public class DuringSustenance extends DuringEvent {
-    private final CardType typeMultiplier;
-
-    public DuringSustenance(String id, int endGamePP, int cost, int era, Optional<Integer> numPlayers, CardType typeMultiplier) {
+public class DuringPaintings extends DuringEvent {
+    public DuringPaintings(String id, int endGamePP, int cost, int era, Optional<Integer> numPlayers) {
         super(id, endGamePP, cost, era, numPlayers);
-        this.typeMultiplier = typeMultiplier;
     }
 
     @Override
     public void execute(Set<Player> players, Trigger t) {
-        if (t != Trigger.SUSTENANCE) {
+        if (t != Trigger.CAVE_PAINTINGS) {
             return;
         }
         Optional<Player> playerContainer = players.stream().findFirst();
@@ -25,10 +21,6 @@ public class DuringSustenance extends DuringEvent {
             return; // ERRORE DA GESTIRE?
         }
         Player p = playerContainer.get();
-        p.getBuildingBonus().setSustenanceDiscount(p.getCards().get(typeMultiplier).size());
-    }
-
-    public CardType getTypeMultiplier() {
-        return typeMultiplier;
+        p.getBuildingBonus().setArtistFood(true);
     }
 }

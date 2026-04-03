@@ -10,17 +10,17 @@
   },
   "era2": {
     "characters": [
-      { "id": "hunter_09",          "type": "HUNTER",          "extraFood": true },
-      { "id": "builder_08",         "type": "BUILDER",         "discount": 1, "pp": 2 },
+      { "id": "hunter_08",          "type": "HUNTER",          "extraFood": true },
+      { "id": "builder_07",         "type": "BUILDER",         "discount": 1, "pp": 2 },
       { "id": "gatherer_06",        "type": "GATHERER",        "discount": 3 },
-      { "id": "artist_09",          "type": "ARTIST" }
+      { "id": "artist_06",          "type": "ARTIST" }
     ]
   },
   "era3": {
     "characters": [
-      { "id": "inventor_18",        "type": "INVENTOR",        "icon": "BOAT" },
-      { "id": "inventor_19",        "type": "INVENTOR",        "icon": "SPEARHEAD" },
-      { "id": "shaman_12",          "type": "SHAMAN",          "starNum": 2 }
+      { "id": "inventor_15",        "type": "INVENTOR",        "icon": "BOAT" },
+      { "id": "inventor_16",        "type": "INVENTOR",        "icon": "SPEARHEAD" },
+      { "id": "shaman_09",          "type": "SHAMAN",          "starNum": 2 }
     ]
   }
 }

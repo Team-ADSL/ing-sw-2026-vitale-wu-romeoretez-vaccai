@@ -11,8 +11,8 @@ public class Gatherer extends Character {
 
     private final int discount;
 
-    public Gatherer (int discount, int era, Optional<Integer> numPlayers) {
-        super(era, numPlayers);
+    public Gatherer (String id, int discount, int era, Optional<Integer> numPlayers) {
+        super(id, era, numPlayers);
         this.discount = discount;
     }
 
