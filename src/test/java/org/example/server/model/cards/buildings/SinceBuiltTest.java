@@ -20,7 +20,7 @@ public class SinceBuiltTest {
 
     @BeforeEach
     void setUp() {
-        player = new Player("Tester", 0, 0, Color.RED);
+        player = new Player("Tester");
     }
 
     @Test

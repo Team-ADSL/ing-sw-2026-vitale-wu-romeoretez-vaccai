@@ -18,7 +18,7 @@ public class BonusTotemTest {
 
     @BeforeEach
     void setUp() {
-        player = new Player("Tester", 10, 0, Color.RED);
+        player = new Player("Tester");
         bonusTotem = new BonusTotem("bt_01", 3, 2, 1, Optional.empty());
     }
 

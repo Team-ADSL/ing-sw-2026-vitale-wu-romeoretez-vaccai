@@ -18,7 +18,7 @@ public class DuringPaintingsTest {
 
     @BeforeEach
     void setUp() {
-        player = new Player("Tester", 10, 0, Color.RED);
+        player = new Player("Tester");
         duringPaintings = new DuringPaintings("dp_01", 3, 2, 1, Optional.empty());
     }
 

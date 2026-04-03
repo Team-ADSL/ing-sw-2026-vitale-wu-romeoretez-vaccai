@@ -18,7 +18,7 @@ public class ExtraMoveTest {
 
     @BeforeEach
     void setUp() {
-        player = new Player("Tester", 10, 0, Color.RED);
+        player = new Player("Tester");
         extraMove = new ExtraMove("em_01", 3, 2, Trigger.END_ROUND, Set.of(), 1, Optional.empty());
     }
 
