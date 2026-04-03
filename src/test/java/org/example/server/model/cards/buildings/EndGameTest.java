@@ -20,7 +20,7 @@ public class EndGameTest {
 
     @BeforeEach
     void setUp() {
-        player = new Player("Tester", 10, 0, Color.RED);
+        player = new Player("Tester");
     }
 
     @Test

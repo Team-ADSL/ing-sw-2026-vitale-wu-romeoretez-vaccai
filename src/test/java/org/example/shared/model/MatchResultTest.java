@@ -13,22 +13,22 @@ public class MatchResultTest {
 
     @Test
     void getRank_returnsCorrectValue() {
-        assertEquals(1, result.getRank());
+        assertEquals(1, result.rank());
     }
 
     @Test
     void getNickname_returnsCorrectValue() {
-        assertEquals("Alice", result.getNickname());
+        assertEquals("Alice", result.nickname());
     }
 
     @Test
     void getScore_returnsCorrectValue() {
-        assertEquals(42, result.getScore());
+        assertEquals(42, result.score());
     }
 
     @Test
     void getPlayedAt_returnsCorrectValue() {
-        assertEquals(now, result.getPlayedAt());
+        assertEquals(now, result.playedAt());
     }
 
     @Test
