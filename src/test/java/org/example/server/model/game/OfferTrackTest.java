@@ -21,7 +21,7 @@ public class OfferTrackTest {
     void setUp() {
         // Arrange - create two tiles and add them to the track
         tile1 = new OfferTile(
-                Optional.of(new Player("Gianpaolo", 3, 0, Color.RED)),
+                Optional.of(new Player("Gianpaolo", 3, 0, Color.RED, new java.util.HashMap<>())),
                 Map.of(Row.UPPER, 1),
                 false
         );
@@ -73,7 +73,7 @@ public class OfferTrackTest {
     @Test
     void testPlaceInOfferTileAssignsPlayer() {
         // should assign the player to the tile at the given index
-        Player newPlayer = new Player("Gianpiero", 2, 0, Color.BLUE);
+        Player newPlayer = new Player("Gianpiero", 2, 0, Color.BLUE, new java.util.HashMap<>());
         offerTrack.placeInOfferTile(newPlayer, 1);
         assertTrue(offerTrack.getTileAt(1).getPlayer().isPresent());
         assertEquals(newPlayer, offerTrack.getTileAt(1).getPlayer().get());
@@ -82,7 +82,7 @@ public class OfferTrackTest {
     @Test
     void testPlaceInOfferTileThrowsOnInvalidIndex() {
         // should throw when index is out of bounds
-        Player newPlayer = new Player("Gianpiero", 2, 0, Color.BLUE);
+        Player newPlayer = new Player("Gianpiero", 2, 0, Color.BLUE, new java.util.HashMap<>());
         assertThrows(IndexOutOfBoundsException.class, () -> offerTrack.placeInOfferTile(newPlayer, 5));
     }
 }

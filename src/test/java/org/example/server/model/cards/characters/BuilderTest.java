@@ -45,7 +45,7 @@ public class BuilderTest {
     @Test
     void canBeDrawn_alwaysTrue() {
         Builder b = new Builder("b", 2, 5, 1, Optional.empty());
-        Player p = new Player("Test", 0, 0, Color.RED);
+        Player p = new Player("Test");
         assertTrue(b.canBeDrawn(p));
     }
 

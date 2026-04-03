@@ -18,8 +18,8 @@ public class OrderTileTest {
     @BeforeEach
     void setUp() {
         // Arrange - create two empty cells and one tile
-        gianpaolo = new Player("Gianpaolo", 3, 0, Color.RED);
-        gianpiero = new Player("Gianpiero", 2, 0, Color.BLUE);
+        gianpaolo = new Player("Gianpaolo", 3, 0, Color.RED, new java.util.HashMap<>());
+        gianpiero = new Player("Gianpiero", 2, 0, Color.BLUE, new java.util.HashMap<>());
 
         ArrayList<OrderCell> cells = new ArrayList<>();
         cells.add(new OrderCell(Optional.empty(), 1, false));
@@ -82,8 +82,8 @@ public class OrderTileTest {
         // should throw when all cells are occupied
         orderTile.placePlayerAtNext(gianpaolo);
         orderTile.placePlayerAtNext(gianpiero);
-        orderTile.placePlayerAtNext(new Player("Gianluca", 1, 0, Color.YELLOW));
-        assertThrows(IndexOutOfBoundsException.class, () -> orderTile.placePlayerAtNext(new Player("Bowser", 1, 0, Color.WHITE)));
+        orderTile.placePlayerAtNext(new Player("Gianluca", 1, 0, Color.YELLOW, new java.util.HashMap<>()));
+        assertThrows(IndexOutOfBoundsException.class, () -> orderTile.placePlayerAtNext(new Player("Bowser", 1, 0, Color.WHITE, new java.util.HashMap<>())));
     }
 
     // --- getCellAt() tests ---

@@ -18,7 +18,8 @@ public class HunterTest {
 
     @BeforeEach
     void setUp() {
-        player = new Player("Tester", 5, 0, Color.RED);
+        player = new Player("Tester");
+        player.changeFood(5);
     }
 
     @Test
