@@ -28,7 +28,8 @@ public class BuildingTest {
 
     @BeforeEach
     void setUp() {
-        player = new Player("Tester", 10, 0, Color.RED);
+        player = new Player("Tester");
+        player.changeFood(10);
     }
 
     @Test
@@ -51,14 +52,16 @@ public class BuildingTest {
 
     @Test
     void canBeDrawn_insufficientFood_returnsFalse() {
-        Player poor = new Player("Poor", 2, 0, Color.RED);
+        Player poor = new Player("Poor");
+        poor.changeFood(2);
         Building b = new ConcreteBuilding("cb", 5, 3, 1, Optional.empty());
         assertFalse(b.canBeDrawn(poor));
     }
 
     @Test
     void canBeDrawn_exactFood_returnsTrue() {
-        Player exact = new Player("Exact", 3, 0, Color.RED);
+        Player exact = new Player("Exact");
+        exact.changeFood(3);
         Building b = new ConcreteBuilding("cb", 5, 3, 1, Optional.empty());
         assertTrue(b.canBeDrawn(exact));
     }
@@ -71,7 +74,8 @@ public class BuildingTest {
 
     @Test
     void canBeDrawn_withBuilderDiscount_makesAffordable() {
-        Player p = new Player("Discounted", 1, 0, Color.RED);
+        Player p = new Player("Discounted");
+        p.changeFood(1);
         Builder builder = new Builder("b", 2, 0, 1, Optional.empty());
         p.getCards().get(CardType.BUILDER).add(builder);
         Building b = new ConcreteBuilding("cb", 5, 3, 1, Optional.empty());
@@ -80,7 +84,7 @@ public class BuildingTest {
 
     @Test
     void canBeDrawn_withMultipleBuilderDiscounts_sumsCorrectly() {
-        Player p = new Player("MultiDiscount", 0, 0, Color.RED);
+        Player p = new Player("MultiDiscount");
         p.getCards().get(CardType.BUILDER).add(new Builder("b1", 2, 0, 1, Optional.empty()));
         p.getCards().get(CardType.BUILDER).add(new Builder("b2", 2, 0, 1, Optional.empty()));
         Building b = new ConcreteBuilding("cb", 5, 3, 1, Optional.empty());

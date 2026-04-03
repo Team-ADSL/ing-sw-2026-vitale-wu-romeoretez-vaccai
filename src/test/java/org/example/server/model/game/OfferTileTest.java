@@ -18,7 +18,7 @@ public class OfferTileTest {
     void setUp() {
         // Arrange - tile with a player and multiple moves
         tileWithPlayer = new OfferTile(
-                Optional.of(new Player("Gianpaolo", 3, 0, Color.RED)),
+                Optional.of(new Player("Gianpaolo", 3, 0, Color.RED, new java.util.HashMap<>())),
                 Map.of(Row.UPPER, 2, Row.LOWER, 1),
                 true
         );

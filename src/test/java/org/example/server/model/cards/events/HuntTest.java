@@ -20,7 +20,8 @@ public class HuntTest {
 
     @BeforeEach
     void setUp() {
-        player = new Player("Tester", 5, 0, Color.RED);
+        player = new Player("Tester");
+        player.changeFood(5);
         hunt = new Hunt("hunt_01", 2, false, 1, Optional.empty());
     }
 
@@ -77,7 +78,7 @@ public class HuntTest {
 
     @Test
     void activeEffect_multiplePlayersAllGetReward() {
-        Player p2 = new Player("Second", 0, 0, Color.BLUE);
+        Player p2 = new Player("Second");
         player.getCards().get(CardType.HUNTER).add(new Hunter("h1", false, 1, Optional.empty()));
         p2.getCards().get(CardType.HUNTER).add(new Hunter("h2", false, 1, Optional.empty()));
         p2.getCards().get(CardType.HUNTER).add(new Hunter("h3", false, 1, Optional.empty()));

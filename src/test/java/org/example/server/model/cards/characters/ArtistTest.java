@@ -27,7 +27,7 @@ public class ArtistTest {
     @Test
     void canBeDrawn_alwaysTrue() {
         Artist a = new Artist("a", 1, Optional.empty());
-        Player p = new Player("Test", 0, 0, Color.RED);
+        Player p = new Player("Test");
         assertTrue(a.canBeDrawn(p));
     }
 

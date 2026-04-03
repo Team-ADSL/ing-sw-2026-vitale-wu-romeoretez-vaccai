@@ -22,7 +22,8 @@ public class SustenanceTest {
 
     @BeforeEach
     void setUp() {
-        player = new Player("Tester", 10, 0, Color.RED);
+        player = new Player("Tester");
+        player.changeFood(10);
         sustenance = new Sustenance("sus_01", 2, false, 1, Optional.empty());
     }
 
@@ -68,7 +69,8 @@ public class SustenanceTest {
 
     @Test
     void activeEffect_notEnoughFood_losesPP() {
-        player = new Player("Poor", 1, 0, Color.RED);
+        player = new Player("Poor");
+        player.changeFood(1);
         player.getCards().get(CardType.HUNTER).add(new Hunter("h1", false, 1, Optional.empty()));
         player.getCards().get(CardType.HUNTER).add(new Hunter("h2", false, 1, Optional.empty()));
         player.getCards().get(CardType.HUNTER).add(new Hunter("h3", false, 1, Optional.empty()));
@@ -79,7 +81,7 @@ public class SustenanceTest {
 
     @Test
     void activeEffect_noFoodAtAll_allCharactersUnfed_maxPPLoss() {
-        player = new Player("Broke", 0, 0, Color.RED);
+        player = new Player("Broke");
         player.getCards().get(CardType.HUNTER).add(new Hunter("h1", false, 1, Optional.empty()));
         player.getCards().get(CardType.HUNTER).add(new Hunter("h2", false, 1, Optional.empty()));
         player.getCards().get(CardType.HUNTER).add(new Hunter("h3", false, 1, Optional.empty()));

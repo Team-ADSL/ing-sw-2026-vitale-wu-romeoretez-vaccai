@@ -33,7 +33,7 @@ public class GathererTest {
     @Test
     void canBeDrawn_alwaysTrue() {
         Gatherer g = new Gatherer("g", 3, 1, Optional.empty());
-        Player p = new Player("Test", 0, 0, Color.RED);
+        Player p = new Player("Test");
         assertTrue(g.canBeDrawn(p));
     }
 

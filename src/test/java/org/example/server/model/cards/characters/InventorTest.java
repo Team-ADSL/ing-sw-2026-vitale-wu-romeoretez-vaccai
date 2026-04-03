@@ -40,7 +40,7 @@ public class InventorTest {
     @Test
     void canBeDrawn_alwaysTrue() {
         Inventor inv = new Inventor("i", Icon.BOAT, 1, Optional.empty());
-        Player p = new Player("Test", 0, 0, Color.RED);
+        Player p = new Player("Test");
         assertTrue(inv.canBeDrawn(p));
     }
 

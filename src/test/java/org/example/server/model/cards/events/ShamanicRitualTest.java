@@ -21,7 +21,7 @@ public class ShamanicRitualTest {
 
     @Test
     void canBeDrawn_alwaysFalse() {
-        Player p = new Player("Test", 0, 0, Color.RED);
+        Player p = new Player("Test");
         assertFalse(ritual().canBeDrawn(p));
     }
 
@@ -32,7 +32,8 @@ public class ShamanicRitualTest {
 
     @Test
     void activeEffect_wrongTrigger_noEffect() {
-        Player p = new Player("Test", 0, 10, Color.RED);
+        Player p = new Player("Test");
+        p.changePP(10);
         p.getCards().get(CardType.SHAMAN).add(new Shaman("s", 3, 1, Optional.empty()));
         ritual().activeEffect(Set.of(p), Trigger.END_ROUND);
         assertEquals(10, p.getPp());
@@ -40,7 +41,8 @@ public class ShamanicRitualTest {
 
     @Test
     void activeEffect_singlePlayer_sameStarsMaxMin_noPPChange() {
-        Player p = new Player("Solo", 0, 10, Color.RED);
+        Player p = new Player("Solo");
+        p.changePP(10);
         p.getCards().get(CardType.SHAMAN).add(new Shaman("s", 3, 1, Optional.empty()));
         ritual().activeEffect(Set.of(p), Trigger.EVENT_EXECUTION);
         assertEquals(10, p.getPp());
@@ -48,8 +50,8 @@ public class ShamanicRitualTest {
 
     @Test
     void activeEffect_twoPlayers_differentStars_maxGainsPP_minLosesPP() {
-        Player winner = new Player("Winner", 0, 0, Color.RED);
-        Player loser  = new Player("Loser",  0, 0, Color.BLUE);
+        Player winner = new Player("Winner");
+        Player loser  = new Player("Loser");
         winner.getCards().get(CardType.SHAMAN).add(new Shaman("s1", 3, 1, Optional.empty()));
         loser.getCards().get(CardType.SHAMAN).add(new Shaman("s2", 1, 1, Optional.empty()));
         Set<Player> players = new HashSet<>();
@@ -62,8 +64,8 @@ public class ShamanicRitualTest {
 
     @Test
     void activeEffect_loserWithImmunity_doesNotLosePP() {
-        Player winner = new Player("Winner", 0, 0, Color.RED);
-        Player loser  = new Player("Loser",  0, 0, Color.BLUE);
+        Player winner = new Player("Winner");
+        Player loser  = new Player("Loser");
         winner.getCards().get(CardType.SHAMAN).add(new Shaman("s1", 3, 1, Optional.empty()));
         loser.getCards().get(CardType.SHAMAN).add(new Shaman("s2", 1, 1, Optional.empty()));
         loser.getBuildingBonus().setNoRitualLostPP(true);
@@ -76,8 +78,8 @@ public class ShamanicRitualTest {
 
     @Test
     void activeEffect_winnerWithShamanMultiplier_gainsDoubledPP() {
-        Player winner = new Player("Winner", 0, 0, Color.RED);
-        Player loser  = new Player("Loser",  0, 0, Color.BLUE);
+        Player winner = new Player("Winner");
+        Player loser  = new Player("Loser");
         winner.getCards().get(CardType.SHAMAN).add(new Shaman("s1", 3, 1, Optional.empty()));
         loser.getCards().get(CardType.SHAMAN).add(new Shaman("s2", 1, 1, Optional.empty()));
         winner.getBuildingBonus().setShamanMulitiplierPP(2);
@@ -90,8 +92,8 @@ public class ShamanicRitualTest {
 
     @Test
     void activeEffect_extraStarsFromBonus_countedInTotal() {
-        Player winner = new Player("Winner", 0, 0, Color.RED);
-        Player loser  = new Player("Loser",  0, 0, Color.BLUE);
+        Player winner = new Player("Winner");
+        Player loser  = new Player("Loser");
         winner.getCards().get(CardType.SHAMAN).add(new Shaman("s1", 1, 1, Optional.empty()));
         loser.getCards().get(CardType.SHAMAN).add(new Shaman("s2", 1, 1, Optional.empty()));
         winner.getBuildingBonus().setExtraStars(3);
@@ -105,8 +107,10 @@ public class ShamanicRitualTest {
 
     @Test
     void activeEffect_twoPlayersNoShamans_sameStars_noPPChange() {
-        Player p1 = new Player("P1", 0, 5, Color.RED);
-        Player p2 = new Player("P2", 0, 5, Color.BLUE);
+        Player p1 = new Player("P1");
+        p1.changePP(5);
+        Player p2 = new Player("P2");
+        p2.changePP(5);
         Set<Player> players = new HashSet<>();
         players.add(p1);
         players.add(p2);
@@ -117,8 +121,8 @@ public class ShamanicRitualTest {
 
     @Test
     void activeEffect_resetsBonus() {
-        Player winner = new Player("Winner", 0, 0, Color.RED);
-        Player loser  = new Player("Loser",  0, 0, Color.BLUE);
+        Player winner = new Player("Winner");
+        Player loser  = new Player("Loser");
         winner.getCards().get(CardType.SHAMAN).add(new Shaman("s1", 3, 1, Optional.empty()));
         loser.getCards().get(CardType.SHAMAN).add(new Shaman("s2", 1, 1, Optional.empty()));
         winner.getBuildingBonus().setShamanMulitiplierPP(2);

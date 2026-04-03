@@ -20,7 +20,8 @@ public class CavePaintingsTest {
 
     @BeforeEach
     void setUp() {
-        player = new Player("Tester", 10, 0, Color.RED);
+        player = new Player("Tester");
+        player.changeFood(10);
         cavePaintings = new CavePaintings("cp_01", 2, 5, 3, false, 1, Optional.empty());
     }
 

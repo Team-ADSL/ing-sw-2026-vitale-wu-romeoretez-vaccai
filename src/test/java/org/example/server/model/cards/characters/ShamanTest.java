@@ -33,7 +33,7 @@ public class ShamanTest {
     @Test
     void canBeDrawn_alwaysTrue() {
         Shaman s = new Shaman("s", 3, 1, Optional.empty());
-        Player p = new Player("Test", 0, 0, Color.RED);
+        Player p = new Player("Test");
         assertTrue(s.canBeDrawn(p));
     }
 
