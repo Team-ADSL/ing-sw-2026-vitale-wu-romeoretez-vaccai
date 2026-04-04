@@ -13,7 +13,7 @@ public class Home {
         this.games = new ArrayList<>();
     }
 
-    public void updateHome() {
+    public void update() {
         for(ModelObserver o : observers) o.updateHome(games);
     }
     public void addObserver(ModelObserver observer) {

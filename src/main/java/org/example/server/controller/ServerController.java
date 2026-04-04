@@ -32,7 +32,7 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
     public void handleClientRequest(ClientRequest req, VirtualClient virtualClient){
         try {
             req.accept(this, virtualClient);
-            home.updateHome();
+            home.update();
         } catch (Exception e) {
             System.out.println(e.getMessage());
             virtualClient.sendErrorMessage(e.getMessage());
@@ -42,7 +42,7 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
     @Override
     public void visit(ClientConnection req, VirtualClient virtualClient) throws InvalidRequestException {
         // Handle initial connection
-        home.updateHome();
+        home.update();
     }
     @Override
     public void visit(SetUsernameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
