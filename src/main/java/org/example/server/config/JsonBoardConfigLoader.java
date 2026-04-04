@@ -23,7 +23,7 @@ public class JsonBoardConfigLoader implements BoardConfigLoader {
 
     @FunctionalInterface
     interface CardParser {
-        Card parse(JsonNode node, int era, Optional<Integer> numPlayers);
+        Card parse(JsonNode node, int era, Integer numPlayers);
     }
 
     @FunctionalInterface
@@ -45,17 +45,17 @@ public class JsonBoardConfigLoader implements BoardConfigLoader {
     );
 
     private static final Map<String, BuildingParser> BUILDING_PARSERS = Map.of(
-        "SINCE_BUILT",       (n, era) -> new SinceBuilt(n.get("id").asText(), n.get("endGamePP").asInt(), n.get("cost").asInt(), null, era, Optional.empty(), BuildingEffect.valueOf(n.get("buildingEffect").asText())),
-        "DURING_SUSTENANCE", (n, era) -> new DuringSustenance(n.get("id").asText(), n.get("endGamePP").asInt(), n.get("cost").asInt(), era, Optional.empty(), CardType.valueOf(n.get("typeMultiplier").asText())),
-        "DURING_RITUAL",     (n, era) -> new DuringRitual(n.get("id").asText(), n.get("endGamePP").asInt(), n.get("cost").asInt(), era, Optional.empty(), BuildingEffect.valueOf(n.get("buildingEffect").asText())),
-        "DURING_HUNT",       (n, era) -> new DuringHunt(n.get("id").asText(), n.get("endGamePP").asInt(), n.get("cost").asInt(), era, Optional.empty()),
-        "DURING_PAINTINGS",  (n, era) -> new DuringPaintings(n.get("id").asText(), n.get("endGamePP").asInt(), n.get("cost").asInt(), era, Optional.empty()),
-        "BONUS_TOTEM",       (n, era) -> new BonusTotem(n.get("id").asText(), n.get("endGamePP").asInt(), n.get("cost").asInt(), era, Optional.empty()),
-        "EXTRA_MOVE",        (n, era) -> new ExtraMove(n.get("id").asText(), n.get("endGamePP").asInt(), n.get("cost").asInt(), null, null, era, Optional.empty()),
+        "SINCE_BUILT",       (n, era) -> new SinceBuilt(n.get("id").asText(), n.get("endGamePP").asInt(), n.get("cost").asInt(), null, era, null, BuildingEffect.valueOf(n.get("buildingEffect").asText())),
+        "DURING_SUSTENANCE", (n, era) -> new DuringSustenance(n.get("id").asText(), n.get("endGamePP").asInt(), n.get("cost").asInt(), era, null, CardType.valueOf(n.get("typeMultiplier").asText())),
+        "DURING_RITUAL",     (n, era) -> new DuringRitual(n.get("id").asText(), n.get("endGamePP").asInt(), n.get("cost").asInt(), era, null, BuildingEffect.valueOf(n.get("buildingEffect").asText())),
+        "DURING_HUNT",       (n, era) -> new DuringHunt(n.get("id").asText(), n.get("endGamePP").asInt(), n.get("cost").asInt(), era, null),
+        "DURING_PAINTINGS",  (n, era) -> new DuringPaintings(n.get("id").asText(), n.get("endGamePP").asInt(), n.get("cost").asInt(), era, null),
+        "BONUS_TOTEM",       (n, era) -> new BonusTotem(n.get("id").asText(), n.get("endGamePP").asInt(), n.get("cost").asInt(), era, null),
+        "EXTRA_MOVE",        (n, era) -> new ExtraMove(n.get("id").asText(), n.get("endGamePP").asInt(), n.get("cost").asInt(), null, null, era, null),
         "END_GAME",          (n, era) -> {
             JsonNode charType = n.get("characterTypeMultiplier");
             CardType ct = (charType != null && !charType.isNull()) ? CardType.valueOf(charType.asText()) : null;
-            return new EndGame(n.get("id").asText(), n.get("endGamePP").asInt(), n.get("cost").asInt(), era, Optional.empty(), BuildingEffect.valueOf(n.get("buildingEffect").asText()), ct);
+            return new EndGame(n.get("id").asText(), n.get("endGamePP").asInt(), n.get("cost").asInt(), era, null, BuildingEffect.valueOf(n.get("buildingEffect").asText()), ct);
         }
     );
 
@@ -86,7 +86,7 @@ public class JsonBoardConfigLoader implements BoardConfigLoader {
         try (InputStream is = getClass().getResourceAsStream(filename)) {
             if (is == null) throw new IllegalArgumentException("Resource not found: " + filename);
             JsonNode root = mapper.readTree(is);
-            Optional<Integer> np = Optional.of(fileNumPlayers);
+            int np = fileNumPlayers;
 
             for (int era = 1; era <= 3; era++) {
                 JsonNode eraNode = root.get("era" + era);
@@ -120,7 +120,7 @@ public class JsonBoardConfigLoader implements BoardConfigLoader {
                     JsonNode movesNode = node.get("moves");
                     movesNode.fields().forEachRemaining(e -> moves.put(Row.valueOf(e.getKey()), e.getValue().asInt()));
                     boolean givesFood = node.get("givesFood").asBoolean();
-                    tiles.add(new OfferTile(Optional.empty(), moves, givesFood));
+                    tiles.add(new OfferTile(null, moves, givesFood));
                 }
             }
             return new OfferTrack(tiles);
@@ -141,7 +141,7 @@ public class JsonBoardConfigLoader implements BoardConfigLoader {
                 if (node.get("numPlayers").asInt() == numPlayers) {
                     ArrayList<OrderCell> cells = new ArrayList<>();
                     for (JsonNode cellNode : node.get("cells")) {
-                        cells.add(new OrderCell(Optional.empty(), cellNode.get("bonus").asInt(), cellNode.get("isMalus").asBoolean()));
+                        cells.add(new OrderCell(null, cellNode.get("bonus").asInt(), cellNode.get("isMalus").asBoolean()));
                     }
                     return new OrderTile(cells);
                 }

@@ -14,32 +14,32 @@ public class GathererTest {
 
     @Test
     void getDiscount_returnsCorrectValue() {
-        Gatherer g = new Gatherer("g", 3, 1, Optional.empty());
+        Gatherer g = new Gatherer("g", 3, 1, null);
         assertEquals(3, g.getDiscount());
     }
 
     @Test
     void getEra_returnsCorrectValue() {
-        Gatherer g = new Gatherer("g", 3, 2, Optional.empty());
+        Gatherer g = new Gatherer("g", 3, 2, null);
         assertEquals(2, g.getEra());
     }
 
     @Test
     void getId_returnsCorrectId() {
-        Gatherer g = new Gatherer("gatherer_01", 3, 1, Optional.empty());
+        Gatherer g = new Gatherer("gatherer_01", 3, 1, null);
         assertEquals("gatherer_01", g.getId());
     }
 
     @Test
     void canBeDrawn_alwaysTrue() {
-        Gatherer g = new Gatherer("g", 3, 1, Optional.empty());
+        Gatherer g = new Gatherer("g", 3, 1, null);
         Player p = new Player("Test");
         assertTrue(g.canBeDrawn(p));
     }
 
     @Test
     void insert_addsToGathererSet() {
-        Gatherer g = new Gatherer("g", 3, 1, Optional.empty());
+        Gatherer g = new Gatherer("g", 3, 1, null);
         Map<CardType, Set<Card>> cards = initCardsMap();
         g.insert(cards);
         assertTrue(cards.get(CardType.GATHERER).contains(g));
@@ -47,7 +47,7 @@ public class GathererTest {
 
     @Test
     void insert_doesNotAddToOtherSets() {
-        Gatherer g = new Gatherer("g", 3, 1, Optional.empty());
+        Gatherer g = new Gatherer("g", 3, 1, null);
         Map<CardType, Set<Card>> cards = initCardsMap();
         g.insert(cards);
         for (CardType type : CardType.values()) {

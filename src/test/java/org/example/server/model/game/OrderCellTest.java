@@ -4,7 +4,6 @@ import org.example.server.model.board.OrderCell;
 import org.example.shared.enums.Color;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class OrderCellTest {
@@ -16,14 +15,14 @@ public class OrderCellTest {
     void setUp() {
         // Arrange - cell with player, bonus and malus
         cellWithPlayer = new OrderCell(
-                Optional.of(new Player("Gianpaolo", 3, 0, Color.RED, new java.util.HashMap<>())),
+                new Player("Gianpaolo", 3, 0, Color.RED, new java.util.HashMap<>()),
                 2,
                 false
         );
 
         // Arrange - empty cell with malus
         cellWithoutPlayer = new OrderCell(
-                Optional.empty(),
+                null,
                 0,
                 true
         );
@@ -49,14 +48,14 @@ public class OrderCellTest {
     void testSetPlayerAssignsPlayer() {
         // should assign a player to an empty cell
         Player newPlayer = new Player("Luigi", 2, 0, Color.BLUE, new java.util.HashMap<>());
-        cellWithoutPlayer.setPlayer(Optional.of(newPlayer));
+        cellWithoutPlayer.setPlayer(newPlayer);
         assertTrue(cellWithoutPlayer.getPlayer().isPresent());
     }
 
     @Test
     void testSetPlayerRemovesPlayer() {
         // should remove the player when set to empty
-        cellWithPlayer.setPlayer(Optional.empty());
+        cellWithPlayer.setPlayer(null);
         assertTrue(cellWithPlayer.getPlayer().isEmpty());
     }
 

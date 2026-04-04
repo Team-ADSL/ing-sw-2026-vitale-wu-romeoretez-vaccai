@@ -4,12 +4,11 @@ import org.example.server.model.cards.Card;
 import org.example.shared.enums.CardType;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 public class Artist extends Character {
 
-    public Artist (String id, int era, Optional<Integer> numPlayers) {
+    public Artist (String id, int era, Integer numPlayers) {
         super(id, era, numPlayers);
     }
 

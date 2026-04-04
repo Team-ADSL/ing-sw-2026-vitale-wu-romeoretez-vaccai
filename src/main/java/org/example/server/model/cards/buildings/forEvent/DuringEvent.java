@@ -4,7 +4,6 @@ import org.example.shared.enums.Trigger;
 import org.example.server.model.cards.buildings.Building;
 import org.example.server.model.Player;
 
-import java.util.Optional;
 import java.util.Set;
 
 public abstract class DuringEvent extends Building {
@@ -14,7 +13,7 @@ public abstract class DuringEvent extends Building {
             Trigger.HUNT,
             Trigger.CAVE_PAINTINGS);
 
-    public DuringEvent(String id, int endGamePP, int cost, int era, Optional<Integer> numPlayers) {
+    public DuringEvent(String id, int endGamePP, int cost, int era, Integer numPlayers) {
         super(id, endGamePP, cost, era, numPlayers);
     }
 

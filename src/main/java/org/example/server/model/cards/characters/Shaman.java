@@ -4,14 +4,13 @@ import org.example.server.model.cards.Card;
 import org.example.shared.enums.CardType;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 public class Shaman extends Character {
 
     private final int starNum;
 
-    public Shaman(String id, int starNum, int era, Optional<Integer> numPlayers) {
+    public Shaman(String id, int starNum, int era, Integer numPlayers) {
         super(id, era, numPlayers);
         this.starNum = starNum;
     }

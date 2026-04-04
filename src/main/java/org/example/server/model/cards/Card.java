@@ -12,9 +12,9 @@ public abstract class Card {
 
     private final String id;
     private final int era;
-    private final Optional<Integer> numPlayers;
+    private final Integer numPlayers;
 
-    public Card (String id, int era, Optional<Integer> numPlayers) {
+    public Card (String id, int era, Integer numPlayers) {
         this.id = id;
         this.era = era;
         this.numPlayers = numPlayers;
@@ -33,6 +33,6 @@ public abstract class Card {
     }
 
     public Optional<Integer> getNumPlayers() {
-        return numPlayers;
+        return Optional.ofNullable(numPlayers);
     }
 }

@@ -3,12 +3,11 @@ package org.example.server.model.cards.buildings;
 import org.example.shared.enums.Trigger;
 import org.example.server.model.Player;
 
-import java.util.Optional;
 import java.util.Set;
 
 public class BonusTotem extends Building {
 
-    public BonusTotem(String id, int endGamePP, int cost, int era, Optional<Integer> numPlayers) {
+    public BonusTotem(String id, int endGamePP, int cost, int era, Integer numPlayers) {
         super(id, endGamePP, cost, era, numPlayers);
     }
 

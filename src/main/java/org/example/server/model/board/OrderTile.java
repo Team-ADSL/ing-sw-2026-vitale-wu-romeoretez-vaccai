@@ -21,7 +21,7 @@ public class OrderTile {
         while(i < orderQueue.size() && orderQueue.get(i).getPlayer().isPresent()){
             i++;
         }
-        orderQueue.get(i).setPlayer(Optional.of(p));
+        orderQueue.get(i).setPlayer(p);
         return i;
     }
 

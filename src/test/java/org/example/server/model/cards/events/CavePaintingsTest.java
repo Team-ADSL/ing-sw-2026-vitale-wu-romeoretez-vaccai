@@ -8,7 +8,6 @@ import org.example.server.model.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -22,7 +21,7 @@ public class CavePaintingsTest {
     void setUp() {
         player = new Player("Tester");
         player.changeFood(10);
-        cavePaintings = new CavePaintings("cp_01", 2, 5, 3, false, 1, Optional.empty());
+        cavePaintings = new CavePaintings("cp_01", 2, 5, 3, false, 1, null);
     }
 
     @Test
@@ -37,23 +36,23 @@ public class CavePaintingsTest {
 
     @Test
     void activeEffect_wrongTrigger_noEffect() {
-        player.getCards().get(CardType.ARTIST).add(new Artist("a", 1, Optional.empty()));
+        player.getCards().get(CardType.ARTIST).add(new Artist("a", 1, null));
         cavePaintings.activeEffect(Set.of(player), Trigger.END_ROUND);
         assertEquals(0, player.getPp());
     }
 
     @Test
     void activeEffect_artistsAboveMin_awardsPP() {
-        player.getCards().get(CardType.ARTIST).add(new Artist("a1", 1, Optional.empty()));
-        player.getCards().get(CardType.ARTIST).add(new Artist("a2", 1, Optional.empty()));
-        player.getCards().get(CardType.ARTIST).add(new Artist("a3", 1, Optional.empty()));
+        player.getCards().get(CardType.ARTIST).add(new Artist("a1", 1, null));
+        player.getCards().get(CardType.ARTIST).add(new Artist("a2", 1, null));
+        player.getCards().get(CardType.ARTIST).add(new Artist("a3", 1, null));
         cavePaintings.activeEffect(Set.of(player), Trigger.EVENT_EXECUTION);
         assertEquals(9, player.getPp());
     }
 
     @Test
     void activeEffect_artistsBelowMin_losesPP() {
-        player.getCards().get(CardType.ARTIST).add(new Artist("a1", 1, Optional.empty()));
+        player.getCards().get(CardType.ARTIST).add(new Artist("a1", 1, null));
         cavePaintings.activeEffect(Set.of(player), Trigger.EVENT_EXECUTION);
         assertEquals(-5, player.getPp());
     }
@@ -66,16 +65,16 @@ public class CavePaintingsTest {
 
     @Test
     void activeEffect_exactlyMinArtists_awardsPP() {
-        player.getCards().get(CardType.ARTIST).add(new Artist("a1", 1, Optional.empty()));
-        player.getCards().get(CardType.ARTIST).add(new Artist("a2", 1, Optional.empty()));
+        player.getCards().get(CardType.ARTIST).add(new Artist("a1", 1, null));
+        player.getCards().get(CardType.ARTIST).add(new Artist("a2", 1, null));
         cavePaintings.activeEffect(Set.of(player), Trigger.EVENT_EXECUTION);
         assertEquals(6, player.getPp());
     }
 
     @Test
     void activeEffect_withArtistFoodBonus_addsFood() {
-        player.getCards().get(CardType.ARTIST).add(new Artist("a1", 1, Optional.empty()));
-        player.getCards().get(CardType.ARTIST).add(new Artist("a2", 1, Optional.empty()));
+        player.getCards().get(CardType.ARTIST).add(new Artist("a1", 1, null));
+        player.getCards().get(CardType.ARTIST).add(new Artist("a2", 1, null));
         player.getBuildingBonus().setArtistFood(true);
         cavePaintings.activeEffect(Set.of(player), Trigger.EVENT_EXECUTION);
         assertEquals(12, player.getFood());
@@ -83,8 +82,8 @@ public class CavePaintingsTest {
 
     @Test
     void activeEffect_withoutArtistFoodBonus_noExtraFood() {
-        player.getCards().get(CardType.ARTIST).add(new Artist("a1", 1, Optional.empty()));
-        player.getCards().get(CardType.ARTIST).add(new Artist("a2", 1, Optional.empty()));
+        player.getCards().get(CardType.ARTIST).add(new Artist("a1", 1, null));
+        player.getCards().get(CardType.ARTIST).add(new Artist("a2", 1, null));
         cavePaintings.activeEffect(Set.of(player), Trigger.EVENT_EXECUTION);
         assertEquals(10, player.getFood());
     }

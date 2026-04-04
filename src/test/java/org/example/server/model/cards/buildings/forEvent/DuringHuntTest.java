@@ -7,7 +7,6 @@ import org.example.server.model.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -20,7 +19,7 @@ public class DuringHuntTest {
     @BeforeEach
     void setUp() {
         player = new Player("Tester");
-        duringHunt = new DuringHunt("dh_01", 3, 2, 1, Optional.empty());
+        duringHunt = new DuringHunt("dh_01", 3, 2, 1, null);
     }
 
     @Test

@@ -6,14 +6,13 @@ import org.example.shared.enums.Trigger;
 import org.example.server.model.Player;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 public class Hunter extends Character {
 
     private final boolean extraFood;
 
-    public Hunter (String id, boolean extraFood, int era, Optional<Integer> numPlayers) {
+    public Hunter (String id, boolean extraFood, int era, Integer numPlayers) {
         super(id, era, numPlayers);
         this.extraFood = extraFood;
     }

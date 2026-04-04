@@ -131,11 +131,11 @@ public class ActionExecutionState extends ControllerState {
                 placeTotem(currPlayer.get());
                 return nextState();
             } else {
-                getGame().setCurrentPlayer(currPlayer);
+                getGame().setCurrentPlayer(currPlayer.get());
                 return this;
             }
         } else {
-            getGame().setCurrentPlayer(Optional.empty());
+            getGame().setCurrentPlayer(null);
             return new ExtraMoveState(getGame(), getContext());
         }
     }

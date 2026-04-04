@@ -12,7 +12,7 @@ public class Hunt extends Event {
 
     private int multiplierPP;
 
-    public Hunt (String id, int multiplierPP, boolean isFinal, int era, Optional<Integer> numPlayers) {
+    public Hunt (String id, int multiplierPP, boolean isFinal, int era, Integer numPlayers) {
         super(id, isFinal, era, numPlayers);
         this.multiplierPP = multiplierPP;
     }

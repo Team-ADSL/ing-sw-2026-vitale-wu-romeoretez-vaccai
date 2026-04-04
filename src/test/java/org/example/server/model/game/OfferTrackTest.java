@@ -8,7 +8,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class OfferTrackTest {
@@ -21,12 +20,12 @@ public class OfferTrackTest {
     void setUp() {
         // Arrange - create two tiles and add them to the track
         tile1 = new OfferTile(
-                Optional.of(new Player("Gianpaolo", 3, 0, Color.RED, new java.util.HashMap<>())),
+                new Player("Gianpaolo", 3, 0, Color.RED, new java.util.HashMap<>()),
                 Map.of(Row.UPPER, 1),
                 false
         );
         tile2 = new OfferTile(
-                Optional.empty(),
+                null,
                 Map.of(Row.LOWER, 2),
                 true
         );

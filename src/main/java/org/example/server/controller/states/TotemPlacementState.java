@@ -11,7 +11,6 @@ import org.example.server.model.Player;
 import org.example.server.model.board.OfferTrack;
 import org.example.server.model.board.OrderTile;
 
-import java.util.Optional;
 import java.util.Set;
 
 
@@ -55,10 +54,10 @@ public class TotemPlacementState extends ControllerState {
             orderIndex++;
         }
         if(orderIndex != getGame().getPlayers().size() - 1){
-            getGame().setCurrentPlayer(orderTile.getPlayerAt(orderIndex));
+            getGame().setCurrentPlayer(orderTile.getPlayerAt(orderIndex).orElse(null));
             return this;
         } else {
-            getGame().setCurrentPlayer(Optional.empty());
+            getGame().setCurrentPlayer(null);
             return new ActionExecutionState(getGame(), getContext());
         }
     }
