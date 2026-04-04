@@ -105,7 +105,7 @@ public class Game {
         return players;
     }
     public Optional<Player> getCurrentPlayer() {
-        return Optional.of(currentPlayer);
+        return Optional.ofNullable(currentPlayer);
     }
     public int getEra() {
         return era;

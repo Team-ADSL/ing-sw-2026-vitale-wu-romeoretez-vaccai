@@ -15,20 +15,20 @@ import java.util.Optional;
 
 public abstract class VirtualClient implements ModelObserver, EndGameObserver {
     private final ServerController serverController;
-    private Optional<GameController> gameController;
+    private GameController gameController;
     private String clientUsername;
 
     public VirtualClient(ServerController serverController){
         this.serverController = serverController;
-        this.gameController = Optional.empty();
+        this.gameController = null;
         this.clientUsername = null;
     }
 
     public void processRequest(ClientRequest req){
-        if(gameController.isEmpty()){
+        if(gameController == null){
             serverController.handleClientRequest(req, this);
         } else{
-            gameController.get().handleClientRequest(req, this);
+            gameController.handleClientRequest(req, this);
         }
     }
 
@@ -72,13 +72,13 @@ public abstract class VirtualClient implements ModelObserver, EndGameObserver {
         return serverController;
     }
     public Optional<GameController> getGameController() {
-        return gameController;
+        return Optional.ofNullable(gameController);
     }
     public String getClientUsername() {
         return clientUsername;
     }
 
-    public void setGameController(Optional<GameController> gameController) {
+    public void setGameController(GameController gameController) {
         this.gameController = gameController;
     }
     public void setClientUsername(String clientUsername) {

@@ -6,7 +6,6 @@ import org.example.shared.enums.Color;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.util.Map;
-import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class OfferTileTest {
@@ -18,14 +17,14 @@ public class OfferTileTest {
     void setUp() {
         // Arrange - tile with a player and multiple moves
         tileWithPlayer = new OfferTile(
-                Optional.of(new Player("Gianpaolo", 3, 0, Color.RED, new java.util.HashMap<>())),
+                new Player("Gianpaolo", 3, 0, Color.RED, new java.util.HashMap<>()),
                 Map.of(Row.UPPER, 2, Row.LOWER, 1),
                 true
         );
 
         // Arrange - tile with no player and no moves
         tileWithoutPlayer = new OfferTile(
-                Optional.empty(),
+                null,
                 Map.of(),
                 false
         );

@@ -12,7 +12,7 @@ public class Sustenance extends Event {
 
     private final int lostPP;
 
-    public Sustenance(String id, int lostPP, boolean isFinal, int era, Optional<Integer> numPlayers) {
+    public Sustenance(String id, int lostPP, boolean isFinal, int era, Integer numPlayers) {
         super(id, isFinal, era, numPlayers);
         this.lostPP = lostPP;
     }

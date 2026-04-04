@@ -8,7 +8,6 @@ import org.example.server.model.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -22,7 +21,7 @@ public class HuntTest {
     void setUp() {
         player = new Player("Tester");
         player.changeFood(5);
-        hunt = new Hunt("hunt_01", 2, false, 1, Optional.empty());
+        hunt = new Hunt("hunt_01", 2, false, 1, null);
     }
 
     @Test
@@ -37,7 +36,7 @@ public class HuntTest {
 
     @Test
     void activeEffect_wrongTrigger_noEffect() {
-        player.getCards().get(CardType.HUNTER).add(new Hunter("h", false, 1, Optional.empty()));
+        player.getCards().get(CardType.HUNTER).add(new Hunter("h", false, 1, null));
         hunt.activeEffect(Set.of(player), Trigger.END_ROUND);
         assertEquals(0, player.getPp());
         assertEquals(5, player.getFood());
@@ -52,8 +51,8 @@ public class HuntTest {
 
     @Test
     void activeEffect_twoHunters_correctPPandFood() {
-        player.getCards().get(CardType.HUNTER).add(new Hunter("h1", false, 1, Optional.empty()));
-        player.getCards().get(CardType.HUNTER).add(new Hunter("h2", false, 1, Optional.empty()));
+        player.getCards().get(CardType.HUNTER).add(new Hunter("h1", false, 1, null));
+        player.getCards().get(CardType.HUNTER).add(new Hunter("h2", false, 1, null));
         hunt.activeEffect(Set.of(player), Trigger.EVENT_EXECUTION);
         assertEquals(4, player.getPp());
         assertEquals(7, player.getFood());
@@ -61,8 +60,8 @@ public class HuntTest {
 
     @Test
     void activeEffect_withHuntEventBonus_doublesExtraReward() {
-        player.getCards().get(CardType.HUNTER).add(new Hunter("h1", false, 1, Optional.empty()));
-        player.getCards().get(CardType.HUNTER).add(new Hunter("h2", false, 1, Optional.empty()));
+        player.getCards().get(CardType.HUNTER).add(new Hunter("h1", false, 1, null));
+        player.getCards().get(CardType.HUNTER).add(new Hunter("h2", false, 1, null));
         player.getBuildingBonus().setHuntEventBonus(true);
         hunt.activeEffect(Set.of(player), Trigger.EVENT_EXECUTION);
         assertEquals(6, player.getPp());
@@ -79,9 +78,9 @@ public class HuntTest {
     @Test
     void activeEffect_multiplePlayersAllGetReward() {
         Player p2 = new Player("Second");
-        player.getCards().get(CardType.HUNTER).add(new Hunter("h1", false, 1, Optional.empty()));
-        p2.getCards().get(CardType.HUNTER).add(new Hunter("h2", false, 1, Optional.empty()));
-        p2.getCards().get(CardType.HUNTER).add(new Hunter("h3", false, 1, Optional.empty()));
+        player.getCards().get(CardType.HUNTER).add(new Hunter("h1", false, 1, null));
+        p2.getCards().get(CardType.HUNTER).add(new Hunter("h2", false, 1, null));
+        p2.getCards().get(CardType.HUNTER).add(new Hunter("h3", false, 1, null));
         hunt.activeEffect(Set.of(player, p2), Trigger.EVENT_EXECUTION);
         assertEquals(2, player.getPp());
         assertEquals(4, p2.getPp());

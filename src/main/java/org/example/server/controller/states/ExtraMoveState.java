@@ -72,10 +72,10 @@ public class ExtraMoveState extends ControllerState {
                 .findFirst();
 
         if(playerExtraMove.isPresent()){
-            getGame().setCurrentPlayer(playerExtraMove);
+            getGame().setCurrentPlayer(playerExtraMove.get());
             return this;
         } else {
-            getGame().setCurrentPlayer(Optional.empty());
+            getGame().setCurrentPlayer(null);
             return new EventsState(getGame(), getContext());
         }
     }

@@ -4,12 +4,11 @@ import org.example.server.model.cards.Card;
 import org.example.shared.enums.Trigger;
 import org.example.server.model.Player;
 
-import java.util.Optional;
 import java.util.Set;
 
 public abstract class Character extends Card {
 
-    public Character (String id, int era, Optional<Integer> numPlayers){
+    public Character (String id, int era, Integer numPlayers){
         super(id, era, numPlayers);
     }
 

@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public class DuringPaintings extends DuringEvent {
-    public DuringPaintings(String id, int endGamePP, int cost, int era, Optional<Integer> numPlayers) {
+    public DuringPaintings(String id, int endGamePP, int cost, int era, Integer numPlayers) {
         super(id, endGamePP, cost, era, numPlayers);
     }
 

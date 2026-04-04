@@ -6,7 +6,6 @@ import org.example.server.model.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,7 +18,7 @@ public class ExtraMoveTest {
     @BeforeEach
     void setUp() {
         player = new Player("Tester");
-        extraMove = new ExtraMove("em_01", 3, 2, Trigger.END_ROUND, Set.of(), 1, Optional.empty());
+        extraMove = new ExtraMove("em_01", 3, 2, Trigger.END_ROUND, Set.of(), 1, null);
     }
 
     @Test

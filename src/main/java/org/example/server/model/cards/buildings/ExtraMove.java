@@ -4,13 +4,12 @@ import org.example.shared.enums.Trigger;
 import org.example.server.model.cards.characters.Character;
 import org.example.server.model.Player;
 
-import java.util.Optional;
 import java.util.Set;
 
 public class ExtraMove extends Building {
 
     public ExtraMove(String id, int endGamePP, int cost, Trigger trigger,
-                     Set<Character> characterUse, int era, Optional<Integer> numPlayers) {
+                     Set<Character> characterUse, int era, Integer numPlayers) {
         super(id, endGamePP, cost, era, numPlayers);
     }
 

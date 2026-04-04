@@ -16,7 +16,11 @@ public class GameTest {
     // ──────────────────────────────────────────────
 
     private static final EndGameObserver NO_OP_END_GAME = (gameId, results) -> {};
-    private static final ModelObserver NO_OP_MODEL = datasource -> {};
+    private static final ModelObserver NO_OP_MODEL = new ModelObserver() {
+        @Override public void updateHome(java.util.List<Integer> g) {}
+        @Override public void updateLobby(java.util.List<String> p) {}
+        @Override public void updateGame(org.example.shared.model.GameDTO g) {}
+    };
 
     // ──────────────────────────────────────────────
     // Helpers
@@ -50,7 +54,7 @@ public class GameTest {
     void setUp() {
         board = buildBoard();
         players = buildPlayers();
-        game = new Game(42, 2, 1, players, Optional.empty(), board,
+        game = new Game(42, 2, 1, players, null, board,
                 Phase.LOBBY, false, NO_OP_END_GAME, NO_OP_MODEL);
     }
 
@@ -60,7 +64,7 @@ public class GameTest {
 
     @Test
     void initialConstructor_setsDefaultValues() {
-        Game g = new Game(1, NO_OP_END_GAME, NO_OP_MODEL);
+        Game g = new Game(1, NO_OP_END_GAME);
         assertAll(
                 () -> assertEquals(1,         g.getGameId()),
                 () -> assertEquals(0,         g.getRound()),
@@ -174,7 +178,7 @@ public class GameTest {
     @Test
     void setCurrentPlayer_updatesCurrentPlayer() {
         Player p = new Player("TestPlayer");
-        game.setCurrentPlayer(Optional.of(p));
+        game.setCurrentPlayer(p);
         assertTrue(game.getCurrentPlayer().isPresent());
         assertSame(p, game.getCurrentPlayer().get());
     }
@@ -182,8 +186,8 @@ public class GameTest {
     @Test
     void setCurrentPlayer_toEmpty_clearsCurrentPlayer() {
         Player p = new Player("TestPlayer");
-        game.setCurrentPlayer(Optional.of(p));
-        game.setCurrentPlayer(Optional.empty());
+        game.setCurrentPlayer(p);
+        game.setCurrentPlayer(null);
         assertTrue(game.getCurrentPlayer().isEmpty());
     }
 }

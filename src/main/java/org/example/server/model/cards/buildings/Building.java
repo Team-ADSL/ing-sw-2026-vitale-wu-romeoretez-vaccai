@@ -7,14 +7,13 @@ import org.example.server.model.cards.characters.Builder;
 import org.example.server.model.Player;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 public abstract class Building extends Card {
     private final int endGamePP;
     private final int cost;
 
-    public Building(String id, int endGamePP, int cost, int era, Optional<Integer> numPlayers) {
+    public Building(String id, int endGamePP, int cost, int era, Integer numPlayers) {
         super(id, era, numPlayers);
         this.endGamePP = endGamePP;
         this.cost = cost;

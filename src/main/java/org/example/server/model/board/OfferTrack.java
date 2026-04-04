@@ -3,7 +3,6 @@ package org.example.server.model.board;
 import org.example.server.model.Player;
 
 import java.util.ArrayList;
-import java.util.Optional;
 
 public class OfferTrack {
     private final ArrayList<OfferTile> offerQueue;
@@ -13,7 +12,7 @@ public class OfferTrack {
     }
 
     public void placeInOfferTile(Player p, int arrayIndex){
-        offerQueue.get(arrayIndex).setPlayer(Optional.of(p));
+        offerQueue.get(arrayIndex).setPlayer(p);
     }
     public OfferTile getTileAt(int i){
         return offerQueue.get(i);

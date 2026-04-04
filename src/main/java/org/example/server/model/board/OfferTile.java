@@ -7,18 +7,18 @@ import java.util.Map;
 import java.util.Optional;
 
 public class OfferTile {
-    private Optional<Player> player;
+    private Player player;
     private final Map<Row,Integer> moves;
     private final boolean givesFood;
 
-    public OfferTile(Optional<Player> player, Map<Row,Integer> moves, boolean givesFood) {
+    public OfferTile(Player player, Map<Row,Integer> moves, boolean givesFood) {
         this.player = player;
         this.moves = moves;
         this.givesFood = givesFood;
     }
 
     public Optional<Player> getPlayer() {
-        return player;
+        return Optional.ofNullable(player);
     }
     public int getNumMoves(){
         return moves.values().stream().mapToInt(Integer::intValue).sum();
@@ -30,7 +30,7 @@ public class OfferTile {
         return givesFood;
     }
 
-    public void setPlayer(Optional<Player> player) {
+    public void setPlayer(Player player) {
         this.player = player;
     }
 }

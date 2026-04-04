@@ -4,14 +4,13 @@ import org.example.server.model.cards.Card;
 import org.example.shared.enums.CardType;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 public class Gatherer extends Character {
 
     private final int discount;
 
-    public Gatherer (String id, int discount, int era, Optional<Integer> numPlayers) {
+    public Gatherer (String id, int discount, int era, Integer numPlayers) {
         super(id, era, numPlayers);
         this.discount = discount;
     }

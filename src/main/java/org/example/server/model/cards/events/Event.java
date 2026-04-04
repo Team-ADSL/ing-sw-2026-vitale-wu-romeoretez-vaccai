@@ -15,7 +15,7 @@ public abstract class Event extends Card {
 
     private final boolean isFinal;
 
-    public Event(String id, boolean isFinal, int era, Optional<Integer> numPlayers) {
+    public Event(String id, boolean isFinal, int era, Integer numPlayers) {
         super(id, era, numPlayers);
         this.isFinal = isFinal;
     }

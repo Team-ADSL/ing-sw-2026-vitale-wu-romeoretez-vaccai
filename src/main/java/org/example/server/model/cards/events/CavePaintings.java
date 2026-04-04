@@ -15,7 +15,7 @@ public class CavePaintings extends Event {
     private final int multiplierPP;
 
     public CavePaintings (String id, int minArtists, int lostPP, int multiplierPP,
-                      boolean isFinal, int era, Optional<Integer> numPlayers) {
+                      boolean isFinal, int era, Integer numPlayers) {
         super(id, isFinal, era, numPlayers);
         this.minArtists = minArtists;
         this.lostPP = lostPP;

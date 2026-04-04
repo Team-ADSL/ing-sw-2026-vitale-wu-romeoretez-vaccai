@@ -6,7 +6,6 @@ import org.example.server.model.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,7 +18,7 @@ public class DuringPaintingsTest {
     @BeforeEach
     void setUp() {
         player = new Player("Tester");
-        duringPaintings = new DuringPaintings("dp_01", 3, 2, 1, Optional.empty());
+        duringPaintings = new DuringPaintings("dp_01", 3, 2, 1, null);
     }
 
     @Test

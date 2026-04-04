@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public class DuringHunt extends DuringEvent {
-    public DuringHunt(String id, int endGamePP, int cost, int era, Optional<Integer> numPlayers) {
+    public DuringHunt(String id, int endGamePP, int cost, int era, Integer numPlayers) {
         super(id, endGamePP, cost, era, numPlayers);
     }
 

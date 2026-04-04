@@ -6,7 +6,6 @@ import org.example.shared.enums.Color;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
-import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class OrderTileTest {
@@ -22,9 +21,9 @@ public class OrderTileTest {
         gianpiero = new Player("Gianpiero", 2, 0, Color.BLUE, new java.util.HashMap<>());
 
         ArrayList<OrderCell> cells = new ArrayList<>();
-        cells.add(new OrderCell(Optional.empty(), 1, false));
-        cells.add(new OrderCell(Optional.empty(), 0, false));
-        cells.add(new OrderCell(Optional.empty(), 0, true));
+        cells.add(new OrderCell(null, 1, false));
+        cells.add(new OrderCell(null, 0, false));
+        cells.add(new OrderCell(null, 0, true));
 
         orderTile = new OrderTile(cells);
     }

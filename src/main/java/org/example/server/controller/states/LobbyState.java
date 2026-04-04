@@ -32,7 +32,7 @@ public class LobbyState extends ControllerState {
         if(getGame().getPlayers().size() < 5){
             getGame().addVirtualClient(virtualClient);
             getGame().getPlayers().add(new Player(virtualClient.getClientUsername()));
-            virtualClient.setGameController(Optional.of(getContext()));
+            virtualClient.setGameController(getContext());
             getGame().sendUpdateGame();
         } else {
             throw new InvalidRequestException("The lobby is full");
@@ -49,7 +49,7 @@ public class LobbyState extends ControllerState {
             throw new InvalidRequestException("Player not in current game");
         }
         getGame().getPlayers().remove(reqPlayer.get());
-        virtualClient.setGameController(Optional.empty());
+        virtualClient.setGameController(null);
 
         if(getGame().getPlayers().isEmpty()){
             getGame().sendEndGameResults(null);
