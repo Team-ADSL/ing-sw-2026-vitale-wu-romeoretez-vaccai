@@ -10,8 +10,8 @@ import java.util.Set;
 public class DuringSustenance extends DuringEvent {
     private final CardType typeMultiplier;
 
-    public DuringSustenance(int endGamePP, int cost, int era, Optional<Integer> numPlayers, CardType typeMultiplier) {
-        super(endGamePP, cost, era, numPlayers);
+    public DuringSustenance(String id, int endGamePP, int cost, int era, Optional<Integer> numPlayers, CardType typeMultiplier) {
+        super(id, endGamePP, cost, era, numPlayers);
         this.typeMultiplier = typeMultiplier;
     }
 

@@ -10,8 +10,8 @@ import java.util.Set;
 public class DuringRitual extends DuringEvent {
     private final BuildingEffect buildingEffect;
 
-    public DuringRitual(int endGamePP, int cost, int era, Optional<Integer> numPlayers, BuildingEffect buildingEffect) {
-        super(endGamePP, cost, era, numPlayers);
+    public DuringRitual(String id, int endGamePP, int cost, int era, Optional<Integer> numPlayers, BuildingEffect buildingEffect) {
+        super(id, endGamePP, cost, era, numPlayers);
         this.buildingEffect = buildingEffect;
     }
 

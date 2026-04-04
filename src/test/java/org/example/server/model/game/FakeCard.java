@@ -10,7 +10,7 @@ import java.util.Set;
 // Fake card only for testing purposes
 public class FakeCard extends Card {
     public FakeCard() {
-        super(1, Optional.empty());
+        super("fake_card", 1, Optional.empty());
     }
     @Override
     public boolean canBeDrawn(Player p) { return true; }

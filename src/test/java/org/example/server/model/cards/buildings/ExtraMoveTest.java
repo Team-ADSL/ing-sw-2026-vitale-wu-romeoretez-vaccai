@@ -1,6 +1,5 @@
 package org.example.server.model.cards.buildings;
 
-import org.example.server.model.cards.buildings.ExtraMove;
 import org.example.shared.enums.Trigger;
 import org.example.shared.enums.Color;
 import org.example.server.model.Player;
@@ -19,8 +18,13 @@ public class ExtraMoveTest {
 
     @BeforeEach
     void setUp() {
-        player = new Player("Tester", 10, 0, Color.RED);
-        extraMove = new ExtraMove(3, 2, Trigger.END_ROUND, Set.of(), 1, Optional.empty());
+        player = new Player("Tester");
+        extraMove = new ExtraMove("em_01", 3, 2, Trigger.END_ROUND, Set.of(), 1, Optional.empty());
+    }
+
+    @Test
+    void getId_returnsCorrectId() {
+        assertEquals("em_01", extraMove.getId());
     }
 
     @Test

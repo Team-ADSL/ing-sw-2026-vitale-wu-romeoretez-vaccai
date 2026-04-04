@@ -9,8 +9,8 @@ import java.util.Set;
 
 public class Artist extends Character {
 
-    public Artist ( int era, Optional<Integer> numPlayers) {
-        super(era, numPlayers);
+    public Artist (String id, int era, Optional<Integer> numPlayers) {
+        super(id, era, numPlayers);
     }
 
     @Override

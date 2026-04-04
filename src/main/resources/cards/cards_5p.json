@@ -1,0 +1,26 @@
+{
+  "numPlayers": 5,
+  "era1": {
+    "characters": [
+      { "id": "builder_03",         "type": "BUILDER",         "discount": 2, "pp": 1 },
+      { "id": "gatherer_04",        "type": "GATHERER",        "discount": 3 },
+      { "id": "shaman_01",          "type": "SHAMAN",          "starNum": 2 }
+    ]
+  },
+  "era2": {
+    "characters": [
+      { "id": "hunter_11",          "type": "HUNTER",          "extraFood": false },
+      { "id": "gatherer_08",        "type": "GATHERER",        "discount": 3 },
+      { "id": "shaman_07",          "type": "SHAMAN",          "starNum": 1 },
+      { "id": "shaman_08",          "type": "SHAMAN",          "starNum": 2 }
+    ]
+  },
+  "era3": {
+    "characters": [
+      { "id": "hunter_12",          "type": "HUNTER",          "extraFood": true },
+      { "id": "builder_09",         "type": "BUILDER",         "discount": 1, "pp": 4 },
+      { "id": "gatherer_11",        "type": "GATHERER",        "discount": 3 },
+      { "id": "artist_10",          "type": "ARTIST" }
+    ]
+  }
+}

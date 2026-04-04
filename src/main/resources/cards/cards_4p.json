@@ -1,0 +1,26 @@
+{
+  "numPlayers": 4,
+  "era1": {
+    "characters": [
+      { "id": "artist_05",          "type": "ARTIST" },
+      { "id": "inventor_05",        "type": "INVENTOR",        "icon": "ROPE" },
+      { "id": "inventor_06",        "type": "INVENTOR",        "icon": "FLUTE" },
+      { "id": "inventor_07",        "type": "INVENTOR",        "icon": "BOWL" },
+      { "id": "shaman_04",          "type": "SHAMAN",          "starNum": 1 }
+    ]
+  },
+  "era2": {
+    "characters": [
+      { "id": "hunter_10",          "type": "HUNTER",          "extraFood": true },
+      { "id": "gatherer_07",        "type": "GATHERER",        "discount": 3 },
+      { "id": "inventor_09",        "type": "INVENTOR",        "icon": "HOOK" }
+    ]
+  },
+  "era3": {
+    "characters": [
+      { "id": "gatherer_10",        "type": "GATHERER",        "discount": 3 },
+      { "id": "inventor_14",        "type": "INVENTOR",        "icon": "NECKLACE" },
+      { "id": "shaman_13",          "type": "SHAMAN",          "starNum": 2 }
+    ]
+  }
+}

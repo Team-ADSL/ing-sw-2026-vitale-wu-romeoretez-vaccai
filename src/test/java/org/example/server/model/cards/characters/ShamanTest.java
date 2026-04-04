@@ -1,7 +1,6 @@
 package org.example.server.model.cards.characters;
 
 import org.example.server.model.cards.Card;
-import org.example.server.model.cards.characters.Shaman;
 import org.example.shared.enums.CardType;
 import org.example.shared.enums.Color;
 import org.example.server.model.Player;
@@ -15,26 +14,32 @@ public class ShamanTest {
 
     @Test
     void getStarNum_returnsCorrectValue() {
-        Shaman s = new Shaman(3, 1, Optional.empty());
+        Shaman s = new Shaman("s", 3, 1, Optional.empty());
         assertEquals(3, s.getStarNum());
     }
 
     @Test
     void getEra_returnsCorrectValue() {
-        Shaman s = new Shaman(3, 2, Optional.empty());
+        Shaman s = new Shaman("s", 3, 2, Optional.empty());
         assertEquals(2, s.getEra());
     }
 
     @Test
+    void getId_returnsCorrectId() {
+        Shaman s = new Shaman("shaman_01", 3, 1, Optional.empty());
+        assertEquals("shaman_01", s.getId());
+    }
+
+    @Test
     void canBeDrawn_alwaysTrue() {
-        Shaman s = new Shaman(3, 1, Optional.empty());
-        Player p = new Player("Test", 0, 0, Color.RED);
+        Shaman s = new Shaman("s", 3, 1, Optional.empty());
+        Player p = new Player("Test");
         assertTrue(s.canBeDrawn(p));
     }
 
     @Test
     void insert_addsToShamanSet() {
-        Shaman s = new Shaman(3, 1, Optional.empty());
+        Shaman s = new Shaman("s", 3, 1, Optional.empty());
         Map<CardType, Set<Card>> cards = initCardsMap();
         s.insert(cards);
         assertTrue(cards.get(CardType.SHAMAN).contains(s));
@@ -42,7 +47,7 @@ public class ShamanTest {
 
     @Test
     void insert_doesNotAddToOtherSets() {
-        Shaman s = new Shaman(3, 1, Optional.empty());
+        Shaman s = new Shaman("s", 3, 1, Optional.empty());
         Map<CardType, Set<Card>> cards = initCardsMap();
         s.insert(cards);
         for (CardType type : CardType.values()) {
