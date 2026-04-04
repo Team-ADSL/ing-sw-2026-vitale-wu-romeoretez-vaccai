@@ -1,10 +1,10 @@
 package org.example.server.controller;
 
+import org.example.server.config.BoardConfigLoader;
 import org.example.server.controller.states.ControllerState;
 import org.example.server.controller.states.LobbyState;
 import org.example.server.controller.states.RecoverState;
 import org.example.server.model.Game;
-import org.example.server.config.BoardConfigLoader;
 import org.example.server.persistence.GameDAO;
 import org.example.server.network.VirtualClient;
 import org.example.server.persistence.GamePersistenceManager;

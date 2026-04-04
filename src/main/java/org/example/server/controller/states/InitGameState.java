@@ -1,5 +1,6 @@
 package org.example.server.controller.states;
 
+import org.example.server.config.BoardConfigLoader;
 import org.example.server.controller.GameController;
 import org.example.server.model.cards.Card;
 import org.example.server.model.cards.buildings.Building;
@@ -7,7 +8,6 @@ import org.example.server.model.Game;
 import org.example.server.model.board.Board;
 import org.example.server.model.board.CardRow;
 import org.example.server.model.board.Deck;
-import org.example.server.config.BoardConfigLoader;
 import org.example.shared.enums.Phase;
 
 import java.util.*;

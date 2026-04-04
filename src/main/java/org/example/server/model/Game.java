@@ -18,7 +18,7 @@ public class Game {
     private Board board;
     private int round;
     private int era;
-    private Optional<Player> currentPlayer;
+    private Player currentPlayer;
     private Phase phase;
     private boolean isInitialized;
 
@@ -31,13 +31,13 @@ public class Game {
         this.board = null;
         this.round = 0;
         this.era = 1;
-        this.currentPlayer = Optional.empty();
+        this.currentPlayer = null;
         this.phase = Phase.LOBBY;
         this.isInitialized = false;
     }
 
     // For recover after crash
-    public Game(int gameId, int round, int era, Set<Player> players, Optional<Player> currentPlayer,
+    public Game(int gameId, int round, int era, Set<Player> players, Player currentPlayer,
                 Board board, Phase phase, boolean isInitialized,
                 EndGameObserver endGameObserver, ModelObserver gamePersistenceManager) {
         this.gameId = gameId;
@@ -105,7 +105,7 @@ public class Game {
         return players;
     }
     public Optional<Player> getCurrentPlayer() {
-        return currentPlayer;
+        return Optional.of(currentPlayer);
     }
     public int getEra() {
         return era;
@@ -120,7 +120,7 @@ public class Game {
         return isInitialized;
     }
 
-    public void setCurrentPlayer(Optional<Player> currentPlayer) {
+    public void setCurrentPlayer(Player currentPlayer) {
         this.currentPlayer = currentPlayer;
     }
     public void setPhase(Phase phase) {
