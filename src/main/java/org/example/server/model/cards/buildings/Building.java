@@ -1,3 +1,4 @@
+
 package org.example.server.model.cards.buildings;
 
 import org.example.server.model.cards.Card;
@@ -13,8 +14,8 @@ public abstract class Building extends Card {
     private final int endGamePP;
     private final int cost;
 
-    public Building(int endGamePP, int cost, int era, Optional<Integer> numPlayers) {
-        super(era, numPlayers);
+    public Building(String id, int endGamePP, int cost, int era, Optional<Integer> numPlayers) {
+        super(id, era, numPlayers);
         this.endGamePP = endGamePP;
         this.cost = cost;
     }

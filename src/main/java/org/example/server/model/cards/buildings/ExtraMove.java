@@ -9,9 +9,9 @@ import java.util.Set;
 
 public class ExtraMove extends Building {
 
-    public ExtraMove(int endGamePP, int cost, Trigger trigger,
+    public ExtraMove(String id, int endGamePP, int cost, Trigger trigger,
                      Set<Character> characterUse, int era, Optional<Integer> numPlayers) {
-        super(endGamePP, cost, era, numPlayers);
+        super(id, endGamePP, cost, era, numPlayers);
     }
 
     @Override

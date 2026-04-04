@@ -7,9 +7,9 @@ import static org.junit.jupiter.api.Assertions.*;
 public class CardDTOTest {
 
     @Test
-    void getId_defaultValue_returnsZero() {
+    void getId_defaultValue_returnsNull() {
         CardDTO dto = new CardDTO();
-        assertEquals(0, dto.getId());
+        assertNull(dto.getId());
     }
 
     @Test

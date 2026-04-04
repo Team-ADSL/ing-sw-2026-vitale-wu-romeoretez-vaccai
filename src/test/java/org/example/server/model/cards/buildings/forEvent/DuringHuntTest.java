@@ -19,8 +19,8 @@ public class DuringHuntTest {
 
     @BeforeEach
     void setUp() {
-        player = new Player("Tester", 10, 0, Color.RED);
-        duringHunt = new DuringHunt(3, 2, 1, Optional.empty());
+        player = new Player("Tester");
+        duringHunt = new DuringHunt("dh_01", 3, 2, 1, Optional.empty());
     }
 
     @Test

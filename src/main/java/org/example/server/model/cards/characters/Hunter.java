@@ -13,8 +13,8 @@ public class Hunter extends Character {
 
     private final boolean extraFood;
 
-    public Hunter (boolean extraFood, int era, Optional<Integer> numPlayers) {
-        super(era, numPlayers);
+    public Hunter (String id, boolean extraFood, int era, Optional<Integer> numPlayers) {
+        super(id, era, numPlayers);
         this.extraFood = extraFood;
     }
 

@@ -1,0 +1,36 @@
+[
+  {
+    "numPlayers": 2,
+    "cells": [
+      { "bonus": 1, "isMalus": false },
+      { "bonus": 0, "isMalus": true  }
+    ]
+  },
+  {
+    "numPlayers": 3,
+    "cells": [
+      { "bonus": 2, "isMalus": false },
+      { "bonus": 0, "isMalus": false },
+      { "bonus": 0, "isMalus": true  }
+    ]
+  },
+  {
+    "numPlayers": 4,
+    "cells": [
+      { "bonus": 2, "isMalus": false },
+      { "bonus": 1, "isMalus": false },
+      { "bonus": 0, "isMalus": false },
+      { "bonus": 0, "isMalus": true  }
+    ]
+  },
+  {
+    "numPlayers": 5,
+    "cells": [
+      { "bonus": 3, "isMalus": false },
+      { "bonus": 1, "isMalus": false },
+      { "bonus": 0, "isMalus": false },
+      { "bonus": 0, "isMalus": false },
+      { "bonus": 0, "isMalus": true  }
+    ]
+  }
+]

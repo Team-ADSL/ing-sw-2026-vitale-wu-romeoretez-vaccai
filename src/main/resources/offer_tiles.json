@@ -1,0 +1,9 @@
+[
+  { "numPlayers": 2, "id": "offer_tile_b", "givesFood": false, "moves": { "LOWER": 1 } },
+  { "numPlayers": 2, "id": "offer_tile_c", "givesFood": false, "moves": { "UPPER": 2 } },
+  { "numPlayers": 2, "id": "offer_tile_e", "givesFood": false, "moves": { "UPPER": 1, "LOWER": 1 } },
+  { "numPlayers": 2, "id": "offer_tile_f", "givesFood": false, "moves": { "UPPER": 2 } },
+  { "numPlayers": 3, "id": "offer_tile_d", "givesFood": false, "moves": { "LOWER": 2 } },
+  { "numPlayers": 4, "id": "offer_tile_g", "givesFood": false, "moves": { "UPPER": 2, "LOWER": 1 } },
+  { "numPlayers": 5, "id": "offer_tile_a", "givesFood": true,  "moves": {} }
+]

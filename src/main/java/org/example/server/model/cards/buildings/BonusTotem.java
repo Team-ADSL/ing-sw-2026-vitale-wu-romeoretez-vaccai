@@ -8,8 +8,8 @@ import java.util.Set;
 
 public class BonusTotem extends Building {
 
-    public BonusTotem(int endGamePP, int cost, int era, Optional<Integer> numPlayers) {
-        super(endGamePP, cost, era, numPlayers);
+    public BonusTotem(String id, int endGamePP, int cost, int era, Optional<Integer> numPlayers) {
+        super(id, endGamePP, cost, era, numPlayers);
     }
 
     @Override

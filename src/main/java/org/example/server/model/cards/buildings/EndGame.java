@@ -12,8 +12,8 @@ public class EndGame extends Building {
     private final BuildingEffect buildingEffect;
     private final CardType characterTypeMultiplier;
 
-    public EndGame(int endGamePP, int cost, int era, Optional<Integer> numPlayers, BuildingEffect buildingEffect, CardType characterTypeForMultiplier) {
-        super(endGamePP, cost, era, numPlayers);
+    public EndGame(String id, int endGamePP, int cost, int era, Optional<Integer> numPlayers, BuildingEffect buildingEffect, CardType characterTypeForMultiplier) {
+        super(id, endGamePP, cost, era, numPlayers);
         this.buildingEffect = buildingEffect;
         this.characterTypeMultiplier = characterTypeForMultiplier;
     }
@@ -45,3 +45,4 @@ public class EndGame extends Building {
         }
     }
 }
+//GESTIRE IL CAMBIO DI PP MULTIPLIER IN BASE AL PERSONAGGIO

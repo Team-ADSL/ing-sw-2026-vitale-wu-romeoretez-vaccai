@@ -16,7 +16,7 @@ public class OrderCellTest {
     void setUp() {
         // Arrange - cell with player, bonus and malus
         cellWithPlayer = new OrderCell(
-                Optional.of(new Player("Gianpaolo", 3, 0, Color.RED)),
+                Optional.of(new Player("Gianpaolo", 3, 0, Color.RED, new java.util.HashMap<>())),
                 2,
                 false
         );
@@ -48,7 +48,7 @@ public class OrderCellTest {
     @Test
     void testSetPlayerAssignsPlayer() {
         // should assign a player to an empty cell
-        Player newPlayer = new Player("Luigi", 2, 0, Color.BLUE);
+        Player newPlayer = new Player("Luigi", 2, 0, Color.BLUE, new java.util.HashMap<>());
         cellWithoutPlayer.setPlayer(Optional.of(newPlayer));
         assertTrue(cellWithoutPlayer.getPlayer().isPresent());
     }

@@ -1,0 +1,82 @@
+{
+  "numPlayers": 2,
+  "era1": {
+    "characters and events": [
+      { "id": "hunter_01",          "type": "HUNTER",          "extraFood": true },
+      { "id": "hunter_02",          "type": "HUNTER",          "extraFood": true },
+      { "id": "hunter_03",          "type": "HUNTER",          "extraFood": false },
+      { "id": "builder_01",         "type": "BUILDER",         "discount": 1, "pp": 3 },
+      { "id": "builder_02",         "type": "BUILDER",         "discount": 2, "pp": 0 },
+      { "id": "builder_04",         "type": "BUILDER",         "discount": 1, "pp": 2 },
+      { "id": "gatherer_01",        "type": "GATHERER",        "discount": 3 },
+      { "id": "gatherer_02",        "type": "GATHERER",        "discount": 3 },
+      { "id": "artist_01",          "type": "ARTIST" },
+      { "id": "artist_02",          "type": "ARTIST" },
+      { "id": "artist_03",          "type": "ARTIST" },
+      { "id": "inventor_01",        "type": "INVENTOR",        "icon": "LEATHER" },
+      { "id": "inventor_02",        "type": "INVENTOR",        "icon": "BOAT" },
+      { "id": "inventor_03",        "type": "INVENTOR",        "icon": "SPEARHEAD" },
+      { "id": "inventor_04",        "type": "INVENTOR",        "icon": "BREAD" },
+      { "id": "shaman_02",          "type": "SHAMAN",          "starNum": 2 },
+      { "id": "shaman_03",          "type": "SHAMAN",          "starNum": 1 },
+
+      { "id": "hunt_01",            "type": "HUNT",            "isFinal": false, "multiplierPP": 1 },
+      { "id": "sustenance_01",      "type": "SUSTENANCE",      "isFinal": false, "lostPP": 1 },
+      { "id": "shamanic_ritual_01", "type": "SHAMANIC_RITUAL", "isFinal": false, "lostPP": 3, "gainedPP": 5 },
+      { "id": "cave_paintings_01",  "type": "CAVE_PAINTINGS",  "isFinal": false, "minArtists": 0, "lostPP": 2, "multiplierPP": 1 }
+    ]
+  },
+  "era2": {
+    "characters and events": [
+      { "id": "hunter_06",          "type": "HUNTER",          "extraFood": false },
+      { "id": "hunter_07",          "type": "HUNTER",          "extraFood": false },
+      { "id": "hunter_09",          "type": "HUNTER",          "extraFood": true },
+      { "id": "builder_05",         "type": "BUILDER",         "discount": 1, "pp": 4 },
+      { "id": "builder_06",         "type": "BUILDER",         "discount": 2, "pp": 1 },
+      { "id": "builder_08",         "type": "BUILDER",         "discount": 2, "pp": 3 },
+      { "id": "gatherer_05",        "type": "GATHERER",        "discount": 3 },
+      { "id": "artist_07",          "type": "ARTIST" },
+      { "id": "artist_08",          "type": "ARTIST" },
+      { "id": "artist_09",          "type": "ARTIST" },
+      { "id": "inventor_08",        "type": "INVENTOR",        "icon": "TOTEM" },
+      { "id": "inventor_10",        "type": "INVENTOR",        "icon": "ROPE" },
+      { "id": "inventor_11",        "type": "INVENTOR",        "icon": "FLUTE" },
+      { "id": "inventor_12",        "type": "INVENTOR",        "icon": "BOWL" },
+      { "id": "inventor_13",        "type": "INVENTOR",        "icon": "LEATHER" },
+      { "id": "shaman_05",          "type": "SHAMAN",          "starNum": 2 },
+      { "id": "shaman_06",          "type": "SHAMAN",          "starNum": 2 },
+
+      { "id": "hunt_02",            "type": "HUNT",            "isFinal": false, "multiplierPP": 2 },
+      { "id": "sustenance_02",      "type": "SUSTENANCE",      "isFinal": false, "lostPP": 2 },
+      { "id": "shamanic_ritual_02", "type": "SHAMANIC_RITUAL", "isFinal": false, "lostPP": 5, "gainedPP": 10 },
+      { "id": "cave_paintings_02",  "type": "CAVE_PAINTINGS",  "isFinal": false, "minArtists": 1, "lostPP": 2, "multiplierPP": 2 }
+    ]
+  },
+  "era3": {
+    "characters and events": [
+      { "id": "hunter_13",          "type": "HUNTER",          "extraFood": false },
+      { "id": "hunter_14",          "type": "HUNTER",          "extraFood": false },
+      { "id": "hunter_15",          "type": "HUNTER",          "extraFood": true },
+      { "id": "builder_09",         "type": "BUILDER",         "discount": 1, "pp": 5 },
+      { "id": "builder_10",         "type": "BUILDER",         "discount": 2, "pp": 3 },
+      { "id": "builder_12",         "type": "BUILDER",         "discount": 2, "pp": 2 },
+      { "id": "gatherer_11",        "type": "GATHERER",        "discount": 3 },
+      { "id": "artist_11",          "type": "ARTIST" },
+      { "id": "artist_12",          "type": "ARTIST" },
+      { "id": "artist_13",          "type": "ARTIST" },
+      { "id": "inventor_17",        "type": "INVENTOR",        "icon": "TOTEM" },
+      { "id": "inventor_18",        "type": "INVENTOR",        "icon": "HOOK" },
+      { "id": "inventor_19",        "type": "INVENTOR",        "icon": "NECKLACE" },
+      { "id": "inventor_20",        "type": "INVENTOR",        "icon": "BREAD" },
+      { "id": "shaman_10",          "type": "SHAMAN",          "starNum": 3 },
+      { "id": "shaman_11",          "type": "SHAMAN",          "starNum": 2 },
+      { "id": "shaman_12",          "type": "SHAMAN",          "starNum": 3 },
+
+
+      { "id": "hunt_03",            "type": "HUNT",            "isFinal": false, "multiplierPP": 3 },
+      { "id": "sustenance_03",      "type": "SUSTENANCE",      "isFinal": true, "lostPP": 3 },
+      { "id": "shamanic_ritual_03", "type": "SHAMANIC_RITUAL", "isFinal": true, "lostPP": 7, "gainedPP": 15 },
+      { "id": "cave_paintings_03",  "type": "CAVE_PAINTINGS",  "isFinal": false, "minArtists": 2, "lostPP": 2, "multiplierPP": 3 }
+    ]
+  }
+}
