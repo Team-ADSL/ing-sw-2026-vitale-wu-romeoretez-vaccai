@@ -91,7 +91,7 @@ public class VirtualClientTest {
     @Test
     void setGameController_thenGetGameController_returnsIt() {
         Game game = new Game(1, NO_OP_END);
-        GameController gc = new GameController(game, loader, NO_OP_PERSISTENCE, NO_OP_DAO);
+        GameController gc = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
         client.setGameController(gc);
         assertTrue(client.getGameController().isPresent());
         assertSame(gc, client.getGameController().get());
@@ -100,7 +100,7 @@ public class VirtualClientTest {
     @Test
     void setGameController_null_makesGetGameControllerEmpty() {
         Game game = new Game(1, NO_OP_END);
-        GameController gc = new GameController(game, loader, NO_OP_PERSISTENCE, NO_OP_DAO);
+        GameController gc = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
         client.setGameController(gc);
         client.setGameController(null);
         assertFalse(client.getGameController().isPresent());

@@ -66,7 +66,7 @@ public class StateFactoryTest {
     }
 
     private GameController makeController(Game g) {
-        return new GameController(g, loader, NO_OP_PERSISTENCE, NO_OP_DAO);
+        return new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
     }
 
     // ──────────────────────────────────────────────

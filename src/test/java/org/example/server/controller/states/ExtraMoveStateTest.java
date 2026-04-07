@@ -61,7 +61,7 @@ public class ExtraMoveStateTest {
         );
         game.setBoard(board);
 
-        GameController controller = new GameController(game, loader, NO_OP_PERSISTENCE, NO_OP_DAO);
+        GameController controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
         state = new ExtraMoveState(game, controller);
     }
 

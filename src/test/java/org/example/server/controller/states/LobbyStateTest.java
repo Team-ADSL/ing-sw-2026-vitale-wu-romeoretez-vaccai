@@ -59,7 +59,7 @@ public class LobbyStateTest {
         BoardConfigLoader loader = new JsonBoardConfigLoader();
         serverController = new ServerController(NO_OP_DAO, loader, NO_OP_PERSISTENCE);
         game = new Game(1, NO_OP_END);
-        controller = new GameController(game, loader, NO_OP_PERSISTENCE, NO_OP_DAO);
+        controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
         state = new LobbyState(game, controller);
     }
 

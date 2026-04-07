@@ -104,7 +104,7 @@ public class ActionExecutionStateTest {
         game.setBoard(board);
         game.setCurrentPlayer(p1);
 
-        controller = new GameController(game, loader, NO_OP_PERSISTENCE, NO_OP_DAO);
+        controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
         state = new ActionExecutionState(game, controller);
     }
 

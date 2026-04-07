@@ -51,7 +51,7 @@ public class InitGameStateTest {
     void setUp() {
         loader = new JsonBoardConfigLoader();
         game = new Game(1, NO_OP_END);
-        GameController controller = new GameController(game, loader, NO_OP_PERSISTENCE, NO_OP_DAO);
+        GameController controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
         state = new InitGameState(game, controller);
     }
 
@@ -105,8 +105,8 @@ public class InitGameStateTest {
     // ──────────────────────────────────────────────
 
     private void initBoardForGame(Game g, int numPlayers) {
-        InitGameState s = new InitGameState(g,
-                new GameController(g, loader, NO_OP_PERSISTENCE, NO_OP_DAO));
+        GameController gc = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
+        InitGameState s = new InitGameState(g, gc);
         Board board = new Board(
                 s.calcNumLowCard(numPlayers),
                 s.calcNumTopCard(numPlayers),
@@ -137,8 +137,8 @@ public class InitGameStateTest {
     void makeBuildingDecks_3players_addsTwoEra1BuildingsToTopRow() {
         Game g = new Game(2, NO_OP_END);
         initBoardForGame(g, 3);
-        InitGameState s = new InitGameState(g,
-                new GameController(g, loader, NO_OP_PERSISTENCE, NO_OP_DAO));
+        GameController gc = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
+        InitGameState s = new InitGameState(g, gc);
         int before = countTopRowCards(g.getBoard().getTopRow());
         s.makeBuildingDecks(loader.getBuildings(), 3);
         assertEquals(2, countTopRowCards(g.getBoard().getTopRow()) - before);

@@ -86,7 +86,7 @@ public class TotemPlacementStateTest {
         );
         game.setBoard(board);
 
-        GameController controller = new GameController(game, loader, NO_OP_PERSISTENCE, NO_OP_DAO);
+        GameController controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
         state = new TotemPlacementState(game, controller);
     }
 
