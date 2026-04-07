@@ -1,6 +1,6 @@
 package org.example.server.model;
 
-import org.example.shared.model.GameDTO;
+import org.example.server.network.HomeObserver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -13,16 +13,14 @@ public class HomeTest {
 
     private Home home;
     private List<List<Integer>> received;
-    private ModelObserver recordingObserver;
+    private HomeObserver recordingObserver;
 
     @BeforeEach
     void setUp() {
         home = new Home();
         received = new ArrayList<>();
-        recordingObserver = new ModelObserver() {
+        recordingObserver = new HomeObserver() {
             @Override public void updateHome(List<Integer> activeGames) { received.add(new ArrayList<>(activeGames)); }
-            @Override public void updateLobby(List<String> players) {}
-            @Override public void updateGame(GameDTO game) {}
         };
     }
 
@@ -41,10 +39,8 @@ public class HomeTest {
     @Test
     void update_notifiesAllObservers() {
         List<Integer> secondReceived = new ArrayList<>();
-        ModelObserver second = new ModelObserver() {
+        HomeObserver second = new HomeObserver() {
             @Override public void updateHome(List<Integer> activeGames) { secondReceived.addAll(activeGames); }
-            @Override public void updateLobby(List<String> p) {}
-            @Override public void updateGame(GameDTO g) {}
         };
         home.addObserver(recordingObserver);
         home.addObserver(second);

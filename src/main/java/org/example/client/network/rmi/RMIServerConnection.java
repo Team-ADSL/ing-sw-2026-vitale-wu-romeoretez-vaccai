@@ -12,17 +12,13 @@ import java.rmi.registry.Registry;
 public class RMIServerConnection implements ServerConnection {
     private RemoteServerService server;
     private RemoteClientStubImpl clientStub;
-    private final AppCoordinator middleware;
-
-    public RMIServerConnection(AppCoordinator middleware) {
-        this.middleware = middleware;
-    }
+    private AppCoordinator appCoordinator;
 
     @Override
     public void connect(String ip, int port) throws Exception {
         Registry registry = LocateRegistry.getRegistry(ip, port);
         server = (RemoteServerService) registry.lookup("ServerService");
-        clientStub = new RemoteClientStubImpl(middleware);
+        clientStub = new RemoteClientStubImpl(appCoordinator);
         server.connect(clientStub);
     }
 
@@ -34,5 +30,10 @@ public class RMIServerConnection implements ServerConnection {
     @Override
     public void disconnect() throws Exception {
         server.disconnect(clientStub);
+    }
+
+    @Override
+    public void setAppCoordinator(AppCoordinator appCoordinator) {
+        this.appCoordinator = appCoordinator;
     }
 }

@@ -15,7 +15,7 @@ public class AppCoordinator implements ResponseVisitor{
     private final ServerConnection serverConnection;
     private int gameId;
 
-    AppCoordinator(GameUI gameUI, ServerConnection serverConnection) {
+    public AppCoordinator(GameUI gameUI, ServerConnection serverConnection) {
         this.gameUI = gameUI;
         this.serverConnection = serverConnection;
         this.gameId = 0;

@@ -3,7 +3,7 @@ package org.example.server.network;
 import org.example.server.controller.GameController;
 import org.example.server.controller.ServerController;
 import org.example.server.model.EndGameObserver;
-import org.example.server.model.ModelObserver;
+import org.example.server.model.GameObserver;
 import org.example.shared.model.GameDTO;
 import org.example.shared.model.MatchResult;
 import org.example.shared.network.requests.ClientDisconnected;
@@ -13,7 +13,7 @@ import org.example.shared.network.responses.*;
 import java.util.List;
 import java.util.Optional;
 
-public abstract class VirtualClient implements ModelObserver, EndGameObserver {
+public abstract class VirtualClient implements GameObserver, HomeObserver, EndGameObserver {
     private final ServerController serverController;
     private GameController gameController;
     private String clientUsername;
