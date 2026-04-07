@@ -53,7 +53,7 @@ public class GameTest {
     void setUp() {
         board = buildBoard();
         players = buildPlayers();
-        game = new Game(42, 2, 1, players, null, board,
+        game = new Game(42, 5, 2, 1, players, null, board,
                 Phase.LOBBY, false, NO_OP_END_GAME, NO_OP_MODEL);
     }
 
@@ -63,7 +63,7 @@ public class GameTest {
 
     @Test
     void initialConstructor_setsDefaultValues() {
-        Game g = new Game(1, NO_OP_END_GAME);
+        Game g = new Game(1, 5, NO_OP_END_GAME);
         assertAll(
                 () -> assertEquals(1,         g.getGameId()),
                 () -> assertEquals(0,         g.getRound()),

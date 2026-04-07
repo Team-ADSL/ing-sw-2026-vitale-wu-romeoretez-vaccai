@@ -58,7 +58,7 @@ public class LobbyStateTest {
     void setUp() {
         BoardConfigLoader loader = new JsonBoardConfigLoader();
         serverController = new ServerController(NO_OP_DAO, loader, NO_OP_PERSISTENCE);
-        game = new Game(1, NO_OP_END);
+        game = new Game(1, 2, NO_OP_END);
         controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
         state = new LobbyState(game, controller);
     }
@@ -89,8 +89,8 @@ public class LobbyStateTest {
 
     @Test
     void enterGame_throwsWhenLobbyFull() throws InvalidRequestException {
-        // Fill to 5 players
-        for (int i = 0; i < 5; i++) {
+        // Fill to 3 players
+        for (int i = 0; i < 2; i++) {
             TestVirtualClient c = client("player" + i);
             state.visit(new EnterGameRequest(1), c);
         }

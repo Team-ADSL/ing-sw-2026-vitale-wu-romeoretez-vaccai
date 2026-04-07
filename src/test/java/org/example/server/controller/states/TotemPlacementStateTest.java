@@ -53,7 +53,7 @@ public class TotemPlacementStateTest {
     @BeforeEach
     void setUp() {
         BoardConfigLoader loader = new JsonBoardConfigLoader();
-        game = new Game(1, NO_OP_END);
+        game = new Game(1, 5, NO_OP_END);
 
         p1 = new Player("p1");
         p2 = new Player("p2");

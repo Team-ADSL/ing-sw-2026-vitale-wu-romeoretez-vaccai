@@ -7,6 +7,7 @@ import java.util.Set;
 
 public record GameDTO (
         int id,
+        int numPlayer,
         int round,
         int era,
         Set<PlayerDTO> players,

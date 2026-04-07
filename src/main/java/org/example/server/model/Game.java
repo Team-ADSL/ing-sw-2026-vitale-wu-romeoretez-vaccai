@@ -14,6 +14,7 @@ public class Game {
     private final List<GameObserver> gameObservers = new ArrayList<>();
     private final List<EndGameObserver> endGameObservers = new ArrayList<>();
     private final Set<Player> players;
+    private final int numPlayer;
 
     private Board board;
     private int round;
@@ -23,8 +24,9 @@ public class Game {
     private boolean isInitialized;
 
     // For initial istantiation
-    public Game(int gameId, EndGameObserver endGameObserver) {
+    public Game(int gameId, int numPlayer, EndGameObserver endGameObserver) {
         this.gameId = gameId;
+        this.numPlayer = numPlayer;
         addObserver(endGameObserver);
         this.players = new HashSet<>();
 
@@ -37,10 +39,11 @@ public class Game {
     }
 
     // For recover after crash
-    public Game(int gameId, int round, int era, Set<Player> players, Player currentPlayer,
+    public Game(int gameId, int numPlayer, int round, int era, Set<Player> players, Player currentPlayer,
                 Board board, Phase phase, boolean isInitialized,
                 EndGameObserver endGameObserver, GameObserver gamePersistenceManager) {
         this.gameId = gameId;
+        this.numPlayer = numPlayer;
         addObserver(endGameObserver);
         addObserver(gamePersistenceManager);
 
@@ -118,6 +121,9 @@ public class Game {
     }
     public boolean isInitialized() {
         return isInitialized;
+    }
+    public int getNumPlayer() {
+        return numPlayer;
     }
 
     public void setCurrentPlayer(Player currentPlayer) {

@@ -18,6 +18,7 @@ public class Player {
     private final Map<CardType, Set<Card>> cards;
     private final BuildingBonus buildingBonus;
     private Card lastPick; // For SinceBuild building (see activeEffect)
+    private boolean isActive;
 
 
     public Player(String name) {
@@ -26,7 +27,9 @@ public class Player {
         this.pp = 0;
         this.color = null;
         this.lastPick = null;
+        this.isActive = true;
         this.buildingBonus = new BuildingBonus(0, 1, 1, 0, false, false, false, false, false);
+
         this.cards = new HashMap<>();
         this.cards.put(CardType.HUNTER, new HashSet<>());
         this.cards.put(CardType.GATHERER, new HashSet<>());
@@ -44,6 +47,7 @@ public class Player {
         this.color = color;
         this.cards = cards;
         this.lastPick = null;
+        this.isActive = false;
         this.buildingBonus = new BuildingBonus(0, 1, 1, 0, false, false, false, false, false);
     }
 
@@ -76,11 +80,17 @@ public class Player {
     public String getName() {
         return name;
     }
+    public boolean isActive() {
+        return isActive;
+    }
 
     public void setLastPick(Card lastPick) {
         this.lastPick = lastPick;
     }
     public void setColor(Color color) {
         this.color = color;
+    }
+    public void setActive(boolean active) {
+        isActive = active;
     }
 }

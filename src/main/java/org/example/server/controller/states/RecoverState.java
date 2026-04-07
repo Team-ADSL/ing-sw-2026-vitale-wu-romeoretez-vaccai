@@ -3,7 +3,10 @@ package org.example.server.controller.states;
 import org.example.server.controller.GameController;
 import org.example.server.controller.StateFactory;
 import org.example.server.model.Game;
-import org.example.shared.enums.Phase;
+import org.example.server.model.Player;
+import org.example.server.network.VirtualClient;
+import org.example.shared.exceptions.InvalidRequestException;
+import org.example.shared.network.requests.EnterGameRequest;
 
 
 public class RecoverState extends ControllerState {
@@ -13,17 +16,30 @@ public class RecoverState extends ControllerState {
 
     @Override
     public ControllerState onEntry() {
-        getGame().setPhase(Phase.RECOVER);
         getGame().sendUpdateLobby();
         return this;
     }
 
-    // Implement methods similar to the LobbyState for reconnection
+    @Override
+    public void visit(EnterGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
+        Player reqPlayer = getGame().getPlayers().stream()
+                .filter(p -> p.getName().equals(virtualClient.getClientUsername()))
+                .findFirst()
+                .orElseThrow(() -> new InvalidRequestException("Player not in current game"));
+
+        reqPlayer.setActive(true);
+        getGame().addVirtualClient(virtualClient);
+        virtualClient.setGameController(getContext());
+        getGame().sendUpdateLobby();
+    }
 
     @Override
     public ControllerState nextState() {
-        // ADD CONTROL TO VERIFY IF EVERY PLAYER IS CONNECTED AGAIN
-        if(true){
+        int activePlayers = (int)getGame().getPlayers().stream()
+                .filter(Player::isActive)
+                .count();
+        if(activePlayers == getGame().getNumPlayer()){
+            setToStop(false);
             return StateFactory.recover(getGame(), getContext());
         } else {
             return this;

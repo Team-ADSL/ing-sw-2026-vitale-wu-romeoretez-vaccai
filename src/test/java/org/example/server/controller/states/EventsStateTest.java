@@ -44,7 +44,7 @@ public class EventsStateTest {
 
     @BeforeEach
     void setUp() {
-        game = new Game(1, NO_OP_END);
+        game = new Game(1, 5, NO_OP_END);
         BoardConfigLoader loader = new JsonBoardConfigLoader();
         GameController controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
 
@@ -71,7 +71,7 @@ public class EventsStateTest {
         // Use recovery constructor to set round to 10
         Set<org.example.server.model.Player> players = new HashSet<>();
         BoardConfigLoader loader = new JsonBoardConfigLoader();
-        Game g = new Game(1, 10, 1, players, null,
+        Game g = new Game(1, 5, 10, 1, players, null,
                 game.getBoard(), org.example.shared.enums.Phase.EVENTS_EXECUTION, true,
                 NO_OP_END, NO_OP_PERSISTENCE);
         GameController controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
@@ -90,7 +90,7 @@ public class EventsStateTest {
     void nextState_whenRoundIs5_returnsEndGameState() {
         Set<org.example.server.model.Player> players = new HashSet<>();
         BoardConfigLoader loader = new JsonBoardConfigLoader();
-        Game g = new Game(1, 5, 1, players, null,
+        Game g = new Game(1, 5, 5, 1, players, null,
                 game.getBoard(), org.example.shared.enums.Phase.EVENTS_EXECUTION, true,
                 NO_OP_END, NO_OP_PERSISTENCE);
         GameController controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);

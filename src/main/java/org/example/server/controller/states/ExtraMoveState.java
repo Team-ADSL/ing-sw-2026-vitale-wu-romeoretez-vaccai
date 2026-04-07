@@ -63,6 +63,9 @@ public class ExtraMoveState extends ControllerState {
 
     @Override
     public ControllerState nextState() {
+        if(isToStop()){
+            return new RecoverState(getGame(), getContext());
+        }
         getGame().getPlayers().forEach(
                 p -> p.getCards().get(CardType.BUILDINGS).forEach(
                         b -> b.activeEffect(Set.of(p), Trigger.END_ROUND)));
