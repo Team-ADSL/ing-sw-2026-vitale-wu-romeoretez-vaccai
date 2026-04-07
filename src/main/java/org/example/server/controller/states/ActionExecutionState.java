@@ -118,6 +118,9 @@ public class ActionExecutionState extends ControllerState {
 
     @Override
     public ControllerState nextState() {
+        if(isToStop()){
+            return new RecoverState(getGame(), getContext());
+        }
         OfferTrack offerTrack = getGame().getBoard().getOfferTrack();
         int offerIndex = 0;
         while(offerTrack.getTileAt(offerIndex).getPlayer().isEmpty() && offerIndex < offerTrack.size()){

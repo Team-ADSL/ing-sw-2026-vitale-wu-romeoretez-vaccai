@@ -54,7 +54,7 @@ public class EndRoundStateTest {
     @BeforeEach
     void setUp() {
         loader = new JsonBoardConfigLoader();
-        game = new Game(1, NO_OP_END);
+        game = new Game(1, 5, NO_OP_END);
 
         // Build board: lowRow=3 slots, topRow=6 slots, 3 tribe slots each, with era-1 cards
         Set<Card> era1 = new HashSet<>();

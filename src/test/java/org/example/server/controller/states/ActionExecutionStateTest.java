@@ -68,7 +68,7 @@ public class ActionExecutionStateTest {
         BoardConfigLoader loader = new JsonBoardConfigLoader();
         serverController = new ServerController(NO_OP_DAO, loader, NO_OP_PERSISTENCE);
 
-        game = new Game(1, NO_OP_END);
+        game = new Game(1, 5, NO_OP_END);
         p1 = new Player("p1");
         p2 = new Player("p2");
         game.getPlayers().add(p1);

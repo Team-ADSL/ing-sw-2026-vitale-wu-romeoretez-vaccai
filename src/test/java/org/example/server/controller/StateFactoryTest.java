@@ -56,7 +56,7 @@ public class StateFactoryTest {
     /** Create a game in the given phase with a minimal board. */
     private Game gameInPhase(Phase phase) {
         Set<Player> players = new HashSet<>();
-        Game g = new Game(1, 0, 1, players, null, minimalBoard(), phase, true, NO_OP_END, NO_OP_PERSISTENCE);
+        Game g = new Game(1, 5, 0, 1, players, null, minimalBoard(), phase, true, NO_OP_END, NO_OP_PERSISTENCE);
         return g;
     }
 
@@ -127,12 +127,5 @@ public class StateFactoryTest {
         Game g = gameInPhase(Phase.END_GAME);
         ControllerState s = StateFactory.recover(g, makeController(g));
         assertInstanceOf(EndGameState.class, s);
-    }
-
-    @Test
-    void recover_RECOVER_returnsRecoverState() {
-        Game g = gameInPhase(Phase.RECOVER);
-        ControllerState s = StateFactory.recover(g, makeController(g));
-        assertInstanceOf(RecoverState.class, s);
     }
 }

@@ -48,6 +48,9 @@ public class TotemPlacementState extends ControllerState {
 
     @Override
     public ControllerState nextState() {
+        if(isToStop()){
+            return new RecoverState(getGame(), getContext());
+        }
         OrderTile orderTile = getGame().getBoard().getOrderTile();
         int orderIndex = 0;
         while(orderTile.getPlayerAt(orderIndex).isEmpty() && orderIndex < orderTile.size()){

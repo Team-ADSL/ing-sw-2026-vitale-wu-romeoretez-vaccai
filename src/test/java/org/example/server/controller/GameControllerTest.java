@@ -39,7 +39,7 @@ public class GameControllerTest {
     @BeforeEach
     void setUp() {
         loader = new JsonBoardConfigLoader();
-        game = new Game(1, NO_OP_END);
+        game = new Game(1, 5,NO_OP_END);
         controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
     }
 

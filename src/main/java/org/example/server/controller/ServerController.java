@@ -92,10 +92,10 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         }
     }
 
-    public void createGame(ClientRequest req, VirtualClient virtualClient){
+    public void createGame(CreateGameRequest req, VirtualClient virtualClient){
         try{
             int newId =  gameDAO.createMatch();
-            Game newGame = new Game(newId, this);
+            Game newGame = new Game(newId, req.getNumPlayer(), this);
             GameController newGameController = new GameController(boardConfigLoader, gamePersistenceManager,gameDAO);
             newGameController.setState(new InitGameState(newGame, newGameController));
             synchronized (games){

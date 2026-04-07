@@ -50,7 +50,7 @@ public class InitGameStateTest {
     @BeforeEach
     void setUp() {
         loader = new JsonBoardConfigLoader();
-        game = new Game(1, NO_OP_END);
+        game = new Game(1, 5, NO_OP_END);
         GameController controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
         state = new InitGameState(game, controller);
     }
@@ -135,7 +135,7 @@ public class InitGameStateTest {
 
     @Test
     void makeBuildingDecks_3players_addsTwoEra1BuildingsToTopRow() {
-        Game g = new Game(2, NO_OP_END);
+        Game g = new Game(2, 5, NO_OP_END);
         initBoardForGame(g, 3);
         GameController gc = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
         InitGameState s = new InitGameState(g, gc);

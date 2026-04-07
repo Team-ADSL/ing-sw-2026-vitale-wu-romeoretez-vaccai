@@ -16,7 +16,6 @@ public class StateFactory {
     static{
         mapper.put(LOBBY, LobbyState::new);
         mapper.put(INIT, InitGameState::new);
-        mapper.put(RECOVER, RecoverState::new);
         mapper.put(TOTEM_PLACEMENT, TotemPlacementState::new);
         mapper.put(ACTION_EXECUTION, ActionExecutionState::new);
         mapper.put(EXTRA_MOVE, ExtraMoveState::new);
