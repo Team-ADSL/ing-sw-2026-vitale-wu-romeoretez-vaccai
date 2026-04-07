@@ -1,3 +1,5 @@
 package org.example.shared.model;
 
-public interface Renderable {}
+public interface Renderable {
+    String id();
+}

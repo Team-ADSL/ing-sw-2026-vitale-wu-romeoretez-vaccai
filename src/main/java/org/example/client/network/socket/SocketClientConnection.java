@@ -14,12 +14,8 @@ public class SocketClientConnection implements ServerConnection {
     private Socket socket;
     private ObjectOutputStream out;
     private ObjectInputStream in;
-    private final AppCoordinator coordinator;
+    private AppCoordinator appCoordinator;
     private boolean isRunning;
-
-    public SocketClientConnection(AppCoordinator coordinator) {
-        this.coordinator = coordinator;
-    }
 
     @Override
     public void connect(String ip, int port) throws Exception {
@@ -34,14 +30,14 @@ public class SocketClientConnection implements ServerConnection {
         try {
             while (isRunning && !socket.isClosed()) {
                 ServerResponse response = (ServerResponse) in.readObject();
-                if (coordinator != null) {
-                    response.accept(coordinator);
+                if (appCoordinator != null) {
+                    response.accept(appCoordinator);
                 }
             }
         } catch (Exception e) {
-            if (isRunning && coordinator != null) {
+            if (isRunning && appCoordinator != null) {
                 ServerResponse disconnection = new ServerDisconnected();
-                disconnection.accept(coordinator);
+                disconnection.accept(appCoordinator);
             }
         }
     }
@@ -58,5 +54,10 @@ public class SocketClientConnection implements ServerConnection {
         if (socket != null && !socket.isClosed()) {
             socket.close();
         }
+    }
+
+    @Override
+    public void setAppCoordinator(AppCoordinator appCoordinator) {
+        this.appCoordinator = appCoordinator;
     }
 }

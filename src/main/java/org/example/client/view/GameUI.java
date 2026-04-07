@@ -13,4 +13,5 @@ public interface GameUI {
     void onEndGame(List<MatchResult> matchResults);
     void onErrorReceived(String error);
     void onServerDisconnected();
+    void start();
 }

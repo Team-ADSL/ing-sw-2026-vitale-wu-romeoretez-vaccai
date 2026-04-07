@@ -11,7 +11,7 @@ import java.util.*;
 
 public class Game {
     private final int gameId;
-    private final List<ModelObserver> modelObservers = new ArrayList<>();
+    private final List<GameObserver> gameObservers = new ArrayList<>();
     private final List<EndGameObserver> endGameObservers = new ArrayList<>();
     private final Set<Player> players;
 
@@ -39,7 +39,7 @@ public class Game {
     // For recover after crash
     public Game(int gameId, int round, int era, Set<Player> players, Player currentPlayer,
                 Board board, Phase phase, boolean isInitialized,
-                EndGameObserver endGameObserver, ModelObserver gamePersistenceManager) {
+                EndGameObserver endGameObserver, GameObserver gamePersistenceManager) {
         this.gameId = gameId;
         addObserver(endGameObserver);
         addObserver(gamePersistenceManager);
@@ -54,19 +54,19 @@ public class Game {
     }
 
     public void addVirtualClient(VirtualClient virtualClient){
-        addObserver((ModelObserver) virtualClient);
+        addObserver((GameObserver) virtualClient);
         addObserver((EndGameObserver) virtualClient);
     }
     public void removeVirtualClient(VirtualClient virtualClient){
-        removeObserver((ModelObserver) virtualClient);
+        removeObserver((GameObserver) virtualClient);
         removeObserver((EndGameObserver) virtualClient);
     }
 
-    public void addObserver(ModelObserver o) {
-        modelObservers.add(o);
+    public void addObserver(GameObserver o) {
+        gameObservers.add(o);
     }
-    public void removeObserver(ModelObserver o) {
-        modelObservers.remove(o);
+    public void removeObserver(GameObserver o) {
+        gameObservers.remove(o);
     }
     public GameDTO createDTO() {
         return null; // TO IMPLEMENT
@@ -81,10 +81,10 @@ public class Game {
 
     public void sendUpdateLobby(){
         List<String> playerNames = players.stream().map(Player::getName).toList();
-        for(ModelObserver o : modelObservers) o.updateLobby(playerNames);
+        for(GameObserver o : gameObservers) o.updateLobby(playerNames);
     }
     public void sendUpdateGame(){
-        for(ModelObserver o : modelObservers) o.updateGame(createDTO());
+        for(GameObserver o : gameObservers) o.updateGame(createDTO());
     }
     public void sendEndGameResults(List<MatchResult> results){
         for(EndGameObserver o : endGameObservers) o.notifyEndGame(gameId, results);

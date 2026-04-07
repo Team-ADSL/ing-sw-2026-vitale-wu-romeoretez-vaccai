@@ -1,13 +1,179 @@
 package org.example;
 
-/**
- * Hello world!
- *
- */
+import org.example.client.AppCoordinator;
+import org.example.client.network.ServerConnection;
+import org.example.client.network.rmi.RMIServerConnection;
+import org.example.client.network.socket.SocketClientConnection;
+import org.example.client.view.GameUI;
+import org.example.server.config.BoardConfigLoader;
+import org.example.server.config.JsonBoardConfigLoader;
+import org.example.server.controller.ServerController;
+import org.example.server.db.ConnectionProvider;
+import org.example.server.db.DatabaseConfig;
+import org.example.server.db.DatabaseManager;
+import org.example.server.network.rmi.RemoteServerServiceImpl;
+import org.example.server.network.socket.SocketServer;
+import org.example.server.persistence.GameDAO;
+import org.example.server.persistence.GamePersistenceManager;
+import org.example.server.persistence.SerialGamePersistenceManager;
+import org.example.server.persistence.SqlGameDAO;
+
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+
 public class App 
 {
-    public static void main( String[] args )
+    static void main( String[] args )
     {
-        System.out.println( "Hello World!" );
+        if (args.length == 0) {
+            printUsageAndExit("Parameter missing.");
+        }
+
+        String mode = args[0].toLowerCase();
+        if ("--server".equals(mode)) {
+            // Expected args: --server <socket-port> <rmi-port> <recover-directory>
+            if (args.length != 4) {
+                printUsageAndExit("Invalid server's parameter or missing..");
+            }
+
+            int socketPort = 0;
+            int rmiPort = 0;
+            try {
+                socketPort = Integer.parseInt(args[1]);
+                rmiPort = Integer.parseInt(args[2]);
+
+                if (socketPort < 1024 || socketPort > 65535 || rmiPort < 1024 || rmiPort > 65535) {
+                    printUsageAndExit("Use ports between 1024 and 65535.");
+                }
+                if (socketPort == rmiPort) {
+                    printUsageAndExit("Socket and RMI cannot share the same port.");
+                }
+            } catch (NumberFormatException e) {
+                printUsageAndExit("The ports specified are not valid integer numbers.");
+            }
+            String saveDirectory = args[3];
+            startServer(socketPort, rmiPort, saveDirectory);
+
+        }
+        else if ("--client".equals(mode)) {
+            // Expected args: --client <connection> <ui> <server-ip> <server-port>
+            if (args.length != 5) {
+                printUsageAndExit("Invalid client's parameter or missing.");
+            }
+            String connectionType = args[1].toLowerCase();
+            String uiType = args[2].toLowerCase();
+            String ipAddress = args[3];
+
+            if (!"--socket".equals(connectionType) && !"--rmi".equals(connectionType)) {
+                printUsageAndExit("Invalid connection type. Use --socket or --rmi.");
+            }
+
+            if (!"--tui".equals(uiType) && !"--gui".equals(uiType)) {
+                printUsageAndExit("Invalid UI type. Use --tui or --gui.");
+            }
+
+            int port = 0;
+            try {
+                port = Integer.parseInt(args[4]);
+                if (port < 1024 || port > 65535) {
+                    printUsageAndExit("Use a port between 1024 and 65535.");
+                }
+            } catch (NumberFormatException e) {
+                printUsageAndExit("The ports specified is not valid integer numbers.");
+            }
+
+            startClient(connectionType, uiType, ipAddress, port);
+        }
+        else {
+            printUsageAndExit("Unknown mode: " + mode);
+        }
+    }
+
+    private static void startServer(int socketPort, int rmiPort, String recoverDirectory) {
+        System.out.println("Starting server...");
+        try {
+            DatabaseManager.initDatabase();
+
+            // Setup server controller
+            ConnectionProvider connectionProvider = DatabaseConfig::getConnection;
+            GameDAO gameDAO = new SqlGameDAO(connectionProvider);
+            BoardConfigLoader boardConfigLoader = new JsonBoardConfigLoader();
+            GamePersistenceManager gamePersistenceManager = new SerialGamePersistenceManager(recoverDirectory);
+            ServerController serverController = new ServerController(gameDAO, boardConfigLoader, gamePersistenceManager);
+
+            // Setup Socket Server
+            ExecutorService threadPool = Executors.newCachedThreadPool();
+            SocketServer socketServer = new SocketServer(serverController, threadPool, socketPort);
+            Thread socketThread = new Thread(socketServer);
+            socketThread.start();
+            System.out.println("- Socket Server listening on port " + socketPort);
+
+            // Setup RMI
+            RemoteServerServiceImpl rmiServer = new RemoteServerServiceImpl(serverController);
+            Registry registry = LocateRegistry.createRegistry(rmiPort);
+            registry.rebind("GameServer", rmiServer);
+            System.out.println("- RMI Server listening on port " + rmiPort + " with name 'GameServer'");
+
+            System.out.println("Server started successfully. Waiting connections...");
+        } catch (Exception e) {
+            System.err.println("Critical error during server starting: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private static void startClient(String connectionType, String uiType, String ipAddress, int port) {
+        System.out.println("Starting Client...");
+        System.out.println("- Network: " + connectionType.replace("--", "").toUpperCase());
+        System.out.println("- UI: " + uiType.replace("--", "").toUpperCase());
+        System.out.println("- Server IP: " + ipAddress);
+        System.out.println("- Server Port: " + port); // Added port print
+
+        try {
+            GameUI gameUI = null;
+            if ("--gui".equals(uiType)) {
+                // gameUI = new GUI();
+            } else {
+                // gameUI = new TUI();
+            }
+
+            ServerConnection serverConnection = null;
+            if ("--socket".equals(connectionType)) {
+                serverConnection = new SocketClientConnection();
+            } else {
+                serverConnection = new RMIServerConnection();
+            }
+            AppCoordinator appCoordinator = new AppCoordinator(gameUI, serverConnection);
+            serverConnection.setAppCoordinator(appCoordinator);
+            gameUI.start();
+            serverConnection.connect(ipAddress, port);
+            System.out.println("UI Application started.");
+        } catch (Exception e) {
+            System.err.println("Critical error during client starting: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    // Help messages for proper application use
+    private static void printUsageAndExit(String errorMessage) {
+        System.err.println("ERROR: " + errorMessage + "\n");
+        System.out.println("=== USAGE ===");
+
+        System.out.println("\nTo start as SERVER:");
+        System.out.println("java -jar masos.jar --server <socket-port> <rmi-port> <recover-directory>");
+        System.out.println("  <socket-port>       : Network socket listening port (e.g. 8080)");
+        System.out.println("  <rmi-port>          : RMI registry listening port (e.g. 1099)");
+        System.out.println("  <recover-directory> : Path for recovery files (e.g. ./saves)");
+
+        System.out.println("\nTo start as CLIENT:");
+        System.out.println("java -jar masos.jar --client <connection> <interface> <ip-server> <port>");
+        System.out.println("  <connection> : --socket or --rmi");
+        System.out.println("  <interface>  : --tui or --gui");
+        System.out.println("  <ip-server>  : IP address of the server (e.g. 127.0.0.1)");
+        System.out.println("  <port>       : Port of the server (e.g. 8080 or 1099)");
+
+        System.exit(1);
     }
 }

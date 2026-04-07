@@ -5,12 +5,10 @@ import org.example.server.config.JsonBoardConfigLoader;
 import org.example.server.controller.GameController;
 import org.example.server.model.EndGameObserver;
 import org.example.server.model.Game;
-import org.example.server.model.ModelObserver;
 import org.example.server.model.board.Board;
 import org.example.server.model.board.CardRow;
 import org.example.server.model.board.OfferTrack;
 import org.example.server.model.board.OrderTile;
-import org.example.server.model.cards.Card;
 import org.example.server.persistence.GameDAO;
 import org.example.server.persistence.GamePersistenceManager;
 import org.example.shared.model.GameDTO;
@@ -31,7 +29,6 @@ public class EventsStateTest {
     private static final GamePersistenceManager NO_OP_PERSISTENCE = new GamePersistenceManager() {
         @Override public List<Game> recoverGames() { return List.of(); }
         @Override public void removeGame(int id) {}
-        @Override public void updateHome(List<Integer> g) {}
         @Override public void updateLobby(List<String> p) {}
         @Override public void updateGame(GameDTO g) {}
     };

@@ -1,7 +1,6 @@
 package org.example.server.persistence;
 
 import org.example.server.db.ConnectionProvider;
-import org.example.server.db.DatabaseConfig;
 import org.example.shared.model.MatchResult;
 
 import java.sql.*;
@@ -11,12 +10,12 @@ import java.util.List;
 public class SqlGameDAO implements GameDAO{
     private ConnectionProvider connectionProvider;
 
-    SqlGameDAO(ConnectionProvider connectionProvider){
+    public SqlGameDAO(ConnectionProvider connectionProvider){
         this.connectionProvider = connectionProvider;
     }
 
     // Game creation for the lobby before starting (the number of player is unknown)
-    public int createMatch() throws SQLException {
+    public int createMatch() throws Exception {
         String sql = "INSERT INTO matches () VALUES ()";
 
         try (Connection conn = connectionProvider.getConnection();
@@ -32,7 +31,7 @@ public class SqlGameDAO implements GameDAO{
     }
 
     // For game created but where all player quit the lobby before starting
-    public void deleteMatch(int gameId) throws SQLException {
+    public void deleteMatch(int gameId) throws Exception {
         String sql = "DELETE FROM matches WHERE id = ?";
 
         try (Connection conn = connectionProvider.getConnection();
@@ -48,7 +47,7 @@ public class SqlGameDAO implements GameDAO{
 
     public void saveMatch(int gameId, int playerCount,
                                  List<String> nicknames,
-                                 List<Integer> scores) throws SQLException {
+                                 List<Integer> scores) throws Exception {
 
         String sqlMatch = "UPDATE matches SET played_at = CURRENT_TIMESTAMP, player_count = ? WHERE id = ?";
         String sqlUpsertPlayer = "INSERT IGNORE INTO players (nickname) VALUES (?)";
@@ -104,7 +103,7 @@ public class SqlGameDAO implements GameDAO{
         }
     }
 
-    public List<MatchResult> getLeaderboard(int playerCount) throws SQLException {
+    public List<MatchResult> getLeaderboard(int playerCount) throws Exception {
         String sql = """
             SELECT
                 RANK() OVER (ORDER BY r.score DESC) AS rank,

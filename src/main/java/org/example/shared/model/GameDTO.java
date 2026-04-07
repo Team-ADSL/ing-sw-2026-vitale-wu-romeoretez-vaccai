@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.util.Set;
 
 public record GameDTO (
+        int id,
         int round,
         int era,
         Set<PlayerDTO> players,

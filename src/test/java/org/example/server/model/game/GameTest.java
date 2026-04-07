@@ -16,8 +16,7 @@ public class GameTest {
     // ──────────────────────────────────────────────
 
     private static final EndGameObserver NO_OP_END_GAME = (gameId, results) -> {};
-    private static final ModelObserver NO_OP_MODEL = new ModelObserver() {
-        @Override public void updateHome(java.util.List<Integer> g) {}
+    private static final GameObserver NO_OP_MODEL = new GameObserver() {
         @Override public void updateLobby(java.util.List<String> p) {}
         @Override public void updateGame(org.example.shared.model.GameDTO g) {}
     };

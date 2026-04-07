@@ -5,7 +5,6 @@ import org.example.server.config.JsonBoardConfigLoader;
 import org.example.server.controller.GameController;
 import org.example.server.model.EndGameObserver;
 import org.example.server.model.Game;
-import org.example.server.model.ModelObserver;
 import org.example.server.model.Player;
 import org.example.server.model.board.*;
 import org.example.server.model.cards.Card;
@@ -29,7 +28,6 @@ public class EndRoundStateTest {
     private static final GamePersistenceManager NO_OP_PERSISTENCE = new GamePersistenceManager() {
         @Override public List<Game> recoverGames() { return List.of(); }
         @Override public void removeGame(int id) {}
-        @Override public void updateHome(List<Integer> g) {}
         @Override public void updateLobby(List<String> p) {}
         @Override public void updateGame(GameDTO g) {}
     };

@@ -1,12 +1,14 @@
 package org.example.server.model;
 
 
+import org.example.server.network.HomeObserver;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class Home {
     private final List<Integer> games;
-    private final List<ModelObserver> observers;
+    private final List<HomeObserver> observers;
 
     public Home() {
         this.observers = new ArrayList<>();
@@ -14,12 +16,12 @@ public class Home {
     }
 
     public void update() {
-        for(ModelObserver o : observers) o.updateHome(games);
+        for(HomeObserver o : observers) o.updateHome(games);
     }
-    public void addObserver(ModelObserver observer) {
+    public void addObserver(HomeObserver observer) {
         this.observers.add(observer);
     }
-    public void removeObserver(ModelObserver observer) {
+    public void removeObserver(HomeObserver observer) {
         this.observers.remove(observer);
     }
 }
