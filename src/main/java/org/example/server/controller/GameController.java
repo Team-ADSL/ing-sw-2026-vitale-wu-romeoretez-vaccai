@@ -18,20 +18,12 @@ public class GameController {
     private final GamePersistenceManager persistenceManager;
     private final GameDAO gameDAO;
 
-    public GameController(Game game, BoardConfigLoader boardConfigLoader,
+    public GameController(BoardConfigLoader boardConfigLoader,
                           GamePersistenceManager persistenceManager, GameDAO gameDAO) {
-        this.state = new LobbyState(game, this);
         this.boardConfigLoader = boardConfigLoader;
         this.persistenceManager = persistenceManager;
         this.gameDAO = gameDAO;
-    }
-
-    public GameController(int gameId, BoardConfigLoader boardConfigLoader,
-                          GamePersistenceManager persistenceManager, GameDAO gameDAO) {
-        this.state = new RecoverState(null, this, gameId);
-        this.boardConfigLoader = boardConfigLoader;
-        this.persistenceManager = persistenceManager;
-        this.gameDAO = gameDAO;
+        this.state = null;
     }
 
     public synchronized void handleClientRequest(ClientRequest req, VirtualClient virtualClient){
@@ -56,6 +48,10 @@ public class GameController {
             state = nextState;
             nextState = state.onEntry();
         }
+    }
+
+    public void setState(ControllerState state) {
+        this.state = state;
     }
 
     public ControllerState getState() {

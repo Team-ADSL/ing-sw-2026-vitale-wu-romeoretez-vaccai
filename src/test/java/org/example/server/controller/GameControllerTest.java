@@ -40,7 +40,7 @@ public class GameControllerTest {
     void setUp() {
         loader = new JsonBoardConfigLoader();
         game = new Game(1, NO_OP_END);
-        controller = new GameController(game, loader, NO_OP_PERSISTENCE, NO_OP_DAO);
+        controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
     }
 
     // ──────────────────────────────────────────────
@@ -60,28 +60,5 @@ public class GameControllerTest {
     @Test
     void getPersistenceManager_returnsPassedManager() {
         assertSame(NO_OP_PERSISTENCE, controller.getPersistenceManager());
-    }
-
-    @Test
-    void getState_isLobbyStateInitially() {
-        assertInstanceOf(LobbyState.class, controller.getState());
-    }
-
-    // ──────────────────────────────────────────────
-    // Different instances are independent
-    // ──────────────────────────────────────────────
-
-    @Test
-    void twoControllers_haveDifferentStates() {
-        Game game2 = new Game(2, NO_OP_END);
-        GameController controller2 = new GameController(game2, loader, NO_OP_PERSISTENCE, NO_OP_DAO);
-        assertNotSame(controller.getState(), controller2.getState());
-    }
-
-    @Test
-    void getBoardConfigLoader_differentLoadersForDifferentControllers() {
-        BoardConfigLoader loader2 = new JsonBoardConfigLoader();
-        GameController controller2 = new GameController(new Game(2, NO_OP_END), loader2, NO_OP_PERSISTENCE, NO_OP_DAO);
-        assertNotSame(loader, controller2.getBoardConfigLoader());
     }
 }

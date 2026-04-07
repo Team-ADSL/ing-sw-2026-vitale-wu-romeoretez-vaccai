@@ -46,7 +46,7 @@ public class EventsStateTest {
     void setUp() {
         game = new Game(1, NO_OP_END);
         BoardConfigLoader loader = new JsonBoardConfigLoader();
-        GameController controller = new GameController(game, loader, NO_OP_PERSISTENCE, NO_OP_DAO);
+        GameController controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
 
         // Minimal board needed for onEntry (getLowRow().getTribeCards())
         Board board = new Board(
@@ -74,7 +74,7 @@ public class EventsStateTest {
         Game g = new Game(1, 10, 1, players, null,
                 game.getBoard(), org.example.shared.enums.Phase.EVENTS_EXECUTION, true,
                 NO_OP_END, NO_OP_PERSISTENCE);
-        GameController controller = new GameController(g, loader, NO_OP_PERSISTENCE, NO_OP_DAO);
+        GameController controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
         EventsState state = new EventsState(g, controller);
 
         assertInstanceOf(EndRoundState.class, state.nextState());
@@ -93,7 +93,7 @@ public class EventsStateTest {
         Game g = new Game(1, 5, 1, players, null,
                 game.getBoard(), org.example.shared.enums.Phase.EVENTS_EXECUTION, true,
                 NO_OP_END, NO_OP_PERSISTENCE);
-        GameController controller = new GameController(g, loader, NO_OP_PERSISTENCE, NO_OP_DAO);
+        GameController controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
         EventsState state = new EventsState(g, controller);
 
         assertInstanceOf(EndGameState.class, state.nextState());

@@ -68,7 +68,7 @@ public class EndRoundStateTest {
                 3);
         game.setBoard(board);
 
-        GameController controller = new GameController(game, loader, NO_OP_PERSISTENCE, NO_OP_DAO);
+        GameController controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
         endRoundState = new EndRoundState(game, controller);
     }
 

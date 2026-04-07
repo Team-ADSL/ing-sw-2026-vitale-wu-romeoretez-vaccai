@@ -103,6 +103,7 @@ public class App
             BoardConfigLoader boardConfigLoader = new JsonBoardConfigLoader();
             GamePersistenceManager gamePersistenceManager = new SerialGamePersistenceManager(recoverDirectory);
             ServerController serverController = new ServerController(gameDAO, boardConfigLoader, gamePersistenceManager);
+            serverController.recoverGames();
 
             // Setup Socket Server
             ExecutorService threadPool = Executors.newCachedThreadPool();

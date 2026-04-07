@@ -1,6 +1,9 @@
 package org.example.server.controller;
 
 import org.example.server.config.BoardConfigLoader;
+import org.example.server.controller.states.ControllerState;
+import org.example.server.controller.states.InitGameState;
+import org.example.server.controller.states.RecoverState;
 import org.example.server.persistence.GameDAO;
 import org.example.server.model.EndGameObserver;
 import org.example.server.model.Game;
@@ -93,7 +96,8 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         try{
             int newId =  gameDAO.createMatch();
             Game newGame = new Game(newId, this);
-            GameController newGameController = new GameController(newGame, boardConfigLoader, gamePersistenceManager,gameDAO);
+            GameController newGameController = new GameController(boardConfigLoader, gamePersistenceManager,gameDAO);
+            newGameController.setState(new InitGameState(newGame, newGameController));
             synchronized (games){
                 games.put(newId, newGameController);
             }
@@ -116,6 +120,21 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         } catch (Exception e){
             System.out.println(e.getMessage());
             virtualClient.sendErrorMessage(e.getMessage());
+        }
+    }
+
+    public void recoverGames(){
+        try{
+            List<Game> gamesLoaded = gamePersistenceManager.recoverGames();
+            gamesLoaded.forEach(g -> {
+                GameController gc = new GameController(boardConfigLoader, gamePersistenceManager, gameDAO);
+                games.put(g.getGameId(), gc);
+                ControllerState state = new RecoverState(g, gc);
+                gc.setState(state);
+            });
+
+        } catch(Exception e){
+            System.out.println(e.getMessage());
         }
     }
 }
