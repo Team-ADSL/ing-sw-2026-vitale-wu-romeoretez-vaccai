@@ -53,7 +53,7 @@ public class TotemPlacementStateTest {
     @BeforeEach
     void setUp() {
         BoardConfigLoader loader = new JsonBoardConfigLoader();
-        game = new Game(1, 5, NO_OP_END);
+        game = new Game(1, 2, NO_OP_END);
 
         p1 = new Player("p1");
         p2 = new Player("p2");
@@ -110,11 +110,12 @@ public class TotemPlacementStateTest {
 
     @Test
     void nextState_returnsActionExecutionStateWhenAllTotemsPlaced() {
-        // For 2-player game: orderIndex == players.size()-1 == 1 triggers ActionExecutionState.
+        // For 2-player game: orderIndex == players.size() == 2 triggers ActionExecutionState.
         // The while loop advances while isEmpty, so to reach index 1:
         //   tile[0] must be empty (loop increments), tile[1] must have a player (loop stops).
         // Manually place p2 at cell index 1 (set directly via getCellAt):
-        orderTile.getCellAt(1).setPlayer(p2);
+        orderTile.removePlayer(p1);
+        orderTile.removePlayer(p2);
 
         ControllerState next = state.calcNextState();
         assertInstanceOf(ActionExecutionState.class, next);

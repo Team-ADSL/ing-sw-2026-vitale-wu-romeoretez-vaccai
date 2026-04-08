@@ -3,6 +3,7 @@ package org.example.server.model.board;
 import org.example.server.model.Player;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Optional;
 
 public class OrderTile {
@@ -25,9 +26,21 @@ public class OrderTile {
         return i;
     }
 
+    public void removePlayer(Player player){
+        for (OrderCell orderCell : orderQueue) {
+            Optional<Player> cellPlayer = orderCell.getPlayer();
+            if (cellPlayer.isPresent()) {
+                if (cellPlayer.get().equals(player)) {
+                    orderCell.setPlayer(null);
+                }
+            }
+        }
+    }
+
     public OrderCell getCellAt(int i){
         return orderQueue.get(i);
     }
+
 
     public int size(){
         return orderQueue.size();

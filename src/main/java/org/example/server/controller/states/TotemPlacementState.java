@@ -1,6 +1,7 @@
 package org.example.server.controller.states;
 
 import org.example.server.controller.GameController;
+import org.example.server.model.board.OrderCell;
 import org.example.server.network.VirtualClient;
 import org.example.shared.enums.Phase;
 import org.example.shared.network.requests.MakeMoveRequest;
@@ -34,8 +35,12 @@ public class TotemPlacementState extends ControllerState {
     }
 
     public void execute(Move move, Player p) {
+        OrderTile orderTile = getGame().getBoard().getOrderTile();
+        orderTile.removePlayer(p);
+
         OfferTrack offerTrack = getGame().getBoard().getOfferTrack();
         offerTrack.placeInOfferTile(p, move.getRowIndex());
+
         setNextState(calcNextState());
         getGame().sendUpdateGame();
     }
@@ -47,10 +52,13 @@ public class TotemPlacementState extends ControllerState {
         }
         OrderTile orderTile = getGame().getBoard().getOrderTile();
         int orderIndex = 0;
-        while(orderTile.getPlayerAt(orderIndex).isEmpty() && orderIndex < orderTile.size()){
+        while(orderTile.getPlayerAt(orderIndex).isEmpty()){
             orderIndex++;
+            if(orderIndex == orderTile.size()){
+                break;
+            }
         }
-        if(orderIndex != getGame().getPlayers().size() - 1){
+        if(orderIndex != orderTile.size()){
             getGame().setCurrentPlayer(orderTile.getPlayerAt(orderIndex).orElse(null));
             return this;
         } else {
