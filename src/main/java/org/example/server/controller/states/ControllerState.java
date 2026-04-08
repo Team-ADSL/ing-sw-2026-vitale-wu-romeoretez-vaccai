@@ -1,8 +1,6 @@
 package org.example.server.controller.states;
 
 import org.example.server.controller.GameController;
-import org.example.server.model.EndGameObserver;
-import org.example.server.model.GameObserver;
 import org.example.server.model.Player;
 import org.example.server.network.VirtualClient;
 import org.example.shared.network.requests.RequestVisitor;
@@ -16,17 +14,23 @@ import java.util.Optional;
 public abstract class ControllerState implements RequestVisitor<VirtualClient> {
     private final Game game;
     private final GameController context;
+    private ControllerState nextState;
     private boolean toStop;
 
     public ControllerState(Game game, GameController context) {
         this.game = game;
         this.context = context;
         this.toStop = false;
+        this.nextState = this;
     }
 
-    public abstract ControllerState onEntry() throws Exception;
+    public ControllerState onEntry() throws Exception{
+        return this;
+    }
 
-    public abstract ControllerState nextState();
+    public ControllerState calcNextState(){
+        return this;
+    }
 
     public Player controlIfPlayerTurn(ClientRequest req, VirtualClient virtualClient) throws InvalidRequestException{
         Optional<Player> reqPlayer = getGame().getPlayers().stream()
@@ -89,8 +93,14 @@ public abstract class ControllerState implements RequestVisitor<VirtualClient> {
     public boolean isToStop() {
         return toStop;
     }
+    public ControllerState getNextState() {
+        return nextState;
+    }
 
     public void setToStop(boolean toStop) {
         this.toStop = toStop;
+    }
+    public void setNextState(ControllerState nextState) {
+        this.nextState = nextState;
     }
 }

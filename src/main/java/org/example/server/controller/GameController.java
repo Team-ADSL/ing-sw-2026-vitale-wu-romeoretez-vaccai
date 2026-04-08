@@ -2,9 +2,6 @@ package org.example.server.controller;
 
 import org.example.server.config.BoardConfigLoader;
 import org.example.server.controller.states.ControllerState;
-import org.example.server.controller.states.LobbyState;
-import org.example.server.controller.states.RecoverState;
-import org.example.server.model.Game;
 import org.example.server.persistence.GameDAO;
 import org.example.server.network.VirtualClient;
 import org.example.server.persistence.GamePersistenceManager;
@@ -29,9 +26,8 @@ public class GameController {
     public synchronized void handleClientRequest(ClientRequest req, VirtualClient virtualClient){
         try {
             req.accept(state, virtualClient);
-            ControllerState newState = state.nextState();
-            if(newState != null){
-                changeState(newState);
+            if(state.getNextState() != null){
+                changeState(state.getNextState());
             }
         } catch(InvalidRequestException e){
             System.out.println(e.getMessage());

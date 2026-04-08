@@ -21,13 +21,6 @@ public class TotemPlacementState extends ControllerState {
     }
 
     @Override
-    public ControllerState onEntry(){
-        getGame().setPhase(Phase.TOTEM_PLACEMENT);
-        getGame().sendUpdateGame();
-        return nextState();
-    }
-
-    @Override
     public void visit(MakeMoveRequest req, VirtualClient virtualClient) throws InvalidRequestException {
         Player reqPlayer = controlIfPlayerTurn(req, virtualClient);
 
@@ -43,11 +36,12 @@ public class TotemPlacementState extends ControllerState {
     public void execute(Move move, Player p) {
         OfferTrack offerTrack = getGame().getBoard().getOfferTrack();
         offerTrack.placeInOfferTile(p, move.getRowIndex());
+        setNextState(calcNextState());
         getGame().sendUpdateGame();
     }
 
     @Override
-    public ControllerState nextState() {
+    public ControllerState calcNextState() {
         if(isToStop()){
             return new RecoverState(getGame(), getContext());
         }
@@ -61,6 +55,7 @@ public class TotemPlacementState extends ControllerState {
             return this;
         } else {
             getGame().setCurrentPlayer(null);
+            getGame().setPhase(Phase.ACTION_EXECUTION);
             return new ActionExecutionState(getGame(), getContext());
         }
     }

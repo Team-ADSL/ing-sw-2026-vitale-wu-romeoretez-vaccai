@@ -21,9 +21,8 @@ public class InitGameState extends ControllerState {
 
     @Override
     public ControllerState onEntry(){
-        getGame().setPhase(Phase.INIT);
         if(getGame().isInitialized()){
-            return nextState();
+            return calcNextState();
         }
 
         int numPlayers = getGame().getPlayers().size();
@@ -45,12 +44,14 @@ public class InitGameState extends ControllerState {
 
         getGame().setInitialized(true);
         getGame().addObserver(getContext().getPersistenceManager());
+        setNextState(calcNextState());
         getGame().sendUpdateGame();
-        return nextState();
+        return getNextState();
     }
 
     @Override
-    public ControllerState nextState() {
+    public ControllerState calcNextState() {
+        getGame().setPhase(Phase.TOTEM_PLACEMENT);
         return new TotemPlacementState(getGame(), getContext());
     }
 

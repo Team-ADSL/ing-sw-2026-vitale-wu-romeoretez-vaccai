@@ -78,7 +78,7 @@ public class EndRoundStateTest {
 
     @Test
     void nextState_returnsTotemPlacementState() {
-        assertInstanceOf(TotemPlacementState.class, endRoundState.nextState());
+        assertInstanceOf(TotemPlacementState.class, endRoundState.calcNextState());
     }
 
     // ──────────────────────────────────────────────
@@ -86,9 +86,9 @@ public class EndRoundStateTest {
     // ──────────────────────────────────────────────
 
     @Test
-    void onEntry_setsPhaseToEndRound() throws Exception {
+    void after_onEntry_setsPhaseToTotemPlacement() throws Exception {
         endRoundState.onEntry();
-        assertEquals(Phase.END_ROUND, game.getPhase());
+        assertEquals(Phase.TOTEM_PLACEMENT, game.getPhase());
     }
 
     @Test

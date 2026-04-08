@@ -74,20 +74,6 @@ public class StateFactoryTest {
     // ──────────────────────────────────────────────
 
     @Test
-    void recover_LOBBY_returnsLobbyState() {
-        Game g = gameInPhase(Phase.LOBBY);
-        ControllerState s = StateFactory.recover(g, makeController(g));
-        assertInstanceOf(LobbyState.class, s);
-    }
-
-    @Test
-    void recover_INIT_returnsInitGameState() {
-        Game g = gameInPhase(Phase.INIT);
-        ControllerState s = StateFactory.recover(g, makeController(g));
-        assertInstanceOf(InitGameState.class, s);
-    }
-
-    @Test
     void recover_TOTEM_PLACEMENT_returnsTotemPlacementState() {
         Game g = gameInPhase(Phase.TOTEM_PLACEMENT);
         ControllerState s = StateFactory.recover(g, makeController(g));

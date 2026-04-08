@@ -29,13 +29,6 @@ public class ActionExecutionState extends ControllerState {
     }
 
     @Override
-    public ControllerState onEntry(){
-        getGame().setPhase(Phase.ACTION_EXECUTION);
-        getGame().sendUpdateGame();
-        return nextState();
-    }
-
-    @Override
     public void visit(MakeMoveRequest req, VirtualClient virtualClient) throws InvalidRequestException {
         Player reqPlayer = controlIfPlayerTurn(req, virtualClient);
 
@@ -91,6 +84,7 @@ public class ActionExecutionState extends ControllerState {
             selectedCard.insert(p.getCards());
         }
         placeTotem(p);
+        setNextState(calcNextState());
         getGame().sendUpdateGame();
     }
 
@@ -117,7 +111,7 @@ public class ActionExecutionState extends ControllerState {
     }
 
     @Override
-    public ControllerState nextState() {
+    public ControllerState calcNextState() {
         if(isToStop()){
             return new RecoverState(getGame(), getContext());
         }
@@ -132,13 +126,14 @@ public class ActionExecutionState extends ControllerState {
             if(offerTrack.getTileAt(offerIndex).isGivesFood()){
                 currPlayer.get().changeFood(3);
                 placeTotem(currPlayer.get());
-                return nextState();
+                return calcNextState();
             } else {
                 getGame().setCurrentPlayer(currPlayer.get());
                 return this;
             }
         } else {
             getGame().setCurrentPlayer(null);
+            getGame().setPhase(Phase.EXTRA_MOVE);
             return new ExtraMoveState(getGame(), getContext());
         }
     }

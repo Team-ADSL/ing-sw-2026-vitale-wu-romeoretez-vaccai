@@ -2,7 +2,6 @@ package org.example.server.controller.states;
 
 import org.example.server.controller.GameController;
 import org.example.server.persistence.GameDAO;
-import org.example.shared.enums.Phase;
 import org.example.shared.enums.CardType;
 import org.example.shared.enums.Trigger;
 import org.example.server.model.cards.buildings.Building;
@@ -22,7 +21,6 @@ public class EndGameState extends ControllerState {
 
     @Override
     public ControllerState onEntry() throws Exception {
-        getGame().setPhase(Phase.END_GAME);
         Set<Player> players = getGame().getPlayers();
         for(Player p : players){
             p.getCards().get(CardType.BUILDINGS)
@@ -63,12 +61,8 @@ public class EndGameState extends ControllerState {
         List<MatchResult> matchResults = gameDAO.getLeaderboard(players.size());
 
         getGame().sendEndGameResults(matchResults);
+        getGame().setPhase(null);
         getGame().sendUpdateGame();
-        return nextState();
-    }
-
-    @Override
-    public ControllerState nextState() {
-        return this;
+        return getNextState();
     }
 }

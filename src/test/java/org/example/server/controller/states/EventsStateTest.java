@@ -77,13 +77,13 @@ public class EventsStateTest {
         GameController controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
         EventsState state = new EventsState(g, controller);
 
-        assertInstanceOf(EndRoundState.class, state.nextState());
+        assertInstanceOf(EndRoundState.class, state.calcNextState());
     }
 
     @Test
     void nextState_whenRoundIsNot10_returnsEndGameState() {
         // default round is 0, which is not 10
-        assertInstanceOf(EndGameState.class, eventsState.nextState());
+        assertInstanceOf(EndGameState.class, eventsState.calcNextState());
     }
 
     @Test
@@ -96,6 +96,6 @@ public class EventsStateTest {
         GameController controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
         EventsState state = new EventsState(g, controller);
 
-        assertInstanceOf(EndGameState.class, state.nextState());
+        assertInstanceOf(EndGameState.class, state.calcNextState());
     }
 }

@@ -54,7 +54,7 @@ public class GameTest {
         board = buildBoard();
         players = buildPlayers();
         game = new Game(42, 5, 2, 1, players, null, board,
-                Phase.LOBBY, false, NO_OP_END_GAME, NO_OP_MODEL);
+                null, false, NO_OP_END_GAME, NO_OP_MODEL);
     }
 
     // ──────────────────────────────────────────────
@@ -70,7 +70,6 @@ public class GameTest {
                 () -> assertEquals(1,         g.getEra()),
                 () -> assertTrue(g.getPlayers().isEmpty()),
                 () -> assertNull(g.getBoard()),
-                () -> assertEquals(Phase.LOBBY, g.getPhase()),
                 () -> assertFalse(g.isInitialized()),
                 () -> assertTrue(g.getCurrentPlayer().isEmpty())
         );
@@ -88,7 +87,6 @@ public class GameTest {
                 () -> assertEquals(1,           game.getEra()),
                 () -> assertSame(players,       game.getPlayers()),
                 () -> assertSame(board,         game.getBoard()),
-                () -> assertEquals(Phase.LOBBY, game.getPhase()),
                 () -> assertFalse(game.isInitialized()),
                 () -> assertTrue(game.getCurrentPlayer().isEmpty())
         );

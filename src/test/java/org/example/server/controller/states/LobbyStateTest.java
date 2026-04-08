@@ -139,7 +139,7 @@ public class LobbyStateTest {
         state.visit(new StartGameRequest(1), client("p1"));
 
         // nextState should now return InitGameState (not this)
-        assertInstanceOf(InitGameState.class, state.nextState());
+        assertInstanceOf(InitGameState.class, state.calcNextState());
     }
 
     @Test
@@ -154,7 +154,7 @@ public class LobbyStateTest {
 
     @Test
     void nextState_returnsSelfWhenNotReady() {
-        assertSame(state, state.nextState());
+        assertSame(state, state.calcNextState());
     }
 
     @Test
@@ -163,6 +163,6 @@ public class LobbyStateTest {
         state.visit(new EnterGameRequest(1), client("p2"));
         state.visit(new StartGameRequest(1), client("p1"));
 
-        assertInstanceOf(InitGameState.class, state.nextState());
+        assertInstanceOf(InitGameState.class, state.calcNextState());
     }
 }

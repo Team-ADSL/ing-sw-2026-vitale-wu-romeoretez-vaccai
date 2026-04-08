@@ -115,7 +115,7 @@ public class ActionExecutionStateTest {
     @Test
     void nextState_returnsSelfWhenPlayerInOfferTrack() {
         // tile[0] has p1 — state should stay ActionExecutionState
-        ControllerState next = state.nextState();
+        ControllerState next = state.calcNextState();
         assertInstanceOf(ActionExecutionState.class, next);
         assertSame(state, next);
     }
@@ -132,7 +132,7 @@ public class ActionExecutionStateTest {
         offerTrack.getTileAt(1).setPlayer(p2);
         game.setCurrentPlayer(p2);
 
-        ControllerState next = state.nextState();
+        ControllerState next = state.calcNextState();
         assertInstanceOf(ActionExecutionState.class, next);
     }
 

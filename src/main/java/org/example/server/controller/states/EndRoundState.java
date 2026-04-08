@@ -17,7 +17,6 @@ public class EndRoundState extends ControllerState {
 
     @Override
     public ControllerState onEntry() {
-        getGame().setPhase(Phase.END_ROUND);
         CardRow lowRow = getGame().getBoard().getLowRow();
         CardRow topRow = getGame().getBoard().getTopRow();
 
@@ -52,12 +51,14 @@ public class EndRoundState extends ControllerState {
             topRow.addBuildings(newBuildings);
         }
         getGame().changeRound();
+        setNextState(calcNextState());
         getGame().sendUpdateGame();
-        return nextState();
+        return getNextState();
     }
 
     @Override
-    public ControllerState nextState() {
+    public ControllerState calcNextState() {
+        getGame().setPhase(Phase.TOTEM_PLACEMENT);
         return new TotemPlacementState(getGame(), getContext());
     }
 }

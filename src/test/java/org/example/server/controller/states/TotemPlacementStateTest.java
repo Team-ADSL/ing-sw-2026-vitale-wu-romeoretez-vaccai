@@ -99,7 +99,7 @@ public class TotemPlacementStateTest {
         // Place p1 at index 0 of order tile: loop stops immediately (tile[0] not empty),
         // orderIndex = 0 != players.size()-1 (= 1) → returns this (TotemPlacementState)
         orderTile.placePlayerAtNext(p1);
-        ControllerState next = state.nextState();
+        ControllerState next = state.calcNextState();
         assertInstanceOf(TotemPlacementState.class, next);
         assertSame(state, next);
     }
@@ -116,7 +116,7 @@ public class TotemPlacementStateTest {
         // Manually place p2 at cell index 1 (set directly via getCellAt):
         orderTile.getCellAt(1).setPlayer(p2);
 
-        ControllerState next = state.nextState();
+        ControllerState next = state.calcNextState();
         assertInstanceOf(ActionExecutionState.class, next);
     }
 
