@@ -72,7 +72,7 @@ public class ExtraMoveStateTest {
     @Test
     void nextState_returnsEventsStateWhenNoPlayerHasExtraMove() {
         // By default BuildingBonus.isExtraMove() == false for both players
-        ControllerState next = state.nextState();
+        ControllerState next = state.calcNextState();
         assertInstanceOf(EventsState.class, next);
     }
 
@@ -84,7 +84,7 @@ public class ExtraMoveStateTest {
     void nextState_returnsSelfWhenPlayerHasExtraMove() {
         p1.getBuildingBonus().setExtraMove(true);
 
-        ControllerState next = state.nextState();
+        ControllerState next = state.calcNextState();
         assertInstanceOf(ExtraMoveState.class, next);
         assertSame(state, next);
     }
@@ -92,7 +92,7 @@ public class ExtraMoveStateTest {
     @Test
     void nextState_setsCurrentPlayerWhenExtraMove() {
         p2.getBuildingBonus().setExtraMove(true);
-        state.nextState();
+        state.calcNextState();
         // current player must be set to the one with extra move
         assertTrue(game.getCurrentPlayer().isPresent());
         assertEquals("p2", game.getCurrentPlayer().get().getName());
@@ -101,7 +101,7 @@ public class ExtraMoveStateTest {
     @Test
     void nextState_clearsCurrentPlayerWhenNoExtraMove() {
         game.setCurrentPlayer(p1);
-        state.nextState();
+        state.calcNextState();
         assertFalse(game.getCurrentPlayer().isPresent());
     }
 }

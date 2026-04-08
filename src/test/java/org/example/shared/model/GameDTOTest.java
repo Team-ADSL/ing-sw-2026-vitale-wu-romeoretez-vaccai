@@ -11,6 +11,6 @@ public class GameDTOTest {
 
     @Test
     void canBeInstantiated() {
-        assertDoesNotThrow(() -> new GameDTO(100, 5, 5,0, new HashSet<>(), null, null, Phase.LOBBY));
+        assertDoesNotThrow(() -> new GameDTO(100, 5, 5,0, new HashSet<>(), null, null, null));
     }
 }

@@ -4,7 +4,6 @@ import org.example.server.controller.GameController;
 import org.example.server.model.Game;
 import org.example.server.model.Player;
 import org.example.server.network.VirtualClient;
-import org.example.shared.enums.Phase;
 import org.example.shared.exceptions.InvalidRequestException;
 import org.example.shared.network.requests.ClientDisconnected;
 import org.example.shared.network.requests.EnterGameRequest;
@@ -22,7 +21,6 @@ public class LobbyState extends ControllerState {
 
     @Override
     public ControllerState onEntry() {
-        getGame().setPhase(Phase.LOBBY);
         getGame().sendUpdateLobby();
         return this;
     }
@@ -37,6 +35,7 @@ public class LobbyState extends ControllerState {
         } else {
             throw new InvalidRequestException("The lobby is full");
         }
+        setNextState(calcNextState());
     }
 
     @Override
@@ -56,20 +55,21 @@ public class LobbyState extends ControllerState {
         } else {
             getGame().sendUpdateLobby();
         }
+        setNextState(calcNextState());
     }
 
     @Override
     public void visit(StartGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
         if(getGame().getPlayers().size() == getGame().getNumPlayer()){
             readyToStart = true;
-            getGame().sendUpdateLobby();
         } else {
             throw new InvalidRequestException(getGame().getNumPlayer() + " players required to start the game");
         }
+        setNextState(calcNextState());
     }
 
     @Override
-    public ControllerState nextState() {
+    public ControllerState calcNextState() {
         if(readyToStart){
             return new InitGameState(getGame(), getContext());
         } else {

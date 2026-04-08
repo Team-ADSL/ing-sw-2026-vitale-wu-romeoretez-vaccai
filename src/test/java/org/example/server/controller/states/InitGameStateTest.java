@@ -5,11 +5,8 @@ import org.example.server.config.JsonBoardConfigLoader;
 import org.example.server.controller.GameController;
 import org.example.server.model.EndGameObserver;
 import org.example.server.model.Game;
-import org.example.server.model.Player;
 import org.example.server.model.board.Board;
 import org.example.server.model.board.CardRow;
-import org.example.server.model.board.OfferTrack;
-import org.example.server.model.board.OrderTile;
 import org.example.server.model.cards.Card;
 import org.example.server.model.cards.buildings.Building;
 import org.example.server.persistence.GameDAO;
@@ -21,7 +18,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -203,7 +199,7 @@ public class InitGameStateTest {
 
     @Test
     void nextState_returnsTotemPlacementState() {
-        assertInstanceOf(TotemPlacementState.class, state.nextState());
+        assertInstanceOf(TotemPlacementState.class, state.calcNextState());
     }
 
     // ──────────────────────────────────────────────

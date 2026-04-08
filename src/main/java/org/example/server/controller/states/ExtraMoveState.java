@@ -13,7 +13,6 @@ import org.example.server.model.cards.Card;
 import org.example.server.model.Game;
 import org.example.server.model.Player;
 import org.example.server.model.board.CardRow;
-import org.example.server.model.board.OfferTrack;
 
 import java.util.Optional;
 import java.util.Set;
@@ -24,13 +23,7 @@ public class ExtraMoveState extends ControllerState {
         super(game, context);
     }
 
-    @Override
-    public ControllerState onEntry(){
-        getGame().setPhase(Phase.EXTRA_MOVE);
-        getGame().sendUpdateGame();
-        return nextState();
-    }
-
+    // NEED TO HANDLE IF PLAYER DON'T WANT TO PERFORM THE ADDITIONAL PICK
     @Override
     public void visit(MakeMoveRequest req, VirtualClient virtualClient) throws InvalidRequestException {
         Player reqPlayer = controlIfPlayerTurn(req, virtualClient);
@@ -58,11 +51,12 @@ public class ExtraMoveState extends ControllerState {
         CardRow selectedRow = getGame().getBoard().getTopRow();
         Card selectedCard = selectedRow.pickCardAt(move.getRowIndex());
         selectedCard.insert(p.getCards());
+        setNextState(calcNextState());
         getGame().sendUpdateGame();
     }
 
     @Override
-    public ControllerState nextState() {
+    public ControllerState calcNextState() {
         if(isToStop()){
             return new RecoverState(getGame(), getContext());
         }
@@ -79,6 +73,7 @@ public class ExtraMoveState extends ControllerState {
             return this;
         } else {
             getGame().setCurrentPlayer(null);
+            getGame().setPhase(Phase.EVENTS_EXECUTION);
             return new EventsState(getGame(), getContext());
         }
     }

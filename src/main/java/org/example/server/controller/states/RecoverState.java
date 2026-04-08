@@ -30,11 +30,12 @@ public class RecoverState extends ControllerState {
         reqPlayer.setActive(true);
         getGame().addVirtualClient(virtualClient);
         virtualClient.setGameController(getContext());
+        setNextState(calcNextState());
         getGame().sendUpdateLobby();
     }
 
     @Override
-    public ControllerState nextState() {
+    public ControllerState calcNextState() {
         int activePlayers = (int)getGame().getPlayers().stream()
                 .filter(Player::isActive)
                 .count();

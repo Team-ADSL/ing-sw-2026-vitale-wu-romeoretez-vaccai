@@ -17,7 +17,6 @@ public class EventsState extends ControllerState {
 
     @Override
     public ControllerState onEntry(){
-        getGame().setPhase(Phase.EVENTS_EXECUTION);
         Set<Player> players = getGame().getPlayers();
         Card[] cards = getGame().getBoard().getLowRow().getTribeCards();
         for(Card c : cards){
@@ -25,13 +24,19 @@ public class EventsState extends ControllerState {
                 c.activeEffect(players, Trigger.EVENT_EXECUTION);
             }
         }
+        setNextState(calcNextState());
         getGame().sendUpdateGame();
-        return nextState();
+        return getNextState();
     }
 
     @Override
-    public ControllerState nextState() {
-        return getGame().getRound() == 10 ?
-                new EndRoundState(getGame(), getContext()) : new EndGameState(getGame(), getContext());
+    public ControllerState calcNextState() {
+        if(getGame().getRound() == 10){
+            getGame().setPhase(Phase.END_ROUND);
+            return new EndRoundState(getGame(), getContext());
+        } else {
+            getGame().setPhase(Phase.END_GAME);
+            return new EndGameState(getGame(), getContext());
+        }
     }
 }

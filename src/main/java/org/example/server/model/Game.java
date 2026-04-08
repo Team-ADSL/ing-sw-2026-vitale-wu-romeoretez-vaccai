@@ -34,7 +34,7 @@ public class Game {
         this.round = 0;
         this.era = 1;
         this.currentPlayer = null;
-        this.phase = Phase.LOBBY;
+        this.phase = null;
         this.isInitialized = false;
     }
 
