@@ -2,7 +2,7 @@ package org.example.client;
 
 import org.example.client.network.ServerConnection;
 import org.example.client.view.GameUI;
-import org.example.shared.exceptions.InvalidResponseException;
+import org.example.client.exceptions.InvalidResponseException;
 import org.example.shared.network.requests.*;
 import org.example.shared.network.responses.*;
 import org.example.shared.utils.Move;

@@ -3,6 +3,7 @@ package org.example.server.network.rmi;
 import org.example.server.controller.ServerController;
 import org.example.shared.network.remote.RemoteClientStub;
 import org.example.shared.network.remote.RemoteServerService;
+import org.example.shared.network.requests.ClientConnection;
 import org.example.shared.network.requests.ClientRequest;
 
 import java.rmi.RemoteException;
@@ -25,6 +26,7 @@ public class RemoteServerServiceImpl extends UnicastRemoteObject implements Remo
         System.out.println("New client connected with RMI.");
         RMIClientHandler handler = new RMIClientHandler(serverController, clientCallback);
         clients.put(clientCallback, handler);
+        handler.handleConnection();
     }
 
     @Override

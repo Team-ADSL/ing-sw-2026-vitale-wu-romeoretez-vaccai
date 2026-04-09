@@ -1,6 +1,7 @@
 package org.example.server.network.socket;
 
 import org.example.server.controller.ServerController;
+import org.example.shared.network.requests.ClientConnection;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -33,6 +34,7 @@ public class SocketServer implements Runnable {
                 System.out.println("New connection: " + client.getInetAddress());
                 SocketClientHandler clientHandler = new SocketClientHandler(client, serverController);
                 threadPool.submit(clientHandler);
+                clientHandler.handleConnection();
             }
         } catch (SocketException e) {
             System.out.println("SocketServer stopped: closing...");
@@ -41,7 +43,6 @@ public class SocketServer implements Runnable {
         } finally {
             threadPool.shutdown();
         }
-
     }
 
     public void stopServer() {

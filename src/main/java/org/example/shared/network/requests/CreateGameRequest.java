@@ -1,6 +1,6 @@
 package org.example.shared.network.requests;
 
-import org.example.shared.exceptions.InvalidRequestException;
+import org.example.server.exceptions.InvalidRequestException;
 
 public class CreateGameRequest extends ClientRequest{
     private final int numPlayer;

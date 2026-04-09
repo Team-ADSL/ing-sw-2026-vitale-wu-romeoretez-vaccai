@@ -1,12 +1,11 @@
 package org.example.server.controller.states;
 
 import org.example.server.controller.GameController;
-import org.example.server.model.board.OrderCell;
 import org.example.server.network.VirtualClient;
 import org.example.shared.enums.Phase;
 import org.example.shared.network.requests.MakeMoveRequest;
 import org.example.shared.utils.Move;
-import org.example.shared.exceptions.InvalidRequestException;
+import org.example.server.exceptions.InvalidRequestException;
 import org.example.server.model.Game;
 import org.example.server.model.Player;
 import org.example.server.model.board.OfferTrack;

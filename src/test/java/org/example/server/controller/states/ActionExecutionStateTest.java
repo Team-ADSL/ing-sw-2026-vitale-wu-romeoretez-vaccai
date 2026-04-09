@@ -12,7 +12,7 @@ import org.example.server.network.VirtualClient;
 import org.example.server.persistence.GameDAO;
 import org.example.server.persistence.GamePersistenceManager;
 import org.example.shared.enums.Row;
-import org.example.shared.exceptions.InvalidRequestException;
+import org.example.server.exceptions.InvalidRequestException;
 import org.example.shared.model.GameDTO;
 import org.example.shared.model.MatchResult;
 import org.example.shared.network.requests.MakeMoveRequest;

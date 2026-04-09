@@ -6,6 +6,7 @@ import org.example.server.model.EndGameObserver;
 import org.example.server.model.GameObserver;
 import org.example.shared.model.GameDTO;
 import org.example.shared.model.MatchResult;
+import org.example.shared.network.requests.ClientConnection;
 import org.example.shared.network.requests.ClientDisconnected;
 import org.example.shared.network.requests.ClientRequest;
 import org.example.shared.network.responses.*;
@@ -35,6 +36,11 @@ public abstract class VirtualClient implements GameObserver, HomeObserver, EndGa
     public void handleDisconnection() {
         ClientRequest disconnection = new ClientDisconnected(-1);
         processRequest(disconnection);
+    }
+
+    public void handleConnection() {
+        ClientConnection connection = new ClientConnection();
+        processRequest(connection);
     }
 
     // Creating and forwarding ServerResponse to the Client

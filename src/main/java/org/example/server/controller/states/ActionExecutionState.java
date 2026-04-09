@@ -6,7 +6,7 @@ import org.example.shared.enums.Phase;
 import org.example.shared.network.requests.MakeMoveRequest;
 import org.example.shared.utils.Move;
 import org.example.shared.enums.Row;
-import org.example.shared.exceptions.InvalidRequestException;
+import org.example.server.exceptions.InvalidRequestException;
 import org.example.server.model.cards.Card;
 import org.example.shared.enums.CardType;
 import org.example.shared.enums.Trigger;

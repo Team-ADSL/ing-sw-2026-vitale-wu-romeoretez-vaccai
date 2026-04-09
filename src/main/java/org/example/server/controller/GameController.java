@@ -5,7 +5,7 @@ import org.example.server.controller.states.ControllerState;
 import org.example.server.persistence.GameDAO;
 import org.example.server.network.VirtualClient;
 import org.example.server.persistence.GamePersistenceManager;
-import org.example.shared.exceptions.InvalidRequestException;
+import org.example.server.exceptions.InvalidRequestException;
 import org.example.shared.network.requests.ClientRequest;
 
 
@@ -50,9 +50,6 @@ public class GameController {
         this.state = state;
     }
 
-    public ControllerState getState() {
-        return state;
-    }
     public BoardConfigLoader getBoardConfigLoader() {
         return boardConfigLoader;
     }
