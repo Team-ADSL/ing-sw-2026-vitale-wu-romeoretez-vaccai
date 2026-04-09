@@ -4,7 +4,7 @@ import org.example.server.controller.GameController;
 import org.example.server.model.Game;
 import org.example.server.model.Player;
 import org.example.server.network.VirtualClient;
-import org.example.shared.exceptions.InvalidRequestException;
+import org.example.server.exceptions.InvalidRequestException;
 import org.example.shared.network.requests.ClientDisconnected;
 import org.example.shared.network.requests.EnterGameRequest;
 import org.example.shared.network.requests.StartGameRequest;

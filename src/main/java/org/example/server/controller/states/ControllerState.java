@@ -5,7 +5,7 @@ import org.example.server.model.Player;
 import org.example.server.network.VirtualClient;
 import org.example.shared.network.requests.RequestVisitor;
 import org.example.shared.network.requests.*;
-import org.example.shared.exceptions.InvalidRequestException;
+import org.example.server.exceptions.InvalidRequestException;
 import org.example.server.model.Game;
 
 import java.util.Optional;
@@ -81,6 +81,7 @@ public abstract class ControllerState implements RequestVisitor<VirtualClient> {
             .orElseThrow(() -> new InvalidRequestException("Player not in current game"))
             .setActive(false);
         getGame().removeVirtualClient(virtualClient);
+        virtualClient.setGameController(null);
         toStop = true;
     }
 

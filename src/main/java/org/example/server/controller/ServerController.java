@@ -10,7 +10,7 @@ import org.example.server.model.Game;
 import org.example.server.model.Home;
 import org.example.server.network.VirtualClient;
 import org.example.server.persistence.GamePersistenceManager;
-import org.example.shared.exceptions.InvalidRequestException;
+import org.example.server.exceptions.InvalidRequestException;
 import org.example.shared.model.MatchResult;
 import org.example.shared.network.requests.RequestVisitor;
 import org.example.shared.network.requests.*;
@@ -44,29 +44,40 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
 
     @Override
     public void visit(ClientConnection req, VirtualClient virtualClient) throws InvalidRequestException {
-        // Handle initial connection
-        home.update();
+        virtualClient.sendSetUsernameResponse(); // Implicitly confirming connection
     }
+
     @Override
     public void visit(SetUsernameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
-        // Setting of username
+        boolean playerAlreadyConnected = false; // To handle?
+        if(playerAlreadyConnected){
+            virtualClient.sendErrorMessage("User already connected");
+        } else {
+            virtualClient.setClientUsername(req.getUsername());
+            home.addObserver(virtualClient);
+        }
     }
+
     @Override
     public void visit(CreateGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
         createGame(req, virtualClient);
     }
+
     @Override
     public void visit(EnterGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
         connectToGame(req, virtualClient);
     }
+
     @Override
     public void visit(ClientDisconnected req, VirtualClient virtualClient) throws InvalidRequestException {
-        // Handle disconnection
+        home.removeObserver(virtualClient);
     }
+
     @Override
     public void visit(StartGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
         throw new InvalidRequestException("Server received invalid request");
     }
+
     @Override
     public void visit(MakeMoveRequest req, VirtualClient virtualClient) throws InvalidRequestException {
         throw new InvalidRequestException("Server received invalid request");
@@ -132,7 +143,6 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
                 ControllerState state = new RecoverState(g, gc);
                 gc.setState(state);
             });
-
         } catch(Exception e){
             System.out.println(e.getMessage());
         }

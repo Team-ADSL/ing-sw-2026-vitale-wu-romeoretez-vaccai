@@ -1,4 +1,4 @@
-package org.example.shared.exceptions;
+package org.example.client.exceptions;
 
 public class InvalidResponseException extends RuntimeException {
     public InvalidResponseException(String message) {
