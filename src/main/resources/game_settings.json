@@ -1,0 +1,42 @@
+[
+  {
+    "numPlayers": 2,
+    "settings": {
+      "numLowTribeCard": 3,
+      "numTopTribeCard": 6,
+      "numBuildingEra1": 1,
+      "numBuildingEra2": 3,
+      "numBuildingEra3": 2
+    }
+  },
+  {
+    "numPlayers": 3,
+    "settings": {
+      "numLowTribeCard": 4,
+      "numTopTribeCard": 7,
+      "numBuildingEra1": 2,
+      "numBuildingEra2": 2,
+      "numBuildingEra3": 4
+    }
+  },
+  {
+    "numPlayers": 4,
+    "settings": {
+      "numLowTribeCard": 5,
+      "numTopTribeCard": 8,
+      "numBuildingEra1": 2,
+      "numBuildingEra2": 3,
+      "numBuildingEra3": 4
+    }
+  },
+  {
+    "numPlayers": 5,
+    "settings": {
+      "numLowTribeCard": 6,
+      "numTopTribeCard": 9,
+      "numBuildingEra1": 2,
+      "numBuildingEra2": 3,
+      "numBuildingEra3": 5
+    }
+  }
+]

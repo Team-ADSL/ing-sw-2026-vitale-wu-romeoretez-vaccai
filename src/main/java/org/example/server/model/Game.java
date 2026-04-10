@@ -9,10 +9,11 @@ import org.example.shared.model.MatchResult;
 import org.example.shared.model.PlayerDTO;
 
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class Game {
+public class Game implements Serializable {
     private final int gameId;
     private final Set<Player> players;
     private final int numPlayer;

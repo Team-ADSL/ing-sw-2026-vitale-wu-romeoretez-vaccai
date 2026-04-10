@@ -1,6 +1,7 @@
 package org.example.server.controller.states;
 
 import org.example.server.config.BoardConfigLoader;
+import org.example.server.config.GameSettings;
 import org.example.server.controller.GameController;
 import org.example.server.model.cards.Card;
 import org.example.server.model.cards.buildings.Building;
@@ -9,10 +10,12 @@ import org.example.server.model.board.Board;
 import org.example.server.model.board.CardRow;
 import org.example.server.model.board.Deck;
 import org.example.shared.enums.Phase;
+import org.example.shared.enums.Totem;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class InitGameState extends ControllerState {
 
@@ -28,21 +31,38 @@ public class InitGameState extends ControllerState {
 
         int numPlayers = getGame().getPlayers().size();
         BoardConfigLoader loader = getContext().getBoardConfigLoader();
+        GameSettings gameSettings = loader.getSettings(numPlayers);
+        int maxBuildings = Stream.of(
+                        gameSettings.numBuildingEra1(),
+                        gameSettings.numBuildingEra2(),
+                        gameSettings.numBuildingEra3()
+                )
+                .max(Integer::compare)
+                .orElse(0);
 
         Board board = new Board(
-                calcNumLowCard(numPlayers),
-                calcNumLowTribeCard(numPlayers),
-                calcNumTopCard(numPlayers),
-                calcNumTopTribeCard(numPlayers),
+                gameSettings.numLowTribeCard() + maxBuildings,
+                gameSettings.numLowTribeCard(),
+                gameSettings.numTopTribeCard() + maxBuildings,
+                gameSettings.numTopTribeCard(),
                 loader.getOfferTrack(numPlayers),
                 loader.getOrderTile(numPlayers),
-                loader.getCards(numPlayers)
+                Deck.createDeck(loader.getCards(numPlayers))
         );
         getGame().setBoard(board);
 
-        makeBuildingDecks(loader.getBuildings(), numPlayers);
+        makeBuildingDecks(loader.getBuildings(), numPlayers, gameSettings);
         fillLowRow(numPlayers);
         fillTopRow(numPlayers);
+
+        List<Totem> shuffledTotems = new ArrayList<>(Arrays.asList(Totem.values()));
+        Collections.shuffle(shuffledTotems);
+        Iterator<Totem> totemIterator = shuffledTotems.iterator();
+        getGame().getPlayers().forEach(p -> {
+            if (totemIterator.hasNext()) {
+                p.setColor(totemIterator.next());
+            }
+        });
         board.orderTile().placePlayersRandom(getGame().getPlayers());
 
         getGame().setInitialized(true);
@@ -111,15 +131,8 @@ public class InitGameState extends ControllerState {
         }
     }
 
-    public void makeBuildingDecks(Set<Building> buildings, int numPlayers) {
-        int[] eraCounts = switch (numPlayers) {
-            case 2 -> new int[]{1, 2, 3};
-            case 3 -> new int[]{2, 2, 4};
-            case 4 -> new int[]{2, 3, 4};
-            case 5 -> new int[]{2, 3, 5};
-            default -> new int[]{0, 0, 0};
-        };
-
+    public void makeBuildingDecks(Set<Building> buildings, int numPlayers, GameSettings gameSettings) {
+        int[] eraCounts = {gameSettings.numBuildingEra1(), gameSettings.numBuildingEra2(), gameSettings.numBuildingEra3()};
         Map<Integer, List<Building>> buildingsByEra = buildings.stream()
                 .collect(Collectors.groupingBy(Building::getEra));
 

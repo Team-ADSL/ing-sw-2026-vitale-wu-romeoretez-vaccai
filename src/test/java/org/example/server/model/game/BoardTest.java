@@ -93,8 +93,9 @@ public class BoardTest {
 
     @Test
     void initConstructor_rowSizesMatchParameters() {
-        Board board = new Board(6, 3, 6, 3, emptyOfferTrack(), emptyOrderTile(),
-                fakeCards(10));
+        Deck fakeDeck = Deck.createDeck(fakeCards(10));
+        Board board = new Board(6, 3, 6, 3,
+                emptyOfferTrack(), emptyOrderTile(), fakeDeck);
 
         assertAll(
                 () -> assertEquals(6, board.lowRow().size()),
@@ -104,16 +105,19 @@ public class BoardTest {
 
     @Test
     void initConstructor_remainingBuildingsStartsEmpty() {
-        Board board = new Board(3, 3,6, 6, emptyOfferTrack(), emptyOrderTile(),
-                fakeCards(10));
+        Deck fakeDeck = Deck.createDeck(fakeCards(10));
+        Board board = new Board(3, 3,6, 6,
+                emptyOfferTrack(), emptyOrderTile(), fakeDeck);
 
         assertTrue(board.remainingBuildings().isEmpty());
     }
 
     @Test
     void initConstructor_deckIsNotEmptyWhenCardsProvided() {
-        Board board = new Board(3, 3,6, 6, emptyOfferTrack(), emptyOrderTile(),
-                fakeCards(10));
+        Deck fakeDeck = Deck.createDeck(fakeCards(10));
+
+        Board board = new Board(3, 3,6, 6,
+                emptyOfferTrack(), emptyOrderTile(), fakeDeck);
 
         assertFalse(board.deck().isEmpty());
     }

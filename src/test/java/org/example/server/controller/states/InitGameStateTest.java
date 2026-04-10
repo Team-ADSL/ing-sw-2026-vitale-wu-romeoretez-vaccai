@@ -6,6 +6,7 @@ import org.example.server.controller.GameController;
 import org.example.server.model.Game;
 import org.example.server.model.board.Board;
 import org.example.server.model.board.CardRow;
+import org.example.server.model.board.Deck;
 import org.example.server.model.cards.Card;
 import org.example.server.model.cards.buildings.Building;
 import org.example.server.persistence.GameDAO;
@@ -55,6 +56,7 @@ public class InitGameStateTest {
     private void initBoardForGame(Game g, int numPlayers) {
         GameController gc = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
         InitGameState s = new InitGameState(g, gc);
+        Deck deck = Deck.createDeck(loader.getCards(numPlayers));
         Board board = new Board(
                 s.calcNumLowCard(numPlayers),
                 s.calcNumLowTribeCard(numPlayers),
@@ -62,7 +64,7 @@ public class InitGameStateTest {
                 s.calcNumTopTribeCard(numPlayers),
                 loader.getOfferTrack(numPlayers),
                 loader.getOrderTile(numPlayers),
-                loader.getCards(numPlayers)
+                deck
         );
         g.setBoard(board);
     }
@@ -70,7 +72,7 @@ public class InitGameStateTest {
     @Test
     void makeBuildingDecks_populatesRemainingBuildings() {
         initBoardForGame(game, 2);
-        state.makeBuildingDecks(loader.getBuildings(), 2);
+        state.makeBuildingDecks(loader.getBuildings(), 2, loader.getSettings(2));
         assertEquals(2, game.getBoard().remainingBuildings().size());
     }
 
@@ -78,7 +80,7 @@ public class InitGameStateTest {
     void makeBuildingDecks_2players_addsOneEra1BuildingToTopRow() {
         initBoardForGame(game, 2);
         int before = countTopRowCards(game.getBoard().topRow());
-        state.makeBuildingDecks(loader.getBuildings(), 2);
+        state.makeBuildingDecks(loader.getBuildings(), 2, loader.getSettings(2));
         assertEquals(1, countTopRowCards(game.getBoard().topRow()) - before);
     }
 
@@ -89,14 +91,14 @@ public class InitGameStateTest {
         GameController gc = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
         InitGameState s = new InitGameState(g, gc);
         int before = countTopRowCards(g.getBoard().topRow());
-        s.makeBuildingDecks(loader.getBuildings(), 3);
+        s.makeBuildingDecks(loader.getBuildings(), 3, loader.getSettings(3));
         assertEquals(2, countTopRowCards(g.getBoard().topRow()) - before);
     }
 
     @Test
     void makeBuildingDecks_remainingBuildingsIndex0HasEra2Cards() {
         initBoardForGame(game, 2);
-        state.makeBuildingDecks(loader.getBuildings(), 2);
+        state.makeBuildingDecks(loader.getBuildings(), 2, loader.getSettings(2));
         List<Set<Card>> remaining = game.getBoard().remainingBuildings();
         remaining.get(0).forEach(c -> assertEquals(2, ((Building) c).getEra()));
     }
@@ -104,7 +106,7 @@ public class InitGameStateTest {
     @Test
     void makeBuildingDecks_remainingBuildingsIndex1HasEra3Cards() {
         initBoardForGame(game, 2);
-        state.makeBuildingDecks(loader.getBuildings(), 2);
+        state.makeBuildingDecks(loader.getBuildings(), 2, loader.getSettings(2));
         List<Set<Card>> remaining = game.getBoard().remainingBuildings();
         remaining.get(1).forEach(c -> assertEquals(3, ((Building) c).getEra()));
     }

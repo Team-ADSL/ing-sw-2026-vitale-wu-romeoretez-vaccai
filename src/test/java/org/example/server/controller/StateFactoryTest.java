@@ -3,7 +3,6 @@ package org.example.server.controller;
 import org.example.server.config.BoardConfigLoader;
 import org.example.server.config.JsonBoardConfigLoader;
 import org.example.server.controller.states.*;
-import org.example.server.model.EndGameObserver;
 import org.example.server.model.Game;
 import org.example.server.model.Player;
 import org.example.server.model.board.*;
@@ -38,7 +37,6 @@ public class StateFactoryTest {
     };
 
     private BoardConfigLoader loader;
-    private GameController controller;
 
     /** Build a minimal Board so states that call getBoard() don't NPE. */
     private Board minimalBoard() {

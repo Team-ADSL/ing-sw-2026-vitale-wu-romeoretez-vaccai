@@ -66,6 +66,7 @@ public class JsonBoardConfigLoader implements BoardConfigLoader {
      * Loads cards_2p.json as base, then incrementally adds cards from 3p, 4p, 5p files.
      * Suitable to pass directly to Deck.createDeck().
      */
+    @Override
     public ArrayList<Set<Card>> getCards(int numPlayers) {
         // 3 sets, one per era
         ArrayList<Set<Card>> result = new ArrayList<>();
@@ -108,6 +109,7 @@ public class JsonBoardConfigLoader implements BoardConfigLoader {
      * Returns the OfferTrack for the given number of players.
      * Includes all tiles with numPlayers <= the given value.
      */
+    @Override
     public OfferTrack getOfferTrack(int numPlayers) {
         try (InputStream is = getClass().getResourceAsStream("/offer_tiles.json")) {
             if (is == null) throw new IllegalArgumentException("Resource not found: /offer_tiles.json");
@@ -132,6 +134,7 @@ public class JsonBoardConfigLoader implements BoardConfigLoader {
     /**
      * Returns the OrderTile (turn order track) for the given number of players.
      */
+    @Override
     public OrderTile getOrderTile(int numPlayers) {
         try (InputStream is = getClass().getResourceAsStream("/order_tiles.json")) {
             if (is == null) throw new IllegalArgumentException("Resource not found: /order_tiles.json");
@@ -156,6 +159,7 @@ public class JsonBoardConfigLoader implements BoardConfigLoader {
      * Returns all buildings (all eras) as a flat set.
      * makeBuildingDecks() in InitGameState handles era separation and selection.
      */
+    @Override
     public Set<Building> getBuildings() {
         String filename = "/cards/buildings.json";
         try (InputStream is = getClass().getResourceAsStream(filename)) {
@@ -175,4 +179,29 @@ public class JsonBoardConfigLoader implements BoardConfigLoader {
             throw new RuntimeException("Failed to load buildings", e);
         }
     }
+
+    @Override
+    public GameSettings getSettings(int numPlayers){
+        try (InputStream is = getClass().getResourceAsStream("/game_settings.json")) {
+            if (is == null) throw new IllegalArgumentException("Resource not found: /game_settings.json");
+            JsonNode root = mapper.readTree(is);
+
+            for (JsonNode node : root) {
+                if (node.get("numPlayers").asInt() == numPlayers) {
+                    JsonNode settingsNode = node.get("settings");
+                    return new GameSettings(
+                            settingsNode.get("numLowTribeCard").asInt(),
+                            settingsNode.get("numTopTribeCard").asInt(),
+                            settingsNode.get("numBuildingEra1").asInt(),
+                            settingsNode.get("numBuildingEra2").asInt(),
+                            settingsNode.get("numBuildingEra3").asInt()
+                    );
+                }
+            }
+            throw new IllegalArgumentException("No settings found for " + numPlayers + " players");
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to load game settings", e);
+        }
+    }
+
 }
