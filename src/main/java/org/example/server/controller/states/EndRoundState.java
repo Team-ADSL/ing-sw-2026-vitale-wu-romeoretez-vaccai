@@ -7,6 +7,7 @@ import org.example.server.model.Game;
 import org.example.server.model.board.CardRow;
 import org.example.server.model.board.Deck;
 
+import java.util.ArrayList;
 import java.util.Set;
 
 public class EndRoundState extends ControllerState {
@@ -17,17 +18,17 @@ public class EndRoundState extends ControllerState {
 
     @Override
     public ControllerState onEntry() {
-        CardRow lowRow = getGame().getBoard().getLowRow();
-        CardRow topRow = getGame().getBoard().getTopRow();
+        CardRow lowRow = getGame().getBoard().lowRow();
+        CardRow topRow = getGame().getBoard().topRow();
 
         // Move cards from top to low row
         lowRow.clearTribeCards();
-        Card[] cardsToMove= topRow.getTribeCards();
+        ArrayList<Card> cardsToMove = topRow.getTribeCards();
         topRow.clearTribeCards();
         lowRow.addTribeCards(cardsToMove);
 
         // Re-fill top row
-        Deck deck = getGame().getBoard().getDeck();
+        Deck deck = getGame().getBoard().deck();
         for(int i=0; i < topRow.getNumTribeCard(); i++){
             Card newCard = deck.drawCard();
             topRow.add(newCard);
@@ -43,11 +44,10 @@ public class EndRoundState extends ControllerState {
 
             // Move top buildings
             Set<Card> buildingToMove = topRow.getBuildings();
-            lowRow.addBuildings(buildingToMove);
             topRow.clearBuildings();
             lowRow.addBuildings(buildingToMove);
 
-            Set<Card> newBuildings = getGame().getBoard().getRemainingBuildings().removeFirst();
+            Set<Card> newBuildings = getGame().getBoard().remainingBuildings().removeFirst();
             topRow.addBuildings(newBuildings);
         }
         getGame().changeRound();

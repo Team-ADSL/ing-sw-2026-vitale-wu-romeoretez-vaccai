@@ -24,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class StateFactoryTest {
 
-    private static final EndGameObserver NO_OP_END = (id, r) -> {};
     private static final GamePersistenceManager NO_OP_PERSISTENCE = new GamePersistenceManager() {
         @Override public List<Game> recoverGames() { return List.of(); }
         @Override public void removeGame(int id) {}
@@ -49,14 +48,14 @@ public class StateFactoryTest {
                 new OfferTrack(new ArrayList<>()),
                 new OrderTile(new ArrayList<>()),
                 new ArrayList<>(),
-                new ArrayList<>()
+                new Deck(new ArrayList<>())
         );
     }
 
     /** Create a game in the given phase with a minimal board. */
     private Game gameInPhase(Phase phase) {
         Set<Player> players = new HashSet<>();
-        Game g = new Game(1, 5, 0, 1, players, null, minimalBoard(), phase, true, NO_OP_END, NO_OP_PERSISTENCE);
+        Game g = new Game(1, 5, 0, 1, players, null, minimalBoard(), phase);
         return g;
     }
 

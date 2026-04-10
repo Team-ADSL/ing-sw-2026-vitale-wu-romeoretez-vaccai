@@ -2,7 +2,7 @@ package org.example.server.model.game;
 import org.example.shared.enums.Row;
 import org.example.server.model.Player;
 import org.example.server.model.board.OfferTile;
-import org.example.shared.enums.Color;
+import org.example.shared.enums.Totem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.util.Map;
@@ -17,7 +17,7 @@ public class OfferTileTest {
     void setUp() {
         // Arrange - tile with a player and multiple moves
         tileWithPlayer = new OfferTile(
-                new Player("Gianpaolo", 3, 0, Color.RED, new java.util.HashMap<>()),
+                new Player("Gianpaolo", 3, 0, Totem.RED, new java.util.HashMap<>()),
                 Map.of(Row.UPPER, 2, Row.LOWER, 1),
                 true
         );

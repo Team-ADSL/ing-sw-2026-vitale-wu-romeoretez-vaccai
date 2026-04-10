@@ -3,7 +3,6 @@ package org.example.server.controller.states;
 import org.example.server.config.BoardConfigLoader;
 import org.example.server.config.JsonBoardConfigLoader;
 import org.example.server.controller.GameController;
-import org.example.server.model.EndGameObserver;
 import org.example.server.model.Game;
 import org.example.server.model.board.Board;
 import org.example.server.model.board.CardRow;
@@ -15,9 +14,8 @@ import org.example.shared.model.GameDTO;
 import org.example.shared.model.MatchResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -25,7 +23,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class InitGameStateTest {
 
-    private static final EndGameObserver NO_OP_END = (id, r) -> {};
     private static final GamePersistenceManager NO_OP_PERSISTENCE = new GamePersistenceManager() {
         @Override public List<Game> recoverGames() { return List.of(); }
         @Override public void removeGame(int id) {}
@@ -46,54 +43,9 @@ public class InitGameStateTest {
     @BeforeEach
     void setUp() {
         loader = new JsonBoardConfigLoader();
-        game = new Game(1, 5, NO_OP_END);
+        game = new Game(1, 5);
         GameController controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
         state = new InitGameState(game, controller);
-    }
-
-    // ──────────────────────────────────────────────
-    // calcNumTopCard
-    // ──────────────────────────────────────────────
-
-    @Test
-    void calcNumTopCard_2players_returns6() {
-        assertEquals(6, state.calcNumTopCard(2));
-    }
-
-    @Test
-    void calcNumTopCard_3players_returns7() {
-        assertEquals(7, state.calcNumTopCard(3));
-    }
-
-    @Test
-    void calcNumTopCard_5players_returns9() {
-        assertEquals(9, state.calcNumTopCard(5));
-    }
-
-    @ParameterizedTest
-    @ValueSource(ints = {2, 3, 4, 5})
-    void calcNumTopCard_isNumPlayersPlusFour(int n) {
-        assertEquals(n + 4, state.calcNumTopCard(n));
-    }
-
-    // ──────────────────────────────────────────────
-    // calcNumLowCard
-    // ──────────────────────────────────────────────
-
-    @Test
-    void calcNumLowCard_2players_returns3() {
-        assertEquals(3, state.calcNumLowCard(2));
-    }
-
-    @Test
-    void calcNumLowCard_5players_returns6() {
-        assertEquals(6, state.calcNumLowCard(5));
-    }
-
-    @ParameterizedTest
-    @ValueSource(ints = {2, 3, 4, 5})
-    void calcNumLowCard_isNumPlayersPlusOne(int n) {
-        assertEquals(n + 1, state.calcNumLowCard(n));
     }
 
     // ──────────────────────────────────────────────
@@ -105,11 +57,12 @@ public class InitGameStateTest {
         InitGameState s = new InitGameState(g, gc);
         Board board = new Board(
                 s.calcNumLowCard(numPlayers),
+                s.calcNumLowTribeCard(numPlayers),
                 s.calcNumTopCard(numPlayers),
+                s.calcNumTopTribeCard(numPlayers),
                 loader.getOfferTrack(numPlayers),
                 loader.getOrderTile(numPlayers),
-                loader.getCards(numPlayers),
-                numPlayers + 1
+                loader.getCards(numPlayers)
         );
         g.setBoard(board);
     }
@@ -118,33 +71,33 @@ public class InitGameStateTest {
     void makeBuildingDecks_populatesRemainingBuildings() {
         initBoardForGame(game, 2);
         state.makeBuildingDecks(loader.getBuildings(), 2);
-        assertEquals(2, game.getBoard().getRemainingBuildings().size());
+        assertEquals(2, game.getBoard().remainingBuildings().size());
     }
 
     @Test
     void makeBuildingDecks_2players_addsOneEra1BuildingToTopRow() {
         initBoardForGame(game, 2);
-        int before = countTopRowCards(game.getBoard().getTopRow());
+        int before = countTopRowCards(game.getBoard().topRow());
         state.makeBuildingDecks(loader.getBuildings(), 2);
-        assertEquals(1, countTopRowCards(game.getBoard().getTopRow()) - before);
+        assertEquals(1, countTopRowCards(game.getBoard().topRow()) - before);
     }
 
     @Test
     void makeBuildingDecks_3players_addsTwoEra1BuildingsToTopRow() {
-        Game g = new Game(2, 5, NO_OP_END);
+        Game g = new Game(2, 5);
         initBoardForGame(g, 3);
         GameController gc = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
         InitGameState s = new InitGameState(g, gc);
-        int before = countTopRowCards(g.getBoard().getTopRow());
+        int before = countTopRowCards(g.getBoard().topRow());
         s.makeBuildingDecks(loader.getBuildings(), 3);
-        assertEquals(2, countTopRowCards(g.getBoard().getTopRow()) - before);
+        assertEquals(2, countTopRowCards(g.getBoard().topRow()) - before);
     }
 
     @Test
     void makeBuildingDecks_remainingBuildingsIndex0HasEra2Cards() {
         initBoardForGame(game, 2);
         state.makeBuildingDecks(loader.getBuildings(), 2);
-        List<Set<Card>> remaining = game.getBoard().getRemainingBuildings();
+        List<Set<Card>> remaining = game.getBoard().remainingBuildings();
         remaining.get(0).forEach(c -> assertEquals(2, ((Building) c).getEra()));
     }
 
@@ -152,7 +105,7 @@ public class InitGameStateTest {
     void makeBuildingDecks_remainingBuildingsIndex1HasEra3Cards() {
         initBoardForGame(game, 2);
         state.makeBuildingDecks(loader.getBuildings(), 2);
-        List<Set<Card>> remaining = game.getBoard().getRemainingBuildings();
+        List<Set<Card>> remaining = game.getBoard().remainingBuildings();
         remaining.get(1).forEach(c -> assertEquals(3, ((Building) c).getEra()));
     }
 
@@ -164,7 +117,7 @@ public class InitGameStateTest {
     void fillLowRow_2players_fillsThreeCharacterSlots() {
         initBoardForGame(game, 2);
         state.fillLowRow(2);
-        Card[] tribe = game.getBoard().getLowRow().getTribeCards();
+        ArrayList<Card> tribe = game.getBoard().lowRow().getTribeCards();
         int filled = 0;
         for (Card c : tribe) if (c != null) filled++;
         assertEquals(3, filled);
@@ -174,7 +127,7 @@ public class InitGameStateTest {
     void fillLowRow_lowRowContainsOnlyDrawableCards() {
         initBoardForGame(game, 2);
         state.fillLowRow(2);
-        for (Card c : game.getBoard().getLowRow().getTribeCards()) {
+        for (Card c : game.getBoard().lowRow().getTribeCards()) {
             if (c != null) {
                 assertTrue(c.canBeDrawn(null), "Low row should only contain character cards (canBeDrawn=true)");
             }

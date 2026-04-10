@@ -15,17 +15,15 @@ public class RecoverState extends ControllerState {
     }
 
     @Override
-    public ControllerState onEntry() {
-        getGame().sendUpdateLobby();
-        return this;
-    }
-
-    @Override
     public void visit(EnterGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
         Player reqPlayer = getGame().getPlayers().stream()
                 .filter(p -> p.getName().equals(virtualClient.getClientUsername()))
                 .findFirst()
-                .orElseThrow(() -> new InvalidRequestException("Player not in current game"));
+                .orElseThrow(() -> new InvalidRequestException("Player not in current game."));
+
+        if(reqPlayer.isActive()){
+            throw new InvalidRequestException("Player already connected.");
+        }
 
         reqPlayer.setActive(true);
         getGame().addVirtualClient(virtualClient);
@@ -40,7 +38,8 @@ public class RecoverState extends ControllerState {
                 .filter(Player::isActive)
                 .count();
         if(activePlayers == getGame().getNumPlayer()){
-            setToStop(false);
+            getGame().sendUpdateGame();
+            getGame().addObserver(getContext().getPersistenceManager());
             return StateFactory.recover(getGame(), getContext());
         } else {
             return this;

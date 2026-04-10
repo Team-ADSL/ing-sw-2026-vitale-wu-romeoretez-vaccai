@@ -3,10 +3,11 @@ package org.example.server.model.board;
 import org.example.shared.enums.Row;
 import org.example.server.model.Player;
 
+import java.io.Serializable;
 import java.util.Map;
 import java.util.Optional;
 
-public class OfferTile {
+public class OfferTile implements Serializable {
     private Player player;
     private final Map<Row,Integer> moves;
     private final boolean givesFood;

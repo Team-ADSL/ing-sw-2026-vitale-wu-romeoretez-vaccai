@@ -57,8 +57,8 @@ public class AppCoordinator implements ResponseVisitor{
         ClientRequest clientRequest = new ClientConnection();
         serverConnection.sendRequest(clientRequest);
     }
-    public void setUsernameRequest() throws Exception {
-        ClientRequest clientRequest = new SetUsernameRequest();
+    public void setUsernameRequest(String username) throws Exception {
+        ClientRequest clientRequest = new SetUsernameRequest(username);
         serverConnection.sendRequest(clientRequest);
     }
     public void createGameRequest(int numPlayer) throws Exception {

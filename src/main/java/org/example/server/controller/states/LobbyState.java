@@ -9,7 +9,6 @@ import org.example.shared.network.requests.ClientDisconnected;
 import org.example.shared.network.requests.EnterGameRequest;
 import org.example.shared.network.requests.StartGameRequest;
 
-import java.util.Optional;
 
 public class LobbyState extends ControllerState {
     private boolean readyToStart;
@@ -20,16 +19,10 @@ public class LobbyState extends ControllerState {
     }
 
     @Override
-    public ControllerState onEntry() {
-        getGame().sendUpdateLobby();
-        return this;
-    }
-
-    @Override
     public void visit(EnterGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
         if(getGame().getPlayers().size() < getGame().getNumPlayer()){
-            getGame().addVirtualClient(virtualClient);
             getGame().getPlayers().add(new Player(virtualClient.getClientUsername()));
+            getGame().addVirtualClient(virtualClient);
             virtualClient.setGameController(getContext());
             getGame().sendUpdateLobby();
         } else {
@@ -40,14 +33,13 @@ public class LobbyState extends ControllerState {
 
     @Override
     public void visit(ClientDisconnected req, VirtualClient virtualClient) throws InvalidRequestException {
-        getGame().removeVirtualClient(virtualClient);
-        Optional<Player> reqPlayer = getGame().getPlayers().stream()
+        Player reqPlayer = getGame().getPlayers().stream()
                 .filter(p -> p.getName().equals(virtualClient.getClientUsername()))
-                .findFirst();
-        if(reqPlayer.isEmpty()){
-            throw new InvalidRequestException("Player not in current game");
-        }
-        getGame().getPlayers().remove(reqPlayer.get());
+                .findFirst()
+                .orElseThrow(()->  new InvalidRequestException("Player not in current game"));
+
+        getGame().getPlayers().remove(reqPlayer);
+        getGame().removeVirtualClient(virtualClient);
         virtualClient.setGameController(null);
 
         if(getGame().getPlayers().isEmpty()){

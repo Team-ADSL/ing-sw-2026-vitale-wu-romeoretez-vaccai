@@ -5,10 +5,7 @@ import org.example.server.config.JsonBoardConfigLoader;
 import org.example.server.controller.GameController;
 import org.example.server.model.EndGameObserver;
 import org.example.server.model.Game;
-import org.example.server.model.board.Board;
-import org.example.server.model.board.CardRow;
-import org.example.server.model.board.OfferTrack;
-import org.example.server.model.board.OrderTile;
+import org.example.server.model.board.*;
 import org.example.server.persistence.GameDAO;
 import org.example.server.persistence.GamePersistenceManager;
 import org.example.shared.model.GameDTO;
@@ -24,8 +21,6 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class EventsStateTest {
-
-    private static final EndGameObserver NO_OP_END = (id, r) -> {};
     private static final GamePersistenceManager NO_OP_PERSISTENCE = new GamePersistenceManager() {
         @Override public List<Game> recoverGames() { return List.of(); }
         @Override public void removeGame(int id) {}
@@ -44,7 +39,7 @@ public class EventsStateTest {
 
     @BeforeEach
     void setUp() {
-        game = new Game(1, 5, NO_OP_END);
+        game = new Game(1, 5);
         BoardConfigLoader loader = new JsonBoardConfigLoader();
         GameController controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
 
@@ -55,7 +50,7 @@ public class EventsStateTest {
                 new OfferTrack(new ArrayList<>()),
                 new OrderTile(new ArrayList<>()),
                 new ArrayList<>(),
-                new ArrayList<>()
+                new Deck(new ArrayList<>())
         );
         game.setBoard(board);
 
@@ -67,35 +62,20 @@ public class EventsStateTest {
     // ──────────────────────────────────────────────
 
     @Test
-    void nextState_whenRoundIs10_returnsEndRoundState() {
+    void nextState_whenRoundIs10_returnsEndGameState() {
         // Use recovery constructor to set round to 10
         Set<org.example.server.model.Player> players = new HashSet<>();
         BoardConfigLoader loader = new JsonBoardConfigLoader();
         Game g = new Game(1, 5, 10, 1, players, null,
-                game.getBoard(), org.example.shared.enums.Phase.EVENTS_EXECUTION, true,
-                NO_OP_END, NO_OP_PERSISTENCE);
-        GameController controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
-        EventsState state = new EventsState(g, controller);
-
-        assertInstanceOf(EndRoundState.class, state.calcNextState());
-    }
-
-    @Test
-    void nextState_whenRoundIsNot10_returnsEndGameState() {
-        // default round is 0, which is not 10
-        assertInstanceOf(EndGameState.class, eventsState.calcNextState());
-    }
-
-    @Test
-    void nextState_whenRoundIs5_returnsEndGameState() {
-        Set<org.example.server.model.Player> players = new HashSet<>();
-        BoardConfigLoader loader = new JsonBoardConfigLoader();
-        Game g = new Game(1, 5, 5, 1, players, null,
-                game.getBoard(), org.example.shared.enums.Phase.EVENTS_EXECUTION, true,
-                NO_OP_END, NO_OP_PERSISTENCE);
+                game.getBoard(), org.example.shared.enums.Phase.EVENTS_EXECUTION);
         GameController controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
         EventsState state = new EventsState(g, controller);
 
         assertInstanceOf(EndGameState.class, state.calcNextState());
+    }
+
+    @Test
+    void nextState_whenRoundIsNot10_returnsEndRoundState() {
+        assertInstanceOf(EndRoundState.class, eventsState.calcNextState());
     }
 }

@@ -1,7 +1,7 @@
 package org.example.server.model.game;
 import org.example.server.model.Player;
 import org.example.server.model.board.OrderCell;
-import org.example.shared.enums.Color;
+import org.example.shared.enums.Totem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -15,7 +15,7 @@ public class OrderCellTest {
     void setUp() {
         // Arrange - cell with player, bonus and malus
         cellWithPlayer = new OrderCell(
-                new Player("Gianpaolo", 3, 0, Color.RED, new java.util.HashMap<>()),
+                new Player("Gianpaolo", 3, 0, Totem.RED, new java.util.HashMap<>()),
                 2,
                 false
         );
@@ -47,7 +47,7 @@ public class OrderCellTest {
     @Test
     void testSetPlayerAssignsPlayer() {
         // should assign a player to an empty cell
-        Player newPlayer = new Player("Luigi", 2, 0, Color.BLUE, new java.util.HashMap<>());
+        Player newPlayer = new Player("Luigi", 2, 0, Totem.BLUE, new java.util.HashMap<>());
         cellWithoutPlayer.setPlayer(newPlayer);
         assertTrue(cellWithoutPlayer.getPlayer().isPresent());
     }

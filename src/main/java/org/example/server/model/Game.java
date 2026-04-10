@@ -3,35 +3,36 @@ package org.example.server.model;
 import org.example.server.network.VirtualClient;
 import org.example.server.model.board.Board;
 import org.example.shared.enums.Phase;
+import org.example.shared.model.BoardDTO;
 import org.example.shared.model.GameDTO;
 import org.example.shared.model.MatchResult;
+import org.example.shared.model.PlayerDTO;
 
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Game {
     private final int gameId;
-    private final List<GameObserver> gameObservers = new ArrayList<>();
-    private final List<EndGameObserver> endGameObservers = new ArrayList<>();
     private final Set<Player> players;
     private final int numPlayer;
-
     private Board board;
     private int round;
     private int era;
     private Player currentPlayer;
     private Phase phase;
-    private boolean isInitialized;
+
+    private transient boolean isInitialized;
+    private final transient List<GameObserver> gameObservers = new ArrayList<>();
+    private final transient List<EndGameObserver> endGameObservers = new ArrayList<>();
 
     // For initial istantiation
-    public Game(int gameId, int numPlayer, EndGameObserver endGameObserver) {
+    public Game(int gameId, int numPlayer) {
         this.gameId = gameId;
         this.numPlayer = numPlayer;
-        addObserver(endGameObserver);
         this.players = new HashSet<>();
-
         this.board = null;
-        this.round = 0;
+        this.round = 1;
         this.era = 1;
         this.currentPlayer = null;
         this.phase = null;
@@ -40,20 +41,16 @@ public class Game {
 
     // For recover after crash
     public Game(int gameId, int numPlayer, int round, int era, Set<Player> players, Player currentPlayer,
-                Board board, Phase phase, boolean isInitialized,
-                EndGameObserver endGameObserver, GameObserver gamePersistenceManager) {
+                Board board, Phase phase) {
         this.gameId = gameId;
         this.numPlayer = numPlayer;
-        addObserver(endGameObserver);
-        addObserver(gamePersistenceManager);
-
+        this.players = players;
+        this.board = board;
         this.round = round;
         this.era = era;
-        this.players = players;
         this.currentPlayer = currentPlayer;
-        this.board = board;
         this.phase = phase;
-        this.isInitialized = isInitialized;
+        this.isInitialized = true;
     }
 
     public void addVirtualClient(VirtualClient virtualClient){
@@ -72,7 +69,9 @@ public class Game {
         gameObservers.remove(o);
     }
     public GameDTO createDTO() {
-        return null; // TO IMPLEMENT
+        Set<PlayerDTO> playersDTO = players.stream().map(Player::createDTO).collect(Collectors.toSet());
+        BoardDTO boardDTO = board.createDTO();
+        return new GameDTO(gameId, numPlayer, round, era, playersDTO, boardDTO, phase);
     }
 
     public void addObserver(EndGameObserver o) {

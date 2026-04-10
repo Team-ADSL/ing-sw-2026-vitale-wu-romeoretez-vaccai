@@ -1,13 +1,10 @@
 package org.example.server.model.game;
 import org.example.server.model.Player;
-import org.example.server.model.cards.Card;
-import org.example.shared.enums.CardType;
-import org.example.shared.enums.Color;
+import org.example.shared.enums.Totem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class PlayerTest {
@@ -17,7 +14,7 @@ public class PlayerTest {
     @BeforeEach
     void setUp() {
         // Arrange - fresh player before each test
-        player = new Player("Gianpaolo", 3, 0, Color.RED, new HashMap<>());
+        player = new Player("Gianpaolo", 3, 0, Totem.RED, new HashMap<>());
     }
 
     // --- getName() tests ---
@@ -45,7 +42,7 @@ public class PlayerTest {
 
     @Test
     void testGetColor() {
-        assertEquals(Color.RED, player.getColor());
+        assertEquals(Totem.RED, player.getColor());
     }
 
     // --- changePP() tests ---
@@ -102,8 +99,8 @@ public class PlayerTest {
 
     @Test
     void testSetColor() {
-        player.setColor(Color.BLUE);
-        assertEquals(Color.BLUE, player.getColor());
+        player.setColor(Totem.BLUE);
+        assertEquals(Totem.BLUE, player.getColor());
     }
 
     // --- single-arg constructor defaults ---

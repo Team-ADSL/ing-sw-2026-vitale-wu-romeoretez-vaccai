@@ -25,7 +25,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class VirtualClientTest {
 
-    private static final EndGameObserver NO_OP_END = (id, r) -> {};
     private static final GamePersistenceManager NO_OP_PERSISTENCE = new GamePersistenceManager() {
         @Override public List<Game> recoverGames() { return List.of(); }
         @Override public void removeGame(int id) {}
@@ -90,7 +89,7 @@ public class VirtualClientTest {
 
     @Test
     void setGameController_thenGetGameController_returnsIt() {
-        Game game = new Game(1, 5, NO_OP_END);
+        Game game = new Game(1, 5);
         GameController gc = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
         client.setGameController(gc);
         assertTrue(client.getGameController().isPresent());
@@ -99,7 +98,7 @@ public class VirtualClientTest {
 
     @Test
     void setGameController_null_makesGetGameControllerEmpty() {
-        Game game = new Game(1, 5, NO_OP_END);
+        Game game = new Game(1, 5);
         GameController gc = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
         client.setGameController(gc);
         client.setGameController(null);

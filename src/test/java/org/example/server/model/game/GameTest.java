@@ -12,16 +12,6 @@ import static org.junit.jupiter.api.Assertions.*;
 public class GameTest {
 
     // ──────────────────────────────────────────────
-    // No-op observer stubs
-    // ──────────────────────────────────────────────
-
-    private static final EndGameObserver NO_OP_END_GAME = (gameId, results) -> {};
-    private static final GameObserver NO_OP_MODEL = new GameObserver() {
-        @Override public void updateLobby(java.util.List<String> p) {}
-        @Override public void updateGame(org.example.shared.model.GameDTO g) {}
-    };
-
-    // ──────────────────────────────────────────────
     // Helpers
     // ──────────────────────────────────────────────
 
@@ -31,7 +21,7 @@ public class GameTest {
         Set<Card> era1 = new HashSet<>();
         for (int i = 0; i < 5; i++) era1.add(new FakeCard());
         ArrayList<Set<Card>> cards = new ArrayList<>(List.of(era1));
-        return new Board(3, 6, offerTrack, orderTile, cards, 3);
+        return new Board(3, 3, 6, 6, offerTrack, orderTile, cards);
     }
 
     private Set<Player> buildPlayers() {
@@ -53,8 +43,7 @@ public class GameTest {
     void setUp() {
         board = buildBoard();
         players = buildPlayers();
-        game = new Game(42, 5, 2, 1, players, null, board,
-                null, false, NO_OP_END_GAME, NO_OP_MODEL);
+        game = new Game(42, 5, 2, 1, players, null, board, null);
     }
 
     // ──────────────────────────────────────────────
@@ -63,10 +52,10 @@ public class GameTest {
 
     @Test
     void initialConstructor_setsDefaultValues() {
-        Game g = new Game(1, 5, NO_OP_END_GAME);
+        Game g = new Game(1, 5);
         assertAll(
                 () -> assertEquals(1,         g.getGameId()),
-                () -> assertEquals(0,         g.getRound()),
+                () -> assertEquals(1,         g.getRound()),
                 () -> assertEquals(1,         g.getEra()),
                 () -> assertTrue(g.getPlayers().isEmpty()),
                 () -> assertNull(g.getBoard()),
@@ -87,7 +76,7 @@ public class GameTest {
                 () -> assertEquals(1,           game.getEra()),
                 () -> assertSame(players,       game.getPlayers()),
                 () -> assertSame(board,         game.getBoard()),
-                () -> assertFalse(game.isInitialized()),
+                () -> assertTrue(game.isInitialized()),
                 () -> assertTrue(game.getCurrentPlayer().isEmpty())
         );
     }

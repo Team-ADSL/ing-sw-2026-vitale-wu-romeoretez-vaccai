@@ -4,8 +4,8 @@ import org.example.shared.enums.Row;
 
 public class Move {
 
-    private int rowIndex;
-    private Row row;
+    private final int rowIndex;
+    private final Row row;
 
     public Move(int rowIndex, Row row) {
         this.rowIndex = rowIndex;

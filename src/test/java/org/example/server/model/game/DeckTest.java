@@ -43,10 +43,10 @@ public class DeckTest {
     void testAddTailCardIncreasesSize() {
         // size should grow after each add
         deck.addTailCard(card1);
-        assertEquals(1, deck.getCards().size());
+        assertEquals(1, deck.cards().size());
 
         deck.addTailCard(card2);
-        assertEquals(2, deck.getCards().size());
+        assertEquals(2, deck.cards().size());
     }
 
     @Test
@@ -54,7 +54,7 @@ public class DeckTest {
         // card should be added at the end of the deck
         deck.addTailCard(card1);
         deck.addTailCard(card2);
-        assertEquals(card2, deck.getCards().getLast());
+        assertEquals(card2, deck.cards().getLast());
     }
 
     // --- addTailCards() tests ---
@@ -64,7 +64,7 @@ public class DeckTest {
         // all cards in the list should be added
         ArrayList<Card> list = new ArrayList<>(List.of(card1, card2, card3));
         deck.addTailCards(list);
-        assertEquals(3, deck.getCards().size());
+        assertEquals(3, deck.cards().size());
     }
 
     @Test
@@ -72,9 +72,9 @@ public class DeckTest {
         // cards should be added in the same order as the input list
         ArrayList<Card> list = new ArrayList<>(List.of(card1, card2, card3));
         deck.addTailCards(list);
-        assertEquals(card1, deck.getCards().get(0));
-        assertEquals(card2, deck.getCards().get(1));
-        assertEquals(card3, deck.getCards().get(2));
+        assertEquals(card1, deck.cards().get(0));
+        assertEquals(card2, deck.cards().get(1));
+        assertEquals(card3, deck.cards().get(2));
     }
 
     // --- drawCard() tests ---
@@ -116,7 +116,7 @@ public class DeckTest {
         ArrayList<Set<Card>> eras = new ArrayList<>(List.of(era1, era2, era3));
         Deck created = Deck.createDeck(eras);
 
-        assertEquals(3, created.getCards().size());
+        assertEquals(3, created.cards().size());
     }
 
     @Test

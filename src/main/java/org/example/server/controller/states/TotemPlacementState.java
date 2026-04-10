@@ -3,6 +3,7 @@ package org.example.server.controller.states;
 import org.example.server.controller.GameController;
 import org.example.server.network.VirtualClient;
 import org.example.shared.enums.Phase;
+import org.example.shared.enums.Row;
 import org.example.shared.network.requests.MakeMoveRequest;
 import org.example.shared.utils.Move;
 import org.example.server.exceptions.InvalidRequestException;
@@ -22,7 +23,7 @@ public class TotemPlacementState extends ControllerState {
 
     @Override
     public void visit(MakeMoveRequest req, VirtualClient virtualClient) throws InvalidRequestException {
-        Player reqPlayer = controlIfPlayerTurn(req, virtualClient);
+        Player reqPlayer = controlIfPlayerTurn(virtualClient);
 
         Set<Move> moves = req.getMoves();
         if(moves.size() != 1){
@@ -30,14 +31,17 @@ public class TotemPlacementState extends ControllerState {
         }
 
         Move currentMove = moves.stream().findFirst().get();
+        if(!currentMove.getRow().equals(Row.OFFER)){
+            throw new InvalidRequestException("Invalid input, you need to choose a tile from the offer track.");
+        }
         execute(currentMove, reqPlayer);
     }
 
     public void execute(Move move, Player p) {
-        OrderTile orderTile = getGame().getBoard().getOrderTile();
+        OrderTile orderTile = getGame().getBoard().orderTile();
         orderTile.removePlayer(p);
 
-        OfferTrack offerTrack = getGame().getBoard().getOfferTrack();
+        OfferTrack offerTrack = getGame().getBoard().offerTrack();
         offerTrack.placeInOfferTile(p, move.getRowIndex());
 
         setNextState(calcNextState());
@@ -49,7 +53,7 @@ public class TotemPlacementState extends ControllerState {
         if(isToStop()){
             return new RecoverState(getGame(), getContext());
         }
-        OrderTile orderTile = getGame().getBoard().getOrderTile();
+        OrderTile orderTile = getGame().getBoard().orderTile();
         int orderIndex = 0;
         while(orderTile.getPlayerAt(orderIndex).isEmpty()){
             orderIndex++;

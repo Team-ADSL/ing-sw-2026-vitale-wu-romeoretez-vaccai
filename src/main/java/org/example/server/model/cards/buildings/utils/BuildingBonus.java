@@ -12,17 +12,17 @@ public class BuildingBonus {
     private boolean bonusFoodTile;
     private boolean doubleRitualPP;
 
-    public BuildingBonus(int extraStars, int shamanMulitiplierPP, int builderMultiplierPP, int sustenanceDiscount, boolean huntEventBonus, boolean extraMove, boolean noRitualLostPP, boolean artistFood, boolean bonusFoodTile) {
-        this.extraStars = extraStars;
-        this.shamanMulitiplierPP = shamanMulitiplierPP;
-        this.builderMultiplierPP = builderMultiplierPP;
-        this.sustenanceDiscount = sustenanceDiscount;
-        this.huntEventBonus = huntEventBonus;
-        this.extraMove = extraMove;
-        this.noRitualLostPP = noRitualLostPP;
-        this.artistFood = artistFood;
-        this.bonusFoodTile = bonusFoodTile;
-        this.doubleRitualPP = doubleRitualPP;
+    public BuildingBonus() {
+        this.extraStars = 0;
+        this.shamanMulitiplierPP = 1;
+        this.builderMultiplierPP = 1;
+        this.sustenanceDiscount = 0;
+        this.huntEventBonus = false;
+        this.extraMove = false;
+        this.noRitualLostPP = false;
+        this.artistFood = false;
+        this.bonusFoodTile = false;
+        this.doubleRitualPP = false;
     }
 
     public void reset() {
