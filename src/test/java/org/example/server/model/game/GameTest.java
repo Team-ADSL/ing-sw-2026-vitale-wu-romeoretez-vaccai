@@ -21,7 +21,8 @@ public class GameTest {
         Set<Card> era1 = new HashSet<>();
         for (int i = 0; i < 5; i++) era1.add(new FakeCard());
         ArrayList<Set<Card>> cards = new ArrayList<>(List.of(era1));
-        return new Board(3, 3, 6, 6, offerTrack, orderTile, cards);
+        Deck deck = Deck.createDeck(cards);
+        return new Board(3, 3, 6, 6, offerTrack, orderTile, deck);
     }
 
     private Set<Player> buildPlayers() {

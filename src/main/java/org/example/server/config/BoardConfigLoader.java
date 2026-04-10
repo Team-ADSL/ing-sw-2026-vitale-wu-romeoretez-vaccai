@@ -13,4 +13,5 @@ public interface BoardConfigLoader {
     OfferTrack getOfferTrack(int numPlayers);
     OrderTile getOrderTile(int numPlayers);
     Set<Building> getBuildings();
+    GameSettings getSettings(int numPlayers);
 }

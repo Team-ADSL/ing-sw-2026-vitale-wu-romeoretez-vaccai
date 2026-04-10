@@ -5,11 +5,12 @@ import org.example.shared.enums.Trigger;
 import org.example.server.model.Player;
 import org.example.shared.model.CardDTO;
 
+import java.io.Serializable;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-public abstract class Card {
+public abstract class Card implements Serializable {
 
     private final String id;
     private final int era;

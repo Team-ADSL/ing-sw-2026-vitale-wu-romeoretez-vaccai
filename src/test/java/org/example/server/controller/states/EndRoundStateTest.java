@@ -59,10 +59,11 @@ public class EndRoundStateTest {
         for (int i = 0; i < 15; i++) era1.add(fakeCard(1));
         ArrayList<Set<Card>> deckCards = new ArrayList<>(List.of(era1));
 
+        Deck deck = Deck.createDeck(deckCards);
         Board board = new Board(3, 3, 6, 6,
                 new OfferTrack(new ArrayList<>()),
                 new OrderTile(new ArrayList<>()),
-                deckCards);
+                deck);
         game.setBoard(board);
 
         GameController controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);

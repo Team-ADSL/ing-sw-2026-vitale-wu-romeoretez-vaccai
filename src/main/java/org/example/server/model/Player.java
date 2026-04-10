@@ -7,22 +7,23 @@ import org.example.shared.enums.Totem;
 import org.example.shared.model.CardDTO;
 import org.example.shared.model.PlayerDTO;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class Player {
+public class Player implements Serializable {
     private final String name;
     private int food;
     private int pp;
     private Totem color;
     private final Map<CardType, Set<Card>> cards;
-    private final BuildingBonus buildingBonus;
-    private Card lastPick; // For SinceBuild building (see activeEffect)
-    private boolean isActive;
 
+    private transient Card lastPick; // For SinceBuild building (see activeEffect)
+    private transient boolean isActive;
+    private final transient BuildingBonus buildingBonus;
 
     public Player(String name) {
         this.name = name;

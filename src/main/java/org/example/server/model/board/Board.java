@@ -11,9 +11,9 @@ import java.util.stream.Collectors;
 public record Board(CardRow lowRow, CardRow topRow, OfferTrack offerTrack, OrderTile orderTile,
                     ArrayList<Set<Card>> remainingBuildings, Deck deck) implements Serializable {
     public Board(int numLowCard, int numLowTribeCards, int numTopCard, int numTopTribeCards,
-                 OfferTrack offerTrack, OrderTile orderQueue,
-                 ArrayList<Set<Card>> cards) {
-        this(new CardRow(numLowCard, numLowTribeCards), new CardRow(numTopCard, numTopTribeCards), offerTrack, orderQueue, new ArrayList<>(), Deck.createDeck(cards));
+                 OfferTrack offerTrack, OrderTile orderQueue, Deck deck) {
+        this(new CardRow(numLowCard, numLowTribeCards), new CardRow(numTopCard, numTopTribeCards),
+                offerTrack, orderQueue, new ArrayList<>(), deck);
     }
 
     public BoardDTO createDTO() {

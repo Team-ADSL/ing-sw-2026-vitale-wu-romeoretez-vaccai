@@ -4,7 +4,6 @@ import org.example.server.config.BoardConfigLoader;
 import org.example.server.config.JsonBoardConfigLoader;
 import org.example.server.controller.GameController;
 import org.example.server.controller.ServerController;
-import org.example.server.model.EndGameObserver;
 import org.example.server.model.Game;
 import org.example.server.persistence.GameDAO;
 import org.example.server.persistence.GamePersistenceManager;
