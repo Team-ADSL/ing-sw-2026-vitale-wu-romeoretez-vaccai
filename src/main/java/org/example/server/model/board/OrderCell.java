@@ -2,9 +2,10 @@ package org.example.server.model.board;
 
 import org.example.server.model.Player;
 
+import java.io.Serializable;
 import java.util.Optional;
 
-public class OrderCell {
+public class OrderCell implements Serializable {
     private Player player;
     private final int bonus;
     private final boolean isMalus;

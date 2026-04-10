@@ -24,8 +24,6 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class LobbyStateTest {
-
-    private static final EndGameObserver NO_OP_END = (id, r) -> {};
     private static final GamePersistenceManager NO_OP_PERSISTENCE = new GamePersistenceManager() {
         @Override public List<Game> recoverGames() { return List.of(); }
         @Override public void removeGame(int id) {}
@@ -58,7 +56,7 @@ public class LobbyStateTest {
     void setUp() {
         BoardConfigLoader loader = new JsonBoardConfigLoader();
         serverController = new ServerController(NO_OP_DAO, loader, NO_OP_PERSISTENCE);
-        game = new Game(1, 2, NO_OP_END);
+        game = new Game(1, 2);
         controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
         state = new LobbyState(game, controller);
     }

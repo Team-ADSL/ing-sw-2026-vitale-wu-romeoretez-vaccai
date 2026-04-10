@@ -2,7 +2,7 @@ package org.example.server.model.game;
 import org.example.server.model.Player;
 import org.example.server.model.board.OrderCell;
 import org.example.server.model.board.OrderTile;
-import org.example.shared.enums.Color;
+import org.example.shared.enums.Totem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
@@ -17,8 +17,8 @@ public class OrderTileTest {
     @BeforeEach
     void setUp() {
         // Arrange - create two empty cells and one tile
-        gianpaolo = new Player("Gianpaolo", 3, 0, Color.RED, new java.util.HashMap<>());
-        gianpiero = new Player("Gianpiero", 2, 0, Color.BLUE, new java.util.HashMap<>());
+        gianpaolo = new Player("Gianpaolo", 3, 0, Totem.RED, new java.util.HashMap<>());
+        gianpiero = new Player("Gianpiero", 2, 0, Totem.BLUE, new java.util.HashMap<>());
 
         ArrayList<OrderCell> cells = new ArrayList<>();
         cells.add(new OrderCell(null, 1, false));
@@ -81,8 +81,8 @@ public class OrderTileTest {
         // should throw when all cells are occupied
         orderTile.placePlayerAtNext(gianpaolo);
         orderTile.placePlayerAtNext(gianpiero);
-        orderTile.placePlayerAtNext(new Player("Gianluca", 1, 0, Color.YELLOW, new java.util.HashMap<>()));
-        assertThrows(IndexOutOfBoundsException.class, () -> orderTile.placePlayerAtNext(new Player("Bowser", 1, 0, Color.WHITE, new java.util.HashMap<>())));
+        orderTile.placePlayerAtNext(new Player("Gianluca", 1, 0, Totem.YELLOW, new java.util.HashMap<>()));
+        assertThrows(IndexOutOfBoundsException.class, () -> orderTile.placePlayerAtNext(new Player("Bowser", 1, 0, Totem.WHITE, new java.util.HashMap<>())));
     }
 
     // --- getCellAt() tests ---

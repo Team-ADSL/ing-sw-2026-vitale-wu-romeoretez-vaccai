@@ -2,7 +2,6 @@ package org.example.server.model.cards.characters;
 
 import org.example.server.model.cards.Card;
 import org.example.shared.enums.CardType;
-import org.example.shared.enums.Color;
 import org.example.server.model.Player;
 import org.example.shared.enums.Icon;
 import org.junit.jupiter.api.Test;

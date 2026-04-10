@@ -1,12 +1,14 @@
 package org.example.server.model.board;
 
 import org.example.server.model.Player;
+import org.example.shared.enums.Totem;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Optional;
+import java.io.Serializable;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
-public class OrderTile {
+public class OrderTile implements Serializable {
     private final ArrayList<OrderCell> orderQueue;
 
     public OrderTile(ArrayList<OrderCell> orderQueue) {
@@ -15,6 +17,13 @@ public class OrderTile {
 
     public Optional<Player> getPlayerAt(int i){
         return orderQueue.get(i).getPlayer();
+    }
+
+    public void placePlayersRandom(Set<Player> players){
+        List<Player> shuffledPlayers = new ArrayList<>(players);
+        Collections.shuffle(shuffledPlayers);
+        IntStream.range(0, shuffledPlayers.size())
+                .forEach(i -> orderQueue.get(i).setPlayer(shuffledPlayers.get(i)));
     }
 
     public int placePlayerAtNext(Player p){
@@ -37,10 +46,16 @@ public class OrderTile {
         }
     }
 
+    public ArrayList<Totem> createDTO(){
+        return (ArrayList<Totem>) orderQueue.stream()
+                .map(tile -> tile.getPlayer().orElse(null))
+                .map(p -> p != null ? p.getColor() : null)
+                .collect(Collectors.toList());
+    }
+
     public OrderCell getCellAt(int i){
         return orderQueue.get(i);
     }
-
 
     public int size(){
         return orderQueue.size();

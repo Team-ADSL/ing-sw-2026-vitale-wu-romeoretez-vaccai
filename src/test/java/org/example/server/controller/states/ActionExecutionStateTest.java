@@ -31,7 +31,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ActionExecutionStateTest {
 
-    private static final EndGameObserver NO_OP_END = (id, r) -> {};
     private static final GamePersistenceManager NO_OP_PERSISTENCE = new GamePersistenceManager() {
         @Override public List<Game> recoverGames() { return List.of(); }
         @Override public void removeGame(int id) {}
@@ -68,7 +67,7 @@ public class ActionExecutionStateTest {
         BoardConfigLoader loader = new JsonBoardConfigLoader();
         serverController = new ServerController(NO_OP_DAO, loader, NO_OP_PERSISTENCE);
 
-        game = new Game(1, 5, NO_OP_END);
+        game = new Game(1, 5);
         p1 = new Player("p1");
         p2 = new Player("p2");
         game.getPlayers().add(p1);
@@ -99,7 +98,7 @@ public class ActionExecutionStateTest {
                 offerTrack,
                 orderTile,
                 new ArrayList<>(),
-                new ArrayList<>()
+                new Deck(new ArrayList<>())
         );
         game.setBoard(board);
         game.setCurrentPlayer(p1);

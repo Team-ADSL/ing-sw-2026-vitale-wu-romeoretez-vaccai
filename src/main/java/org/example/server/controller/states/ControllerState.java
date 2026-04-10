@@ -10,7 +10,6 @@ import org.example.server.model.Game;
 
 import java.util.Optional;
 
-
 public abstract class ControllerState implements RequestVisitor<VirtualClient> {
     private final Game game;
     private final GameController context;
@@ -32,46 +31,44 @@ public abstract class ControllerState implements RequestVisitor<VirtualClient> {
         return this;
     }
 
-    public Player controlIfPlayerTurn(ClientRequest req, VirtualClient virtualClient) throws InvalidRequestException{
-        Optional<Player> reqPlayer = getGame().getPlayers().stream()
+    // Called only in non-automatic states
+    public Player controlIfPlayerTurn(VirtualClient virtualClient) throws InvalidRequestException{
+        Player reqPlayer = getGame().getPlayers().stream()
                 .filter(p -> p.getName().equals(virtualClient.getClientUsername()))
-                .findFirst();
-        if(reqPlayer.isEmpty()){
-            throw new InvalidRequestException("Player not in current game");
-        }
+                .findFirst()
+                .orElseThrow(() -> new InvalidRequestException("Player not in current game"));
 
         Optional<Player> currentPlayerContainer = getGame().getCurrentPlayer();
-        assert currentPlayerContainer.isPresent(); // Setted on creation
-        if(!currentPlayerContainer.get().equals(reqPlayer.get()) ) {
+        assert currentPlayerContainer.isPresent(); // Setted on creation in every non-automatic state
+        if(!currentPlayerContainer.get().equals(reqPlayer) ) {
             throw new InvalidRequestException("The current player is " + currentPlayerContainer.get().getName());
         }
-
-        return reqPlayer.get();
+        return reqPlayer;
     }
 
     @Override
     public void visit(ClientConnection req, VirtualClient virtualClient) throws InvalidRequestException {
-        throw new InvalidRequestException("New connection not allowed:");
+        throw new InvalidRequestException("New connection rejected.");
     }
     @Override
     public void visit(SetUsernameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
-        throw new InvalidRequestException("You can't change username here:");
+        throw new InvalidRequestException("Username setting rejected.");
     }
     @Override
     public void visit(CreateGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
-        throw new InvalidRequestException("Create game request rejected:");
+        throw new InvalidRequestException("Create game request rejected.");
     }
     @Override
     public void visit(EnterGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
-        throw new InvalidRequestException("Connection rejected:");
+        throw new InvalidRequestException("Connection rejected.");
     }
     @Override
     public void visit(StartGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
-        throw new InvalidRequestException("Start request rejected:");
+        throw new InvalidRequestException("Start request rejected.");
     }
     @Override
     public void visit(MakeMoveRequest req, VirtualClient virtualClient) throws InvalidRequestException {
-        throw new InvalidRequestException("Move request rejected:");
+        throw new InvalidRequestException("Move request rejected.");
     }
     @Override
     public void visit(ClientDisconnected req, VirtualClient virtualClient) throws InvalidRequestException {

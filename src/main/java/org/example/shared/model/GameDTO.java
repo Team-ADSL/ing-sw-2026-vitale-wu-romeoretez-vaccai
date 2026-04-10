@@ -11,7 +11,6 @@ public record GameDTO (
         int round,
         int era,
         Set<PlayerDTO> players,
-        PlayerDTO currentPlayer,
         BoardDTO board,
         Phase phase
 ) implements Serializable { }

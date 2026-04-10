@@ -3,6 +3,7 @@ package org.example.server.model.cards;
 import org.example.shared.enums.CardType;
 import org.example.shared.enums.Trigger;
 import org.example.server.model.Player;
+import org.example.shared.model.CardDTO;
 
 import java.util.Map;
 import java.util.Optional;
@@ -24,14 +25,16 @@ public abstract class Card {
     public abstract void insert(Map<CardType, Set<Card>> cards);
     public abstract void activeEffect(Set<Player> players, Trigger t);
 
+    public CardDTO createDTO(){
+        return new CardDTO(id);
+    }
+
     public String getId() {
         return id;
     }
-
     public int getEra() {
         return era;
     }
-
     public Optional<Integer> getNumPlayers() {
         return Optional.ofNullable(numPlayers);
     }

@@ -1,81 +1,95 @@
 package org.example.server.model.board;
+
 import org.example.server.model.cards.Card;
+import org.example.shared.model.CardDTO;
+
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-public class CardRow {
-    private final Card[] cards;
+public class CardRow implements Serializable {
+    private final ArrayList<Card> cards;
     private final int numTribeCards;
 
-    public CardRow(Card[] cards, int numTribeCards) {
+    public CardRow(ArrayList<Card> cards, int numTribeCards) {
         this.cards = cards;
         this.numTribeCards = numTribeCards;
     }
 
     public CardRow(int numCard, int numTribeCards) {
-        this.cards = new Card[numCard];
+        this.cards = new ArrayList<>(numCard);
+        for (int i = 0; i < numCard; i++) cards.add(null);
         this.numTribeCards = numTribeCards;
     }
 
     public int size(){
-        return cards.length;
+        return cards.size();
     }
 
     public Card pickCardAt(int index){
-        Card toReturn = cards[index];
-        cards[index] = null;
+        Card toReturn = cards.get(index);
+        cards.set(index, null);
         return toReturn;
     }
 
     public void add(Card card) {
-        for (int i = 0; i < cards.length; i++) {
-            if (cards[i] == null) {
-                cards[i] = card;
+        for (int i = 0; i < cards.size(); i++) {
+            if (cards.get(i) == null) {
+                cards.set(i, card);
                 return;
             }
         }
     }
 
-    public Card[] getTribeCards() {
-        Card[] cardToReturn = new Card[numTribeCards];
-        System.arraycopy(cards, 0, cardToReturn, 0, numTribeCards);
-        return cardToReturn;
+    public ArrayList<Card> getTribeCards() {
+        return cards.stream()
+                .limit(numTribeCards)
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    public void addTribeCards(Card[] newCards) {
-        System.arraycopy(newCards, 0, cards, 0, numTribeCards);
+    public void addTribeCards(ArrayList<Card> newCards) {
+        for(int i=0; i < numTribeCards; i++){
+            cards.set(i, newCards.get(i));
+        }
     }
 
     public void clearTribeCards(){
         for (int i = 0; i < numTribeCards; i++) {
-            cards[i] = null;
+            cards.set(i, null);
         }
     }
 
     public Set<Card> getBuildings(){
         Set<Card> buildings = new HashSet<>();
-        for (int i = numTribeCards; i < cards.length; i++) {
-            if(cards[i] != null){
-                buildings.add(cards[i]);
+        for (int i = numTribeCards; i < cards.size(); i++) {
+            Card newCard = cards.get(i);
+            if(newCard != null){
+                buildings.add(newCard);
             }
         }
         return buildings;
     }
 
-    public void addBuildings(Set<Card> newCards) {
-        int i = numTribeCards;
-        for(Card c : newCards){
-            while(cards[i] != null){
-                i++;
-            }
-            cards[i] = c;
+    public void clearBuildings(){
+        for (int i = numTribeCards; i < cards.size(); i++) {
+            cards.set(i, null);
         }
     }
 
-    public void clearBuildings(){
-        for (int i = numTribeCards; i < cards.length; i++) {
-            cards[i] = null;
+    public void addBuildings(Set<Card> newCards) {
+        int i = numTribeCards;
+        for(Card c : newCards){
+            cards.set(i, c);
+            i++;
         }
+    }
+
+    public ArrayList<CardDTO> createDTO(){
+        return  (ArrayList<CardDTO>) cards.stream()
+                .map(Card::createDTO)
+                .collect(Collectors.toList());
     }
 
     public int getNumTribeCard() {

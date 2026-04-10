@@ -105,13 +105,20 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
 
     public void createGame(CreateGameRequest req, VirtualClient virtualClient){
         try{
+            if(req.getNumPlayer() < 2 || req.getNumPlayer() > 5 ){
+                throw new Exception("Minimum players: 2; Maximum players: 5.");
+            }
+
             int newId =  gameDAO.createMatch();
-            Game newGame = new Game(newId, req.getNumPlayer(), this);
-            GameController newGameController = new GameController(boardConfigLoader, gamePersistenceManager,gameDAO);
+            Game newGame = new Game(newId, req.getNumPlayer());
+            newGame.addObserver(this);
+
+            GameController newGameController = new GameController(boardConfigLoader, gamePersistenceManager, gameDAO);
             newGameController.setState(new InitGameState(newGame, newGameController));
             synchronized (games){
                 games.put(newId, newGameController);
             }
+
             EnterGameRequest newReq = new EnterGameRequest(newId);
             newGameController.handleClientRequest(newReq, virtualClient);
         } catch (Exception e){
@@ -138,6 +145,8 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         try{
             List<Game> gamesLoaded = gamePersistenceManager.recoverGames();
             gamesLoaded.forEach(g -> {
+                g.getPlayers().forEach(p -> p.setActive(false));
+                g.addObserver(this);
                 GameController gc = new GameController(boardConfigLoader, gamePersistenceManager, gameDAO);
                 games.put(g.getGameId(), gc);
                 ControllerState state = new RecoverState(g, gc);

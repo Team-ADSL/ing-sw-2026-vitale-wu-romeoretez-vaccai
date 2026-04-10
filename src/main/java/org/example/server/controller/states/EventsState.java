@@ -7,6 +7,7 @@ import org.example.shared.enums.Trigger;
 import org.example.server.model.Game;
 import org.example.server.model.Player;
 
+import java.util.ArrayList;
 import java.util.Set;
 
 public class EventsState extends ControllerState {
@@ -18,7 +19,7 @@ public class EventsState extends ControllerState {
     @Override
     public ControllerState onEntry(){
         Set<Player> players = getGame().getPlayers();
-        Card[] cards = getGame().getBoard().getLowRow().getTribeCards();
+        ArrayList<Card> cards = getGame().getBoard().lowRow().getTribeCards();
         for(Card c : cards){
             if(c != null){
                 c.activeEffect(players, Trigger.EVENT_EXECUTION);
@@ -31,7 +32,7 @@ public class EventsState extends ControllerState {
 
     @Override
     public ControllerState calcNextState() {
-        if(getGame().getRound() == 10){
+        if(getGame().getRound() != 10){
             getGame().setPhase(Phase.END_ROUND);
             return new EndRoundState(getGame(), getContext());
         } else {

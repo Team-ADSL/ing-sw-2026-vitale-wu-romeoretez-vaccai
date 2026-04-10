@@ -23,32 +23,42 @@ public class ExtraMoveState extends ControllerState {
         super(game, context);
     }
 
-    // NEED TO HANDLE IF PLAYER DON'T WANT TO PERFORM THE ADDITIONAL PICK
+    @Override
+    public ControllerState onEntry(){
+        setNextState(calcNextState());
+        return getNextState();
+    }
+
     @Override
     public void visit(MakeMoveRequest req, VirtualClient virtualClient) throws InvalidRequestException {
-        Player reqPlayer = controlIfPlayerTurn(req, virtualClient);
+        Player reqPlayer = controlIfPlayerTurn(virtualClient);
 
         Set<Move> moves = req.getMoves();
-        if(moves.size() != 1){
-            throw new InvalidRequestException("Invalid input, only 1 move allowed");
+        if(moves.size() > 1){
+            throw new InvalidRequestException("Invalid input, only 0 or 1 move allowed");
         }
 
-        Move currentMove = moves.stream().findFirst().get();
-        if(currentMove.getRow() != Row.UPPER){
-            throw new InvalidRequestException("Allowed only picking from TopRow");
-        }
+        if(moves.isEmpty()){
+            setNextState(calcNextState());
+            getGame().sendUpdateGame();
+        } else {
+            Move currentMove = moves.stream().findFirst().get();
+            if(currentMove.getRow() != Row.UPPER){
+                throw new InvalidRequestException("Allowed only picking from TopRow");
+            }
 
-        CardRow selectedRow = getGame().getBoard().getTopRow();
-        Card selectedCard = selectedRow.pickCardAt(currentMove.getRowIndex());
-        if(!selectedCard.canBeDrawn(reqPlayer)){
-            throw new InvalidRequestException("Invalid picking: selected card cannot be picked");
-        }
+            CardRow selectedRow = getGame().getBoard().topRow();
+            Card selectedCard = selectedRow.pickCardAt(currentMove.getRowIndex());
+            if(!selectedCard.canBeDrawn(reqPlayer)){
+                throw new InvalidRequestException("Invalid picking: selected card cannot be picked");
+            }
 
-        execute(currentMove, reqPlayer);
+            execute(currentMove, reqPlayer);
+        }
     }
 
     public void execute(Move move, Player p) {
-        CardRow selectedRow = getGame().getBoard().getTopRow();
+        CardRow selectedRow = getGame().getBoard().topRow();
         Card selectedCard = selectedRow.pickCardAt(move.getRowIndex());
         selectedCard.insert(p.getCards());
         setNextState(calcNextState());

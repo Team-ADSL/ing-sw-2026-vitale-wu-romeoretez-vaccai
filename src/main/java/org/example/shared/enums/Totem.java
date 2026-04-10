@@ -1,6 +1,6 @@
 package org.example.shared.enums;
 
-public enum Color {
+public enum Totem {
     RED,
     WHITE,
     BLACK,

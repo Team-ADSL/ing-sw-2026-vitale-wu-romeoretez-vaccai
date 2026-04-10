@@ -11,52 +11,7 @@ public class BuildingBonusTest {
 
     @BeforeEach
     void setUp() {
-        bonus = new BuildingBonus(2, 3, 2, 1, true, true, true, true, true);
-    }
-
-    @Test
-    void constructor_setsExtraStars() {
-        assertEquals(2, bonus.getExtraStars());
-    }
-
-    @Test
-    void constructor_setsShamanMultiplier() {
-        assertEquals(3, bonus.getShamanMulitiplierPP());
-    }
-
-    @Test
-    void constructor_setsBuilderMultiplier() {
-        assertEquals(2, bonus.getBuilderMultiplierPP());
-    }
-
-    @Test
-    void constructor_setsSustenanceDiscount() {
-        assertEquals(1, bonus.getSustenanceDiscount());
-    }
-
-    @Test
-    void constructor_setsHuntEventBonus() {
-        assertTrue(bonus.isHuntEventBonus());
-    }
-
-    @Test
-    void constructor_setsExtraMove() {
-        assertTrue(bonus.isExtraMove());
-    }
-
-    @Test
-    void constructor_setsNoRitualLostPP() {
-        assertTrue(bonus.isNoRitualLostPP());
-    }
-
-    @Test
-    void constructor_setsArtistFood() {
-        assertTrue(bonus.isArtistFood());
-    }
-
-    @Test
-    void constructor_setsBonusFoodTile() {
-        assertTrue(bonus.isBonusFoodTile());
+        bonus = new BuildingBonus();
     }
 
     @Test
@@ -98,10 +53,9 @@ public class BuildingBonusTest {
 
     @Test
     void setSustenanceDiscount_accumulates() {
-        BuildingBonus b = new BuildingBonus(0, 1, 1, 0, false, false, false, false, false);
-        b.setSustenanceDiscount(2);
-        b.setSustenanceDiscount(3);
-        assertEquals(5, b.getSustenanceDiscount());
+        bonus.setSustenanceDiscount(2);
+        bonus.setSustenanceDiscount(3);
+        assertEquals(5, bonus.getSustenanceDiscount());
     }
 
     @Test

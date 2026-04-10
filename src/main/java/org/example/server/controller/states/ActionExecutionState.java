@@ -30,9 +30,9 @@ public class ActionExecutionState extends ControllerState {
 
     @Override
     public void visit(MakeMoveRequest req, VirtualClient virtualClient) throws InvalidRequestException {
-        Player reqPlayer = controlIfPlayerTurn(req, virtualClient);
+        Player reqPlayer = controlIfPlayerTurn(virtualClient);
 
-        OfferTrack offerTrack = getGame().getBoard().getOfferTrack();
+        OfferTrack offerTrack = getGame().getBoard().offerTrack();
         int offerIndex = 0;
         while(offerTrack.getTileAt(offerIndex).getPlayer().isEmpty() && offerIndex < offerTrack.size()){
             offerIndex++;
@@ -45,7 +45,7 @@ public class ActionExecutionState extends ControllerState {
                             + ", Allowed: " + remainingMoves);
         }
 
-        OfferTile offerTile = getGame().getBoard().getOfferTrack().getTileAt(offerIndex);
+        OfferTile offerTile = getGame().getBoard().offerTrack().getTileAt(offerIndex);
         Map<Row, Integer> allowedMoves = offerTile.getMoves();
         int numLowDraw = (int) moves.stream().filter(m -> m.getRow() == Row.LOWER).count();
         int numUpDraw = (int) moves.stream().filter(m -> m.getRow() == Row.UPPER).count();
@@ -57,15 +57,17 @@ public class ActionExecutionState extends ControllerState {
         }
 
         for(Move move : moves){
-            CardRow selectedRow = null;
+            CardRow selectedRow;
             if(move.getRow() == Row.UPPER) {
-                selectedRow = getGame().getBoard().getTopRow();
+                selectedRow = getGame().getBoard().topRow();
             } else {
-                selectedRow = getGame().getBoard().getLowRow();
+                selectedRow = getGame().getBoard().lowRow();
             }
             Card selectedCard = selectedRow.pickCardAt(move.getRowIndex());
             if(!selectedCard.canBeDrawn(reqPlayer)){
-                throw new InvalidRequestException("Invalid picking: some selected cards cannot be picked");
+                throw new InvalidRequestException("Invalid picking: " +
+                        "card at " + move.getRow().toString() + " row and index " +
+                        move.getRowIndex() + " cannot be picked");
             }
         }
 
@@ -74,28 +76,30 @@ public class ActionExecutionState extends ControllerState {
 
     private void execute(Set<Move> moves, Player p) {
         for(Move move : moves){
-            CardRow selectedRow = null;
+            CardRow selectedRow;
             if(move.getRow() == Row.UPPER) {
-                selectedRow = getGame().getBoard().getTopRow();
+                selectedRow = getGame().getBoard().topRow();
             } else {
-                selectedRow = getGame().getBoard().getLowRow();
+                selectedRow = getGame().getBoard().lowRow();
             }
             Card selectedCard = selectedRow.pickCardAt(move.getRowIndex());
             selectedCard.insert(p.getCards());
         }
+        OfferTrack offerTrack = getGame().getBoard().offerTrack();
+        offerTrack.removePlayer(p);
         placeTotem(p);
         setNextState(calcNextState());
         getGame().sendUpdateGame();
     }
 
     private void placeTotem(Player p){
-        int i = getGame().getBoard().getOrderTile().placePlayerAtNext(p);
+        int i = getGame().getBoard().orderTile().placePlayerAtNext(p);
 
         // Eventual bonus for totem placement in order tile
         p.getCards().get(CardType.BUILDINGS).forEach(b -> b.activeEffect(Set.of(p),Trigger.END_TURN));
 
         // Set new point/food after player's move
-        OrderCell orderCell = getGame().getBoard().getOrderTile().getCellAt(i);
+        OrderCell orderCell = getGame().getBoard().orderTile().getCellAt(i);
         if(orderCell.getBonus() >= 0){
             p.changeFood(orderCell.getBonus());
             if(p.getBuildingBonus().isBonusFoodTile()){
@@ -115,7 +119,7 @@ public class ActionExecutionState extends ControllerState {
         if(isToStop()){
             return new RecoverState(getGame(), getContext());
         }
-        OfferTrack offerTrack = getGame().getBoard().getOfferTrack();
+        OfferTrack offerTrack = getGame().getBoard().offerTrack();
         int offerIndex = 0;
         while(offerTrack.getTileAt(offerIndex).getPlayer().isEmpty() && offerIndex < offerTrack.size()){
             offerIndex++;
@@ -124,7 +128,12 @@ public class ActionExecutionState extends ControllerState {
         Optional<Player> currPlayer = offerTrack.getTileAt(offerIndex).getPlayer();
         if(currPlayer.isPresent()){
             if(offerTrack.getTileAt(offerIndex).isGivesFood()){
+                // First update model (previous action) and execute the automation after
+                getGame().sendUpdateGame();
+                // Automatic action can be performed
+                getGame().setCurrentPlayer(currPlayer.get());
                 currPlayer.get().changeFood(3);
+                offerTrack.removePlayer(currPlayer.get());
                 placeTotem(currPlayer.get());
                 return calcNextState();
             } else {

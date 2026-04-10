@@ -4,7 +4,6 @@ import org.example.server.model.cards.characters.*;
 import org.example.shared.enums.Icon;
 import org.example.shared.enums.Trigger;
 import org.example.server.model.cards.buildings.utils.BuildingEffect;
-import org.example.shared.enums.Color;
 import org.example.server.model.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

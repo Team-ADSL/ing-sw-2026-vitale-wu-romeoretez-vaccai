@@ -24,8 +24,6 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TotemPlacementStateTest {
-
-    private static final EndGameObserver NO_OP_END = (id, r) -> {};
     private static final GamePersistenceManager NO_OP_PERSISTENCE = new GamePersistenceManager() {
         @Override public List<Game> recoverGames() { return List.of(); }
         @Override public void removeGame(int id) {}
@@ -53,7 +51,7 @@ public class TotemPlacementStateTest {
     @BeforeEach
     void setUp() {
         BoardConfigLoader loader = new JsonBoardConfigLoader();
-        game = new Game(1, 2, NO_OP_END);
+        game = new Game(1, 2);
 
         p1 = new Player("p1");
         p2 = new Player("p2");
@@ -82,7 +80,7 @@ public class TotemPlacementStateTest {
                 offerTrack,
                 orderTile,
                 new ArrayList<>(),
-                new ArrayList<>()
+                new Deck(new ArrayList<>())
         );
         game.setBoard(board);
 

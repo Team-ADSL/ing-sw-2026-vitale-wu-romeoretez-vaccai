@@ -1,7 +1,6 @@
 package org.example.server.model.cards.buildings.forEvent;
 
 import org.example.shared.enums.Trigger;
-import org.example.shared.enums.Color;
 import org.example.server.model.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

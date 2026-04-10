@@ -3,7 +3,7 @@ import org.example.shared.enums.Row;
 import org.example.server.model.Player;
 import org.example.server.model.board.OfferTile;
 import org.example.server.model.board.OfferTrack;
-import org.example.shared.enums.Color;
+import org.example.shared.enums.Totem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
@@ -20,7 +20,7 @@ public class OfferTrackTest {
     void setUp() {
         // Arrange - create two tiles and add them to the track
         tile1 = new OfferTile(
-                new Player("Gianpaolo", 3, 0, Color.RED, new java.util.HashMap<>()),
+                new Player("Gianpaolo", 3, 0, Totem.RED, new java.util.HashMap<>()),
                 Map.of(Row.UPPER, 1),
                 false
         );
@@ -72,7 +72,7 @@ public class OfferTrackTest {
     @Test
     void testPlaceInOfferTileAssignsPlayer() {
         // should assign the player to the tile at the given index
-        Player newPlayer = new Player("Gianpiero", 2, 0, Color.BLUE, new java.util.HashMap<>());
+        Player newPlayer = new Player("Gianpiero", 2, 0, Totem.BLUE, new java.util.HashMap<>());
         offerTrack.placeInOfferTile(newPlayer, 1);
         assertTrue(offerTrack.getTileAt(1).getPlayer().isPresent());
         assertEquals(newPlayer, offerTrack.getTileAt(1).getPlayer().get());
@@ -81,7 +81,7 @@ public class OfferTrackTest {
     @Test
     void testPlaceInOfferTileThrowsOnInvalidIndex() {
         // should throw when index is out of bounds
-        Player newPlayer = new Player("Gianpiero", 2, 0, Color.BLUE, new java.util.HashMap<>());
+        Player newPlayer = new Player("Gianpiero", 2, 0, Totem.BLUE, new java.util.HashMap<>());
         assertThrows(IndexOutOfBoundsException.class, () -> offerTrack.placeInOfferTile(newPlayer, 5));
     }
 }
