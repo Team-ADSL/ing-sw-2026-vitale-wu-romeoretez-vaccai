@@ -47,8 +47,8 @@ public class ActionExecutionState extends ControllerState {
 
         OfferTile offerTile = getGame().getBoard().offerTrack().getTileAt(offerIndex);
         Map<Row, Integer> allowedMoves = offerTile.getMoves();
-        int numLowDraw = (int) moves.stream().filter(m -> m.getRow() == Row.LOWER).count();
-        int numUpDraw = (int) moves.stream().filter(m -> m.getRow() == Row.UPPER).count();
+        int numLowDraw = (int) moves.stream().filter(m -> m.row() == Row.LOWER).count();
+        int numUpDraw = (int) moves.stream().filter(m -> m.row() == Row.UPPER).count();
         if(numUpDraw != allowedMoves.get(Row.UPPER) || numLowDraw != allowedMoves.get(Row.LOWER)){
             throw new InvalidRequestException(
                     "Wrong moves: you can do "
@@ -58,16 +58,16 @@ public class ActionExecutionState extends ControllerState {
 
         for(Move move : moves){
             CardRow selectedRow;
-            if(move.getRow() == Row.UPPER) {
+            if(move.row() == Row.UPPER) {
                 selectedRow = getGame().getBoard().topRow();
             } else {
                 selectedRow = getGame().getBoard().lowRow();
             }
-            Card selectedCard = selectedRow.pickCardAt(move.getRowIndex());
+            Card selectedCard = selectedRow.pickCardAt(move.rowIndex());
             if(!selectedCard.canBeDrawn(reqPlayer)){
                 throw new InvalidRequestException("Invalid picking: " +
-                        "card at " + move.getRow().toString() + " row and index " +
-                        move.getRowIndex() + " cannot be picked");
+                        "card at " + move.row().toString() + " row and index " +
+                        move.rowIndex() + " cannot be picked");
             }
         }
 
@@ -77,12 +77,12 @@ public class ActionExecutionState extends ControllerState {
     private void execute(Set<Move> moves, Player p) {
         for(Move move : moves){
             CardRow selectedRow;
-            if(move.getRow() == Row.UPPER) {
+            if(move.row() == Row.UPPER) {
                 selectedRow = getGame().getBoard().topRow();
             } else {
                 selectedRow = getGame().getBoard().lowRow();
             }
-            Card selectedCard = selectedRow.pickCardAt(move.getRowIndex());
+            Card selectedCard = selectedRow.pickCardAt(move.rowIndex());
             selectedCard.insert(p.getCards());
         }
         OfferTrack offerTrack = getGame().getBoard().offerTrack();
