@@ -1,6 +1,7 @@
 package org.example.server.controller.states;
 
 import org.example.server.config.BoardConfigLoader;
+import org.example.server.config.GameSettings;
 import org.example.server.config.JsonBoardConfigLoader;
 import org.example.server.controller.GameController;
 import org.example.server.model.Game;
@@ -57,11 +58,13 @@ public class InitGameStateTest {
         GameController gc = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
         InitGameState s = new InitGameState(g, gc);
         Deck deck = Deck.createDeck(loader.getCards(numPlayers));
+        GameSettings gameSettings = loader.getSettings(numPlayers);
+        int maxBuildings = s.maxBuildings(gameSettings);
         Board board = new Board(
-                s.calcNumLowCard(numPlayers),
-                s.calcNumLowTribeCard(numPlayers),
-                s.calcNumTopCard(numPlayers),
-                s.calcNumTopTribeCard(numPlayers),
+                gameSettings.numLowTribeCard() + maxBuildings,
+                gameSettings.numLowTribeCard(),
+                gameSettings.numTopTribeCard() + maxBuildings,
+                gameSettings.numTopTribeCard(),
                 loader.getOfferTrack(numPlayers),
                 loader.getOrderTile(numPlayers),
                 deck

@@ -32,13 +32,7 @@ public class InitGameState extends ControllerState {
         int numPlayers = getGame().getPlayers().size();
         BoardConfigLoader loader = getContext().getBoardConfigLoader();
         GameSettings gameSettings = loader.getSettings(numPlayers);
-        int maxBuildings = Stream.of(
-                        gameSettings.numBuildingEra1(),
-                        gameSettings.numBuildingEra2(),
-                        gameSettings.numBuildingEra3()
-                )
-                .max(Integer::compare)
-                .orElse(0);
+        int maxBuildings = maxBuildings(gameSettings);
 
         Board board = new Board(
                 gameSettings.numLowTribeCard() + maxBuildings,
@@ -78,19 +72,14 @@ public class InitGameState extends ControllerState {
         return new TotemPlacementState(getGame(), getContext());
     }
 
-    public int calcNumTopCard(int numPlayer){
-        int maxBuildings = numPlayer == 4 || numPlayer == 5 ? numPlayer : numPlayer + 1;
-        return calcNumTopTribeCard(numPlayer) + maxBuildings;
-    }
-    public int calcNumLowCard(int numPlayer){
-        int maxBuildings = numPlayer == 4 || numPlayer == 5 ? numPlayer : numPlayer + 1;
-        return calcNumLowTribeCard(numPlayer) + maxBuildings;
-    }
-    public int calcNumTopTribeCard(int numPlayer){
-        return numPlayer + 4;
-    }
-    public int calcNumLowTribeCard(int numPlayer){
-        return numPlayer + 1;
+    public int maxBuildings(GameSettings gameSettings){
+        return Stream.of(
+                        gameSettings.numBuildingEra1(),
+                        gameSettings.numBuildingEra2(),
+                        gameSettings.numBuildingEra3()
+                )
+                .max(Integer::compare)
+                .orElse(0);
     }
 
     public void fillLowRow(int numPlayers){
