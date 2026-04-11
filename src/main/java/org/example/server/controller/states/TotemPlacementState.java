@@ -31,7 +31,7 @@ public class TotemPlacementState extends ControllerState {
         }
 
         Move currentMove = moves.stream().findFirst().get();
-        if(!currentMove.getRow().equals(Row.OFFER)){
+        if(!currentMove.row().equals(Row.OFFER)){
             throw new InvalidRequestException("Invalid input, you need to choose a tile from the offer track.");
         }
         execute(currentMove, reqPlayer);
@@ -42,7 +42,7 @@ public class TotemPlacementState extends ControllerState {
         orderTile.removePlayer(p);
 
         OfferTrack offerTrack = getGame().getBoard().offerTrack();
-        offerTrack.placeInOfferTile(p, move.getRowIndex());
+        offerTrack.placeInOfferTile(p, move.rowIndex());
 
         setNextState(calcNextState());
         getGame().sendUpdateGame();

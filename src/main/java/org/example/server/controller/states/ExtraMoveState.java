@@ -43,12 +43,12 @@ public class ExtraMoveState extends ControllerState {
             getGame().sendUpdateGame();
         } else {
             Move currentMove = moves.stream().findFirst().get();
-            if(currentMove.getRow() != Row.UPPER){
+            if(currentMove.row() != Row.UPPER){
                 throw new InvalidRequestException("Allowed only picking from TopRow");
             }
 
             CardRow selectedRow = getGame().getBoard().topRow();
-            Card selectedCard = selectedRow.pickCardAt(currentMove.getRowIndex());
+            Card selectedCard = selectedRow.pickCardAt(currentMove.rowIndex());
             if(!selectedCard.canBeDrawn(reqPlayer)){
                 throw new InvalidRequestException("Invalid picking: selected card cannot be picked");
             }
@@ -59,7 +59,7 @@ public class ExtraMoveState extends ControllerState {
 
     public void execute(Move move, Player p) {
         CardRow selectedRow = getGame().getBoard().topRow();
-        Card selectedCard = selectedRow.pickCardAt(move.getRowIndex());
+        Card selectedCard = selectedRow.pickCardAt(move.rowIndex());
         selectedCard.insert(p.getCards());
         setNextState(calcNextState());
         getGame().sendUpdateGame();
