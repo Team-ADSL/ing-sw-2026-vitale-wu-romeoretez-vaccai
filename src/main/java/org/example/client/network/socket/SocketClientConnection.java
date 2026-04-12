@@ -15,12 +15,13 @@ public class SocketClientConnection implements ServerConnection {
     private ObjectOutputStream out;
     private ObjectInputStream in;
     private AppCoordinator appCoordinator;
-    private boolean isRunning;
+    private volatile boolean isRunning;
 
     @Override
     public void connect(String ip, int port) throws Exception {
         socket = new Socket(ip, port);
         out = new ObjectOutputStream(socket.getOutputStream());
+        out.flush();
         in = new ObjectInputStream(socket.getInputStream());
         isRunning = true;
         new Thread(this::listenToServer).start();
@@ -39,6 +40,12 @@ public class SocketClientConnection implements ServerConnection {
                 ServerResponse disconnection = new ServerDisconnected();
                 disconnection.accept(appCoordinator);
             }
+        } finally {
+            try {
+                terminateResources();
+            } catch(Exception e){
+                System.out.println(e.getMessage());
+            }
         }
     }
 
@@ -51,6 +58,12 @@ public class SocketClientConnection implements ServerConnection {
     @Override
     public void disconnect() throws Exception {
         isRunning = false;
+        terminateResources();
+    }
+
+    private void terminateResources() throws Exception {
+        if (in != null) in.close();
+        if (out != null) out.close();
         if (socket != null && !socket.isClosed()) {
             socket.close();
         }

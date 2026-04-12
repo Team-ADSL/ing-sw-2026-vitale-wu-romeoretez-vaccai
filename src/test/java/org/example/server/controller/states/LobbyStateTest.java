@@ -106,7 +106,7 @@ public class LobbyStateTest {
         state.visit(new EnterGameRequest(1), c);
         assertEquals(1, game.getPlayers().size());
 
-        state.visit(new ClientDisconnected(-1), c);
+        state.visit(new ClientDisconnected(), c);
         assertEquals(0, game.getPlayers().size());
     }
 
@@ -114,7 +114,7 @@ public class LobbyStateTest {
     void clientDisconnected_clearsGameControllerOnClient() throws InvalidRequestException {
         TestVirtualClient c = client("bob");
         state.visit(new EnterGameRequest(1), c);
-        state.visit(new ClientDisconnected(-1), c);
+        state.visit(new ClientDisconnected(), c);
         assertFalse(c.getGameController().isPresent());
     }
 
@@ -122,7 +122,7 @@ public class LobbyStateTest {
     void clientDisconnected_throwsWhenPlayerNotInGame() {
         TestVirtualClient c = client("notInGame");
         // The player was never added — disconnect should throw
-        assertThrows(InvalidRequestException.class, () -> state.visit(new ClientDisconnected(-1), c));
+        assertThrows(InvalidRequestException.class, () -> state.visit(new ClientDisconnected(), c));
     }
 
     // ──────────────────────────────────────────────

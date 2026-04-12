@@ -1,7 +1,6 @@
 package org.example.server.network.socket;
 
 import org.example.server.controller.ServerController;
-import org.example.shared.network.requests.ClientConnection;
 
 import java.io.IOException;
 import java.net.ServerSocket;
