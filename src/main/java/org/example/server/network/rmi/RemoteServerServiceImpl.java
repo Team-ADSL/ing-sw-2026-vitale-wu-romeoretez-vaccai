@@ -3,7 +3,6 @@ package org.example.server.network.rmi;
 import org.example.server.controller.ServerController;
 import org.example.shared.network.remote.RemoteClientStub;
 import org.example.shared.network.remote.RemoteServerService;
-import org.example.shared.network.requests.ClientConnection;
 import org.example.shared.network.requests.ClientRequest;
 
 import java.rmi.RemoteException;
@@ -44,6 +43,7 @@ public class RemoteServerServiceImpl extends UnicastRemoteObject implements Remo
         RMIClientHandler handler = clients.get(clientStub);
         if (handler != null) {
             handler.handleDisconnection();
+            clients.remove(clientStub);
         } else {
             System.err.println("Unregistered client.");
         }

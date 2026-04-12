@@ -78,8 +78,18 @@ public class AppCoordinator implements ResponseVisitor{
         serverConnection.sendRequest(clientRequest);
     }
     public void disconnect() throws Exception {
-        ClientRequest clientRequest = new ClientDisconnected(gameId);
-        serverConnection.sendRequest(clientRequest);
+        try {
+            ClientRequest clientRequest = new ClientDisconnected();
+            serverConnection.sendRequest(clientRequest);
+        } catch (Exception e) {
+            System.err.println("Error sending disconnection message to server");
+        } finally {
+            try {
+                serverConnection.disconnect();
+            } catch (Exception e) {
+                System.err.println("Error during local connection closing.");
+            }
+        }
     }
 
     public void setGameId(int gameId) {

@@ -34,7 +34,7 @@ public abstract class VirtualClient implements GameObserver, HomeObserver, EndGa
     }
 
     public void handleDisconnection() {
-        ClientRequest disconnection = new ClientDisconnected(-1);
+        ClientRequest disconnection = new ClientDisconnected();
         processRequest(disconnection);
     }
 
