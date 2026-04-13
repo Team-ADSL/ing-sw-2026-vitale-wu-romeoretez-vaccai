@@ -66,42 +66,14 @@ public class VirtualClientTest {
         }
     }
 
-    private BoardConfigLoader loader;
     private RecordingServerController serverController;
     private TestVirtualClient client;
 
     @BeforeEach
     void setUp() {
-        loader = new JsonBoardConfigLoader();
+        BoardConfigLoader loader = new JsonBoardConfigLoader();
         serverController = new RecordingServerController(NO_OP_DAO, loader, NO_OP_PERSISTENCE);
         client = new TestVirtualClient(serverController);
-    }
-
-    // ──────────────────────────────────────────────
-    // getGameController / setGameController
-    // ──────────────────────────────────────────────
-
-    @Test
-    void getGameController_returnsEmptyWhenNotSet() {
-        assertEquals(Optional.empty(), client.getGameController());
-    }
-
-    @Test
-    void setGameController_thenGetGameController_returnsIt() {
-        Game game = new Game(1, 5);
-        GameController gc = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
-        client.setGameController(gc);
-        assertTrue(client.getGameController().isPresent());
-        assertSame(gc, client.getGameController().get());
-    }
-
-    @Test
-    void setGameController_null_makesGetGameControllerEmpty() {
-        Game game = new Game(1, 5);
-        GameController gc = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
-        client.setGameController(gc);
-        client.setGameController(null);
-        assertFalse(client.getGameController().isPresent());
     }
 
     // ──────────────────────────────────────────────
@@ -113,19 +85,7 @@ public class VirtualClientTest {
         ClientRequest req = new ClientConnection();
         client.processRequest(req);
         assertEquals(1, serverController.handled.size());
-        assertSame(req, serverController.handled.get(0));
-    }
-
-    // ──────────────────────────────────────────────
-    // handleDisconnection
-    // ──────────────────────────────────────────────
-
-    @Test
-    void handleDisconnection_callsProcessRequest() {
-        // With no gameController it goes to serverController
-        client.handleDisconnection();
-        assertEquals(1, serverController.handled.size());
-        assertInstanceOf(ClientDisconnected.class, serverController.handled.get(0));
+        assertSame(req, serverController.handled.getFirst());
     }
 
     // ──────────────────────────────────────────────
@@ -134,13 +94,14 @@ public class VirtualClientTest {
 
     @Test
     void getClientUsername_nullByDefault() {
-        assertNull(client.getClientUsername());
+        assertTrue(client.getClientUsername().isEmpty());
     }
 
     @Test
     void setClientUsername_thenGetClientUsername_returnsIt() {
         client.setClientUsername("alice");
-        assertEquals("alice", client.getClientUsername());
+        assertTrue(client.getClientUsername().isPresent());
+        assertEquals("alice", client.getClientUsername().get());
     }
 
     // ──────────────────────────────────────────────

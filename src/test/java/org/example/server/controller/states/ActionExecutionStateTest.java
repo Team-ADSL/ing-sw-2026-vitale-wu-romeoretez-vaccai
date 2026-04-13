@@ -4,7 +4,6 @@ import org.example.server.config.BoardConfigLoader;
 import org.example.server.config.JsonBoardConfigLoader;
 import org.example.server.controller.GameController;
 import org.example.server.controller.ServerController;
-import org.example.server.model.EndGameObserver;
 import org.example.server.model.Game;
 import org.example.server.model.Player;
 import org.example.server.model.board.*;
@@ -12,7 +11,7 @@ import org.example.server.network.VirtualClient;
 import org.example.server.persistence.GameDAO;
 import org.example.server.persistence.GamePersistenceManager;
 import org.example.shared.enums.Row;
-import org.example.server.exceptions.InvalidRequestException;
+import org.example.server.exceptions.GameException;
 import org.example.shared.model.GameDTO;
 import org.example.shared.model.MatchResult;
 import org.example.shared.network.requests.MakeMoveRequest;
@@ -164,8 +163,8 @@ public class ActionExecutionStateTest {
                 new Move(0, Row.UPPER),
                 new Move(1, Row.UPPER)
         );
-        MakeMoveRequest req = new MakeMoveRequest(1, twoMoves);
-        assertThrows(InvalidRequestException.class, () -> state.visit(req, client));
+        MakeMoveRequest req = new MakeMoveRequest(twoMoves);
+        assertThrows(GameException.class, () -> state.visit(req, client));
     }
 
     @Test
@@ -173,7 +172,7 @@ public class ActionExecutionStateTest {
         // tile[0] has p1; client username is p2 → not their turn
         TestVirtualClient client = new TestVirtualClient(serverController, "p2");
         Set<Move> moves = Set.of(new Move(0, Row.UPPER));
-        MakeMoveRequest req = new MakeMoveRequest(1, moves);
-        assertThrows(InvalidRequestException.class, () -> state.visit(req, client));
+        MakeMoveRequest req = new MakeMoveRequest(moves);
+        assertThrows(GameException.class, () -> state.visit(req, client));
     }
 }

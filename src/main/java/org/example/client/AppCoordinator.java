@@ -23,7 +23,7 @@ public class AppCoordinator implements ResponseVisitor{
 
     // Handle ServerResponse
     @Override
-    public void visit(SetUsername response) throws InvalidResponseException {
+    public void visit(LoginNeeded response) throws InvalidResponseException {
         gameUI.showUsernameField();
     }
     @Override
@@ -57,24 +57,24 @@ public class AppCoordinator implements ResponseVisitor{
         ClientRequest clientRequest = new ClientConnection();
         serverConnection.sendRequest(clientRequest);
     }
-    public void setUsernameRequest(String username) throws Exception {
-        ClientRequest clientRequest = new SetUsernameRequest(username);
+    public void createLoginRequest(String username) throws Exception {
+        ClientRequest clientRequest = new LoginRequest(username);
         serverConnection.sendRequest(clientRequest);
     }
     public void createGameRequest(int numPlayer) throws Exception {
         ClientRequest clientRequest = new CreateGameRequest(numPlayer);
         serverConnection.sendRequest(clientRequest);
     }
-    public void enterGameRequest() throws Exception {
+    public void enterGameRequest(int gameId) throws Exception {
         ClientRequest clientRequest = new EnterGameRequest(gameId);
         serverConnection.sendRequest(clientRequest);
     }
     public void startGameRequest() throws Exception {
-        ClientRequest clientRequest = new StartGameRequest(gameId);
+        ClientRequest clientRequest = new StartGameRequest();
         serverConnection.sendRequest(clientRequest);
     }
     public void makeMoveRequest(Set<Move> moves) throws Exception {
-        ClientRequest clientRequest = new MakeMoveRequest(gameId, moves);
+        ClientRequest clientRequest = new MakeMoveRequest(moves);
         serverConnection.sendRequest(clientRequest);
     }
     public void disconnect() throws Exception {

@@ -6,7 +6,7 @@ import org.example.shared.enums.Phase;
 import org.example.shared.network.requests.MakeMoveRequest;
 import org.example.shared.utils.Move;
 import org.example.shared.enums.Row;
-import org.example.server.exceptions.InvalidRequestException;
+import org.example.server.exceptions.GameException;
 import org.example.server.model.cards.Card;
 import org.example.shared.enums.CardType;
 import org.example.shared.enums.Trigger;
@@ -29,7 +29,7 @@ public class ActionExecutionState extends ControllerState {
     }
 
     @Override
-    public void visit(MakeMoveRequest req, VirtualClient virtualClient) throws InvalidRequestException {
+    public void visit(MakeMoveRequest req, VirtualClient virtualClient) throws GameException {
         Player reqPlayer = controlIfPlayerTurn(virtualClient);
 
         OfferTrack offerTrack = getGame().getBoard().offerTrack();
@@ -40,7 +40,7 @@ public class ActionExecutionState extends ControllerState {
         int remainingMoves = offerTrack.getTileAt(offerIndex).getNumMoves();
         Set<Move> moves = req.getMoves();
         if(moves.size() != remainingMoves){
-            throw new InvalidRequestException(
+            throw new GameException(
                     "Number of cards mismatch. Requires " + moves.size()
                             + ", Allowed: " + remainingMoves);
         }
@@ -50,7 +50,7 @@ public class ActionExecutionState extends ControllerState {
         int numLowDraw = (int) moves.stream().filter(m -> m.row() == Row.LOWER).count();
         int numUpDraw = (int) moves.stream().filter(m -> m.row() == Row.UPPER).count();
         if(numUpDraw != allowedMoves.get(Row.UPPER) || numLowDraw != allowedMoves.get(Row.LOWER)){
-            throw new InvalidRequestException(
+            throw new GameException(
                     "Wrong moves: you can do "
                             + allowedMoves.get(Row.UPPER) + " draws from the up row and "
                             + allowedMoves.get(Row.LOWER) + " draws from the low row");
@@ -65,7 +65,7 @@ public class ActionExecutionState extends ControllerState {
             }
             Card selectedCard = selectedRow.pickCardAt(move.rowIndex());
             if(!selectedCard.canBeDrawn(reqPlayer)){
-                throw new InvalidRequestException("Invalid picking: " +
+                throw new GameException("Invalid picking: " +
                         "card at " + move.row().toString() + " row and index " +
                         move.rowIndex() + " cannot be picked");
             }
