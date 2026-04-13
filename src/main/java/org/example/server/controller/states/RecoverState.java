@@ -5,7 +5,7 @@ import org.example.server.controller.StateFactory;
 import org.example.server.model.Game;
 import org.example.server.model.Player;
 import org.example.server.network.VirtualClient;
-import org.example.server.exceptions.InvalidRequestException;
+import org.example.server.exceptions.GameException;
 import org.example.shared.network.requests.EnterGameRequest;
 
 
@@ -15,19 +15,22 @@ public class RecoverState extends ControllerState {
     }
 
     @Override
-    public void visit(EnterGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
+    public void visit(EnterGameRequest req, VirtualClient virtualClient) throws GameException {
+        if(virtualClient.getClientUsername().isEmpty()){
+            throw new GameException("Virtual client has no username associated.");
+        }
         Player reqPlayer = getGame().getPlayers().stream()
-                .filter(p -> p.getName().equals(virtualClient.getClientUsername()))
+                .filter(p -> p.getName().equals(virtualClient.getClientUsername().get()))
                 .findFirst()
-                .orElseThrow(() -> new InvalidRequestException("Player not in current game."));
+                .orElseThrow(() -> new GameException("Player not in current game."));
 
         if(reqPlayer.isActive()){
-            throw new InvalidRequestException("Player already connected.");
+            throw new GameException("Player already connected.");
         }
 
         reqPlayer.setActive(true);
         getGame().addVirtualClient(virtualClient);
-        virtualClient.setGameController(getContext());
+        virtualClient.setGameId(getGame().getGameId());
         setNextState(calcNextState());
         getGame().sendUpdateLobby();
     }

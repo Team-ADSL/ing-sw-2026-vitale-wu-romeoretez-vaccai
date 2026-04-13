@@ -10,84 +10,147 @@ import org.example.server.model.Game;
 import org.example.server.model.Home;
 import org.example.server.network.VirtualClient;
 import org.example.server.persistence.GamePersistenceManager;
-import org.example.server.exceptions.InvalidRequestException;
+import org.example.server.exceptions.GameException;
 import org.example.shared.model.MatchResult;
 import org.example.shared.network.requests.RequestVisitor;
 import org.example.shared.network.requests.*;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ServerController implements RequestVisitor<VirtualClient>, EndGameObserver {
     private final Map<Integer, GameController> games;
+    private final Map<String, VirtualClient> userConnected;
     private final Home home;
     private final GameDAO gameDAO;
     private final BoardConfigLoader boardConfigLoader;
     private final GamePersistenceManager gamePersistenceManager;
 
     public ServerController(GameDAO gameDAO, BoardConfigLoader boardConfigLoader, GamePersistenceManager gamePersistenceManager) {
-        this.games = new HashMap<>();
+        this.games = new ConcurrentHashMap<>();
         this.home = new Home();
         this.gameDAO = gameDAO;
         this.boardConfigLoader = boardConfigLoader;
         this.gamePersistenceManager = gamePersistenceManager;
+        this.userConnected = new ConcurrentHashMap<>();
     }
 
     public void handleClientRequest(ClientRequest req, VirtualClient virtualClient){
         try {
             req.accept(this, virtualClient);
             home.update();
-        } catch (Exception e) {
+        } catch (GameException e) {
             System.out.println(e.getMessage());
             virtualClient.sendErrorMessage(e.getMessage());
         }
     }
 
     @Override
-    public void visit(ClientConnection req, VirtualClient virtualClient) throws InvalidRequestException {
-        virtualClient.sendSetUsernameResponse(); // Implicitly confirming connection
+    public void visit(ClientConnection req, VirtualClient virtualClient) throws GameException {
+        virtualClient.sendLoginNeededResponse(); // Implicitly confirming connection
     }
 
     @Override
-    public void visit(SetUsernameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
-        boolean playerAlreadyConnected = false; // To handle?
-        if(playerAlreadyConnected){
+    public void visit(LoginRequest req, VirtualClient virtualClient) throws GameException {
+        if(userConnected.containsKey(req.getUsername())){
             virtualClient.sendErrorMessage("User already connected");
         } else {
+            virtualClient.setConnected(true);
             virtualClient.setClientUsername(req.getUsername());
+            userConnected.put(req.getUsername(), virtualClient);
             home.addObserver(virtualClient);
+            System.out.println("[LOGIN] User connected: " + req.getUsername());
         }
     }
 
     @Override
-    public void visit(CreateGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
-        createGame(req, virtualClient);
+    public void visit(CreateGameRequest req, VirtualClient virtualClient) throws GameException {
+        try{
+            if(req.getNumPlayer() < 2 || req.getNumPlayer() > 5 ){
+                throw new java.lang.Exception("Minimum players: 2; Maximum players: 5.");
+            }
+
+            int newId =  gameDAO.createMatch();
+            Game newGame = new Game(newId, req.getNumPlayer());
+            newGame.addObserver(this);
+
+            GameController newGameController = new GameController(boardConfigLoader, gamePersistenceManager, gameDAO);
+            newGameController.setState(new InitGameState(newGame, newGameController));
+            games.put(newId, newGameController);
+
+            EnterGameRequest newReq = new EnterGameRequest(newId);
+            newGameController.handleClientRequest(newReq, virtualClient);
+            // SEE ENTER GAME
+        } catch (java.lang.Exception e){
+            System.out.println(e.getMessage());
+            virtualClient.sendErrorMessage(e.getMessage());
+        }
     }
 
     @Override
-    public void visit(EnterGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
-        connectToGame(req, virtualClient);
+    public void visit(EnterGameRequest req, VirtualClient virtualClient) throws GameException {
+        try{
+            if(virtualClient.getGameId().isEmpty()){
+                throw new GameException("Virtual client has no gameID associated.");
+            }
+            GameController reqGame = games.get(virtualClient.getGameId().get());
+            if(reqGame != null){
+                reqGame.handleClientRequest(req, virtualClient);
+                // NEED TO REMOVE FROM HOME OBSERVER ONLY IF SUCCESS,
+                // CHANGE EXCEPTION HANDLING
+            } else {
+                throw new GameException("The requested game does not exists.");
+            }
+        } catch (Exception e){
+            System.out.println(e.getMessage());
+            virtualClient.sendErrorMessage(e.getMessage());
+        }
     }
 
     @Override
-    public void visit(ClientDisconnected req, VirtualClient virtualClient) throws InvalidRequestException {
+    public void visit(ClientDisconnected req, VirtualClient virtualClient) throws GameException {
         home.removeObserver(virtualClient);
+        if(virtualClient.getClientUsername().isEmpty()){
+            throw new GameException("Virtual client has no username associated.");
+        } else {
+            Optional<Integer> gameID = virtualClient.getGameId();
+            if(gameID.isPresent()){
+                GameController gc = games.get(gameID.get());
+                gc.handleClientRequest(req, virtualClient);
+            }
+            virtualClient.setConnected(false);
+            userConnected.remove(virtualClient.getClientUsername().get());
+        }
     }
 
     @Override
-    public void visit(StartGameRequest req, VirtualClient virtualClient) throws InvalidRequestException {
-        throw new InvalidRequestException("Server received invalid request");
+    public void visit(StartGameRequest req, VirtualClient virtualClient) throws GameException {
+        if(virtualClient.getGameId().isEmpty()){
+            throw new GameException("Virtual client has no gameID associated.");
+        }
+        sendToGameController(virtualClient.getGameId().get(), req, virtualClient);
     }
 
     @Override
-    public void visit(MakeMoveRequest req, VirtualClient virtualClient) throws InvalidRequestException {
-        throw new InvalidRequestException("Server received invalid request");
+    public void visit(MakeMoveRequest req, VirtualClient virtualClient) throws GameException {
+        if(virtualClient.getGameId().isEmpty()) {
+            throw new GameException("Virtual client has no gameID associated.");
+        }
+        sendToGameController(virtualClient.getGameId().get(), req, virtualClient);
+    }
+
+    public void sendToGameController(int gameId, ClientRequest req, VirtualClient virtualClient) throws GameException {
+        GameController gameController = games.get(gameId);
+        if(gameController != null){
+            gameController.handleClientRequest(req, virtualClient);
+        } else {
+            throw new GameException("Game requested does not exists.");
+        }
     }
 
     @Override
     public void notifyEndGame(int gameId, List<MatchResult> matchResults) {
-        synchronized (games){
-            games.remove(gameId);
-        }
+        games.remove(gameId);
         try {
             gamePersistenceManager.removeGame(gameId);
         } catch(Exception e){
@@ -100,44 +163,6 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
             } catch(Exception e){
                 System.out.println(e.getMessage());
             }
-        }
-    }
-
-    public void createGame(CreateGameRequest req, VirtualClient virtualClient){
-        try{
-            if(req.getNumPlayer() < 2 || req.getNumPlayer() > 5 ){
-                throw new Exception("Minimum players: 2; Maximum players: 5.");
-            }
-
-            int newId =  gameDAO.createMatch();
-            Game newGame = new Game(newId, req.getNumPlayer());
-            newGame.addObserver(this);
-
-            GameController newGameController = new GameController(boardConfigLoader, gamePersistenceManager, gameDAO);
-            newGameController.setState(new InitGameState(newGame, newGameController));
-            synchronized (games){
-                games.put(newId, newGameController);
-            }
-
-            EnterGameRequest newReq = new EnterGameRequest(newId);
-            newGameController.handleClientRequest(newReq, virtualClient);
-        } catch (Exception e){
-            System.out.println(e.getMessage());
-            virtualClient.sendErrorMessage(e.getMessage());
-        }
-    }
-
-    public void connectToGame(EnterGameRequest req, VirtualClient virtualClient){
-        try{
-            if(games.containsKey(req.getGameId())){
-                GameController reqGame = games.get(req.getGameId());
-                reqGame.handleClientRequest(req, virtualClient);
-            } else {
-                throw new InvalidRequestException("The requested game does not exists");
-            }
-        } catch (Exception e){
-            System.out.println(e.getMessage());
-            virtualClient.sendErrorMessage(e.getMessage());
         }
     }
 

@@ -2,10 +2,10 @@ package org.example.server.controller;
 
 import org.example.server.config.BoardConfigLoader;
 import org.example.server.controller.states.ControllerState;
+import org.example.server.exceptions.GameException;
 import org.example.server.persistence.GameDAO;
 import org.example.server.network.VirtualClient;
 import org.example.server.persistence.GamePersistenceManager;
-import org.example.server.exceptions.InvalidRequestException;
 import org.example.shared.network.requests.ClientRequest;
 
 
@@ -23,22 +23,15 @@ public class GameController {
         this.state = null;
     }
 
-    public synchronized void handleClientRequest(ClientRequest req, VirtualClient virtualClient){
-        try {
-            req.accept(state, virtualClient);
-            if(state.getNextState() != null){
-                changeState(state.getNextState());
-            }
-        } catch(InvalidRequestException e){
-            System.out.println(e.getMessage());
-            virtualClient.sendErrorMessage(e.getMessage());
-        } catch(Exception e){
-            System.out.println(e.getMessage());
+    public synchronized void handleClientRequest(ClientRequest req, VirtualClient virtualClient) throws GameException {
+        req.accept(state, virtualClient);
+        if(state.getNextState() != null){
+            changeState(state.getNextState());
         }
     }
 
     // To handle automatics states
-    private void changeState(ControllerState newControllerState) throws Exception{
+    private void changeState(ControllerState newControllerState) throws GameException {
         ControllerState nextState = newControllerState;
         while (nextState != state && nextState != null) {
             state = nextState;

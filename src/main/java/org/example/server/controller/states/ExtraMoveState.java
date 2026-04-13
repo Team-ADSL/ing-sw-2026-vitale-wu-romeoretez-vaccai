@@ -8,7 +8,7 @@ import org.example.shared.enums.Trigger;
 import org.example.shared.network.requests.MakeMoveRequest;
 import org.example.shared.utils.Move;
 import org.example.shared.enums.Row;
-import org.example.server.exceptions.InvalidRequestException;
+import org.example.server.exceptions.GameException;
 import org.example.server.model.cards.Card;
 import org.example.server.model.Game;
 import org.example.server.model.Player;
@@ -30,12 +30,12 @@ public class ExtraMoveState extends ControllerState {
     }
 
     @Override
-    public void visit(MakeMoveRequest req, VirtualClient virtualClient) throws InvalidRequestException {
+    public void visit(MakeMoveRequest req, VirtualClient virtualClient) throws GameException {
         Player reqPlayer = controlIfPlayerTurn(virtualClient);
 
         Set<Move> moves = req.getMoves();
         if(moves.size() > 1){
-            throw new InvalidRequestException("Invalid input, only 0 or 1 move allowed");
+            throw new GameException("Invalid input, only 0 or 1 move allowed");
         }
 
         if(moves.isEmpty()){
@@ -44,13 +44,13 @@ public class ExtraMoveState extends ControllerState {
         } else {
             Move currentMove = moves.stream().findFirst().get();
             if(currentMove.row() != Row.UPPER){
-                throw new InvalidRequestException("Allowed only picking from TopRow");
+                throw new GameException("Allowed only picking from TopRow");
             }
 
             CardRow selectedRow = getGame().getBoard().topRow();
             Card selectedCard = selectedRow.pickCardAt(currentMove.rowIndex());
             if(!selectedCard.canBeDrawn(reqPlayer)){
-                throw new InvalidRequestException("Invalid picking: selected card cannot be picked");
+                throw new GameException("Invalid picking: selected card cannot be picked");
             }
 
             execute(currentMove, reqPlayer);

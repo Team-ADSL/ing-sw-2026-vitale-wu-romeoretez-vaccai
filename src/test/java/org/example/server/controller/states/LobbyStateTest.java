@@ -4,12 +4,11 @@ import org.example.server.config.BoardConfigLoader;
 import org.example.server.config.JsonBoardConfigLoader;
 import org.example.server.controller.GameController;
 import org.example.server.controller.ServerController;
-import org.example.server.model.EndGameObserver;
 import org.example.server.model.Game;
 import org.example.server.network.VirtualClient;
 import org.example.server.persistence.GameDAO;
 import org.example.server.persistence.GamePersistenceManager;
-import org.example.server.exceptions.InvalidRequestException;
+import org.example.server.exceptions.GameException;
 import org.example.shared.model.GameDTO;
 import org.example.shared.model.MatchResult;
 import org.example.shared.network.requests.ClientDisconnected;
@@ -70,7 +69,7 @@ public class LobbyStateTest {
     // ──────────────────────────────────────────────
 
     @Test
-    void enterGame_addsPlayerToGame() throws InvalidRequestException {
+    void enterGame_addsPlayerToGame() throws GameException {
         TestVirtualClient c = client("alice");
         state.visit(new EnterGameRequest(1), c);
         assertEquals(1, game.getPlayers().size());
@@ -78,22 +77,22 @@ public class LobbyStateTest {
     }
 
     @Test
-    void enterGame_setsGameControllerOnClient() throws InvalidRequestException {
+    void enterGame_setsGameControllerOnClient() throws GameException {
         TestVirtualClient c = client("alice");
         state.visit(new EnterGameRequest(1), c);
-        assertTrue(c.getGameController().isPresent());
-        assertSame(controller, c.getGameController().get());
+        assertTrue(c.getGameId().isPresent());
+        assertSame(game.getGameId(), c.getGameId().get());
     }
 
     @Test
-    void enterGame_throwsWhenLobbyFull() throws InvalidRequestException {
+    void enterGame_throwsWhenLobbyFull() throws GameException {
         // Fill to 3 players
         for (int i = 0; i < 2; i++) {
             TestVirtualClient c = client("player" + i);
             state.visit(new EnterGameRequest(1), c);
         }
         TestVirtualClient extra = client("extra");
-        assertThrows(InvalidRequestException.class, () -> state.visit(new EnterGameRequest(1), extra));
+        assertThrows(GameException.class, () -> state.visit(new EnterGameRequest(1), extra));
     }
 
     // ──────────────────────────────────────────────
@@ -101,7 +100,7 @@ public class LobbyStateTest {
     // ──────────────────────────────────────────────
 
     @Test
-    void clientDisconnected_removesPlayer() throws InvalidRequestException {
+    void clientDisconnected_removesPlayer() throws GameException {
         TestVirtualClient c = client("bob");
         state.visit(new EnterGameRequest(1), c);
         assertEquals(1, game.getPlayers().size());
@@ -111,18 +110,18 @@ public class LobbyStateTest {
     }
 
     @Test
-    void clientDisconnected_clearsGameControllerOnClient() throws InvalidRequestException {
+    void clientDisconnected_clearsGameControllerOnClient() throws GameException {
         TestVirtualClient c = client("bob");
         state.visit(new EnterGameRequest(1), c);
         state.visit(new ClientDisconnected(), c);
-        assertFalse(c.getGameController().isPresent());
+        assertFalse(c.getGameId().isPresent());
     }
 
     @Test
     void clientDisconnected_throwsWhenPlayerNotInGame() {
         TestVirtualClient c = client("notInGame");
         // The player was never added — disconnect should throw
-        assertThrows(InvalidRequestException.class, () -> state.visit(new ClientDisconnected(), c));
+        assertThrows(GameException.class, () -> state.visit(new ClientDisconnected(), c));
     }
 
     // ──────────────────────────────────────────────
@@ -130,20 +129,20 @@ public class LobbyStateTest {
     // ──────────────────────────────────────────────
 
     @Test
-    void startGame_setsReadyWhenTwoPlayers() throws InvalidRequestException {
+    void startGame_setsReadyWhenTwoPlayers() throws GameException {
         state.visit(new EnterGameRequest(1), client("p1"));
         state.visit(new EnterGameRequest(1), client("p2"));
 
-        state.visit(new StartGameRequest(1), client("p1"));
+        state.visit(new StartGameRequest(), client("p1"));
 
         // nextState should now return InitGameState (not this)
         assertInstanceOf(InitGameState.class, state.calcNextState());
     }
 
     @Test
-    void startGame_throwsWhenLessThanTwoPlayers() throws InvalidRequestException {
+    void startGame_throwsWhenLessThanTwoPlayers() throws GameException {
         state.visit(new EnterGameRequest(1), client("p1"));
-        assertThrows(InvalidRequestException.class, () -> state.visit(new StartGameRequest(1), client("p1")));
+        assertThrows(GameException.class, () -> state.visit(new StartGameRequest(), client("p1")));
     }
 
     // ──────────────────────────────────────────────
@@ -156,10 +155,10 @@ public class LobbyStateTest {
     }
 
     @Test
-    void nextState_returnsInitGameStateWhenReady() throws InvalidRequestException {
+    void nextState_returnsInitGameStateWhenReady() throws GameException {
         state.visit(new EnterGameRequest(1), client("p1"));
         state.visit(new EnterGameRequest(1), client("p2"));
-        state.visit(new StartGameRequest(1), client("p1"));
+        state.visit(new StartGameRequest(), client("p1"));
 
         assertInstanceOf(InitGameState.class, state.calcNextState());
     }

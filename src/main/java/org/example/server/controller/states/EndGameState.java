@@ -1,6 +1,7 @@
 package org.example.server.controller.states;
 
 import org.example.server.controller.GameController;
+import org.example.server.exceptions.GameException;
 import org.example.server.persistence.GameDAO;
 import org.example.shared.enums.CardType;
 import org.example.shared.enums.Trigger;
@@ -11,6 +12,7 @@ import org.example.server.model.Game;
 import org.example.server.model.Player;
 import org.example.shared.model.MatchResult;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 
@@ -20,7 +22,7 @@ public class EndGameState extends ControllerState {
     }
 
     @Override
-    public ControllerState onEntry() throws Exception {
+    public ControllerState onEntry() throws GameException {
         Set<Player> players = getGame().getPlayers();
         for(Player p : players){
             p.getCards().get(CardType.BUILDINGS)
@@ -57,10 +59,14 @@ public class EndGameState extends ControllerState {
         List<Integer> scores = players.stream()
                 .map(Player::getPp)
                 .toList();
-        gameDAO.saveMatch(getGame().getGameId(), players.size(), nicknames, scores);
-        List<MatchResult> matchResults = gameDAO.getLeaderboard(players.size());
 
-        getGame().sendEndGameResults(matchResults);
+        try{
+            gameDAO.saveMatch(getGame().getGameId(), players.size(), nicknames, scores);
+            List<MatchResult> matchResults = gameDAO.getLeaderboard(players.size());
+            getGame().sendEndGameResults(matchResults);
+        } catch(SQLException e){
+            throw new GameException("Error during saving match results.");
+        }
         getGame().setPhase(null);
         getGame().sendUpdateGame();
         return getNextState();

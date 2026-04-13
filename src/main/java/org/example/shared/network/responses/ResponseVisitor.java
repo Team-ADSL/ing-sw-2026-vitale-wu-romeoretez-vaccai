@@ -3,7 +3,7 @@ package org.example.shared.network.responses;
 import org.example.client.exceptions.InvalidResponseException;
 
 public interface ResponseVisitor {
-    void visit(SetUsername response) throws InvalidResponseException;
+    void visit(LoginNeeded response) throws InvalidResponseException;
     void visit(HomeUpdate response) throws InvalidResponseException;
     void visit(LobbyUpdate response) throws InvalidResponseException;
     void visit(GameUpdate response) throws InvalidResponseException;

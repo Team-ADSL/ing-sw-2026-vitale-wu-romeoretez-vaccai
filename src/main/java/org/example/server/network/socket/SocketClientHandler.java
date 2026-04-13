@@ -43,7 +43,7 @@ public class SocketClientHandler extends VirtualClient implements Runnable {
         try {
             socket.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
     }
 

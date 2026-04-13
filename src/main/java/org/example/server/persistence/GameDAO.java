@@ -2,13 +2,14 @@ package org.example.server.persistence;
 
 import org.example.shared.model.MatchResult;
 
+import java.sql.SQLException;
 import java.util.List;
 
 public interface GameDAO {
-    int createMatch() throws Exception;
-    void deleteMatch(int gameId) throws Exception;
+    int createMatch() throws SQLException;
+    void deleteMatch(int gameId) throws SQLException;
     void saveMatch(int gameId, int playerCount,
                           List<String> nicknames,
-                          List<Integer> scores) throws Exception;
-    List<MatchResult> getLeaderboard(int playerCount) throws Exception;
+                          List<Integer> scores) throws SQLException;
+    List<MatchResult> getLeaderboard(int playerCount) throws SQLException;
 }

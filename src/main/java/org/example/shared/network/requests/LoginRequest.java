@@ -2,11 +2,11 @@ package org.example.shared.network.requests;
 
 import org.example.server.exceptions.GameException;
 
-public class CreateGameRequest extends ClientRequest{
-    private final int numPlayer;
+public class LoginRequest extends ClientRequest{
+    private final String username;
 
-    public CreateGameRequest(int numPlayer) {
-        this.numPlayer = numPlayer;
+    public LoginRequest(String username) {
+        this.username = username;
     }
 
     @Override
@@ -14,7 +14,7 @@ public class CreateGameRequest extends ClientRequest{
         visitor.visit(this, context);
     }
 
-    public int getNumPlayer() {
-        return numPlayer;
+    public String getUsername() {
+        return username;
     }
 }

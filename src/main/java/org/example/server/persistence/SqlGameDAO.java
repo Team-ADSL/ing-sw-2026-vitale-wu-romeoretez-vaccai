@@ -15,7 +15,7 @@ public class SqlGameDAO implements GameDAO{
     }
 
     // Game creation for the lobby before starting (the number of player is unknown)
-    public int createMatch() throws Exception {
+    public int createMatch() throws SQLException {
         String sql = "INSERT INTO matches () VALUES ()";
 
         try (Connection conn = connectionProvider.getConnection();
@@ -31,7 +31,7 @@ public class SqlGameDAO implements GameDAO{
     }
 
     // For game created but where all player quit the lobby before starting
-    public void deleteMatch(int gameId) throws Exception {
+    public void deleteMatch(int gameId) throws SQLException {
         String sql = "DELETE FROM matches WHERE id = ?";
 
         try (Connection conn = connectionProvider.getConnection();
@@ -47,7 +47,7 @@ public class SqlGameDAO implements GameDAO{
 
     public void saveMatch(int gameId, int playerCount,
                                  List<String> nicknames,
-                                 List<Integer> scores) throws Exception {
+                                 List<Integer> scores) throws SQLException {
 
         String sqlMatch = "UPDATE matches SET played_at = CURRENT_TIMESTAMP, player_count = ? WHERE id = ?";
         String sqlUpsertPlayer = "INSERT IGNORE INTO players (nickname) VALUES (?)";
@@ -103,7 +103,7 @@ public class SqlGameDAO implements GameDAO{
         }
     }
 
-    public List<MatchResult> getLeaderboard(int playerCount) throws Exception {
+    public List<MatchResult> getLeaderboard(int playerCount) throws SQLException {
         String sql = """
             SELECT
                 RANK() OVER (ORDER BY r.score DESC) AS rank,
