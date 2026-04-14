@@ -7,5 +7,9 @@ public enum CardType {
     SHAMAN,
     GATHERER,
     BUILDER,
-    BUILDINGS
+    BUILDINGS,
+    SHAMANIC_RITUAL,
+    SUSTENANCE,
+    CAVE_PAINTINGS,
+    HUNT
 }

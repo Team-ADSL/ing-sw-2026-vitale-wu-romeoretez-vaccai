@@ -17,7 +17,7 @@ public class Gatherer extends Character {
 
     @Override
     public void insert(Map<CardType, Set<Card>> cards) {
-        cards.get(CardType.GATHERER).add(this);
+        if(cards.containsKey(CardType.GATHERER)) cards.get(CardType.GATHERER).add(this);
     }
 
     public int getDiscount() {

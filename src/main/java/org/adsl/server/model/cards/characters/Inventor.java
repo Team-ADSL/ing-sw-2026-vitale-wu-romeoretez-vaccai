@@ -18,7 +18,7 @@ public class Inventor extends Character {
 
     @Override
     public void insert(Map<CardType, Set<Card>> cards) {
-        cards.get(CardType.INVENTOR).add(this);
+        if(cards.containsKey(CardType.INVENTOR)) cards.get(CardType.INVENTOR).add(this);
     }
 
     public Icon getIcon() {

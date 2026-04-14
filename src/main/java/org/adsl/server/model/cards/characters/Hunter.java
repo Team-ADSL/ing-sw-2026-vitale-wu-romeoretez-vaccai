@@ -19,7 +19,7 @@ public class Hunter extends Character {
 
     @Override
     public void insert(Map<CardType, Set<Card>> cards) {
-        cards.get(CardType.HUNTER).add(this);
+        if(cards.containsKey(CardType.HUNTER)) cards.get(CardType.HUNTER).add(this);
     }
 
     // NOTE: to call after inserting in player's deck
