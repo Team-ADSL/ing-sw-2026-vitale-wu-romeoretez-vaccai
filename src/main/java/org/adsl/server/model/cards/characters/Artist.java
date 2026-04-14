@@ -14,6 +14,6 @@ public class Artist extends Character {
 
     @Override
     public void insert(Map<CardType, Set<Card>> cards) {
-        cards.get(CardType.ARTIST).add(this);
+        if(cards.containsKey(CardType.ARTIST)) cards.get(CardType.ARTIST).add(this);
     }
 }

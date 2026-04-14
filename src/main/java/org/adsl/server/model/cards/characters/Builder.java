@@ -19,7 +19,7 @@ public class Builder extends Character {
 
     @Override
     public void insert(Map<CardType, Set<Card>> cards) {
-        cards.get(CardType.BUILDER).add(this);
+        if(cards.containsKey(CardType.BUILDER))cards.get(CardType.BUILDER).add(this);
     }
 
     public int getDiscount() {

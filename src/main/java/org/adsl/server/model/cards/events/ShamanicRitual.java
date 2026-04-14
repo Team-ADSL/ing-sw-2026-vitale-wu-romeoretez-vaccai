@@ -1,5 +1,6 @@
 package org.adsl.server.model.cards.events;
 
+import org.adsl.server.model.cards.Card;
 import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Trigger;
 import org.adsl.server.model.cards.buildings.utils.BuildingBonus;
@@ -18,6 +19,11 @@ public class ShamanicRitual extends Event {
         super(id, isFinal, era, numPlayers);
         this.lostPP = lostPP;
         this.gainedPP = gainedPP;
+    }
+
+    @Override
+    public void insert(Map<CardType, Set<Card>> cards) {
+        if(cards.containsKey(CardType.SHAMANIC_RITUAL)) cards.get(CardType.SHAMANIC_RITUAL).add(this);
     }
 
     @Override

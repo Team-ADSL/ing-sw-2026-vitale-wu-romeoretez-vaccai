@@ -24,11 +24,6 @@ public abstract class Event extends Card {
         return false;
     }
 
-    @Override
-    public void insert(Map<CardType, Set<Card>> cards) {
-
-    }
-
     public void activateBuildings(Player p, Trigger t){
         p.getCards().get(CardType.BUILDINGS).stream()
                 .map(c -> (Building)c)

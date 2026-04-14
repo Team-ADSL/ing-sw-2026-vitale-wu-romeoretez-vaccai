@@ -21,6 +21,6 @@ public class Shaman extends Character {
 
     @Override
     public void insert(Map<CardType, Set<Card>> cards) {
-        cards.get(CardType.SHAMAN).add(this);
+        if(cards.containsKey(CardType.SHAMAN)) cards.get(CardType.SHAMAN).add(this);
     }
 }

@@ -8,10 +8,7 @@ import org.adsl.shared.model.CardDTO;
 import org.adsl.shared.model.PlayerDTO;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Player implements Serializable {
@@ -34,7 +31,7 @@ public class Player implements Serializable {
         this.isActive = true;
         this.buildingBonus = new BuildingBonus();
 
-        this.cards = new HashMap<>();
+        this.cards = new EnumMap<>(CardType.class);
         this.cards.put(CardType.HUNTER, new HashSet<>());
         this.cards.put(CardType.GATHERER, new HashSet<>());
         this.cards.put(CardType.SHAMAN, new HashSet<>());
