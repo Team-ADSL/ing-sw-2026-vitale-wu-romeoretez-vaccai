@@ -28,8 +28,8 @@ public record Deck(ArrayList<Card> cards) implements Serializable {
 
     public static Deck createDeck(ArrayList<Set<Card>> cards) {
         Deck deck = new Deck();
-        for (Set<Card> era : cards) {
-            ArrayList<Card> eraList = new ArrayList<>(era);
+        for (Set<Card> cardSet : cards) {
+            ArrayList<Card> eraList = new ArrayList<>(cardSet);
             Collections.shuffle(eraList);
             deck.addTailCards(eraList);
         }

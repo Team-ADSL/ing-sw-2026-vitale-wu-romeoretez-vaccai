@@ -99,6 +99,17 @@ public class JsonBoardConfigLoader implements BoardConfigLoader {
                     if (parser != null) result.get(era - 1).add(parser.parse(node, era, np));
                 }
             }
+            JsonNode eraNode = root.get("finalEvents");
+            if (eraNode == null) return;
+            JsonNode cardArray = eraNode.get("events");
+            if (cardArray == null) return;
+            for (JsonNode node : cardArray) {
+                String type = node.get("type").asText();
+                CardParser parser = CARD_PARSERS.get(type);
+                // We put the final events in the last arrayCell (4) and the era is always 3
+                if (parser != null) result.get(3).add(parser.parse(node, 3, np));
+            }
+
         } catch (Exception e) {
             throw new RuntimeException("Failed to load cards from " + filename, e);
         }

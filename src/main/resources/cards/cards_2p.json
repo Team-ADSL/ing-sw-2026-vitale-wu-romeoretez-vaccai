@@ -71,12 +71,14 @@
       { "id": "shaman_10",          "type": "SHAMAN",          "starNum": 3 },
       { "id": "shaman_11",          "type": "SHAMAN",          "starNum": 2 },
       { "id": "shaman_12",          "type": "SHAMAN",          "starNum": 3 },
-
-
       { "id": "hunt_03",            "type": "HUNT",            "isFinal": false, "multiplierPP": 3 },
+      { "id": "cave_paintings_03",  "type": "CAVE_PAINTINGS",  "isFinal": false, "minArtists": 2, "lostPP": 2, "multiplierPP": 3 },
+    ]
+  },
+  "finalEvents": {
+    "events": [
       { "id": "sustenance_03",      "type": "SUSTENANCE",      "isFinal": true, "lostPP": 3 },
-      { "id": "shamanic_ritual_03", "type": "SHAMANIC_RITUAL", "isFinal": true, "lostPP": 7, "gainedPP": 15 },
-      { "id": "cave_paintings_03",  "type": "CAVE_PAINTINGS",  "isFinal": false, "minArtists": 2, "lostPP": 2, "multiplierPP": 3 }
+      { "id": "shamanic_ritual_03", "type": "SHAMANIC_RITUAL", "isFinal": true, "lostPP": 7, "gainedPP": 15 }
     ]
   }
 }
