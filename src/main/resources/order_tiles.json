@@ -1,5 +1,6 @@
 [
   {
+    "id": "order_tile_2p",
     "numPlayers": 2,
     "cells": [
       { "bonus": 1, "isMalus": false },
@@ -7,6 +8,7 @@
     ]
   },
   {
+    "id": "order_tile_3p",
     "numPlayers": 3,
     "cells": [
       { "bonus": 2, "isMalus": false },
@@ -15,6 +17,7 @@
     ]
   },
   {
+    "id": "order_tile_4p",
     "numPlayers": 4,
     "cells": [
       { "bonus": 2, "isMalus": false },
@@ -24,6 +27,7 @@
     ]
   },
   {
+    "id": "order_tile_5p",
     "numPlayers": 5,
     "cells": [
       { "bonus": 3, "isMalus": false },
