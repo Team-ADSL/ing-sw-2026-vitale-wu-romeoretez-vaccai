@@ -6,17 +6,21 @@ import org.adsl.shared.network.responses.*;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 public class RemoteClientStubImpl extends UnicastRemoteObject implements RemoteClientStub {
     private final transient AppCoordinator coordinator;
+    private final ExecutorService threadPool;
 
     public RemoteClientStubImpl(AppCoordinator coordinator) throws RemoteException {
         super();
         this.coordinator = coordinator;
+        this.threadPool = Executors.newSingleThreadExecutor();
     }
 
     public void sendResponse(ServerResponse response){
-        response.accept(coordinator);
+        threadPool.submit(() -> coordinator.handleServerResponse(response));
     }
 }

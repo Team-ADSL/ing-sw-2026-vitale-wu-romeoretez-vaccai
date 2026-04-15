@@ -18,12 +18,14 @@ public abstract class VirtualClient implements GameObserver, HomeObserver, EndGa
     private String clientUsername;
     private Integer gameId;
     private boolean isConnected;
+    private volatile long lastPing;
 
     public VirtualClient(ServerController serverController){
         this.serverController = serverController;
         this.clientUsername = null;
         this.isConnected = false;
         this.gameId = null;
+        this.lastPing = System.currentTimeMillis();
     }
 
     public void processRequest(ClientRequest req){
@@ -78,6 +80,11 @@ public abstract class VirtualClient implements GameObserver, HomeObserver, EndGa
         this.sendResponse(serverResponse);
     }
 
+    public void sendPing(){
+        ServerResponse serverResponse = new ServerPing();
+        this.sendResponse(serverResponse);
+    }
+
     public abstract void sendResponse(ServerResponse response);
 
     public Optional<String> getClientUsername() {
@@ -85,6 +92,9 @@ public abstract class VirtualClient implements GameObserver, HomeObserver, EndGa
     }
     public Optional<Integer> getGameId() {
         return Optional.ofNullable(gameId);
+    }
+    public long getLastPing() {
+        return lastPing;
     }
 
     public void setGameId(Integer gameId) {
@@ -96,4 +106,8 @@ public abstract class VirtualClient implements GameObserver, HomeObserver, EndGa
     public void setConnected(boolean connected) {
         isConnected = connected;
     }
+    public void updateLastPing() {
+        this.lastPing = System.currentTimeMillis();
+    }
+
 }

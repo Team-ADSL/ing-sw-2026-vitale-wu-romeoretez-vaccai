@@ -32,13 +32,13 @@ public class SocketClientConnection implements ServerConnection {
             while (isRunning && !socket.isClosed()) {
                 ServerResponse response = (ServerResponse) in.readObject();
                 if (appCoordinator != null) {
-                    response.accept(appCoordinator);
+                    appCoordinator.handleServerResponse(response);
                 }
             }
         } catch (Exception e) {
             if (isRunning && appCoordinator != null) {
                 ServerResponse disconnection = new ServerDisconnected();
-                disconnection.accept(appCoordinator);
+                appCoordinator.handleServerResponse(disconnection);
             }
         } finally {
             try {

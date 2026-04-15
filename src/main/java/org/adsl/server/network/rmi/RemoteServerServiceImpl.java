@@ -9,15 +9,19 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class RemoteServerServiceImpl extends UnicastRemoteObject implements RemoteServerService {
     private final ServerController serverController;
     private final Map<RemoteClientStub, RMIClientHandler> clients;
+    private final ExecutorService threadPool;
 
     public RemoteServerServiceImpl(ServerController serverController) throws RemoteException {
         super();
         this.serverController = serverController;
         this.clients = new ConcurrentHashMap<>();
+        this.threadPool = Executors.newCachedThreadPool();
     }
 
     @Override
@@ -25,14 +29,14 @@ public class RemoteServerServiceImpl extends UnicastRemoteObject implements Remo
         System.out.println("New client connected with RMI.");
         RMIClientHandler handler = new RMIClientHandler(serverController, clientCallback);
         clients.put(clientCallback, handler);
-        handler.handleConnection();
+        threadPool.submit(handler::handleConnection);
     }
 
     @Override
     public void sendRequest(ClientRequest request, RemoteClientStub clientStub) throws RemoteException {
         RMIClientHandler handler = clients.get(clientStub);
         if (handler != null) {
-            handler.processRequest(request);
+            threadPool.submit(() -> handler.processRequest(request));
         } else {
             System.err.println("Unregistered client.");
         }
@@ -42,7 +46,7 @@ public class RemoteServerServiceImpl extends UnicastRemoteObject implements Remo
     public void disconnect(RemoteClientStub clientStub) {
         RMIClientHandler handler = clients.get(clientStub);
         if (handler != null) {
-            handler.handleDisconnection();
+            threadPool.submit(handler::handleDisconnection);
             clients.remove(clientStub);
         } else {
             System.err.println("Unregistered client.");
