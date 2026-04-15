@@ -50,6 +50,8 @@ public abstract class ControllerState implements RequestVisitor<VirtualClient> {
     }
 
     @Override
+    public void visit(ClientPing req, VirtualClient virtualClient) throws GameException {}
+    @Override
     public void visit(ClientConnection req, VirtualClient virtualClient) throws GameException {
         throw new GameException("New connection rejected.");
     }

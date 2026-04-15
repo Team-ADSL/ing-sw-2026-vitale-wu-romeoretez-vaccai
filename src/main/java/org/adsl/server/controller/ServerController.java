@@ -17,6 +17,9 @@ import org.adsl.shared.network.requests.*;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class ServerController implements RequestVisitor<VirtualClient>, EndGameObserver {
     private final Map<Integer, GameController> games;
@@ -35,14 +38,35 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         this.userConnected = new ConcurrentHashMap<>();
     }
 
+    public void startTimeoutChecker(int ping_ratio_ms, long max_timeout_ms) {
+        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+        scheduler.scheduleAtFixedRate(() -> {
+            long now = System.currentTimeMillis();
+            for (VirtualClient client : userConnected.values()) {
+                if (now - client.getLastPing() > max_timeout_ms) {
+                    System.out.println("Client timeout: " + client.getClientUsername());
+                    client.handleDisconnection();
+                } else {
+                    client.sendPing();
+                }
+            }
+        }, 0, ping_ratio_ms, TimeUnit.MILLISECONDS);
+    }
+
     public void handleClientRequest(ClientRequest req, VirtualClient virtualClient){
         try {
+            virtualClient.updateLastPing();
             req.accept(this, virtualClient);
             home.update();
         } catch (GameException e) {
             System.out.println(e.getMessage());
             virtualClient.sendErrorMessage(e.getMessage());
         }
+    }
+
+    @Override
+    public void visit(ClientPing req, VirtualClient virtualClient) throws GameException {
+        virtualClient.sendLoginNeededResponse(); // Implicitly confirming connection
     }
 
     @Override

@@ -104,6 +104,7 @@ public class App
             GamePersistenceManager gamePersistenceManager = new SerialGamePersistenceManager(recoverDirectory);
             ServerController serverController = new ServerController(gameDAO, boardConfigLoader, gamePersistenceManager);
             serverController.recoverGames();
+            serverController.startTimeoutChecker(5000, 20000);
 
             // Setup Socket Server
             ExecutorService threadPool = Executors.newCachedThreadPool();

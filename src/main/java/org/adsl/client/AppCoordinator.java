@@ -8,18 +8,61 @@ import org.adsl.shared.network.responses.*;
 import org.adsl.shared.utils.Move;
 
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 // Mediator between Network and View. Send response to UI and request to Network.
 public class AppCoordinator implements ResponseVisitor{
     private final GameUI gameUI;
     private final ServerConnection serverConnection;
-    private int gameId;
+    private ScheduledExecutorService pingScheduler;
+    private volatile long lastServerPing = System.currentTimeMillis();
 
     public AppCoordinator(GameUI gameUI, ServerConnection serverConnection) {
         this.gameUI = gameUI;
         this.serverConnection = serverConnection;
-        this.gameId = 0;
+        this.pingScheduler = null;
     }
+
+    public void startPingScheduler(int ping_ratio_ms, long server_timout_ms) {
+        pingScheduler = Executors.newSingleThreadScheduledExecutor();
+
+        pingScheduler.scheduleAtFixedRate(() -> {
+            try {
+                long now = System.currentTimeMillis();
+
+                if (now - lastServerPing > server_timout_ms) {
+                    System.err.println("Server irraggiungibile (Timeout). Disconnessione...");
+                    gameUI.onServerDisconnected();
+                    return;
+                }
+
+                serverConnection.sendRequest(new ClientPing());
+
+            } catch (Exception e) {
+                System.err.println("Errore nell'invio del Ping: " + e.getMessage());
+            }
+        }, ping_ratio_ms, ping_ratio_ms, TimeUnit.MILLISECONDS);
+    }
+
+    public void stopHeartbeat() {
+        if (pingScheduler != null) {
+            pingScheduler.shutdownNow();
+        }
+    }
+
+    public void handleServerResponse(ServerResponse serverResponse){
+        lastServerPing = System.currentTimeMillis();
+        try {
+            serverResponse.accept(this);
+        } catch(Exception e){
+            System.out.println(e.getMessage());
+        }
+    }
+
+    @Override
+    public void visit(ServerPing response) throws InvalidResponseException {}
 
     // Handle ServerResponse
     @Override
@@ -90,9 +133,5 @@ public class AppCoordinator implements ResponseVisitor{
                 System.err.println("Error during local connection closing.");
             }
         }
-    }
-
-    public void setGameId(int gameId) {
-        this.gameId = gameId;
     }
 }
