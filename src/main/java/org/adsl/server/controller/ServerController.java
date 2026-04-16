@@ -49,8 +49,6 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
                 if (now - client.getLastPing() > max_timeout_ms) {
                     System.out.println("Client timeout: " + client.getClientUsername());
                     client.handleDisconnection();
-                } else {
-                    client.sendPing();
                 }
             }
         }, 0, ping_ratio_ms, TimeUnit.MILLISECONDS);
@@ -75,7 +73,7 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
 
     @Override
     public void visit(ClientPing req, VirtualClient virtualClient) throws GameException {
-        virtualClient.sendLoginNeededResponse(); // Implicitly confirming connection
+        virtualClient.sendPing();
     }
 
     @Override
@@ -142,18 +140,20 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
 
     @Override
     public void visit(ClientDisconnected req, VirtualClient virtualClient) throws GameException {
-        home.removeObserver(virtualClient);
-        if(virtualClient.getClientUsername().isEmpty()){
-            throw new GameException("Virtual client has no username associated.");
-        } else {
-            Optional<Integer> gameID = virtualClient.getGameId();
-            if(gameID.isPresent()){
-                GameController gc = games.get(gameID.get());
-                gc.handleClientRequest(req, virtualClient);
-            }
-            virtualClient.setConnected(false);
+        if(virtualClient.getClientUsername().isPresent()) {
             userConnected.remove(virtualClient.getClientUsername().get());
         }
+        home.removeObserver(virtualClient);
+        Optional<Integer> gameID = virtualClient.getGameId();
+        if(gameID.isPresent()){
+            GameController gc = games.get(gameID.get());
+            if(gc != null){
+                gc.handleClientRequest(req, virtualClient);
+            }
+        }
+        virtualClient.setGameId(null);
+        virtualClient.setConnected(false);
+        virtualClient.closeConnection();
     }
 
     @Override
@@ -216,6 +216,6 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
     }
 
     public void shutdown(){
-
+        stopTimeoutChecker();
     }
 }

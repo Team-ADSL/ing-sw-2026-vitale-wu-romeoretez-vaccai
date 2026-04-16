@@ -27,7 +27,7 @@ public class RemoteServerServiceImpl extends UnicastRemoteObject implements Remo
     @Override
     public void connect(RemoteClientStub clientCallback) throws RemoteException {
         System.out.println("New client connected with RMI.");
-        RMIClientHandler handler = new RMIClientHandler(serverController, clientCallback);
+        RMIClientHandler handler = new RMIClientHandler(serverController, clientCallback, this);
         clients.put(clientCallback, handler);
         threadPool.submit(handler::handleConnection);
     }
@@ -47,13 +47,21 @@ public class RemoteServerServiceImpl extends UnicastRemoteObject implements Remo
         RMIClientHandler handler = clients.get(clientStub);
         if (handler != null) {
             threadPool.submit(handler::handleDisconnection);
+        } else {
+            System.err.println("Unregistered client.");
+        }
+    }
+
+    public void remove(RemoteClientStub clientStub){
+        RMIClientHandler handler = clients.get(clientStub);
+        if (handler != null) {
             clients.remove(clientStub);
         } else {
             System.err.println("Unregistered client.");
         }
     }
 
-    public void shutdown(){
+    public void shutdown() {
 
     }
 }
