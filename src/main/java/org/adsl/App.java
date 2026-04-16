@@ -123,12 +123,12 @@ public class App
             socketServer.setServerController(serverController);
             rmiServer.setServerController(serverController);
 
-            System.out.println("Server started successfully. Waiting connections...");
-
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 System.out.println("\nClosing signal. Starting Shutdown...");
                 serverController.shutdown();
             }));
+
+            System.out.println("Server started successfully. Waiting connections...");
         } catch (Exception e) {
             System.err.println("Critical error during server starting: " + e.getMessage());
         }
