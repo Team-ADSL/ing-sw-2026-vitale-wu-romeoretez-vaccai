@@ -57,17 +57,17 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         this.socketServer = socketServer;
     }
 
-    public void startTimeoutChecker(int ping_ratio_ms, long max_timeout_ms) {
+    public void startTimeoutChecker(int pingRatioMs, long clientTimoutMs) {
         timeoutScheduler = Executors.newSingleThreadScheduledExecutor();
         timeoutScheduler.scheduleAtFixedRate(() -> {
             long now = System.currentTimeMillis();
             for (VirtualClient client : userConnected.values()) {
-                if (now - client.getLastPing() > max_timeout_ms) {
+                if (now - client.getLastPing() > clientTimoutMs) {
                     System.out.println("Client timeout: " + client.getClientUsername());
                     client.handleDisconnection();
                 }
             }
-        }, 0, ping_ratio_ms, TimeUnit.MILLISECONDS);
+        }, 0, pingRatioMs, TimeUnit.MILLISECONDS);
     }
 
     public void stopTimeoutChecker() {
