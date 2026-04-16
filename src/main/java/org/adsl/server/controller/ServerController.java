@@ -28,6 +28,8 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
     private final GameDAO gameDAO;
     private final BoardConfigLoader boardConfigLoader;
     private final GamePersistenceManager gamePersistenceManager;
+    private ScheduledExecutorService timeoutScheduler;
+
 
     public ServerController(GameDAO gameDAO, BoardConfigLoader boardConfigLoader, GamePersistenceManager gamePersistenceManager) {
         this.games = new ConcurrentHashMap<>();
@@ -36,11 +38,12 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         this.boardConfigLoader = boardConfigLoader;
         this.gamePersistenceManager = gamePersistenceManager;
         this.userConnected = new ConcurrentHashMap<>();
+        this.timeoutScheduler = null;
     }
 
     public void startTimeoutChecker(int ping_ratio_ms, long max_timeout_ms) {
-        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-        scheduler.scheduleAtFixedRate(() -> {
+        timeoutScheduler = Executors.newSingleThreadScheduledExecutor();
+        timeoutScheduler.scheduleAtFixedRate(() -> {
             long now = System.currentTimeMillis();
             for (VirtualClient client : userConnected.values()) {
                 if (now - client.getLastPing() > max_timeout_ms) {
@@ -51,6 +54,12 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
                 }
             }
         }, 0, ping_ratio_ms, TimeUnit.MILLISECONDS);
+    }
+
+    public void stopTimeoutChecker() {
+        if (timeoutScheduler != null) {
+            timeoutScheduler.shutdownNow();
+        }
     }
 
     public void handleClientRequest(ClientRequest req, VirtualClient virtualClient){
@@ -204,5 +213,9 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         } catch(Exception e){
             System.out.println(e.getMessage());
         }
+    }
+
+    public void shutdown(){
+
     }
 }

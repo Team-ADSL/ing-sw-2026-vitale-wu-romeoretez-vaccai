@@ -44,7 +44,7 @@ public class SocketServer implements Runnable {
         }
     }
 
-    public void stopServer() {
+    public void shutdown() {
         this.active = false;
         try {
             if (this.serverSocket != null && !this.serverSocket.isClosed()) {

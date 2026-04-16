@@ -46,7 +46,7 @@ public class AppCoordinator implements ResponseVisitor{
         }, ping_ratio_ms, ping_ratio_ms, TimeUnit.MILLISECONDS);
     }
 
-    public void stopHeartbeat() {
+    public void stopPingScheduler() {
         if (pingScheduler != null) {
             pingScheduler.shutdownNow();
         }

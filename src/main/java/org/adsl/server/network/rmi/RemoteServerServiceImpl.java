@@ -52,4 +52,8 @@ public class RemoteServerServiceImpl extends UnicastRemoteObject implements Remo
             System.err.println("Unregistered client.");
         }
     }
+
+    public void shutdown(){
+
+    }
 }

@@ -120,9 +120,15 @@ public class App
             System.out.println("- RMI Server listening on port " + rmiPort + " with name 'GameServer'");
 
             System.out.println("Server started successfully. Waiting connections...");
+
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                System.out.println("\nClosing signal. Starting Shutdown...");
+                serverController.shutdown();
+                socketServer.shutdown();
+                rmiServer.shutdown();
+            }));
         } catch (Exception e) {
             System.err.println("Critical error during server starting: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
@@ -149,12 +155,17 @@ public class App
             }
             AppCoordinator appCoordinator = new AppCoordinator(gameUI, serverConnection);
             serverConnection.setAppCoordinator(appCoordinator);
+            appCoordinator.startPingScheduler(5000, 20000);
             gameUI.start();
             serverConnection.connect(ipAddress, port);
             System.out.println("UI Application started.");
+
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                System.out.println("\nClosing signal. Starting Shutdown...");
+                gameUI.shutdown();
+            }));
         } catch (Exception e) {
             System.err.println("Critical error during client starting: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
