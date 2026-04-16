@@ -47,6 +47,8 @@ public class VirtualClientTest {
         public void sendResponse(ServerResponse response) {
             sent.add(response);
         }
+        @Override
+        public void closeConnection() {}
     }
 
     /** ServerController that records which requests it handled. */
@@ -54,7 +56,7 @@ public class VirtualClientTest {
         final List<ClientRequest> handled = new ArrayList<>();
 
         RecordingServerController(GameDAO dao, BoardConfigLoader loader, GamePersistenceManager pm) {
-            super(dao, loader, pm);
+            super(dao, loader, pm, null, null, null);
         }
 
         @Override
