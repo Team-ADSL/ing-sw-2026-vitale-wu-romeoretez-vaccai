@@ -14,4 +14,5 @@ public interface GameUI {
     void onErrorReceived(String error);
     void onServerDisconnected();
     void start();
+    void shutdown();
 }
