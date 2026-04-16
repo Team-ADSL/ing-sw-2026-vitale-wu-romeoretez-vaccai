@@ -13,13 +13,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class RemoteServerServiceImpl extends UnicastRemoteObject implements RemoteServerService {
-    private final ServerController serverController;
+    private ServerController serverController;
     private final Map<RemoteClientStub, RMIClientHandler> clients;
     private final ExecutorService threadPool;
 
-    public RemoteServerServiceImpl(ServerController serverController) throws RemoteException {
+    public RemoteServerServiceImpl() throws RemoteException {
         super();
-        this.serverController = serverController;
+        this.serverController = null;
         this.clients = new ConcurrentHashMap<>();
         this.threadPool = Executors.newCachedThreadPool();
     }
@@ -61,7 +61,7 @@ public class RemoteServerServiceImpl extends UnicastRemoteObject implements Remo
         }
     }
 
-    public void shutdown() {
-
+    public void setServerController(ServerController serverController) {
+        this.serverController = serverController;
     }
 }

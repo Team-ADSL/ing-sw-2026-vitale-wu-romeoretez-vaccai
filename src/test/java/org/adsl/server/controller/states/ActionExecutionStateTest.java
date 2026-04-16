@@ -50,6 +50,8 @@ public class ActionExecutionStateTest {
         }
         @Override
         public void sendResponse(ServerResponse response) {}
+        @Override
+        public void closeConnection() {}
     }
 
     private Game game;
@@ -64,7 +66,7 @@ public class ActionExecutionStateTest {
     @BeforeEach
     void setUp() {
         BoardConfigLoader loader = new JsonBoardConfigLoader();
-        serverController = new ServerController(NO_OP_DAO, loader, NO_OP_PERSISTENCE);
+        serverController = new ServerController(NO_OP_DAO, loader, NO_OP_PERSISTENCE, null, null, null);
 
         game = new Game(1, 5);
         p1 = new Player("p1");

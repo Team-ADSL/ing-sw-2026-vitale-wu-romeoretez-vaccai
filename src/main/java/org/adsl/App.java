@@ -97,35 +97,37 @@ public class App
         try {
             DatabaseManager.initDatabase();
 
-            // Setup server controller
-            ConnectionProvider connectionProvider = DatabaseConfig::getConnection;
-            GameDAO gameDAO = new SqlGameDAO(connectionProvider);
-            BoardConfigLoader boardConfigLoader = new JsonBoardConfigLoader();
-            GamePersistenceManager gamePersistenceManager = new SerialGamePersistenceManager(recoverDirectory);
-            ServerController serverController = new ServerController(gameDAO, boardConfigLoader, gamePersistenceManager);
-            serverController.recoverGames();
-            serverController.startTimeoutChecker(5000, 20000);
-
             // Setup Socket Server
             ExecutorService threadPool = Executors.newCachedThreadPool();
-            SocketServer socketServer = new SocketServer(serverController, threadPool, socketPort);
+            SocketServer socketServer = new SocketServer(threadPool, socketPort);
             Thread socketThread = new Thread(socketServer);
             socketThread.start();
             System.out.println("- Socket Server listening on port " + socketPort);
 
             // Setup RMI
-            RemoteServerServiceImpl rmiServer = new RemoteServerServiceImpl(serverController);
             Registry registry = LocateRegistry.createRegistry(rmiPort);
+            RemoteServerServiceImpl rmiServer = new RemoteServerServiceImpl();
             registry.rebind("GameServer", rmiServer);
             System.out.println("- RMI Server listening on port " + rmiPort + " with name 'GameServer'");
+
+            // Setup server controller
+            ConnectionProvider connectionProvider = DatabaseConfig::getConnection;
+            GameDAO gameDAO = new SqlGameDAO(connectionProvider);
+            BoardConfigLoader boardConfigLoader = new JsonBoardConfigLoader();
+            GamePersistenceManager gamePersistenceManager = new SerialGamePersistenceManager(recoverDirectory);
+            ServerController serverController = new ServerController(
+                    gameDAO, boardConfigLoader, gamePersistenceManager, registry, rmiServer, socketServer);
+            serverController.recoverGames();
+            serverController.startTimeoutChecker(5000, 20000);
+
+            socketServer.setServerController(serverController);
+            rmiServer.setServerController(serverController);
 
             System.out.println("Server started successfully. Waiting connections...");
 
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 System.out.println("\nClosing signal. Starting Shutdown...");
                 serverController.shutdown();
-                socketServer.shutdown();
-                rmiServer.shutdown();
             }));
         } catch (Exception e) {
             System.err.println("Critical error during server starting: " + e.getMessage());

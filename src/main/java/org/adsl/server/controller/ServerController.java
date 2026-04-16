@@ -4,6 +4,7 @@ import org.adsl.server.config.BoardConfigLoader;
 import org.adsl.server.controller.states.ControllerState;
 import org.adsl.server.controller.states.InitGameState;
 import org.adsl.server.controller.states.RecoverState;
+import org.adsl.server.network.socket.SocketServer;
 import org.adsl.server.persistence.GameDAO;
 import org.adsl.server.model.EndGameObserver;
 import org.adsl.server.model.Game;
@@ -12,9 +13,15 @@ import org.adsl.server.network.VirtualClient;
 import org.adsl.server.persistence.GamePersistenceManager;
 import org.adsl.server.exceptions.GameException;
 import org.adsl.shared.model.MatchResult;
+import org.adsl.shared.network.remote.RemoteServerService;
 import org.adsl.shared.network.requests.RequestVisitor;
 import org.adsl.shared.network.requests.*;
 
+import java.rmi.NoSuchObjectException;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -25,13 +32,19 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
     private final Map<Integer, GameController> games;
     private final Map<String, VirtualClient> userConnected;
     private final Home home;
+
     private final GameDAO gameDAO;
     private final BoardConfigLoader boardConfigLoader;
     private final GamePersistenceManager gamePersistenceManager;
+
     private ScheduledExecutorService timeoutScheduler;
+    private final Registry registry;
+    private final RemoteServerService rmiServer;
+    private final SocketServer socketServer;
 
 
-    public ServerController(GameDAO gameDAO, BoardConfigLoader boardConfigLoader, GamePersistenceManager gamePersistenceManager) {
+    public ServerController(GameDAO gameDAO, BoardConfigLoader boardConfigLoader, GamePersistenceManager gamePersistenceManager,
+                            Registry registry, RemoteServerService rmiServer, SocketServer socketServer) {
         this.games = new ConcurrentHashMap<>();
         this.home = new Home();
         this.gameDAO = gameDAO;
@@ -39,6 +52,9 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         this.gamePersistenceManager = gamePersistenceManager;
         this.userConnected = new ConcurrentHashMap<>();
         this.timeoutScheduler = null;
+        this.registry = registry;
+        this.rmiServer = rmiServer;
+        this.socketServer = socketServer;
     }
 
     public void startTimeoutChecker(int ping_ratio_ms, long max_timeout_ms) {
@@ -217,5 +233,32 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
 
     public void shutdown(){
         stopTimeoutChecker();
+        shutdownRMI();
+        socketServer.shutdown();
+    }
+
+    public void shutdownRMI(){
+        if (this.registry != null) {
+            try {
+                registry.unbind("GameServer");
+                System.out.println("GameServer removed from Registry.");
+            } catch (NotBoundException | RemoteException e) {
+                System.out.println("RMI service already removed.");
+            }
+        }
+
+        try {
+            if (rmiServer != null) {
+                UnicastRemoteObject.unexportObject(this.rmiServer, true);
+                System.out.println("Removed rmiServer object.");
+            }
+
+            if (this.registry != null) {
+                UnicastRemoteObject.unexportObject(this.registry, true);
+                System.out.println("Registry stopped.");
+            }
+        } catch (NoSuchObjectException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

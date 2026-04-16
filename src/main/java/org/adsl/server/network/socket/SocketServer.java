@@ -9,14 +9,14 @@ import java.net.SocketException;
 import java.util.concurrent.ExecutorService;
 
 public class SocketServer implements Runnable {
-    private final ServerController serverController;
+    private ServerController serverController;
     private final ExecutorService threadPool;
     private boolean active;
     private final int port;
     private ServerSocket serverSocket;
 
-    public SocketServer(ServerController serverController, ExecutorService threadPool, int port) {
-        this.serverController = serverController;
+    public SocketServer(ExecutorService threadPool, int port) {
+        this.serverController = null;
         this.threadPool = threadPool;
         this.active = true;
         this.port = port;
@@ -58,5 +58,9 @@ public class SocketServer implements Runnable {
             this.threadPool.shutdown();
         }
         System.out.println("Socket Server successfully stopped.");
+    }
+
+    public void setServerController(ServerController serverController) {
+        this.serverController = serverController;
     }
 }
