@@ -86,6 +86,7 @@ public abstract class VirtualClient implements GameObserver, HomeObserver, EndGa
     }
 
     public abstract void sendResponse(ServerResponse response);
+    public abstract void closeConnection();
 
     public Optional<String> getClientUsername() {
         return Optional.ofNullable(clientUsername);

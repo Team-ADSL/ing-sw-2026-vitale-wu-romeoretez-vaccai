@@ -32,14 +32,13 @@ public class SocketClientHandler extends VirtualClient implements Runnable {
                 processRequest(request);
             }
         } catch (IOException | ClassNotFoundException e) {
-            System.out.println("Client disconnesso o errore di rete: " + e.getMessage());
+            System.out.println("Client disconnected or network error: " + e.getMessage());
             handleDisconnection();
-        } finally {
-            closeConnection();
         }
     }
 
-    private void closeConnection() {
+    @Override
+    public void closeConnection() {
         try {
             socket.close();
         } catch (IOException e) {

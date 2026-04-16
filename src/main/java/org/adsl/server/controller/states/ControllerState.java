@@ -77,16 +77,13 @@ public abstract class ControllerState implements RequestVisitor<VirtualClient> {
     }
     @Override
     public void visit(ClientDisconnected req, VirtualClient virtualClient) throws GameException {
-        if(virtualClient.getClientUsername().isEmpty()){
-            throw new GameException("Virtual client has no username associated.");
-        }
+        assert virtualClient.getClientUsername().isPresent(); // Already controlled in ServerController
         getGame().getPlayers().stream()
             .filter(p -> p.getName().equals(virtualClient.getClientUsername().get()))
             .findFirst()
             .orElseThrow(() -> new GameException("Player not in current game"))
             .setActive(false);
         getGame().removeVirtualClient(virtualClient);
-        virtualClient.setGameId(null);
         toStop = true;
     }
 
