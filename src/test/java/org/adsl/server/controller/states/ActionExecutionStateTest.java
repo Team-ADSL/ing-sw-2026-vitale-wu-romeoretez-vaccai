@@ -11,10 +11,9 @@ import org.adsl.server.network.VirtualClient;
 import org.adsl.server.persistence.GameDAO;
 import org.adsl.server.persistence.GamePersistenceManager;
 import org.adsl.shared.enums.Row;
-import org.adsl.server.exceptions.GameException;
-import org.adsl.shared.model.GameDTO;
+import org.adsl.server.exceptions.ServerException;
 import org.adsl.shared.model.MatchResult;
-import org.adsl.shared.network.requests.MakeMoveRequest;
+import org.adsl.shared.network.requests.MoveRequest;
 import org.adsl.shared.network.responses.ServerResponse;
 import org.adsl.shared.utils.Move;
 import org.junit.jupiter.api.BeforeEach;
@@ -165,8 +164,8 @@ public class ActionExecutionStateTest {
                 new Move(0, Row.UPPER),
                 new Move(1, Row.UPPER)
         );
-        MakeMoveRequest req = new MakeMoveRequest(twoMoves);
-        assertThrows(GameException.class, () -> state.visit(req, client));
+        MoveRequest req = new MoveRequest(twoMoves);
+        assertThrows(ServerException.class, () -> state.visit(req, client));
     }
 
     @Test
@@ -174,7 +173,7 @@ public class ActionExecutionStateTest {
         // tile[0] has p1; client username is p2 → not their turn
         TestVirtualClient client = new TestVirtualClient(serverController, "p2");
         Set<Move> moves = Set.of(new Move(0, Row.UPPER));
-        MakeMoveRequest req = new MakeMoveRequest(moves);
-        assertThrows(GameException.class, () -> state.visit(req, client));
+        MoveRequest req = new MoveRequest(moves);
+        assertThrows(ServerException.class, () -> state.visit(req, client));
     }
 }

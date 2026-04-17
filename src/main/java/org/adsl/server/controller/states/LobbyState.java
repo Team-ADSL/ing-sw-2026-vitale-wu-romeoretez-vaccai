@@ -4,7 +4,7 @@ import org.adsl.server.controller.GameController;
 import org.adsl.server.model.Game;
 import org.adsl.server.model.Player;
 import org.adsl.server.network.VirtualClient;
-import org.adsl.server.exceptions.GameException;
+import org.adsl.server.exceptions.ServerException;
 import org.adsl.shared.network.requests.ClientDisconnected;
 import org.adsl.shared.network.requests.EnterGameRequest;
 import org.adsl.shared.network.requests.StartGameRequest;
@@ -19,30 +19,30 @@ public class LobbyState extends ControllerState {
     }
 
     @Override
-    public void visit(EnterGameRequest req, VirtualClient virtualClient) throws GameException {
-        if(getGame().getPlayers().size() < getGame().getNumPlayer()){
+    public void visit(EnterGameRequest req, VirtualClient virtualClient) throws ServerException {
+        if(getGame().getPlayers().size() == getGame().getNumPlayer()) {
+            throw new ServerException("The lobby is full");
+        } else {
             if(virtualClient.getClientUsername().isEmpty()){
-                throw new GameException("Virtual client has no username associated.");
+                throw new ServerException("Virtual client has no username associated.");
             }
             getGame().getPlayers().add(new Player(virtualClient.getClientUsername().get()));
             getGame().addVirtualClient(virtualClient);
             virtualClient.setGameId(getGame().getGameId());
             getGame().sendUpdateLobby();
-        } else {
-            throw new GameException("The lobby is full");
         }
         setNextState(calcNextState());
     }
 
     @Override
-    public void visit(ClientDisconnected req, VirtualClient virtualClient) throws GameException {
+    public void visit(ClientDisconnected req, VirtualClient virtualClient) throws ServerException {
         if(virtualClient.getClientUsername().isEmpty()){
-            throw new GameException("Virtual client has no username associated.");
+            throw new ServerException("Virtual client has no username associated.");
         }
         Player reqPlayer = getGame().getPlayers().stream()
                 .filter(p -> p.getName().equals(virtualClient.getClientUsername().get()))
                 .findFirst()
-                .orElseThrow(()->  new GameException("Player not in current game"));
+                .orElseThrow(()->  new ServerException("Player not in current game"));
 
         getGame().getPlayers().remove(reqPlayer);
         getGame().removeVirtualClient(virtualClient);
@@ -57,11 +57,11 @@ public class LobbyState extends ControllerState {
     }
 
     @Override
-    public void visit(StartGameRequest req, VirtualClient virtualClient) throws GameException {
+    public void visit(StartGameRequest req, VirtualClient virtualClient) throws ServerException {
         if(getGame().getPlayers().size() == getGame().getNumPlayer()){
             readyToStart = true;
         } else {
-            throw new GameException(getGame().getNumPlayer() + " players required to start the game");
+            throw new ServerException(getGame().getNumPlayer() + " players required to start the game");
         }
         setNextState(calcNextState());
     }

@@ -2,7 +2,7 @@ package org.adsl.server.controller;
 
 import org.adsl.server.config.BoardConfigLoader;
 import org.adsl.server.controller.states.ControllerState;
-import org.adsl.server.exceptions.GameException;
+import org.adsl.server.exceptions.ServerException;
 import org.adsl.server.persistence.GameDAO;
 import org.adsl.server.network.VirtualClient;
 import org.adsl.server.persistence.GamePersistenceManager;
@@ -23,7 +23,7 @@ public class GameController {
         this.state = null;
     }
 
-    public synchronized void handleClientRequest(ClientRequest req, VirtualClient virtualClient) throws GameException {
+    public synchronized void handleClientRequest(ClientRequest req, VirtualClient virtualClient) throws ServerException {
         req.accept(state, virtualClient);
         if(state.getNextState() != null){
             changeState(state.getNextState());
@@ -31,7 +31,7 @@ public class GameController {
     }
 
     // To handle automatics states
-    private void changeState(ControllerState newControllerState) throws GameException {
+    private void changeState(ControllerState newControllerState) throws ServerException {
         ControllerState nextState = newControllerState;
         while (nextState != state && nextState != null) {
             state = nextState;

@@ -1,19 +1,19 @@
 package org.adsl.shared.network.requests;
 
-import org.adsl.server.exceptions.GameException;
+import org.adsl.server.exceptions.ServerException;
 import org.adsl.shared.utils.Move;
 
 import java.util.Set;
 
-public class MakeMoveRequest extends ClientRequest{
+public class MoveRequest extends ClientRequest{
     private final Set<Move> moves;
 
-    public MakeMoveRequest(Set<Move> moves) {
+    public MoveRequest(Set<Move> moves) {
         this.moves = moves;
     }
 
     @Override
-    public <T> void accept(RequestVisitor<T> visitor, T context) throws GameException {
+    public <T> void accept(RequestVisitor<T> visitor, T context) throws ServerException {
         visitor.visit(this, context);
     }
 

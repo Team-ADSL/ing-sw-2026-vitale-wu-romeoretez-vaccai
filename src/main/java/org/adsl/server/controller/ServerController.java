@@ -2,7 +2,7 @@ package org.adsl.server.controller;
 
 import org.adsl.server.config.BoardConfigLoader;
 import org.adsl.server.controller.states.ControllerState;
-import org.adsl.server.controller.states.InitGameState;
+import org.adsl.server.controller.states.LobbyState;
 import org.adsl.server.controller.states.RecoverState;
 import org.adsl.server.network.socket.SocketServer;
 import org.adsl.server.persistence.GameDAO;
@@ -11,7 +11,7 @@ import org.adsl.server.model.Game;
 import org.adsl.server.model.Home;
 import org.adsl.server.network.VirtualClient;
 import org.adsl.server.persistence.GamePersistenceManager;
-import org.adsl.server.exceptions.GameException;
+import org.adsl.server.exceptions.ServerException;
 import org.adsl.shared.model.MatchResult;
 import org.adsl.shared.network.remote.RemoteServerService;
 import org.adsl.shared.network.requests.RequestVisitor;
@@ -57,13 +57,13 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         this.socketServer = socketServer;
     }
 
-    public void startTimeoutChecker(int pingRatioMs, long clientTimoutMs) {
+    public void startTimeoutChecker(int pingRatioMs, long clientTimeoutMs) {
         timeoutScheduler = Executors.newSingleThreadScheduledExecutor();
         timeoutScheduler.scheduleAtFixedRate(() -> {
             long now = System.currentTimeMillis();
             for (VirtualClient client : userConnected.values()) {
-                if (now - client.getLastPing() > clientTimoutMs) {
-                    System.out.println("Client timeout: " + client.getClientUsername());
+                if (now - client.getLastPing() > clientTimeoutMs) {
+                    System.out.println(" NETWORK] Client timeout: " + client.getClientUsername());
                     client.handleDisconnection();
                 }
             }
@@ -79,42 +79,48 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
     public void handleClientRequest(ClientRequest req, VirtualClient virtualClient){
         try {
             virtualClient.updateLastPing();
+            virtualClient.sendPing();
             req.accept(this, virtualClient);
-            home.update();
-        } catch (GameException e) {
-            System.out.println(e.getMessage());
+            System.out.println("[REQUEST] Handled request from " + virtualClient.getClientUsername());
+        } catch (ServerException e) {
+            System.out.println("ERROR: " + e.getMessage());
             virtualClient.sendErrorMessage(e.getMessage());
         }
     }
 
     @Override
-    public void visit(ClientPing req, VirtualClient virtualClient) throws GameException {
-        virtualClient.sendPing();
+    public void visit(ClientPing req, VirtualClient virtualClient) throws ServerException {}
+
+    @Override
+    public void visit(ClientConnection req, VirtualClient virtualClient) throws ServerException {
+        virtualClient.sendLoginNeededResponse();
     }
 
     @Override
-    public void visit(ClientConnection req, VirtualClient virtualClient) throws GameException {
-        virtualClient.sendLoginNeededResponse(); // Implicitly confirming connection
-    }
-
-    @Override
-    public void visit(LoginRequest req, VirtualClient virtualClient) throws GameException {
+    public void visit(LoginRequest req, VirtualClient virtualClient) throws ServerException {
         if(userConnected.containsKey(req.getUsername())){
-            virtualClient.sendErrorMessage("User already connected");
+            throw new ServerException("[LOGIN REQUEST] User already connected");
         } else {
-            virtualClient.setConnected(true);
             virtualClient.setClientUsername(req.getUsername());
             userConnected.put(req.getUsername(), virtualClient);
             home.addObserver(virtualClient);
+            home.update();
             System.out.println("[LOGIN] User connected: " + req.getUsername());
         }
     }
 
+    public void controlIfLogged(VirtualClient virtualClient) throws ServerException {
+        if(virtualClient.getClientUsername().isEmpty()){
+            throw new ServerException("[REQUEST] User is not logged");
+        }
+    }
+
     @Override
-    public void visit(CreateGameRequest req, VirtualClient virtualClient) throws GameException {
+    public void visit(CreateGameRequest req, VirtualClient virtualClient) throws ServerException {
+        controlIfLogged(virtualClient);
         try{
             if(req.getNumPlayer() < 2 || req.getNumPlayer() > 5 ){
-                throw new GameException("Minimum players: 2; Maximum players: 5.");
+                throw new ServerException("[CREATE GAME REQUEST] Minimum players: 2; Maximum players: 5.");
             }
 
             int newId =  gameDAO.createMatch();
@@ -122,40 +128,33 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
             newGame.addObserver(this);
 
             GameController newGameController = new GameController(boardConfigLoader, gamePersistenceManager, gameDAO);
-            newGameController.setState(new InitGameState(newGame, newGameController));
+            newGameController.setState(new LobbyState(newGame, newGameController));
             games.put(newId, newGameController);
 
             EnterGameRequest newReq = new EnterGameRequest(newId);
             newGameController.handleClientRequest(newReq, virtualClient);
-            // SEE ENTER GAME
+            home.removeObserver(virtualClient);
+            home.addGame(newId);
+            home.update();
         } catch (Exception e){
-            System.out.println(e.getMessage());
-            virtualClient.sendErrorMessage(e.getMessage());
+            throw new ServerException("[CREATE GAME] Creation failed, retry."); // Fail in database query
         }
     }
 
     @Override
-    public void visit(EnterGameRequest req, VirtualClient virtualClient) throws GameException {
-        try{
-            if(virtualClient.getGameId().isEmpty()){
-                throw new GameException("Virtual client has no gameID associated.");
-            }
-            GameController reqGame = games.get(virtualClient.getGameId().get());
-            if(reqGame != null){
-                reqGame.handleClientRequest(req, virtualClient);
-                // NEED TO REMOVE FROM HOME OBSERVER ONLY IF SUCCESS,
-                // CHANGE EXCEPTION HANDLING
-            } else {
-                throw new GameException("The requested game does not exists.");
-            }
-        } catch (Exception e){
-            System.out.println(e.getMessage());
-            virtualClient.sendErrorMessage(e.getMessage());
+    public void visit(EnterGameRequest req, VirtualClient virtualClient) throws ServerException {
+        controlIfLogged(virtualClient);
+        GameController reqGame = games.get(req.getGameId());
+        if(reqGame != null){
+            reqGame.handleClientRequest(req, virtualClient);
+            home.removeObserver(virtualClient);
+        } else {
+            throw new ServerException("[ENTER GAME REQUEST] The requested game does not exists.");
         }
     }
 
     @Override
-    public void visit(ClientDisconnected req, VirtualClient virtualClient) throws GameException {
+    public void visit(ClientDisconnected req, VirtualClient virtualClient) throws ServerException {
         if(virtualClient.getClientUsername().isPresent()) {
             userConnected.remove(virtualClient.getClientUsername().get());
         }
@@ -173,44 +172,60 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
     }
 
     @Override
-    public void visit(StartGameRequest req, VirtualClient virtualClient) throws GameException {
+    public void visit(StartGameRequest req, VirtualClient virtualClient) throws ServerException {
+        controlIfLogged(virtualClient);
         if(virtualClient.getGameId().isEmpty()){
-            throw new GameException("Virtual client has no gameID associated.");
+            throw new ServerException("[START GAME REQUEST] Virtual client has no gameId associated.");
         }
         sendToGameController(virtualClient.getGameId().get(), req, virtualClient);
     }
 
     @Override
-    public void visit(MakeMoveRequest req, VirtualClient virtualClient) throws GameException {
+    public void visit(MoveRequest req, VirtualClient virtualClient) throws ServerException {
+        controlIfLogged(virtualClient);
         if(virtualClient.getGameId().isEmpty()) {
-            throw new GameException("Virtual client has no gameID associated.");
+            throw new ServerException("[MOVE REQUEST] Virtual client has no gameId associated.");
         }
         sendToGameController(virtualClient.getGameId().get(), req, virtualClient);
     }
 
-    public void sendToGameController(int gameId, ClientRequest req, VirtualClient virtualClient) throws GameException {
+    public void sendToGameController(int gameId, ClientRequest req, VirtualClient virtualClient) throws ServerException {
         GameController gameController = games.get(gameId);
         if(gameController != null){
             gameController.handleClientRequest(req, virtualClient);
         } else {
-            throw new GameException("Game requested does not exists.");
+            throw new ServerException("[GAME REQUEST] Game requested does not exists.");
         }
     }
 
     @Override
     public void notifyEndGame(int gameId, List<MatchResult> matchResults) {
         games.remove(gameId);
+
+        home.removeGame(gameId);
+        List<VirtualClient> newClientInHome = userConnected.values().stream()
+                .filter(c -> c.getGameId().isPresent())
+                .filter(c -> c.getGameId().get() == gameId)
+                .toList();
+        for(VirtualClient c : newClientInHome){
+            home.addObserver(c);
+        }
+        home.update();
+
         try {
             gamePersistenceManager.removeGame(gameId);
         } catch(Exception e){
             System.out.println(e.getMessage());
         }
+
         // If game terminates before starting we clean the database
         if(matchResults == null){
             try {
                 gameDAO.deleteMatch(gameId);
             } catch(Exception e){
-                System.out.println(e.getMessage());
+                System.out.println("ERROR: [DB] Some problem during deletion of game "
+                        + gameId + "\n"
+                        + e.getMessage());
             }
         }
     }
@@ -223,11 +238,14 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
                 g.addObserver(this);
                 GameController gc = new GameController(boardConfigLoader, gamePersistenceManager, gameDAO);
                 games.put(g.getGameId(), gc);
+                home.addGame(g.getGameId());
                 ControllerState state = new RecoverState(g, gc);
                 gc.setState(state);
             });
+            home.update();
         } catch(Exception e){
-            System.out.println(e.getMessage());
+            System.out.println("ERROR: [RECOVER] Some problem while reading " +
+                    "game saved.\n" + e.getMessage());
         }
     }
 
@@ -241,21 +259,21 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         if (this.registry != null) {
             try {
                 registry.unbind("GameServer");
-                System.out.println("GameServer removed from Registry.");
+                System.out.println("[CLOSING] GameServer removed from Registry.");
             } catch (NotBoundException | RemoteException e) {
-                System.out.println("RMI service already removed.");
+                System.out.println("ERROR: [CLOSING] RMI service already removed.");
             }
         }
 
         try {
             if (rmiServer != null) {
                 UnicastRemoteObject.unexportObject(this.rmiServer, true);
-                System.out.println("Removed rmiServer object.");
+                System.out.println("[CLOSING] Removed rmiServer object.");
             }
 
             if (this.registry != null) {
                 UnicastRemoteObject.unexportObject(this.registry, true);
-                System.out.println("Registry stopped.");
+                System.out.println("[CLOSING] Registry stopped.");
             }
         } catch (NoSuchObjectException e) {
             throw new RuntimeException(e);

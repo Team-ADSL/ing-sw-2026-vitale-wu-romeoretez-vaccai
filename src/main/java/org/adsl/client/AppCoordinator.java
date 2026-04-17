@@ -25,14 +25,14 @@ public class AppCoordinator implements ResponseVisitor{
         this.pingScheduler = null;
     }
 
-    public void startPingScheduler(int pingRatioMs, long serverTimoutMs) {
+    public void startPingScheduler(int pingRatioMs, long serverTimeoutMs) {
         pingScheduler = Executors.newSingleThreadScheduledExecutor();
 
         pingScheduler.scheduleAtFixedRate(() -> {
             try {
                 long now = System.currentTimeMillis();
 
-                if (now - lastServerPing > serverTimoutMs) {
+                if (now - lastServerPing > serverTimeoutMs) {
                     System.err.println("Server unavailable (Timeout). Disconnection...");
                     gameUI.onServerDisconnected();
                     return;
@@ -117,7 +117,7 @@ public class AppCoordinator implements ResponseVisitor{
         serverConnection.sendRequest(clientRequest);
     }
     public void makeMoveRequest(Set<Move> moves) throws Exception {
-        ClientRequest clientRequest = new MakeMoveRequest(moves);
+        ClientRequest clientRequest = new MoveRequest(moves);
         serverConnection.sendRequest(clientRequest);
     }
     public void disconnect() throws Exception {

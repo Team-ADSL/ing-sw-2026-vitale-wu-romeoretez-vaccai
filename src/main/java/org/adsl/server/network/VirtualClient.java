@@ -23,21 +23,23 @@ public abstract class VirtualClient implements GameObserver, HomeObserver, EndGa
     public VirtualClient(ServerController serverController){
         this.serverController = serverController;
         this.clientUsername = null;
-        this.isConnected = false;
+        this.isConnected = true;
         this.gameId = null;
         this.lastPing = System.currentTimeMillis();
     }
 
     public void processRequest(ClientRequest req){
-        serverController.handleClientRequest(req, this);
+        if(isConnected){
+            serverController.handleClientRequest(req, this);
+        }
     }
 
     public void handleDisconnection() {
-        if(!isConnected){
-            return;
+        if(isConnected){
+            ClientRequest disconnection = new ClientDisconnected();
+            processRequest(disconnection);
         }
-        ClientRequest disconnection = new ClientDisconnected();
-        processRequest(disconnection);
+
     }
 
     public void handleConnection() {

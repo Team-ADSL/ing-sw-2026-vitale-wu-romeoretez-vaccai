@@ -5,10 +5,10 @@ import org.adsl.server.network.VirtualClient;
 import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Phase;
 import org.adsl.shared.enums.Trigger;
-import org.adsl.shared.network.requests.MakeMoveRequest;
+import org.adsl.shared.network.requests.MoveRequest;
 import org.adsl.shared.utils.Move;
 import org.adsl.shared.enums.Row;
-import org.adsl.server.exceptions.GameException;
+import org.adsl.server.exceptions.ServerException;
 import org.adsl.server.model.cards.Card;
 import org.adsl.server.model.Game;
 import org.adsl.server.model.Player;
@@ -30,12 +30,12 @@ public class ExtraMoveState extends ControllerState {
     }
 
     @Override
-    public void visit(MakeMoveRequest req, VirtualClient virtualClient) throws GameException {
+    public void visit(MoveRequest req, VirtualClient virtualClient) throws ServerException {
         Player reqPlayer = controlIfPlayerTurn(virtualClient);
 
         Set<Move> moves = req.getMoves();
         if(moves.size() > 1){
-            throw new GameException("Invalid input, only 0 or 1 move allowed");
+            throw new ServerException("Invalid input, only 0 or 1 move allowed");
         }
 
         if(moves.isEmpty()){
@@ -44,13 +44,13 @@ public class ExtraMoveState extends ControllerState {
         } else {
             Move currentMove = moves.stream().findFirst().get();
             if(currentMove.row() != Row.UPPER){
-                throw new GameException("Allowed only picking from TopRow");
+                throw new ServerException("Allowed only picking from TopRow");
             }
 
             CardRow selectedRow = getGame().getBoard().topRow();
             Card selectedCard = selectedRow.pickCardAt(currentMove.rowIndex());
             if(!selectedCard.canBeDrawn(reqPlayer)){
-                throw new GameException("Invalid picking: selected card cannot be picked");
+                throw new ServerException("Invalid picking: selected card cannot be picked");
             }
 
             execute(currentMove, reqPlayer);

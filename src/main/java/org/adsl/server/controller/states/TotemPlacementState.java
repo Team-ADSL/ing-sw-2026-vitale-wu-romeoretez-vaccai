@@ -4,9 +4,9 @@ import org.adsl.server.controller.GameController;
 import org.adsl.server.network.VirtualClient;
 import org.adsl.shared.enums.Phase;
 import org.adsl.shared.enums.Row;
-import org.adsl.shared.network.requests.MakeMoveRequest;
+import org.adsl.shared.network.requests.MoveRequest;
 import org.adsl.shared.utils.Move;
-import org.adsl.server.exceptions.GameException;
+import org.adsl.server.exceptions.ServerException;
 import org.adsl.server.model.Game;
 import org.adsl.server.model.Player;
 import org.adsl.server.model.board.OfferTrack;
@@ -22,17 +22,17 @@ public class TotemPlacementState extends ControllerState {
     }
 
     @Override
-    public void visit(MakeMoveRequest req, VirtualClient virtualClient) throws GameException {
+    public void visit(MoveRequest req, VirtualClient virtualClient) throws ServerException {
         Player reqPlayer = controlIfPlayerTurn(virtualClient);
 
         Set<Move> moves = req.getMoves();
         if(moves.size() != 1){
-            throw new GameException("Invalid input, only 1 move allowed");
+            throw new ServerException("Invalid input, only 1 move allowed");
         }
 
         Move currentMove = moves.stream().findFirst().get();
         if(!currentMove.row().equals(Row.OFFER)){
-            throw new GameException("Invalid input, you need to choose a tile from the offer track.");
+            throw new ServerException("Invalid input, you need to choose a tile from the offer track.");
         }
         execute(currentMove, reqPlayer);
     }
