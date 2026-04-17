@@ -1,7 +1,7 @@
 package org.adsl.server.controller.states;
 
 import org.adsl.server.controller.GameController;
-import org.adsl.server.exceptions.GameException;
+import org.adsl.server.exceptions.ServerException;
 import org.adsl.server.persistence.GameDAO;
 import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Trigger;
@@ -22,7 +22,7 @@ public class EndGameState extends ControllerState {
     }
 
     @Override
-    public ControllerState onEntry() throws GameException {
+    public ControllerState onEntry() throws ServerException {
         Set<Player> players = getGame().getPlayers();
         for(Player p : players){
             p.getCards().get(CardType.BUILDINGS)
@@ -65,7 +65,7 @@ public class EndGameState extends ControllerState {
             List<MatchResult> matchResults = gameDAO.getLeaderboard(players.size());
             getGame().sendEndGameResults(matchResults);
         } catch(SQLException e){
-            throw new GameException("Error during saving match results.");
+            throw new ServerException("Error during saving match results.");
         }
         getGame().setPhase(null);
         getGame().sendUpdateGame();

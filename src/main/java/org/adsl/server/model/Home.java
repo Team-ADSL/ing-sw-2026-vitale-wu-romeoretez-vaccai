@@ -15,6 +15,14 @@ public class Home {
         this.games = new ArrayList<>();
     }
 
+    public void addGame(int gameId){
+        games.add(gameId);
+    }
+
+    public void removeGame(int gameId){
+        games.remove(gameId);
+    }
+
     public void update() {
         for(HomeObserver o : observers) o.updateHome(games);
     }

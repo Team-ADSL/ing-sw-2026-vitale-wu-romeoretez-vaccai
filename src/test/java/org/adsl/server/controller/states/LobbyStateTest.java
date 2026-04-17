@@ -8,8 +8,7 @@ import org.adsl.server.model.Game;
 import org.adsl.server.network.VirtualClient;
 import org.adsl.server.persistence.GameDAO;
 import org.adsl.server.persistence.GamePersistenceManager;
-import org.adsl.server.exceptions.GameException;
-import org.adsl.shared.model.GameDTO;
+import org.adsl.server.exceptions.ServerException;
 import org.adsl.shared.model.MatchResult;
 import org.adsl.shared.network.requests.ClientDisconnected;
 import org.adsl.shared.network.requests.EnterGameRequest;
@@ -74,7 +73,7 @@ public class LobbyStateTest {
     // ──────────────────────────────────────────────
 
     @Test
-    void enterGame_addsPlayerToGame() throws GameException {
+    void enterGame_addsPlayerToGame() throws ServerException {
         TestVirtualClient c = client("alice");
         state.visit(new EnterGameRequest(1), c);
         assertEquals(1, game.getPlayers().size());
@@ -82,7 +81,7 @@ public class LobbyStateTest {
     }
 
     @Test
-    void enterGame_setsGameControllerOnClient() throws GameException {
+    void enterGame_setsGameControllerOnClient() throws ServerException {
         TestVirtualClient c = client("alice");
         state.visit(new EnterGameRequest(1), c);
         assertTrue(c.getGameId().isPresent());
@@ -90,14 +89,14 @@ public class LobbyStateTest {
     }
 
     @Test
-    void enterGame_throwsWhenLobbyFull() throws GameException {
+    void enterGame_throwsWhenLobbyFull() throws ServerException {
         // Fill to 3 players
         for (int i = 0; i < 2; i++) {
             TestVirtualClient c = client("player" + i);
             state.visit(new EnterGameRequest(1), c);
         }
         TestVirtualClient extra = client("extra");
-        assertThrows(GameException.class, () -> state.visit(new EnterGameRequest(1), extra));
+        assertThrows(ServerException.class, () -> state.visit(new EnterGameRequest(1), extra));
     }
 
     // ──────────────────────────────────────────────
@@ -105,7 +104,7 @@ public class LobbyStateTest {
     // ──────────────────────────────────────────────
 
     @Test
-    void clientDisconnected_removesPlayer() throws GameException {
+    void clientDisconnected_removesPlayer() throws ServerException {
         TestVirtualClient c = client("bob");
         state.visit(new EnterGameRequest(1), c);
         assertEquals(1, game.getPlayers().size());
@@ -115,7 +114,7 @@ public class LobbyStateTest {
     }
 
     @Test
-    void clientDisconnected_clearsGameControllerOnClient() throws GameException {
+    void clientDisconnected_clearsGameControllerOnClient() throws ServerException {
         TestVirtualClient c = client("bob");
         state.visit(new EnterGameRequest(1), c);
         state.visit(new ClientDisconnected(), c);
@@ -126,7 +125,7 @@ public class LobbyStateTest {
     void clientDisconnected_throwsWhenPlayerNotInGame() {
         TestVirtualClient c = client("notInGame");
         // The player was never added — disconnect should throw
-        assertThrows(GameException.class, () -> state.visit(new ClientDisconnected(), c));
+        assertThrows(ServerException.class, () -> state.visit(new ClientDisconnected(), c));
     }
 
     // ──────────────────────────────────────────────
@@ -134,7 +133,7 @@ public class LobbyStateTest {
     // ──────────────────────────────────────────────
 
     @Test
-    void startGame_setsReadyWhenTwoPlayers() throws GameException {
+    void startGame_setsReadyWhenTwoPlayers() throws ServerException {
         state.visit(new EnterGameRequest(1), client("p1"));
         state.visit(new EnterGameRequest(1), client("p2"));
 
@@ -145,9 +144,9 @@ public class LobbyStateTest {
     }
 
     @Test
-    void startGame_throwsWhenLessThanTwoPlayers() throws GameException {
+    void startGame_throwsWhenLessThanTwoPlayers() throws ServerException {
         state.visit(new EnterGameRequest(1), client("p1"));
-        assertThrows(GameException.class, () -> state.visit(new StartGameRequest(), client("p1")));
+        assertThrows(ServerException.class, () -> state.visit(new StartGameRequest(), client("p1")));
     }
 
     // ──────────────────────────────────────────────
@@ -160,7 +159,7 @@ public class LobbyStateTest {
     }
 
     @Test
-    void nextState_returnsInitGameStateWhenReady() throws GameException {
+    void nextState_returnsInitGameStateWhenReady() throws ServerException {
         state.visit(new EnterGameRequest(1), client("p1"));
         state.visit(new EnterGameRequest(1), client("p2"));
         state.visit(new StartGameRequest(), client("p1"));

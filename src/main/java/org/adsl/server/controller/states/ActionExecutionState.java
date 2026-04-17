@@ -3,10 +3,10 @@ package org.adsl.server.controller.states;
 import org.adsl.server.controller.GameController;
 import org.adsl.server.network.VirtualClient;
 import org.adsl.shared.enums.Phase;
-import org.adsl.shared.network.requests.MakeMoveRequest;
+import org.adsl.shared.network.requests.MoveRequest;
 import org.adsl.shared.utils.Move;
 import org.adsl.shared.enums.Row;
-import org.adsl.server.exceptions.GameException;
+import org.adsl.server.exceptions.ServerException;
 import org.adsl.server.model.cards.Card;
 import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Trigger;
@@ -29,7 +29,7 @@ public class ActionExecutionState extends ControllerState {
     }
 
     @Override
-    public void visit(MakeMoveRequest req, VirtualClient virtualClient) throws GameException {
+    public void visit(MoveRequest req, VirtualClient virtualClient) throws ServerException {
         Player reqPlayer = controlIfPlayerTurn(virtualClient);
 
         OfferTrack offerTrack = getGame().getBoard().offerTrack();
@@ -40,7 +40,7 @@ public class ActionExecutionState extends ControllerState {
         int remainingMoves = offerTrack.getTileAt(offerIndex).getNumMoves();
         Set<Move> moves = req.getMoves();
         if(moves.size() != remainingMoves){
-            throw new GameException(
+            throw new ServerException(
                     "Number of cards mismatch. Requires " + moves.size()
                             + ", Allowed: " + remainingMoves);
         }
@@ -50,7 +50,7 @@ public class ActionExecutionState extends ControllerState {
         int numLowDraw = (int) moves.stream().filter(m -> m.row() == Row.LOWER).count();
         int numUpDraw = (int) moves.stream().filter(m -> m.row() == Row.UPPER).count();
         if(numUpDraw != allowedMoves.get(Row.UPPER) || numLowDraw != allowedMoves.get(Row.LOWER)){
-            throw new GameException(
+            throw new ServerException(
                     "Wrong moves: you can do "
                             + allowedMoves.get(Row.UPPER) + " draws from the up row and "
                             + allowedMoves.get(Row.LOWER) + " draws from the low row");
@@ -65,7 +65,7 @@ public class ActionExecutionState extends ControllerState {
             }
             Card selectedCard = selectedRow.pickCardAt(move.rowIndex());
             if(!selectedCard.canBeDrawn(reqPlayer)){
-                throw new GameException("Invalid picking: " +
+                throw new ServerException("Invalid picking: " +
                         "card at " + move.row().toString() + " row and index " +
                         move.rowIndex() + " cannot be picked");
             }

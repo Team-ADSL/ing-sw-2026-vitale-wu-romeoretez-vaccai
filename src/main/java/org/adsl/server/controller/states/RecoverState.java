@@ -5,7 +5,7 @@ import org.adsl.server.controller.StateFactory;
 import org.adsl.server.model.Game;
 import org.adsl.server.model.Player;
 import org.adsl.server.network.VirtualClient;
-import org.adsl.server.exceptions.GameException;
+import org.adsl.server.exceptions.ServerException;
 import org.adsl.shared.network.requests.EnterGameRequest;
 
 
@@ -15,17 +15,17 @@ public class RecoverState extends ControllerState {
     }
 
     @Override
-    public void visit(EnterGameRequest req, VirtualClient virtualClient) throws GameException {
+    public void visit(EnterGameRequest req, VirtualClient virtualClient) throws ServerException {
         if(virtualClient.getClientUsername().isEmpty()){
-            throw new GameException("Virtual client has no username associated.");
+            throw new ServerException("Virtual client has no username associated.");
         }
         Player reqPlayer = getGame().getPlayers().stream()
                 .filter(p -> p.getName().equals(virtualClient.getClientUsername().get()))
                 .findFirst()
-                .orElseThrow(() -> new GameException("Player not in current game."));
+                .orElseThrow(() -> new ServerException("Player not in current game."));
 
         if(reqPlayer.isActive()){
-            throw new GameException("Player already connected.");
+            throw new ServerException("Player already connected.");
         }
 
         reqPlayer.setActive(true);
