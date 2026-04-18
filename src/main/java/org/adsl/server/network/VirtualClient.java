@@ -39,7 +39,6 @@ public abstract class VirtualClient implements GameObserver, HomeObserver, EndGa
             ClientRequest disconnection = new ClientDisconnected();
             processRequest(disconnection);
         }
-
     }
 
     public void handleConnection() {
@@ -98,6 +97,9 @@ public abstract class VirtualClient implements GameObserver, HomeObserver, EndGa
     }
     public long getLastPing() {
         return lastPing;
+    }
+    public boolean isConnected() {
+        return isConnected;
     }
 
     public void setGameId(Integer gameId) {

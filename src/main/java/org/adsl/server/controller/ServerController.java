@@ -63,7 +63,7 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
             long now = System.currentTimeMillis();
             for (VirtualClient client : userConnected.values()) {
                 if (now - client.getLastPing() > clientTimeoutMs) {
-                    System.out.println(" NETWORK] Client timeout: " + client.getClientUsername());
+                    System.out.println("[NETWORK] Client timeout: " + client.getClientUsername());
                     client.handleDisconnection();
                 }
             }

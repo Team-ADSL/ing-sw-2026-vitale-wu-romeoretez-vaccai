@@ -8,7 +8,6 @@ import org.adsl.server.network.VirtualClient;
 import org.adsl.server.persistence.GamePersistenceManager;
 import org.adsl.shared.network.requests.ClientRequest;
 
-
 public class GameController {
     private ControllerState state;
     private final BoardConfigLoader boardConfigLoader;

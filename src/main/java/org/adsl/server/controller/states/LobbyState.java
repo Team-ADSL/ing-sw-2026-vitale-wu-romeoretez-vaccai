@@ -9,7 +9,6 @@ import org.adsl.shared.network.requests.ClientDisconnected;
 import org.adsl.shared.network.requests.EnterGameRequest;
 import org.adsl.shared.network.requests.StartGameRequest;
 
-
 public class LobbyState extends ControllerState {
     private boolean readyToStart;
 

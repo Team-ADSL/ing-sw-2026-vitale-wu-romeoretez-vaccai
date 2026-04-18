@@ -19,7 +19,7 @@ public class Home {
         games.add(gameId);
     }
 
-    public void removeGame(int gameId){
+    public void removeGame(Integer gameId){
         games.remove(gameId);
     }
 
