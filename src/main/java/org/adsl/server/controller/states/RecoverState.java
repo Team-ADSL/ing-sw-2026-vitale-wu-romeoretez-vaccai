@@ -8,7 +8,6 @@ import org.adsl.server.network.VirtualClient;
 import org.adsl.server.exceptions.ServerException;
 import org.adsl.shared.network.requests.EnterGameRequest;
 
-
 public class RecoverState extends ControllerState {
     public RecoverState(Game game, GameController context) {
         super(game, context);
