@@ -209,6 +209,7 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
                 .toList();
         for(VirtualClient c : newClientInHome){
             home.addObserver(c);
+            c.setGameId(null);
         }
         home.update();
 

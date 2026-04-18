@@ -11,7 +11,6 @@ import org.adsl.server.network.socket.SocketServer;
 import org.adsl.shared.network.remote.RemoteServerService;
 import org.adsl.shared.network.requests.*;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.rmi.registry.Registry;
@@ -47,7 +46,6 @@ public class ServerControllerTest {
     // ──────────────────────────────────────────────
 
     @Test
-    @DisplayName("handleClientRequest send ping and accept the request")
     void testHandleClientRequest_updatesPingAndAccepts() {
         final boolean[] acceptCalled = {false};
         ClientRequest fakeReq = new ClientRequest() {
@@ -65,7 +63,6 @@ public class ServerControllerTest {
     }
 
     @Test
-    @DisplayName("visit(ClientConnection) send a login request")
     void testVisitClientConnection_sendsLoginNeeded() throws ServerException {
         serverController.visit(new ClientConnection(), client);
 
@@ -77,7 +74,6 @@ public class ServerControllerTest {
     // ──────────────────────────────────────────────
 
     @Test
-    @DisplayName("Login with a new username succeed")
     void testVisitLoginRequest_success() throws ServerException {
         LoginRequest req = new LoginRequest("Player1");
 
@@ -87,7 +83,6 @@ public class ServerControllerTest {
     }
 
     @Test
-    @DisplayName("Login with a already connected username failed")
     void testVisitLoginRequest_duplicateUsername_throwsException() throws ServerException {
         LoginRequest req1 = new LoginRequest("Player1");
         serverController.visit(req1, client);
@@ -104,7 +99,6 @@ public class ServerControllerTest {
     // ──────────────────────────────────────────────
 
     @Test
-    @DisplayName("Creation from a client not logged failed")
     void testVisitCreateGameRequest_notLogged_throwsException() {
         CreateGameRequest req = new CreateGameRequest(4);
 
@@ -112,7 +106,6 @@ public class ServerControllerTest {
     }
 
     @Test
-    @DisplayName("Creation with an invalid number of players failed")
     void testVisitCreateGameRequest_invalidPlayers_throwsException() {
         client.setClientUsername("Player1");
 
@@ -121,7 +114,6 @@ public class ServerControllerTest {
     }
 
     @Test
-    @DisplayName("Creation with correct parameter succeed")
     void testVisitCreateGameRequest_success() throws Exception {
         client.setClientUsername("Player1");
         CreateGameRequest req = new CreateGameRequest(4);
@@ -139,7 +131,6 @@ public class ServerControllerTest {
     // ──────────────────────────────────────────────
 
     @Test
-    @DisplayName("Entering in a not existing match failed")
     void testVisitEnterGameRequest_gameNotExists_throwsException() {
         client.setClientUsername("Player1");
         EnterGameRequest req = new EnterGameRequest(999);
@@ -148,7 +139,6 @@ public class ServerControllerTest {
     }
 
     @Test
-    @DisplayName("StartGame without an associated gameID failed")
     void testVisitStartGameRequest_noGameId_throwsException() {
         client.setClientUsername("Player1");
         StartGameRequest req = new StartGameRequest(); // Same for MoveRequest
@@ -161,7 +151,6 @@ public class ServerControllerTest {
     // ──────────────────────────────────────────────
 
     @Test
-    @DisplayName("ClientDisconnected clean client's state")
     void testVisitClientDisconnected_cleansUp() throws ServerException {
         client.setClientUsername("Player1");
         ClientDisconnected req = new ClientDisconnected();
@@ -173,7 +162,6 @@ public class ServerControllerTest {
     }
 
     @Test
-    @DisplayName("Timeout checker disconnect inactive client")
     void testTimeoutChecker_disconnectsIdleClient() throws Exception {
         client.setClientUsername("Player1");
         LoginRequest req = new LoginRequest("Player1");
@@ -192,7 +180,6 @@ public class ServerControllerTest {
     // ──────────────────────────────────────────────
 
     @Test
-    @DisplayName("notifyEndGame with match_results null remove from DB and disk")
     void testNotifyEndGame_withNullResults_cleansDatabase() {
         int targetGameId = 101;
 
@@ -200,5 +187,25 @@ public class ServerControllerTest {
 
         assertTrue(fakePersistence.removedGames.contains(targetGameId));
         assertTrue(fakeGameDAO.deletedMatches.contains(targetGameId));
+    }
+
+    @Test
+    void testNotifyEndGame_removeGameIdFromClientOnlyIfInGame() {
+        int targetGameId = 101;
+
+        LoginRequest req = new LoginRequest("Player1");
+        serverController.visit(req,client);
+        client.setGameId(targetGameId);
+
+        FakeVirtualClient client2 = new FakeVirtualClient();
+        LoginRequest req2 = new LoginRequest("Player2");
+        serverController.visit(req2,client2);
+        client2.setGameId(10);
+
+        serverController.notifyEndGame(targetGameId, null);
+
+        assertTrue(client.getGameId().isEmpty());
+        assertTrue(client2.getGameId().isPresent());
+        assertEquals(10, client2.getGameId().get());
     }
 }
