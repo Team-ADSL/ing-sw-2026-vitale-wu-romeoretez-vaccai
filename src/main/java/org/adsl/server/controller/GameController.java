@@ -32,7 +32,12 @@ public class GameController {
     // To handle automatics states
     private void changeState(ControllerState newControllerState) throws ServerException {
         ControllerState nextState = newControllerState;
+        int transitionCount = 0;
+        final int MAX_TRANSITIONS = 50; // To avoid thread starvation
         while (nextState != state && nextState != null) {
+            if (transitionCount++ > MAX_TRANSITIONS) {
+                throw new ServerException("[FATAL] Infinite state transition loop detected.");
+            }
             state = nextState;
             nextState = state.onEntry();
         }

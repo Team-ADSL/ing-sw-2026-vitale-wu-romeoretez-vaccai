@@ -97,6 +97,16 @@ public class ControllerStateTest {
         assertEquals("Player1", result.getName());
     }
 
+    @Test
+    void testControlIfPlayerTurn_emptyCurrentPlayer_throwsServerException() {
+        fakeGame.currentPlayer = null;
+
+        ServerException exception = assertThrows(ServerException.class,
+                () -> state.controlIfPlayerTurn(client));
+
+        assertTrue(exception.getMessage().contains("FATAL"));
+    }
+
     // ──────────────────────────────────────────────
     // TEST REQUEST REJECTIONS
     // ──────────────────────────────────────────────

@@ -9,6 +9,10 @@ import org.adsl.server.exceptions.ServerException;
 import org.adsl.shared.network.requests.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -82,6 +86,52 @@ public class ServerControllerTest {
         ServerException exception = assertThrows(ServerException.class, () -> serverController.visit(req2, client2));
 
         assertTrue(exception.getMessage().contains("already connected"));
+    }
+
+    @Test
+    void testVisitLoginRequest_trueConcurrentAtomicInsertion() throws InterruptedException {
+        int numThreads = 10;
+        ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+
+        CountDownLatch readyLatch = new CountDownLatch(numThreads);
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch doneLatch = new CountDownLatch(numThreads);
+
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger exceptionCount = new AtomicInteger(0);
+
+        String sharedUsername = "ConcurrentPlayer";
+
+        for (int i = 0; i < numThreads; i++) {
+            executor.submit(() -> {
+                FakeVirtualClient threadClient = new FakeVirtualClient();
+                LoginRequest req = new LoginRequest(sharedUsername);
+
+                try {
+                    readyLatch.countDown();
+                    startLatch.await();
+
+                    serverController.visit(req, threadClient);
+                    successCount.incrementAndGet();
+                } catch (ServerException e) {
+                    if (e.getMessage().contains("already connected")) {
+                        exceptionCount.incrementAndGet();
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                } finally {
+                    doneLatch.countDown();
+                }
+            });
+        }
+
+        readyLatch.await();
+        startLatch.countDown();
+        doneLatch.await();
+        executor.shutdown();
+
+        assertEquals(1, successCount.get(), "Exactly one thread must win the race and succeed");
+        assertEquals(numThreads - 1, exceptionCount.get(), "All other simultaneous threads must be cleanly rejected");
     }
 
     @Test

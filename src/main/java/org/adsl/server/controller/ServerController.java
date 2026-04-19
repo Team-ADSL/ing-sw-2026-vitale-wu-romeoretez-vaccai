@@ -98,15 +98,22 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
 
     @Override
     public void visit(LoginRequest req, VirtualClient virtualClient) throws ServerException {
-        if(userConnected.containsKey(req.getUsername())){
-            throw new ServerException("[LOGIN REQUEST] User already connected");
-        } else {
-            virtualClient.setClientUsername(req.getUsername());
-            userConnected.put(req.getUsername(), virtualClient);
-            home.addObserver(virtualClient);
-            home.update();
-            System.out.println("[LOGIN] User connected: " + req.getUsername());
+        String username = req.getUsername();
+
+        if (username == null || username.trim().isEmpty()) {
+            throw new ServerException("[LOGIN REQUEST] Invalid username provided");
         }
+
+        VirtualClient existingClient = userConnected.putIfAbsent(username, virtualClient);
+
+        if (existingClient != null) {
+            throw new ServerException("[LOGIN REQUEST] User already connected");
+        }
+
+        virtualClient.setClientUsername(username);
+        home.addObserver(virtualClient);
+        home.update();
+        System.out.println("[LOGIN] User connected: " + username);
     }
 
     public void controlIfLogged(VirtualClient virtualClient) throws ServerException {
