@@ -11,7 +11,6 @@ import org.adsl.utils.TestDummies;
 import org.adsl.utils.fakes.FakeGameDAO;
 import org.adsl.utils.fakes.FakeGamePersistenceManager;
 import org.adsl.utils.fakes.FakeHome;
-import org.adsl.utils.fakes.FakeRegistry;
 
 import java.rmi.registry.Registry;
 
@@ -19,7 +18,7 @@ public class ServerControllerBuilder {
     public Home home = new FakeHome();
     public GameDAO gameDAO = new FakeGameDAO();
     public GamePersistenceManager persistenceManager = new FakeGamePersistenceManager();
-    public Registry registry = new FakeRegistry();
+    public Registry registry = new TestDummies.DummyRegistry();
     public BoardConfigLoader boardConfigLoader = new TestDummies.DummyBoardConfigLoader();
     public RemoteServerService rmiServer = new TestDummies.DummyRemoteServerService();
     public SocketServer socketServer = new TestDummies.DummySocketServer();
