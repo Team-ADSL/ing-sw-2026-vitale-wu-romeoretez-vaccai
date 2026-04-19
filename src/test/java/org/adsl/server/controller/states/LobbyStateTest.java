@@ -14,6 +14,7 @@ import org.adsl.shared.network.requests.ClientDisconnected;
 import org.adsl.shared.network.requests.EnterGameRequest;
 import org.adsl.shared.network.requests.StartGameRequest;
 import org.adsl.shared.network.responses.ServerResponse;
+import org.adsl.utils.fakes.FakeHome;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -58,7 +59,7 @@ public class LobbyStateTest {
     @BeforeEach
     void setUp() {
         BoardConfigLoader loader = new JsonBoardConfigLoader();
-        serverController = new ServerController(NO_OP_DAO, loader, NO_OP_PERSISTENCE, null, null, null);
+        serverController = new ServerController(new FakeHome(), NO_OP_DAO, loader, NO_OP_PERSISTENCE, null, null, null);
         game = new Game(1, 2);
         controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
         state = new LobbyState(game, controller);

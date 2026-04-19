@@ -11,6 +11,7 @@ import org.adsl.shared.model.MatchResult;
 import org.adsl.shared.network.requests.ClientConnection;
 import org.adsl.shared.network.requests.ClientRequest;
 import org.adsl.shared.network.responses.ServerResponse;
+import org.adsl.utils.fakes.FakeHome;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -56,7 +57,7 @@ public class VirtualClientTest {
         final List<ClientRequest> handled = new ArrayList<>();
 
         RecordingServerController(GameDAO dao, BoardConfigLoader loader, GamePersistenceManager pm) {
-            super(dao, loader, pm, null, null, null);
+            super(new FakeHome(), dao, loader, pm, null, null, null);
         }
 
         @Override

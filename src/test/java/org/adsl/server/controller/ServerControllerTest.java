@@ -1,44 +1,31 @@
 package org.adsl.server.controller;
 
-import org.adsl.TestDummies;
-import org.adsl.fakes.FakeGameDAO;
-import org.adsl.fakes.FakeGamePersistenceManager;
-import org.adsl.fakes.FakeRegistry;
-import org.adsl.fakes.FakeVirtualClient;
-import org.adsl.server.config.BoardConfigLoader;
+import org.adsl.utils.builder.ServerControllerBuilder;
+import org.adsl.utils.fakes.FakeGameDAO;
+import org.adsl.utils.fakes.FakeGamePersistenceManager;
+import org.adsl.utils.fakes.FakeHome;
+import org.adsl.utils.fakes.FakeVirtualClient;
 import org.adsl.server.exceptions.ServerException;
-import org.adsl.server.network.socket.SocketServer;
-import org.adsl.shared.network.remote.RemoteServerService;
 import org.adsl.shared.network.requests.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.rmi.registry.Registry;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ServerControllerTest {
+    private FakeVirtualClient client;
     private FakeGameDAO fakeGameDAO;
     private FakeGamePersistenceManager fakePersistence;
-
-    private FakeVirtualClient client;
+    private ServerControllerBuilder builder;
     private ServerController serverController;
 
     @BeforeEach
     void setUp() {
-        fakeGameDAO = new FakeGameDAO();
         client = new FakeVirtualClient();
+        fakeGameDAO = new FakeGameDAO();
         fakePersistence = new FakeGamePersistenceManager();
-        Registry fakeRegistry = new FakeRegistry();
-
-        BoardConfigLoader fakeBoardConfig = new TestDummies.DummyBoardConfigLoader();
-        RemoteServerService fakeRmiServer = new TestDummies.DummyRemoteServerService();
-        SocketServer fakeSocketServer = new TestDummies.DummySocketServer();
-
-        serverController = new ServerController(
-                fakeGameDAO, fakeBoardConfig, fakePersistence,
-                fakeRegistry, fakeRmiServer, fakeSocketServer
-        );
+        builder = new ServerControllerBuilder();
+        serverController = builder.build();
     }
 
     // ──────────────────────────────────────────────
@@ -64,7 +51,9 @@ public class ServerControllerTest {
 
     @Test
     void testVisitClientConnection_sendsLoginNeeded() throws ServerException {
-        serverController.visit(new ClientConnection(), client);
+        ClientConnection req = new ClientConnection();
+
+        serverController.visit(req, client);
 
         assertTrue(client.loginNeededSent);
     }
@@ -78,6 +67,7 @@ public class ServerControllerTest {
         LoginRequest req = new LoginRequest("Player1");
 
         assertDoesNotThrow(() -> serverController.visit(req, client));
+
         assertTrue(client.getClientUsername().isPresent());
         assertEquals("Player1", client.getClientUsername().get());
     }
@@ -85,13 +75,25 @@ public class ServerControllerTest {
     @Test
     void testVisitLoginRequest_duplicateUsername_throwsException() throws ServerException {
         LoginRequest req1 = new LoginRequest("Player1");
-        serverController.visit(req1, client);
-
         FakeVirtualClient client2 = new FakeVirtualClient();
         LoginRequest req2 = new LoginRequest("Player1");
 
-        ServerException exception = assertThrows(ServerException.class,
-                () -> serverController.visit(req2, client2));
+        serverController.visit(req1, client);
+        ServerException exception = assertThrows(ServerException.class, () -> serverController.visit(req2, client2));
+
+        assertTrue(exception.getMessage().contains("already connected"));
+    }
+
+    @Test
+    void testVisitLoginRequest_addsUserToHome() throws ServerException {
+        FakeHome fakeHome = new FakeHome();
+        ServerController serverController = builder.withHome(fakeHome).build();
+        LoginRequest login = new LoginRequest("Player1");
+
+        serverController.visit(login, client);
+
+        assertTrue(fakeHome.updateCalled);
+        assertTrue(fakeHome.addedObservers.contains(client));
     }
 
     // ──────────────────────────────────────────────
@@ -102,26 +104,34 @@ public class ServerControllerTest {
     void testVisitCreateGameRequest_notLogged_throwsException() {
         CreateGameRequest req = new CreateGameRequest(4);
 
-        assertThrows(ServerException.class, () -> serverController.visit(req, client));
+        ServerException exception = assertThrows(ServerException.class, () -> serverController.visit(req, client));
+
+        assertTrue(exception.getMessage().contains("not logged"));
+
     }
 
     @Test
     void testVisitCreateGameRequest_invalidPlayers_throwsException() {
         client.setClientUsername("Player1");
 
-        assertThrows(ServerException.class, () -> serverController.visit(new CreateGameRequest(1), client));
-        assertThrows(ServerException.class, () -> serverController.visit(new CreateGameRequest(6), client));
+        ServerException exception1 = assertThrows(ServerException.class,
+                () -> serverController.visit(new CreateGameRequest(1), client));
+        ServerException exception2 = assertThrows(ServerException.class,
+                () -> serverController.visit(new CreateGameRequest(6), client));
+
+        assertTrue(exception1.getMessage().contains("invalid number"));
+        assertTrue(exception2.getMessage().contains("invalid number"));
     }
 
     @Test
     void testVisitCreateGameRequest_success() throws Exception {
+        ServerController serverController = builder.withGameDAO(fakeGameDAO).build();
         client.setClientUsername("Player1");
         CreateGameRequest req = new CreateGameRequest(4);
 
         assertDoesNotThrow(() -> serverController.visit(req, client));
 
         assertEquals(1, fakeGameDAO.createdMatches.size(), "A game need to be created in the DB");
-
         assertTrue(client.getGameId().isPresent());
         assertEquals(1, client.getGameId().get());
     }
@@ -135,7 +145,10 @@ public class ServerControllerTest {
         client.setClientUsername("Player1");
         EnterGameRequest req = new EnterGameRequest(999);
 
-        assertThrows(ServerException.class, () -> serverController.visit(req, client));
+        ServerException exception = assertThrows(ServerException.class, () -> serverController.visit(req, client));
+
+        assertTrue(exception.getMessage().contains("not exists"));
+
     }
 
     @Test
@@ -143,7 +156,10 @@ public class ServerControllerTest {
         client.setClientUsername("Player1");
         StartGameRequest req = new StartGameRequest(); // Same for MoveRequest
 
-        assertThrows(ServerException.class, () -> serverController.visit(req, client));
+        ServerException exception = assertThrows(ServerException.class, () -> serverController.visit(req, client));
+
+        assertTrue(exception.getMessage().contains("no gameId"));
+
     }
 
     // ──────────────────────────────────────────────
@@ -165,11 +181,10 @@ public class ServerControllerTest {
     void testTimeoutChecker_disconnectsIdleClient() throws Exception {
         client.setClientUsername("Player1");
         LoginRequest req = new LoginRequest("Player1");
+
         serverController.visit(req, client);
-
         serverController.startTimeoutChecker(10, 50);
-
-        Thread.sleep(100);
+        Thread.sleep(250);
         serverController.stopTimeoutChecker();
 
         assertFalse(client.isConnected());
@@ -181,6 +196,8 @@ public class ServerControllerTest {
 
     @Test
     void testNotifyEndGame_withNullResults_cleansDatabase() {
+        ServerController serverController = builder.withPersistenceManager(fakePersistence)
+                .withGameDAO(fakeGameDAO).build();
         int targetGameId = 101;
 
         serverController.notifyEndGame(targetGameId, null);
@@ -193,14 +210,14 @@ public class ServerControllerTest {
     void testNotifyEndGame_removeGameIdFromClientOnlyIfInGame() {
         int targetGameId = 101;
 
+        client.setGameId(targetGameId);
         LoginRequest req = new LoginRequest("Player1");
         serverController.visit(req,client);
-        client.setGameId(targetGameId);
 
         FakeVirtualClient client2 = new FakeVirtualClient();
+        client2.setGameId(10);
         LoginRequest req2 = new LoginRequest("Player2");
         serverController.visit(req2,client2);
-        client2.setGameId(10);
 
         serverController.notifyEndGame(targetGameId, null);
 

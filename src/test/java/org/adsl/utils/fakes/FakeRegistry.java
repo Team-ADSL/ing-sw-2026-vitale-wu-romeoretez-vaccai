@@ -1,4 +1,4 @@
-package org.adsl.fakes;
+package org.adsl.utils.fakes;
 
 import java.rmi.Remote;
 import java.rmi.registry.Registry;

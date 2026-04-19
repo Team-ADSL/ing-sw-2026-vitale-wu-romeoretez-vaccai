@@ -1,4 +1,4 @@
-package org.adsl;
+package org.adsl.utils;
 
 import org.adsl.server.config.BoardConfigLoader;
 import org.adsl.server.config.GameSettings;
