@@ -51,30 +51,37 @@ public abstract class ControllerState implements RequestVisitor<VirtualClient> {
 
     @Override
     public void visit(ClientPing req, VirtualClient virtualClient) throws ServerException {}
+
     @Override
     public void visit(ClientConnection req, VirtualClient virtualClient) throws ServerException {
         throw new ServerException("New connection rejected.");
     }
+
     @Override
     public void visit(LoginRequest req, VirtualClient virtualClient) throws ServerException {
         throw new ServerException("Username setting rejected.");
     }
+
     @Override
     public void visit(CreateGameRequest req, VirtualClient virtualClient) throws ServerException {
         throw new ServerException("Create game request rejected.");
     }
+
     @Override
     public void visit(EnterGameRequest req, VirtualClient virtualClient) throws ServerException {
         throw new ServerException("Connection rejected.");
     }
+
     @Override
     public void visit(StartGameRequest req, VirtualClient virtualClient) throws ServerException {
         throw new ServerException("Start request rejected.");
     }
+
     @Override
     public void visit(MoveRequest req, VirtualClient virtualClient) throws ServerException {
         throw new ServerException("Move request rejected.");
     }
+
     @Override
     public void visit(ClientDisconnected req, VirtualClient virtualClient) throws ServerException {
         assert virtualClient.getClientUsername().isPresent(); // Already controlled in ServerController
