@@ -41,10 +41,11 @@ public abstract class ControllerState implements RequestVisitor<VirtualClient> {
                 .findFirst()
                 .orElseThrow(() -> new ServerException("Player not in current game"));
 
-        Optional<Player> currentPlayerContainer = getGame().getCurrentPlayer();
-        assert currentPlayerContainer.isPresent(); // Setted on creation in every non-automatic state
-        if(!currentPlayerContainer.get().equals(reqPlayer) ) {
-            throw new ServerException("The current player is " + currentPlayerContainer.get().getName());
+        Player currentPlayer = getGame().getCurrentPlayer()
+                .orElseThrow(() -> new ServerException("[FATAL] Internal Error: No current player found in this state"));
+
+        if (!currentPlayer.equals(reqPlayer)) {
+            throw new ServerException("The current player is " + currentPlayer.getName());
         }
         return reqPlayer;
     }

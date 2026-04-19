@@ -9,6 +9,7 @@ import org.adsl.utils.fakes.FakeVirtualClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class GameControllerTest {
@@ -86,5 +87,28 @@ public class GameControllerTest {
 
         assertTrue(stateB.onEntryCalled);
         assertTrue(stateC.onEntryCalled);
+    }
+
+    @Test
+    void testChangeState_infiniteLoop_throwsServerException() throws ServerException {
+        FakeState stateA = new FakeState(controller);
+        FakeState stateB = new FakeState(controller);
+
+        stateA.autoTransitionTarget = stateB;
+        stateB.autoTransitionTarget = stateA;
+
+        controller.setState(stateA);
+
+        ClientRequest trigger = new ClientRequest() {
+            @Override
+            public <T> void accept(RequestVisitor<T> visitor, T c) {
+                stateA.setNextState(stateB);
+            }
+        };
+
+        ServerException exception = assertThrows(ServerException.class,
+                () -> controller.handleClientRequest(trigger, client));
+
+        assertTrue(exception.getMessage().contains("loop detected"));
     }
 }
