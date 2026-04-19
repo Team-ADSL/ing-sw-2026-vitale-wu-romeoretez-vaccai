@@ -16,6 +16,7 @@ import org.adsl.shared.model.MatchResult;
 import org.adsl.shared.network.requests.MoveRequest;
 import org.adsl.shared.network.responses.ServerResponse;
 import org.adsl.shared.utils.Move;
+import org.adsl.utils.fakes.FakeHome;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -65,7 +66,7 @@ public class ActionExecutionStateTest {
     @BeforeEach
     void setUp() {
         BoardConfigLoader loader = new JsonBoardConfigLoader();
-        serverController = new ServerController(NO_OP_DAO, loader, NO_OP_PERSISTENCE, null, null, null);
+        serverController = new ServerController(new FakeHome(), NO_OP_DAO, loader, NO_OP_PERSISTENCE, null, null, null);
 
         game = new Game(1, 5);
         p1 = new Player("p1");

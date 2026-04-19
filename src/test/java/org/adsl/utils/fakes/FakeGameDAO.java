@@ -1,4 +1,4 @@
-package org.adsl.fakes;
+package org.adsl.utils.fakes;
 
 import org.adsl.server.persistence.GameDAO;
 import org.adsl.shared.model.MatchResult;

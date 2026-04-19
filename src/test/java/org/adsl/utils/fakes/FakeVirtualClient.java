@@ -1,4 +1,4 @@
-package org.adsl.fakes;
+package org.adsl.utils.fakes;
 
 import org.adsl.server.network.VirtualClient;
 import org.adsl.shared.network.responses.ServerResponse;

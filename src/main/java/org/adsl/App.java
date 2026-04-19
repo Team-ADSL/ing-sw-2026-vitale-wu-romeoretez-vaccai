@@ -11,6 +11,7 @@ import org.adsl.server.controller.ServerController;
 import org.adsl.server.db.ConnectionProvider;
 import org.adsl.server.db.DatabaseConfig;
 import org.adsl.server.db.DatabaseManager;
+import org.adsl.server.model.Home;
 import org.adsl.server.network.rmi.RemoteServerServiceImpl;
 import org.adsl.server.network.socket.SocketServer;
 import org.adsl.server.persistence.GameDAO;
@@ -115,8 +116,9 @@ public class App
             GameDAO gameDAO = new SqlGameDAO(connectionProvider);
             BoardConfigLoader boardConfigLoader = new JsonBoardConfigLoader();
             GamePersistenceManager gamePersistenceManager = new SerialGamePersistenceManager(recoverDirectory);
+            Home home = new Home();
             ServerController serverController = new ServerController(
-                    gameDAO, boardConfigLoader, gamePersistenceManager, registry, rmiServer, socketServer);
+                    home, gameDAO, boardConfigLoader, gamePersistenceManager, registry, rmiServer, socketServer);
             serverController.recoverGames();
             serverController.startTimeoutChecker(5000, 20000);
 

@@ -43,10 +43,10 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
     private final SocketServer socketServer;
 
 
-    public ServerController(GameDAO gameDAO, BoardConfigLoader boardConfigLoader, GamePersistenceManager gamePersistenceManager,
+    public ServerController(Home home, GameDAO gameDAO, BoardConfigLoader boardConfigLoader, GamePersistenceManager gamePersistenceManager,
                             Registry registry, RemoteServerService rmiServer, SocketServer socketServer) {
         this.games = new ConcurrentHashMap<>();
-        this.home = new Home();
+        this.home = home;
         this.gameDAO = gameDAO;
         this.boardConfigLoader = boardConfigLoader;
         this.gamePersistenceManager = gamePersistenceManager;
@@ -120,7 +120,8 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         controlIfLogged(virtualClient);
         try{
             if(req.getNumPlayer() < 2 || req.getNumPlayer() > 5 ){
-                throw new ServerException("[CREATE GAME REQUEST] Minimum players: 2; Maximum players: 5.");
+                throw new ServerException("[CREATE GAME REQUEST] invalid number of players. " +
+                        "Minimum players: 2; Maximum players: 5.");
             }
 
             int newId =  gameDAO.createMatch();
@@ -136,6 +137,8 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
             home.removeObserver(virtualClient);
             home.addGame(newId);
             home.update();
+        } catch(ServerException e) {
+            throw e;
         } catch (Exception e){
             throw new ServerException("[CREATE GAME] Creation failed, retry."); // Fail in database query
         }
