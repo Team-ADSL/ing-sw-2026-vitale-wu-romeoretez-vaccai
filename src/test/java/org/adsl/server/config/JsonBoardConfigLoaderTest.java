@@ -28,15 +28,15 @@ public class JsonBoardConfigLoaderTest {
     // ──────────────────────────────────────────────
 
     @Test
-    void getCards_2p_returnsThreeEras() {
+    void getCards_2p_returnsThreeErasAndFinalEvents() {
         ArrayList<Set<Card>> cards = loader.getCards(2);
-        assertEquals(3, cards.size());
+        assertEquals(4, cards.size());
     }
 
     @ParameterizedTest
     @ValueSource(ints = {2, 3, 4, 5})
-    void getCards_allPlayerCounts_returnsThreeEras(int n) {
-        assertEquals(3, loader.getCards(n).size());
+    void getCards_allPlayerCounts_returnsThreeErasAndFinalEvents(int n) {
+        assertEquals(4, loader.getCards(n).size());
     }
 
     @Test
@@ -57,11 +57,15 @@ public class JsonBoardConfigLoaderTest {
     @Test
     void getCards_allCardsHaveValidEra() {
         ArrayList<Set<Card>> cards = loader.getCards(2);
-        for (int i = 0; i < cards.size(); i++) {
-            final int era = i + 1;
+        for (int i = 0; i < cards.size() - 1; i++) {
+            int era = i + 1;
             for (Card c : cards.get(i)) {
                 assertEquals(era, c.getEra(), "Card era mismatch in era set " + era);
             }
+        }
+        // Control final events
+        for (Card c : cards.get(3)) {
+            assertEquals(3, c.getEra(), "Card era mismatch in final events set ");
         }
     }
 
