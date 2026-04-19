@@ -70,7 +70,7 @@ public class JsonBoardConfigLoader implements BoardConfigLoader {
     public ArrayList<Set<Card>> getCards(int numPlayers) {
         // 3 sets, one per era
         ArrayList<Set<Card>> result = new ArrayList<>();
-        for (int i = 0; i < 3; i++) result.add(new HashSet<>());
+        for (int i = 0; i <= 3; i++) result.add(new HashSet<>());
 
         // Base file (2p): contains characters AND events
         loadCardsFromFile("/cards/cards_2p.json", "characters and events", 2, result);

@@ -72,7 +72,7 @@
       { "id": "shaman_11",          "type": "SHAMAN",          "starNum": 2 },
       { "id": "shaman_12",          "type": "SHAMAN",          "starNum": 3 },
       { "id": "hunt_03",            "type": "HUNT",            "isFinal": false, "multiplierPP": 3 },
-      { "id": "cave_paintings_03",  "type": "CAVE_PAINTINGS",  "isFinal": false, "minArtists": 2, "lostPP": 2, "multiplierPP": 3 },
+      { "id": "cave_paintings_03",  "type": "CAVE_PAINTINGS",  "isFinal": false, "minArtists": 2, "lostPP": 2, "multiplierPP": 3 }
     ]
   },
   "finalEvents": {
