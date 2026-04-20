@@ -4,15 +4,16 @@ import com.googlecode.lanterna.gui2.*;
 import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
 import com.googlecode.lanterna.gui2.dialogs.MessageDialogButton;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
- * Handles the two setup phases before a local game:
- *   1. Player count selection (2–5) via radio buttons
- *   2. Name entry for each player with duplicate-name validation
+ * Pre-game dialogs driven by the Lanterna GUI layer, used in network mode:
+ *   1. askUsername() — shown on LoginNeeded, returns the username typed by the user
+ *   2. showHome(activeGames) — shown on HomeUpdate, returns the user's choice:
+ *        either CREATE (with a player count 2-5) or JOIN (with a gameId)
+ *
+ * These dialogs never talk to the network directly. The TUI collects the user's
+ * choice and forwards it through AppCoordinator.
  */
 public class SetupScreen {
     private final WindowBasedTextGUI gui;
@@ -21,123 +22,106 @@ public class SetupScreen {
         this.gui = gui;
     }
 
-    // ── Phase 1: Choose number of players ────────────────────────────────────
-
-    public int selectPlayerCount() {
-        final int[] result = {2};
-
-        BasicWindow window = new BasicWindow("MESOS – Player Setup");
-        window.setHints(List.of(Window.Hint.CENTERED));
-
-        Panel root = new Panel(new LinearLayout(Direction.VERTICAL));
-
-        root.addComponent(new Label(""));
-        root.addComponent(new Label("  MESOS  –  Ancient Tribe Strategy  "));
-        root.addComponent(new Label(""));
-        root.addComponent(new Label("  How many players?"));
-        root.addComponent(new Label(""));
-
-        RadioBoxList<String> radioBox = new RadioBoxList<>();
-        for (int n = 2; n <= 5; n++) {
-            radioBox.addItem(n + " players");
-        }
-        radioBox.setCheckedItemIndex(0);
-        root.addComponent(radioBox);
-
-        root.addComponent(new Label(""));
-
-        root.addComponent(new Button("  Confirm  ", () -> {
-            result[0] = radioBox.getCheckedItemIndex() + 2;
-            window.close();
-        }));
-
-        root.addComponent(new Label(""));
-
-        window.setComponent(root);
-        gui.addWindowAndWait(window);
-
-        return result[0];
+    /** Result of the home dialog: either create a new game or join an existing one. */
+    public record HomeChoice(Kind kind, int value) {
+        public enum Kind { CREATE, JOIN }
+        public static HomeChoice create(int numPlayers) { return new HomeChoice(Kind.CREATE, numPlayers); }
+        public static HomeChoice join(int gameId)       { return new HomeChoice(Kind.JOIN, gameId); }
     }
 
-    // ── Phase 2: Enter player names ───────────────────────────────────────────
+    // ── Username entry ────────────────────────────────────────────────────────
 
-    public List<String> enterPlayerNames(int numPlayers) {
-        while (true) {
-            List<String> names = showNameEntryDialog(numPlayers);
-            if (names != null) return names;
-        }
-    }
+    public String askUsername() {
+        final String[] result = {null};
 
-    private List<String> showNameEntryDialog(int numPlayers) {
-        final List<String>[] result = new List[]{null};
+        while (result[0] == null || result[0].isBlank()) {
+            BasicWindow window = new BasicWindow("MESOS – Login");
+            window.setHints(List.of(Window.Hint.CENTERED));
 
-        BasicWindow window = new BasicWindow("MESOS – Enter Names");
-        window.setHints(List.of(Window.Hint.CENTERED));
+            Panel root = new Panel(new LinearLayout(Direction.VERTICAL));
+            root.addComponent(new Label(""));
+            root.addComponent(new Label("  MESOS  –  Ancient Tribe Strategy  "));
+            root.addComponent(new Label(""));
+            root.addComponent(new Label("  Enter your username:"));
 
-        Panel root = new Panel(new LinearLayout(Direction.VERTICAL));
-        root.addComponent(new Label(""));
-        root.addComponent(new Label("  Enter a name for each player:"));
-        root.addComponent(new Label(""));
-
-        List<TextBox> textBoxes = new ArrayList<>();
-        for (int i = 1; i <= numPlayers; i++) {
-            Panel row = new Panel(new LinearLayout(Direction.HORIZONTAL));
-            row.addComponent(new Label("  Player " + i + ":  "));
             TextBox tb = new TextBox(new com.googlecode.lanterna.TerminalSize(20, 1));
-            textBoxes.add(tb);
-            row.addComponent(tb);
-            root.addComponent(row);
-        }
+            root.addComponent(tb);
+            root.addComponent(new Label(""));
 
+            root.addComponent(new Button("  Login  ", () -> {
+                String name = tb.getText().trim();
+                if (name.isBlank()) {
+                    MessageDialog.showMessageDialog(gui, "Invalid", "Username cannot be empty.", MessageDialogButton.OK);
+                    return;
+                }
+                if (name.length() > 20) {
+                    MessageDialog.showMessageDialog(gui, "Invalid", "Username must be 20 characters or fewer.", MessageDialogButton.OK);
+                    return;
+                }
+                result[0] = name;
+                window.close();
+            }));
+            root.addComponent(new Label(""));
+
+            window.setComponent(root);
+            gui.addWindowAndWait(window);
+        }
+        return result[0];
+    }
+
+    // ── Home screen (create or join) ──────────────────────────────────────────
+
+    public HomeChoice showHome(List<Integer> activeGames) {
+        final HomeChoice[] result = {null};
+
+        BasicWindow window = new BasicWindow("MESOS – Home");
+        window.setHints(List.of(Window.Hint.CENTERED));
+
+        Panel root = new Panel(new LinearLayout(Direction.VERTICAL));
+        root.addComponent(new Label(""));
+        root.addComponent(new Label("  Choose an option:"));
         root.addComponent(new Label(""));
 
-        Panel buttons = new Panel(new LinearLayout(Direction.HORIZONTAL));
-        buttons.addComponent(new Button("  Start Game  ", () -> {
-            List<String> names = new ArrayList<>();
-            for (TextBox tb : textBoxes) {
-                names.add(tb.getText().trim());
-            }
-
-            String error = validateNames(names, numPlayers);
-            if (error != null) {
-                MessageDialog.showMessageDialog(gui, "Invalid Names", error, MessageDialogButton.OK);
-                return;
-            }
-
-            result[0] = names;
+        // Create new game
+        root.addComponent(new Label("  Create new game — select number of players:"));
+        RadioBoxList<String> playerCount = new RadioBoxList<>();
+        for (int n = 2; n <= 5; n++) playerCount.addItem(n + " players");
+        playerCount.setCheckedItemIndex(0);
+        root.addComponent(playerCount);
+        root.addComponent(new Button("  Create Game  ", () -> {
+            result[0] = HomeChoice.create(playerCount.getCheckedItemIndex() + 2);
             window.close();
         }));
-        buttons.addComponent(new EmptySpace());
-        buttons.addComponent(new Button("  Back  ", window::close));
 
-        root.addComponent(buttons);
+        root.addComponent(new Label(""));
+        root.addComponent(new Separator(Direction.HORIZONTAL));
+        root.addComponent(new Label(""));
+
+        // Join existing game
+        if (activeGames != null && !activeGames.isEmpty()) {
+            root.addComponent(new Label("  Join an active game:"));
+            RadioBoxList<String> gameList = new RadioBoxList<>();
+            for (Integer gid : activeGames) gameList.addItem("Game #" + gid);
+            gameList.setCheckedItemIndex(0);
+            root.addComponent(gameList);
+            root.addComponent(new Button("  Join Game  ", () -> {
+                int idx = gameList.getCheckedItemIndex();
+                if (idx < 0) {
+                    MessageDialog.showMessageDialog(gui, "Invalid", "Select a game first.", MessageDialogButton.OK);
+                    return;
+                }
+                result[0] = HomeChoice.join(activeGames.get(idx));
+                window.close();
+            }));
+        } else {
+            root.addComponent(new Label("  (no active games available to join)"));
+        }
+
         root.addComponent(new Label(""));
 
         window.setComponent(root);
         gui.addWindowAndWait(window);
 
         return result[0];
-    }
-
-    private String validateNames(List<String> names, int expected) {
-        if (names.size() != expected) {
-            return "Expected " + expected + " names.";
-        }
-        for (String name : names) {
-            if (name.isBlank()) {
-                return "All player names must be non-empty.";
-            }
-            if (name.length() > 20) {
-                return "Names must be 20 characters or fewer.";
-            }
-        }
-        Set<String> seen = new HashSet<>();
-        for (String name : names) {
-            String lower = name.toLowerCase();
-            if (!seen.add(lower)) {
-                return "Duplicate name: \"" + name + "\". Each player must have a unique name.";
-            }
-        }
-        return null; // valid
     }
 }
