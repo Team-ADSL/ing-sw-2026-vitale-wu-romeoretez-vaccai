@@ -106,8 +106,8 @@ public class JsonBoardConfigLoader implements BoardConfigLoader {
             for (JsonNode node : cardArray) {
                 String type = node.get("type").asText();
                 CardParser parser = CARD_PARSERS.get(type);
-                // We put the final events in the last arrayCell (4) and the era is always 3
-                if (parser != null) result.get(3).add(parser.parse(node, 3, np));
+                // Final events belong to era 3 (index 2)
+                if (parser != null) result.get(2).add(parser.parse(node, 3, np));
             }
 
         } catch (Exception e) {

@@ -60,7 +60,7 @@ public class Player implements Serializable {
                             .map(Card::createDTO)
                             .collect(Collectors.toSet())
             ));
-        return new PlayerDTO(cardsDTO);
+        return new PlayerDTO(name, food, pp, color, cardsDTO);
     }
 
     public void changePP(int pp){
