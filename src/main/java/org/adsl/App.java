@@ -29,77 +29,74 @@ import java.util.concurrent.Executors;
 
 public class App 
 {
-    public static void main( String[] args )
+    static void main( String[] args )
     {
         if (args.length == 0) {
             printUsageAndExit("Parameter missing.");
         }
 
         String mode = args[0].toLowerCase();
-        if ("--local".equals(mode)) {
-            startLocal();
-        }
-        else if ("--server".equals(mode)) {
-            // Expected args: --server <socket-port> <rmi-port> <recover-directory>
-            if (args.length != 4) {
-                printUsageAndExit("Invalid server's parameter or missing..");
-            }
-
-            int socketPort = 0;
-            int rmiPort = 0;
-            try {
-                socketPort = Integer.parseInt(args[1]);
-                rmiPort = Integer.parseInt(args[2]);
-
-                if (socketPort < 1024 || socketPort > 65535 || rmiPort < 1024 || rmiPort > 65535) {
-                    printUsageAndExit("Use ports between 1024 and 65535.");
+        switch (mode) {
+            case "--test-tui" -> startTestTui();
+            case "--server" -> {
+                // Expected args: --server <socket-port> <rmi-port> <recover-directory>
+                if (args.length != 4) {
+                    printUsageAndExit("Invalid server's parameter or missing..");
                 }
-                if (socketPort == rmiPort) {
-                    printUsageAndExit("Socket and RMI cannot share the same port.");
+
+                int socketPort = 0;
+                int rmiPort = 0;
+                try {
+                    socketPort = Integer.parseInt(args[1]);
+                    rmiPort = Integer.parseInt(args[2]);
+
+                    if (socketPort < 1024 || socketPort > 65535 || rmiPort < 1024 || rmiPort > 65535) {
+                        printUsageAndExit("Use ports between 1024 and 65535.");
+                    }
+                    if (socketPort == rmiPort) {
+                        printUsageAndExit("Socket and RMI cannot share the same port.");
+                    }
+                } catch (NumberFormatException e) {
+                    printUsageAndExit("The ports specified are not valid integer numbers.");
                 }
-            } catch (NumberFormatException e) {
-                printUsageAndExit("The ports specified are not valid integer numbers.");
+                String saveDirectory = args[3];
+                startServer(socketPort, rmiPort, saveDirectory);
             }
-            String saveDirectory = args[3];
-            startServer(socketPort, rmiPort, saveDirectory);
-
-        }
-        else if ("--client".equals(mode)) {
-            // Expected args: --client <connection> <ui> <server-ip> <server-port>
-            if (args.length != 5) {
-                printUsageAndExit("Invalid client's parameter or missing.");
-            }
-            String connectionType = args[1].toLowerCase();
-            String uiType = args[2].toLowerCase();
-            String ipAddress = args[3];
-
-            if (!"--socket".equals(connectionType) && !"--rmi".equals(connectionType)) {
-                printUsageAndExit("Invalid connection type. Use --socket or --rmi.");
-            }
-
-            if (!"--tui".equals(uiType) && !"--gui".equals(uiType)) {
-                printUsageAndExit("Invalid UI type. Use --tui or --gui.");
-            }
-
-            int port = 0;
-            try {
-                port = Integer.parseInt(args[4]);
-                if (port < 1024 || port > 65535) {
-                    printUsageAndExit("Use a port between 1024 and 65535.");
+            case "--client" -> {
+                // Expected args: --client <connection> <ui> <server-ip> <server-port>
+                if (args.length != 5) {
+                    printUsageAndExit("Invalid client's parameter or missing.");
                 }
-            } catch (NumberFormatException e) {
-                printUsageAndExit("The ports specified is not valid integer numbers.");
-            }
+                String connectionType = args[1].toLowerCase();
+                String uiType = args[2].toLowerCase();
+                String ipAddress = args[3];
 
-            startClient(connectionType, uiType, ipAddress, port);
-        }
-        else {
-            printUsageAndExit("Unknown mode: " + mode);
+                if (!"--socket".equals(connectionType) && !"--rmi".equals(connectionType)) {
+                    printUsageAndExit("Invalid connection type. Use --socket or --rmi.");
+                }
+
+                if (!"--tui".equals(uiType) && !"--gui".equals(uiType)) {
+                    printUsageAndExit("Invalid UI type. Use --tui or --gui.");
+                }
+
+                int port = 0;
+                try {
+                    port = Integer.parseInt(args[4]);
+                    if (port < 1024 || port > 65535) {
+                        printUsageAndExit("Use a port between 1024 and 65535.");
+                    }
+                } catch (NumberFormatException e) {
+                    printUsageAndExit("The ports specified is not valid integer numbers.");
+                }
+
+                startClient(connectionType, uiType, ipAddress, port);
+            }
+            default -> printUsageAndExit("Unknown mode: " + mode);
         }
     }
 
-    private static void startLocal() {
-        System.out.println("Starting MESOS in local mode (TUI + in-process fake server)...");
+    private static void startTestTui() {
+        System.out.println("[BUILDING] Starting MESOS in test mode (TUI + in-process fake server)...");
         TUI tui = new TUI();
         ServerConnection fakeServerConnection = new FakeServerConnection();
         AppCoordinator appCoordinator = new AppCoordinator(tui, fakeServerConnection);

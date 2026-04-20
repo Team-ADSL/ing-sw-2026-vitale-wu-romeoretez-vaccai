@@ -125,7 +125,6 @@ public class TUI implements GameUI {
             else if (disconnected)  onServerDisconnected();
 
         } catch (Exception e) {
-            e.printStackTrace();
             showFatal("Unexpected error", e);
         } finally {
             shutdown();
