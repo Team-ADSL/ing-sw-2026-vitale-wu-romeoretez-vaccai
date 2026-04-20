@@ -1,14 +1,11 @@
 package org.adsl.utils.fakes;
 
 import org.adsl.server.model.Game;
-import org.adsl.server.model.Player;
 import org.adsl.server.network.VirtualClient;
 import org.adsl.shared.model.MatchResult;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class FakeGame extends Game {
     public boolean updateLobbySent = false;
@@ -17,8 +14,6 @@ public class FakeGame extends Game {
     public List<MatchResult> capturedResults = null;
     public final List<VirtualClient> addedClients = new ArrayList<>();
     public final List<VirtualClient> removedClients = new ArrayList<>();
-    public final Set<Player> players = new HashSet<>();
-    public Player currentPlayer = null;
 
     public FakeGame(int gameId, int numPlayer) {
         super(gameId, numPlayer);

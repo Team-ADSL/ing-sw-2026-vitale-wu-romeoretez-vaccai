@@ -39,9 +39,9 @@ public class ControllerStateTest {
         FakePlayer player2 = new FakePlayer("Player2");
 
         fakeGame = new FakeGame();
-        fakeGame.players.add(player1);
-        fakeGame.players.add(player2);
-        fakeGame.currentPlayer = player1;
+        fakeGame.getPlayers().add(player1);
+        fakeGame.getPlayers().add(player2);
+        fakeGame.setCurrentPlayer(player1);
 
         state = new ConcreteControllerState(fakeGame, controller);
     }
@@ -99,7 +99,7 @@ public class ControllerStateTest {
 
     @Test
     void testControlIfPlayerTurn_emptyCurrentPlayer_throwsServerException() {
-        fakeGame.currentPlayer = null;
+        fakeGame.setCurrentPlayer(null);
 
         ServerException exception = assertThrows(ServerException.class,
                 () -> state.controlIfPlayerTurn(client));
