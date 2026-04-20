@@ -6,7 +6,6 @@ import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
 import com.googlecode.lanterna.screen.Screen;
-import org.adsl.client.local.LocalGameCoordinator;
 import org.adsl.client.view.tui.CardCatalog;
 import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Phase;
@@ -56,16 +55,14 @@ public class GameScreen {
     private static final int CARD_GAP = 2; // horizontal gap between cards
 
     private final Screen screen;
-    private final LocalGameCoordinator coordinator;
 
     // Selection state
     private int selectionIndex = 0;
     private final Set<Move> selectedMoves = new LinkedHashSet<>();
     private int requiredMoves = 0;         // how many cards/tiles must be picked
 
-    public GameScreen(Screen screen, LocalGameCoordinator coordinator) {
+    public GameScreen(Screen screen) {
         this.screen = screen;
-        this.coordinator = coordinator;
     }
 
     // ── Public entry point ────────────────────────────────────────────────────
@@ -519,7 +516,11 @@ public class GameScreen {
     private String currentPlayerLabel(GameDTO game) {
         Totem t = game.currentPlayerTotem();
         if (t == null) return "---";
-        String name = coordinator.getTotemToName().getOrDefault(t, "?");
+        String name = game.players().stream()
+                .filter(p -> p.totem() == t)
+                .map(PlayerDTO::name)
+                .findFirst()
+                .orElse("?");
         return name + " [" + CardCatalog.totemLabel(t) + "]";
     }
 

@@ -19,6 +19,10 @@ public class LobbyScreen {
         this.screen = screen;
     }
 
+    /**
+     * Renders the lobby. Pass totalPlayers = -1 when the target capacity is unknown
+     * (e.g. when joining a game created by someone else).
+     */
     public void render(List<String> players, int totalPlayers) {
         try {
             screen.clear();
@@ -38,13 +42,18 @@ public class LobbyScreen {
             // ── Status ───────────────────────────────────────────────────────
             int row = 2;
             tg.putString(4, row++, "Waiting for players to join...");
-            tg.putString(4, row++, String.format("(%d / %d players ready)", players.size(), totalPlayers));
+            if (totalPlayers > 0) {
+                tg.putString(4, row++, String.format("(%d / %d players ready)", players.size(), totalPlayers));
+            } else {
+                tg.putString(4, row++, String.format("(%d players in lobby)", players.size()));
+            }
             row++;
 
             // ── Player list ───────────────────────────────────────────────────
             tg.putString(4, row++, "Players:");
             row++;
-            for (int i = 0; i < totalPlayers; i++) {
+            int slots = (totalPlayers > 0) ? totalPlayers : players.size();
+            for (int i = 0; i < slots; i++) {
                 if (i < players.size()) {
                     tg.setForegroundColor(TextColor.ANSI.GREEN);
                     tg.putString(6, row, "✓  " + players.get(i));
@@ -60,7 +69,7 @@ public class LobbyScreen {
             // ── Note ─────────────────────────────────────────────────────────
             row += 2;
             tg.setForegroundColor(TextColor.ANSI.CYAN);
-            tg.putString(4, row, "Game will start automatically when all players have joined.");
+            tg.putString(4, row, "Press [S] to start the game when you are ready (host only).");
             tg.setForegroundColor(TextColor.ANSI.WHITE);
 
             screen.refresh();

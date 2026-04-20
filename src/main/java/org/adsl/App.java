@@ -1,8 +1,8 @@
 package org.adsl;
 
 import org.adsl.client.AppCoordinator;
-import org.adsl.client.local.LocalGameCoordinator;
 import org.adsl.client.network.ServerConnection;
+import org.adsl.client.network.fake.FakeServerConnection;
 import org.adsl.client.network.rmi.RMIServerConnection;
 import org.adsl.client.network.socket.SocketClientConnection;
 import org.adsl.client.view.GameUI;
@@ -98,10 +98,15 @@ public class App
     }
 
     private static void startLocal() {
-        System.out.println("Starting MESOS in local mode...");
+        System.out.println("Starting MESOS in local mode (TUI + in-process fake server)...");
         TUI tui = new TUI();
-        tui.start();
+        ServerConnection fakeServerConnection = new FakeServerConnection();
+        AppCoordinator appCoordinator = new AppCoordinator(tui, fakeServerConnection);
+        fakeServerConnection.setAppCoordinator(appCoordinator);
+        tui.setAppCoordinator(appCoordinator);
+
         Runtime.getRuntime().addShutdownHook(new Thread(tui::shutdown));
+        tui.start();
     }
 
     private static void startServer(int socketPort, int rmiPort, String recoverDirectory) {
