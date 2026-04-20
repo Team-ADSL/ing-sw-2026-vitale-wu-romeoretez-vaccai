@@ -26,6 +26,7 @@ public class SocketClientHandler extends VirtualClient implements Runnable {
             out = new ObjectOutputStream(socket.getOutputStream());
             out.flush();
             in = new ObjectInputStream(socket.getInputStream());
+            handleConnection();
 
             while (!socket.isClosed()) {
                 ClientRequest request = (ClientRequest) in.readObject();

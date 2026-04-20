@@ -21,6 +21,9 @@ import org.adsl.server.persistence.GamePersistenceManager;
 import org.adsl.server.persistence.SerialGamePersistenceManager;
 import org.adsl.server.persistence.SqlGameDAO;
 
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.concurrent.ExecutorService;
@@ -38,6 +41,7 @@ public class App
         String mode = args[0].toLowerCase();
         switch (mode) {
             case "--test-tui" -> startTestTui();
+            case "--test-server-connection" -> startClientTester();
             case "--server" -> {
                 // Expected args: --server <socket-port> <rmi-port> <recover-directory>
                 if (args.length != 4) {
@@ -92,6 +96,28 @@ public class App
                 startClient(connectionType, uiType, ipAddress, port);
             }
             default -> printUsageAndExit("Unknown mode: " + mode);
+        }
+    }
+
+    public static void startClientTester() {
+        String ip = "127.0.0.1";
+        int port = 8080;
+
+        System.out.println("Trying connection at " + ip + ":" + port + "...");
+
+        try (Socket socket = new Socket(ip, port);
+             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream())) {
+
+            out.flush();
+            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+
+            System.out.println("Connection established.");
+
+            Object response = in.readObject();
+            System.out.println("Received from server: " + response.getClass().getSimpleName());
+
+        } catch (Exception e) {
+            System.err.println("Connection error: " + e.getMessage());
         }
     }
 
