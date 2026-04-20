@@ -3,30 +3,54 @@ package org.adsl.utils.fakes;
 import org.adsl.server.model.Game;
 import org.adsl.server.model.Player;
 import org.adsl.server.network.VirtualClient;
+import org.adsl.shared.model.MatchResult;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class FakeGame extends Game {
+    public boolean updateLobbySent = false;
+    public boolean updateGameSent = false;
+    public boolean endGameResultsSent = false;
+    public List<MatchResult> capturedResults = null;
+    public final List<VirtualClient> addedClients = new ArrayList<>();
+    public final List<VirtualClient> removedClients = new ArrayList<>();
     public final Set<Player> players = new HashSet<>();
-    public Player currentPlayer;
-    public boolean clientRemoved = false;
+    public Player currentPlayer = null;
+
+    public FakeGame(int gameId, int numPlayer) {
+        super(gameId, numPlayer);
+    }
 
     public FakeGame() {
-        super(1, 2);
+        super(1, 5);
     }
 
     @Override
-    public Set<Player> getPlayers() {
-        return players;
-    }
-
-    @Override
-    public Optional<Player> getCurrentPlayer() {
-        return Optional.ofNullable(currentPlayer);
+    public void addVirtualClient(VirtualClient virtualClient) {
+        this.addedClients.add(virtualClient);
     }
 
     @Override
     public void removeVirtualClient(VirtualClient virtualClient) {
-        this.clientRemoved = true;
+        this.removedClients.add(virtualClient);
+    }
+
+    @Override
+    public void sendUpdateLobby() {
+        this.updateLobbySent = true;
+    }
+
+    @Override
+    public void sendUpdateGame() {
+        this.updateGameSent = true;
+    }
+
+    @Override
+    public void sendEndGameResults(List<MatchResult> results) {
+        this.endGameResultsSent = true;
+        this.capturedResults = results;
     }
 }

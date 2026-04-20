@@ -132,7 +132,7 @@ public class ControllerStateTest {
         state.visit(req, client);
 
         assertFalse(player1.isActive());
-        assertTrue(fakeGame.clientRemoved);
+        assertTrue(fakeGame.removedClients.contains(client));
         assertTrue(state.isToStop());
     }
 }

@@ -20,10 +20,16 @@ public class LobbyState extends ControllerState {
     @Override
     public void visit(EnterGameRequest req, VirtualClient virtualClient) throws ServerException {
         if(getGame().getPlayers().size() == getGame().getNumPlayer()) {
-            throw new ServerException("The lobby is full");
+            throw new ServerException("[LOBBY] The lobby is full");
         } else {
             if(virtualClient.getClientUsername().isEmpty()){
-                throw new ServerException("Virtual client has no username associated.");
+                throw new ServerException("[LOBBY] Virtual client has no username associated.");
+            }
+            String newUser = virtualClient.getClientUsername().get();
+            boolean isDuplicate = getGame().getPlayers().stream()
+                    .anyMatch(p -> p.getName().equals(newUser));
+            if(isDuplicate){
+                throw new ServerException("[LOBBY] Client already connected.");
             }
             getGame().getPlayers().add(new Player(virtualClient.getClientUsername().get()));
             getGame().addVirtualClient(virtualClient);
@@ -36,12 +42,12 @@ public class LobbyState extends ControllerState {
     @Override
     public void visit(ClientDisconnected req, VirtualClient virtualClient) throws ServerException {
         if(virtualClient.getClientUsername().isEmpty()){
-            throw new ServerException("Virtual client has no username associated.");
+            throw new ServerException("[LOBBY] Virtual client has no username associated.");
         }
         Player reqPlayer = getGame().getPlayers().stream()
                 .filter(p -> p.getName().equals(virtualClient.getClientUsername().get()))
                 .findFirst()
-                .orElseThrow(()->  new ServerException("Player not in current game"));
+                .orElseThrow(()->  new ServerException("[LOBBY] Player not in current game"));
 
         getGame().getPlayers().remove(reqPlayer);
         getGame().removeVirtualClient(virtualClient);
@@ -60,7 +66,7 @@ public class LobbyState extends ControllerState {
         if(getGame().getPlayers().size() == getGame().getNumPlayer()){
             readyToStart = true;
         } else {
-            throw new ServerException(getGame().getNumPlayer() + " players required to start the game");
+            throw new ServerException("[LOBBY]" + getGame().getNumPlayer() + " players required to start the game");
         }
         setNextState(calcNextState());
     }

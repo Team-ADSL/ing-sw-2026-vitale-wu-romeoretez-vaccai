@@ -1,170 +1,147 @@
 package org.adsl.server.controller.states;
 
-import org.adsl.server.config.BoardConfigLoader;
-import org.adsl.server.config.JsonBoardConfigLoader;
 import org.adsl.server.controller.GameController;
-import org.adsl.server.controller.ServerController;
-import org.adsl.server.model.Game;
-import org.adsl.server.network.VirtualClient;
-import org.adsl.server.persistence.GameDAO;
-import org.adsl.server.persistence.GamePersistenceManager;
+import org.adsl.server.model.Player;
 import org.adsl.server.exceptions.ServerException;
-import org.adsl.shared.model.MatchResult;
 import org.adsl.shared.network.requests.ClientDisconnected;
 import org.adsl.shared.network.requests.EnterGameRequest;
 import org.adsl.shared.network.requests.StartGameRequest;
-import org.adsl.shared.network.responses.ServerResponse;
-import org.adsl.utils.fakes.FakeHome;
+
+import org.adsl.utils.builder.GameControllerBuilder;
+import org.adsl.utils.fakes.FakeGame;
+import org.adsl.utils.fakes.FakeVirtualClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class LobbyStateTest {
-    private static final GamePersistenceManager NO_OP_PERSISTENCE = new GamePersistenceManager() {
-        @Override public List<Game> recoverGames() { return List.of(); }
-        @Override public void removeGame(int id) {}
-        @Override public void updateLobby(List<String> p) {}
-        @Override public void updateGame(Game g) {}
-    };
-    private static final GameDAO NO_OP_DAO = new GameDAO() {
-        @Override public int createMatch() { return 0; }
-        @Override public void deleteMatch(int id) {}
-        @Override public void saveMatch(int id, int c, List<String> n, List<Integer> s) {}
-        @Override public List<MatchResult> getLeaderboard(int c) { return List.of(); }
-    };
-
-    // Concrete VirtualClient for testing
-    static class TestVirtualClient extends VirtualClient {
-        TestVirtualClient(ServerController sc, String username) {
-            super(sc);
-            setClientUsername(username);
-        }
-        @Override
-        public void sendResponse(ServerResponse response) {}
-
-        @Override
-        public void closeConnection() {
-
-        }
-    }
-
-    private Game game;
-    private GameController controller;
+    private FakeVirtualClient client;
+    private FakeGame fakeGame;
     private LobbyState state;
-    private ServerController serverController;
 
     @BeforeEach
     void setUp() {
-        BoardConfigLoader loader = new JsonBoardConfigLoader();
-        serverController = new ServerController(new FakeHome(), NO_OP_DAO, loader, NO_OP_PERSISTENCE, null, null, null);
-        game = new Game(1, 2);
-        controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
-        state = new LobbyState(game, controller);
-    }
+        client = new FakeVirtualClient();
+        client.setClientUsername("Player1");
 
-    private TestVirtualClient client(String username) {
-        return new TestVirtualClient(serverController, username);
-    }
+        GameControllerBuilder builder = new GameControllerBuilder();
+        GameController controller = builder.build();
 
-    // ──────────────────────────────────────────────
-    // visit(EnterGameRequest, ...)
-    // ──────────────────────────────────────────────
-
-    @Test
-    void enterGame_addsPlayerToGame() throws ServerException {
-        TestVirtualClient c = client("alice");
-        state.visit(new EnterGameRequest(1), c);
-        assertEquals(1, game.getPlayers().size());
-        assertTrue(game.getPlayers().stream().anyMatch(p -> p.getName().equals("alice")));
-    }
-
-    @Test
-    void enterGame_setsGameControllerOnClient() throws ServerException {
-        TestVirtualClient c = client("alice");
-        state.visit(new EnterGameRequest(1), c);
-        assertTrue(c.getGameId().isPresent());
-        assertSame(game.getGameId(), c.getGameId().get());
-    }
-
-    @Test
-    void enterGame_throwsWhenLobbyFull() throws ServerException {
-        // Fill to 3 players
-        for (int i = 0; i < 2; i++) {
-            TestVirtualClient c = client("player" + i);
-            state.visit(new EnterGameRequest(1), c);
-        }
-        TestVirtualClient extra = client("extra");
-        assertThrows(ServerException.class, () -> state.visit(new EnterGameRequest(1), extra));
+        fakeGame = new FakeGame(1, 4);
+        state = new LobbyState(fakeGame, controller);
     }
 
     // ──────────────────────────────────────────────
-    // visit(ClientDisconnected, ...)
+    // TEST ENTER GAME
     // ──────────────────────────────────────────────
 
     @Test
-    void clientDisconnected_removesPlayer() throws ServerException {
-        TestVirtualClient c = client("bob");
-        state.visit(new EnterGameRequest(1), c);
-        assertEquals(1, game.getPlayers().size());
+    void testVisitEnterGameRequest_success_addsPlayerAndUpdatesLobby() throws ServerException {
+        EnterGameRequest req = new EnterGameRequest(1);
 
-        state.visit(new ClientDisconnected(), c);
-        assertEquals(0, game.getPlayers().size());
+        state.visit(req, client);
+
+        assertEquals(1, fakeGame.getPlayers().size());
+        boolean playerExists = fakeGame.getPlayers().stream()
+                .anyMatch(p -> p.getName().equals("Player1"));
+        assertTrue(playerExists, "Player1 must be successfully added to the game Set");
+        assertTrue(fakeGame.addedClients.contains(client), "Client should be added to game observers");
+        assertTrue(client.getGameId().isPresent(), "Client should have the gameId set");
+        assertTrue(fakeGame.updateLobbySent, "Game should notify clients of the new player");
+        assertEquals(state, state.calcNextState(), "State should remain LobbyState");
     }
 
     @Test
-    void clientDisconnected_clearsGameControllerOnClient() throws ServerException {
-        TestVirtualClient c = client("bob");
-        state.visit(new EnterGameRequest(1), c);
-        state.visit(new ClientDisconnected(), c);
-        assertFalse(c.getGameId().isPresent());
+    void testVisitEnterGameRequest_lobbyFull_throwsException() {
+        fakeGame.players.add(new Player("P1"));
+        fakeGame.players.add(new Player("P2"));
+        fakeGame.players.add(new Player("P3"));
+        fakeGame.players.add(new Player("P4"));
+        EnterGameRequest req = new EnterGameRequest(1);
+
+        ServerException exception = assertThrows(ServerException.class,
+                () -> state.visit(req, client));
+
+        assertTrue(exception.getMessage().contains("lobby is full"));
     }
 
     @Test
-    void clientDisconnected_throwsWhenPlayerNotInGame() {
-        TestVirtualClient c = client("notInGame");
-        // The player was never added — disconnect should throw
-        assertThrows(ServerException.class, () -> state.visit(new ClientDisconnected(), c));
-    }
+    void testVisitEnterGameRequest_duplicatePlayer_throwsException() {
+        fakeGame.players.add(new Player("Player1"));
+        EnterGameRequest req = new EnterGameRequest(1);
 
-    // ──────────────────────────────────────────────
-    // visit(StartGameRequest, ...)
-    // ──────────────────────────────────────────────
+        ServerException exception = assertThrows(ServerException.class,
+                () -> state.visit(req, client));
 
-    @Test
-    void startGame_setsReadyWhenTwoPlayers() throws ServerException {
-        state.visit(new EnterGameRequest(1), client("p1"));
-        state.visit(new EnterGameRequest(1), client("p2"));
-
-        state.visit(new StartGameRequest(), client("p1"));
-
-        // nextState should now return InitGameState (not this)
-        assertInstanceOf(InitGameState.class, state.calcNextState());
-    }
-
-    @Test
-    void startGame_throwsWhenLessThanTwoPlayers() throws ServerException {
-        state.visit(new EnterGameRequest(1), client("p1"));
-        assertThrows(ServerException.class, () -> state.visit(new StartGameRequest(), client("p1")));
+        assertTrue(exception.getMessage().contains("already"),
+                "Must prevent the same player from joining multiple times");
     }
 
     // ──────────────────────────────────────────────
-    // nextState
+    // TEST DISCONNECTION
     // ──────────────────────────────────────────────
 
     @Test
-    void nextState_returnsSelfWhenNotReady() {
-        assertSame(state, state.calcNextState());
+    void testVisitClientDisconnected_removesPlayerAndUpdatesLobby() throws ServerException {
+        fakeGame.players.add(new Player("Player1"));
+        fakeGame.players.add(new Player("Player2"));
+        fakeGame.addedClients.add(client);
+        client.setGameId(1);
+
+        ClientDisconnected req = new ClientDisconnected();
+
+        state.visit(req, client);
+
+        assertEquals(1, fakeGame.getPlayers().size());
+        boolean playerExists = fakeGame.players.stream()
+                .anyMatch(p -> p.getName().equals("Player2"));
+        assertTrue(playerExists, "Player2 must be successfully added to the game Set");
+        assertFalse(fakeGame.addedClients.contains(client), "Client must be removed from observers");
+        assertTrue(client.getGameId().isEmpty(), "Client gameId must be cleared");
+        assertTrue(fakeGame.updateLobbySent, "Game should notify remaining clients");
+        assertFalse(state.isToStop(), "State machine MUST NOT stop for a lobby disconnection");
     }
 
     @Test
-    void nextState_returnsInitGameStateWhenReady() throws ServerException {
-        state.visit(new EnterGameRequest(1), client("p1"));
-        state.visit(new EnterGameRequest(1), client("p2"));
-        state.visit(new StartGameRequest(), client("p1"));
+    void testVisitClientDisconnected_lastPlayer_triggersEndGameResults() throws ServerException {
+        fakeGame.players.add(new Player("Player1"));
+        fakeGame.addedClients.add(client);
+        ClientDisconnected req = new ClientDisconnected();
 
-        assertInstanceOf(InitGameState.class, state.calcNextState());
+        state.visit(req, client);
+
+        assertTrue(fakeGame.getPlayers().isEmpty());
+        assertTrue(fakeGame.endGameResultsSent, "If lobby is empty, trigger the ServerController cleanup");
+        assertFalse(state.isToStop(), "State machine MUST NOT stop even if lobby is empty");
+    }
+
+    // ──────────────────────────────────────────────
+    // TEST START GAME
+    // ──────────────────────────────────────────────
+
+    @Test
+    void testVisitStartGameRequest_notFull_throwsException() {
+        fakeGame.players.add(new Player("P1"));
+        StartGameRequest req = new StartGameRequest();
+
+        ServerException exception = assertThrows(ServerException.class,
+                () -> state.visit(req, client));
+
+        assertTrue(exception.getMessage().contains("players required"));
+    }
+
+    @Test
+    void testVisitStartGameRequest_full_transitionsToInitState() throws ServerException {
+        fakeGame.players.add(new Player("P1"));
+        fakeGame.players.add(new Player("P2"));
+        fakeGame.players.add(new Player("P3"));
+        fakeGame.players.add(new Player("P4"));
+        StartGameRequest req = new StartGameRequest();
+
+        state.visit(req, client);
+        ControllerState nextState = state.calcNextState();
+
+        assertInstanceOf(InitGameState.class, nextState, "The state machine must transition to InitGameState when start is valid");
     }
 }
