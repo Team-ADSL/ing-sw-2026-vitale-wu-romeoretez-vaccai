@@ -5,12 +5,13 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DatabaseConfig {
-
     private static final String HOST     = "localhost";
     private static final String PORT     = "3306";
     static final         String DB_NAME  = "game_leaderboard";
+
     static final         String USER     = "root";
-    static final         String PASSWORD = "Gianpaolo69!";
+
+    static final         String PASSWORD = System.getenv("DB_PASSWORD");
 
     public static final String URL_NO_DB =
             "jdbc:mysql://" + HOST + ":" + PORT +
@@ -21,6 +22,9 @@ public class DatabaseConfig {
                     "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
 
     public static Connection getConnection() throws SQLException {
+        if (PASSWORD == null) {
+            throw new SQLException("[SECURITY FATAL] Variabile d'ambiente 'DB_PASSWORD' non trovata. Impossibile connettersi al database.");
+        }
         return DriverManager.getConnection(URL, USER, PASSWORD);
     }
 }
