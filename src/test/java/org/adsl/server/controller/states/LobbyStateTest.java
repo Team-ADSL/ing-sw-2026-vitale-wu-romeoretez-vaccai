@@ -54,10 +54,10 @@ public class LobbyStateTest {
 
     @Test
     void testVisitEnterGameRequest_lobbyFull_throwsException() {
-        fakeGame.players.add(new Player("P1"));
-        fakeGame.players.add(new Player("P2"));
-        fakeGame.players.add(new Player("P3"));
-        fakeGame.players.add(new Player("P4"));
+        fakeGame.getPlayers().add(new Player("P1"));
+        fakeGame.getPlayers().add(new Player("P2"));
+        fakeGame.getPlayers().add(new Player("P3"));
+        fakeGame.getPlayers().add(new Player("P4"));
         EnterGameRequest req = new EnterGameRequest(1);
 
         ServerException exception = assertThrows(ServerException.class,
@@ -68,7 +68,7 @@ public class LobbyStateTest {
 
     @Test
     void testVisitEnterGameRequest_duplicatePlayer_throwsException() {
-        fakeGame.players.add(new Player("Player1"));
+        fakeGame.getPlayers().add(new Player("Player1"));
         EnterGameRequest req = new EnterGameRequest(1);
 
         ServerException exception = assertThrows(ServerException.class,
@@ -84,8 +84,8 @@ public class LobbyStateTest {
 
     @Test
     void testVisitClientDisconnected_removesPlayerAndUpdatesLobby() throws ServerException {
-        fakeGame.players.add(new Player("Player1"));
-        fakeGame.players.add(new Player("Player2"));
+        fakeGame.getPlayers().add(new Player("Player1"));
+        fakeGame.getPlayers().add(new Player("Player2"));
         fakeGame.addedClients.add(client);
         client.setGameId(1);
 
@@ -94,10 +94,10 @@ public class LobbyStateTest {
         state.visit(req, client);
 
         assertEquals(1, fakeGame.getPlayers().size());
-        boolean playerExists = fakeGame.players.stream()
+        boolean playerExists = fakeGame.getPlayers().stream()
                 .anyMatch(p -> p.getName().equals("Player2"));
         assertTrue(playerExists, "Player2 must be successfully added to the game Set");
-        assertFalse(fakeGame.addedClients.contains(client), "Client must be removed from observers");
+        assertTrue(fakeGame.removedClients.contains(client), "Client must be removed from observers");
         assertTrue(client.getGameId().isEmpty(), "Client gameId must be cleared");
         assertTrue(fakeGame.updateLobbySent, "Game should notify remaining clients");
         assertFalse(state.isToStop(), "State machine MUST NOT stop for a lobby disconnection");
@@ -105,7 +105,7 @@ public class LobbyStateTest {
 
     @Test
     void testVisitClientDisconnected_lastPlayer_triggersEndGameResults() throws ServerException {
-        fakeGame.players.add(new Player("Player1"));
+        fakeGame.getPlayers().add(new Player("Player1"));
         fakeGame.addedClients.add(client);
         ClientDisconnected req = new ClientDisconnected();
 
@@ -122,7 +122,7 @@ public class LobbyStateTest {
 
     @Test
     void testVisitStartGameRequest_notFull_throwsException() {
-        fakeGame.players.add(new Player("P1"));
+        fakeGame.getPlayers().add(new Player("P1"));
         StartGameRequest req = new StartGameRequest();
 
         ServerException exception = assertThrows(ServerException.class,
@@ -133,10 +133,10 @@ public class LobbyStateTest {
 
     @Test
     void testVisitStartGameRequest_full_transitionsToInitState() throws ServerException {
-        fakeGame.players.add(new Player("P1"));
-        fakeGame.players.add(new Player("P2"));
-        fakeGame.players.add(new Player("P3"));
-        fakeGame.players.add(new Player("P4"));
+        fakeGame.getPlayers().add(new Player("P1"));
+        fakeGame.getPlayers().add(new Player("P2"));
+        fakeGame.getPlayers().add(new Player("P3"));
+        fakeGame.getPlayers().add(new Player("P4"));
         StartGameRequest req = new StartGameRequest();
 
         state.visit(req, client);
