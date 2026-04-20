@@ -33,7 +33,6 @@ public class SocketServer implements Runnable {
                 System.out.println("New connection: " + client.getInetAddress());
                 SocketClientHandler clientHandler = new SocketClientHandler(client, serverController);
                 threadPool.submit(clientHandler);
-                clientHandler.handleConnection();
             }
         } catch (SocketException e) {
             System.out.println("SocketServer stopped: closing...");
