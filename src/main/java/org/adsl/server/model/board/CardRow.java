@@ -87,9 +87,9 @@ public class CardRow implements Serializable {
     }
 
     public ArrayList<CardDTO> createDTO(){
-        return  (ArrayList<CardDTO>) cards.stream()
-                .map(Card::createDTO)
-                .collect(Collectors.toList());
+        return cards.stream()
+                .map(c -> c != null ? c.createDTO() : null)
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     public int getNumTribeCard() {

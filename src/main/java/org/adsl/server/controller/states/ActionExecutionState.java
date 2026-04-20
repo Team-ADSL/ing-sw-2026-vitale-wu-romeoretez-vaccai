@@ -34,26 +34,28 @@ public class ActionExecutionState extends ControllerState {
 
         OfferTrack offerTrack = getGame().getBoard().offerTrack();
         int offerIndex = 0;
-        while(offerTrack.getTileAt(offerIndex).getPlayer().isEmpty() && offerIndex < offerTrack.size()){
+        while(offerIndex < offerTrack.size() && offerTrack.getTileAt(offerIndex).getPlayer().isEmpty()){
             offerIndex++;
         }
         int remainingMoves = offerTrack.getTileAt(offerIndex).getNumMoves();
         Set<Move> moves = req.getMoves();
         if(moves.size() != remainingMoves){
             throw new ServerException(
-                    "Number of cards mismatch. Requires " + moves.size()
-                            + ", Allowed: " + remainingMoves);
+                    "Number of cards mismatch. Required: " + remainingMoves
+                            + ", provided: " + moves.size());
         }
 
         OfferTile offerTile = getGame().getBoard().offerTrack().getTileAt(offerIndex);
         Map<Row, Integer> allowedMoves = offerTile.getMoves();
         int numLowDraw = (int) moves.stream().filter(m -> m.row() == Row.LOWER).count();
         int numUpDraw = (int) moves.stream().filter(m -> m.row() == Row.UPPER).count();
-        if(numUpDraw != allowedMoves.get(Row.UPPER) || numLowDraw != allowedMoves.get(Row.LOWER)){
+        int allowedUpper = allowedMoves.getOrDefault(Row.UPPER, 0);
+        int allowedLower = allowedMoves.getOrDefault(Row.LOWER, 0);
+        if(numUpDraw != allowedUpper || numLowDraw != allowedLower){
             throw new ServerException(
-                    "Wrong moves: you can do "
-                            + allowedMoves.get(Row.UPPER) + " draws from the up row and "
-                            + allowedMoves.get(Row.LOWER) + " draws from the low row");
+                    "Wrong moves: you can draw "
+                            + allowedUpper + " card(s) from the top row and "
+                            + allowedLower + " card(s) from the bottom row");
         }
 
         for(Move move : moves){
@@ -121,11 +123,13 @@ public class ActionExecutionState extends ControllerState {
         }
         OfferTrack offerTrack = getGame().getBoard().offerTrack();
         int offerIndex = 0;
-        while(offerTrack.getTileAt(offerIndex).getPlayer().isEmpty() && offerIndex < offerTrack.size()){
+        while(offerIndex < offerTrack.size() && offerTrack.getTileAt(offerIndex).getPlayer().isEmpty()){
             offerIndex++;
         }
 
-        Optional<Player> currPlayer = offerTrack.getTileAt(offerIndex).getPlayer();
+        Optional<Player> currPlayer = (offerIndex < offerTrack.size())
+                ? offerTrack.getTileAt(offerIndex).getPlayer()
+                : Optional.empty();
         if(currPlayer.isPresent()){
             if(offerTrack.getTileAt(offerIndex).isGivesFood()){
                 // First update model (previous action) and execute the automation after

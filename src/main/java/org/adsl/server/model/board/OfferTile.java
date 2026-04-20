@@ -1,6 +1,7 @@
 package org.adsl.server.model.board;
 
 import org.adsl.shared.enums.Row;
+import org.adsl.shared.enums.Totem;
 import org.adsl.server.model.Player;
 import org.adsl.shared.model.OfferTileDTO;
 
@@ -35,7 +36,8 @@ public class OfferTile implements Serializable {
     }
 
     public OfferTileDTO createDTO(){
-        return new OfferTileDTO(id, player.getColor());
+        Totem totemColor = (player != null) ? player.getColor() : null;
+        return new OfferTileDTO(id, totemColor);
     }
 
     public void setPlayer(Player player) {

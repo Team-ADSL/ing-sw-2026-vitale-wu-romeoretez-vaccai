@@ -3,6 +3,7 @@ package org.adsl.server.model;
 import org.adsl.server.network.VirtualClient;
 import org.adsl.server.model.board.Board;
 import org.adsl.shared.enums.Phase;
+import org.adsl.shared.enums.Totem;
 import org.adsl.shared.model.BoardDTO;
 import org.adsl.shared.model.GameDTO;
 import org.adsl.shared.model.MatchResult;
@@ -72,7 +73,8 @@ public class Game implements Serializable {
     public GameDTO createDTO() {
         Set<PlayerDTO> playersDTO = players.stream().map(Player::createDTO).collect(Collectors.toSet());
         BoardDTO boardDTO = board.createDTO();
-        return new GameDTO(gameId, numPlayer, round, era, playersDTO, boardDTO, phase);
+        Totem currentTotem = (currentPlayer != null) ? currentPlayer.getColor() : null;
+        return new GameDTO(gameId, numPlayer, round, era, playersDTO, boardDTO, phase, currentTotem);
     }
 
     public void addObserver(EndGameObserver o) {

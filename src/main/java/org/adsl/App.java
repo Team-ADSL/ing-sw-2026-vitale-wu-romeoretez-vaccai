@@ -2,9 +2,11 @@ package org.adsl;
 
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.network.ServerConnection;
+import org.adsl.client.network.fake.FakeServerConnection;
 import org.adsl.client.network.rmi.RMIServerConnection;
 import org.adsl.client.network.socket.SocketClientConnection;
 import org.adsl.client.view.GameUI;
+import org.adsl.client.view.tui.TUI;
 import org.adsl.server.config.BoardConfigLoader;
 import org.adsl.server.config.JsonBoardConfigLoader;
 import org.adsl.server.controller.ServerController;
@@ -27,14 +29,17 @@ import java.util.concurrent.Executors;
 
 public class App 
 {
-    static void main( String[] args )
+    public static void main( String[] args )
     {
         if (args.length == 0) {
             printUsageAndExit("Parameter missing.");
         }
 
         String mode = args[0].toLowerCase();
-        if ("--server".equals(mode)) {
+        if ("--local".equals(mode)) {
+            startLocal();
+        }
+        else if ("--server".equals(mode)) {
             // Expected args: --server <socket-port> <rmi-port> <recover-directory>
             if (args.length != 4) {
                 printUsageAndExit("Invalid server's parameter or missing..");
@@ -91,6 +96,18 @@ public class App
         else {
             printUsageAndExit("Unknown mode: " + mode);
         }
+    }
+
+    private static void startLocal() {
+        System.out.println("Starting MESOS in local mode (TUI + in-process fake server)...");
+        TUI tui = new TUI();
+        ServerConnection fakeServerConnection = new FakeServerConnection();
+        AppCoordinator appCoordinator = new AppCoordinator(tui, fakeServerConnection);
+        fakeServerConnection.setAppCoordinator(appCoordinator);
+        tui.setAppCoordinator(appCoordinator);
+
+        Runtime.getRuntime().addShutdownHook(new Thread(tui::shutdown));
+        tui.start();
     }
 
     private static void startServer(int socketPort, int rmiPort, String recoverDirectory) {
@@ -179,13 +196,16 @@ public class App
         System.out.println("=== USAGE ===");
 
         System.out.println("\nTo start as SERVER:");
-        System.out.println("java -jar masos.jar --server <socket-port> <rmi-port> <recover-directory>");
+        System.out.println("java -jar mesos.jar --server <socket-port> <rmi-port> <recover-directory>");
         System.out.println("  <socket-port>       : Network socket listening port (e.g. 8080)");
         System.out.println("  <rmi-port>          : RMI registry listening port (e.g. 1099)");
         System.out.println("  <recover-directory> : Path for recovery files (e.g. ./saves)");
 
+        System.out.println("\nTo start in LOCAL mode (same terminal, no network):");
+        System.out.println("java -jar mesos.jar --local");
+
         System.out.println("\nTo start as CLIENT:");
-        System.out.println("java -jar masos.jar --client <connection> <interface> <ip-server> <port>");
+        System.out.println("java -jar mesos.jar --client <connection> <interface> <ip-server> <port>");
         System.out.println("  <connection> : --socket or --rmi");
         System.out.println("  <interface>  : --tui or --gui");
         System.out.println("  <ip-server>  : IP address of the server (e.g. 127.0.0.1)");
