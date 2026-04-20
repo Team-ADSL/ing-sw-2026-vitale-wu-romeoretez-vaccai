@@ -192,7 +192,7 @@ public class App
                 gameUI = new TUI();
             }
 
-            ServerConnection serverConnection = null;
+            ServerConnection serverConnection;
             if ("--socket".equals(connectionType)) {
                 serverConnection = new SocketClientConnection();
             } else {
@@ -202,8 +202,8 @@ public class App
             serverConnection.setAppCoordinator(appCoordinator);
             gameUI.setAppCoordinator(appCoordinator);
             appCoordinator.startPingScheduler(5000, 20000);
-            gameUI.start();
             serverConnection.connect(ipAddress, port);
+            gameUI.start();
             System.out.println("UI Application started.");
 
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
