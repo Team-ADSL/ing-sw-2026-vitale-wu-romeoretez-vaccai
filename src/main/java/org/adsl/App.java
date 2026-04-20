@@ -158,11 +158,12 @@ public class App
         System.out.println("- Server Port: " + port); // Added port print
 
         try {
-            GameUI gameUI = null;
+            GameUI gameUI;
             if ("--gui".equals(uiType)) {
                 // gameUI = new GUI();
+                return;
             } else {
-                // gameUI = new TUI();
+                gameUI = new TUI();
             }
 
             ServerConnection serverConnection = null;
@@ -173,6 +174,7 @@ public class App
             }
             AppCoordinator appCoordinator = new AppCoordinator(gameUI, serverConnection);
             serverConnection.setAppCoordinator(appCoordinator);
+            gameUI.setAppCoordinator(appCoordinator);
             appCoordinator.startPingScheduler(5000, 20000);
             gameUI.start();
             serverConnection.connect(ipAddress, port);

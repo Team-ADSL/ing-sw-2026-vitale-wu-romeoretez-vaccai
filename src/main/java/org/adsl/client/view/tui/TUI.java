@@ -68,6 +68,7 @@ public class TUI implements GameUI {
     public TUI() {}
 
     /** Wires the coordinator used to send requests to the server. */
+    @Override
     public void setAppCoordinator(AppCoordinator appCoordinator) {
         this.appCoordinator = appCoordinator;
     }
