@@ -3,7 +3,6 @@ package org.adsl.client;
 import org.adsl.client.network.ServerConnection;
 import org.adsl.client.view.GameUI;
 import org.adsl.client.exceptions.InvalidResponseException;
-import org.adsl.client.view.tui.prova.Event;
 import org.adsl.shared.network.requests.*;
 import org.adsl.shared.network.responses.*;
 import org.adsl.shared.utils.Move;
@@ -80,9 +79,7 @@ public class AppCoordinator implements ResponseVisitor{
     }
     @Override
     public void visit(GameUpdate response) throws InvalidResponseException {
-        //gameUI.onGameUpdate(response.getGame());
-        Event event = new GameUpdateEvent();
-        gameUI.handleEvent(event);
+        gameUI.onGameUpdate(response.getGame());
     }
     @Override
     public void visit(GameEnded response) throws InvalidResponseException {
@@ -94,7 +91,7 @@ public class AppCoordinator implements ResponseVisitor{
     }
     @Override
     public void visit(ServerDisconnected response) throws InvalidResponseException {
-        gameUI.handleDisconnection();
+        gameUI.onServerDisconnected();
     }
 
 
