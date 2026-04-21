@@ -47,7 +47,7 @@ public class LobbyState extends ControllerState {
         Player reqPlayer = getGame().getPlayers().stream()
                 .filter(p -> p.getName().equals(virtualClient.getClientUsername().get()))
                 .findFirst()
-                .orElseThrow(()->  new ServerException("[LOBBY] Player not in current game"));
+                .orElseThrow(()->  new ServerException("[LOBBY] Player not in current game."));
 
         getGame().getPlayers().remove(reqPlayer);
         getGame().removeVirtualClient(virtualClient);

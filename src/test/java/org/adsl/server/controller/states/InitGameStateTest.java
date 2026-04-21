@@ -14,6 +14,9 @@ import org.adsl.server.persistence.GameDAO;
 import org.adsl.server.persistence.GamePersistenceManager;
 import org.adsl.shared.model.GameDTO;
 import org.adsl.shared.model.MatchResult;
+import org.adsl.utils.TestDummies;
+import org.adsl.utils.fakes.FakeGameDAO;
+import org.adsl.utils.fakes.FakeGamePersistenceManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -24,29 +27,16 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class InitGameStateTest {
-
-    private static final GamePersistenceManager NO_OP_PERSISTENCE = new GamePersistenceManager() {
-        @Override public List<Game> recoverGames() { return List.of(); }
-        @Override public void removeGame(int id) {}
-        @Override public void updateLobby(List<String> p) {}
-        @Override public void updateGame(Game g) {}
-    };
-    private static final GameDAO NO_OP_DAO = new GameDAO() {
-        @Override public int createMatch() { return 0; }
-        @Override public void deleteMatch(int id) {}
-        @Override public void saveMatch(int id, int c, List<String> n, List<Integer> s) {}
-        @Override public List<MatchResult> getLeaderboard(int c) { return List.of(); }
-    };
-
-    private BoardConfigLoader loader;
     private InitGameState state;
     private Game game;
+    BoardConfigLoader loader = new TestDummies.DummyBoardConfigLoader();
+    GameDAO gameDAO = new FakeGameDAO();
+    GamePersistenceManager persistenceManager = new FakeGamePersistenceManager();
 
     @BeforeEach
     void setUp() {
-        loader = new JsonBoardConfigLoader();
         game = new Game(1, 5);
-        GameController controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
+        GameController controller = new GameController(loader, persistenceManager,gameDAO);
         state = new InitGameState(game, controller);
     }
 
@@ -55,7 +45,7 @@ public class InitGameStateTest {
     // ──────────────────────────────────────────────
 
     private void initBoardForGame(Game g, int numPlayers) {
-        GameController gc = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
+        GameController gc = new GameController(loader, persistenceManager, gameDAO);
         InitGameState s = new InitGameState(g, gc);
         Deck deck = Deck.createDeck(loader.getCards(numPlayers));
         GameSettings gameSettings = loader.getSettings(numPlayers);
@@ -144,11 +134,10 @@ public class InitGameStateTest {
     // ──────────────────────────────────────────────
 
     @Test
-    void fillTopRow_2players_doesNotThrow() {
-        // fillTopRow computes cardsToDraw = targetSize - topRow.size() (array length).
-        // Since Board creates topRow with exactly targetSize slots, cardsToDraw == 0.
+    void fillTopRow_2players_fillsSixCards(){
         initBoardForGame(game, 2);
-        assertDoesNotThrow(() -> state.fillTopRow(2));
+
+        assertEquals(6, game.getBoard().topRow().size());
     }
 
     // ──────────────────────────────────────────────
