@@ -2,10 +2,9 @@ package org.adsl.client.view.tui;
 
 import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.graphics.TextGraphics;
-import com.googlecode.lanterna.gui2.*;
+import com.googlecode.lanterna.gui2.MultiWindowTextGUI;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
-import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import com.googlecode.lanterna.terminal.Terminal;
@@ -13,120 +12,58 @@ import com.googlecode.lanterna.terminal.swing.SwingTerminalFrame;
 import com.googlecode.lanterna.terminal.swing.TerminalEmulatorAutoCloseTrigger;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.view.GameUI;
-import org.adsl.client.view.tui.screens.*;
-import org.adsl.shared.enums.Phase;
-import org.adsl.shared.enums.Totem;
+import org.adsl.client.view.tui.events.*;
+import org.adsl.client.view.tui.screens.ConnectingScreen;
+import org.adsl.client.view.tui.screens.ExitScreen;
+import org.adsl.client.view.tui.screens.Screen;
 import org.adsl.shared.model.GameDTO;
 import org.adsl.shared.model.MatchResult;
-import org.adsl.shared.model.OfferTileDTO;
-import org.adsl.shared.model.PlayerDTO;
-import org.adsl.shared.utils.Move;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
- * Text User Interface for MESOS (network mode).
+ * Text User Interface driven by an event queue and a state/visitor pattern.
  *
- * The TUI is a pure GameUI: it never creates a local controller or touches the
- * server directly. All outgoing actions go through {@link AppCoordinator}
- * (createLoginRequest, createGameRequest, enterGameRequest, startGameRequest,
- * makeMoveRequest, ...) and all incoming state arrives via the GameUI callbacks
- * invoked by {@code AppCoordinator.visit(...)} on the network thread.
+ * Both server callbacks and key presses produce {@link Event} objects.
+ * Server callbacks (network thread) enqueue events into a thread-safe queue.
+ * Key presses are translated by {@link #toInputEvent(KeyStroke)} and
+ * dispatched immediately in the main loop. In both cases the current
+ * {@link Screen} receives the event via {@code event.accept(screen)} and
+ * returns the next screen (same instance = stay, new instance = transition).
  *
- * The main thread in {@link #start()} drives a linear state machine
- * (login → home → lobby → game → end) that consumes the volatile state written
- * by the callbacks. A single monitor ({@code stateLock}) is used to let the main
- * thread wait for the next relevant update without busy-looping.
+ * Disconnection is handled outside the visitor: {@link #onServerDisconnected()}
+ * is called directly by {@link AppCoordinator} and runs a dedicated disconnect
+ * flow without involving the screen state machine.
  */
 public class TUI implements GameUI {
-    private Screen screen;
-    private MultiWindowTextGUI setupGui;
+
+    private com.googlecode.lanterna.screen.Screen terminal;
+    private MultiWindowTextGUI gui;
     private AppCoordinator appCoordinator;
 
-    // Screens
-    private SetupScreen setupScreen;
-    private GameScreen gameScreen;
-    private LobbyScreen lobbyScreen;
-    private EndGameScreen endGameScreen;
+    private Screen currentScreen;
+    private final LinkedBlockingQueue<Event> eventQueue = new LinkedBlockingQueue<>();
+    private volatile boolean running = true;
 
-    // State reflected from server callbacks (network thread → main thread)
-    private final Object stateLock = new Object();
-    private volatile boolean loginPrompted = false;
-    private volatile List<Integer> pendingHomeGames = null;
-    private volatile List<String> lobbyPlayers = null;
-    private volatile GameDTO currentGame = null;
-    private volatile List<MatchResult> endResults = null;
-    private volatile String lastError = null;
-    private volatile boolean disconnected = false;
-
-    // Local identity + per-session info
-    private String myUsername;
-    private int knownTotalPlayers = -1;
-    private Totem lastPassedTotem = null;
-
-    public TUI() {}
-
-    /** Wires the coordinator used to send requests to the server. */
     @Override
     public void setAppCoordinator(AppCoordinator appCoordinator) {
         this.appCoordinator = appCoordinator;
     }
 
-    // ── GameUI lifecycle ──────────────────────────────────────────────────────
+    // ── Lifecycle ─────────────────────────────────────────────────────────────
 
     @Override
     public void start() {
         try {
             initLanterna();
-
-            setupScreen   = new SetupScreen(setupGui);
-            lobbyScreen   = new LobbyScreen(screen);
-            gameScreen    = new GameScreen(screen);
-            endGameScreen = new EndGameScreen(screen);
-
-            // Ask the server for the initial handshake; the server will reply with LoginNeeded.
-            try {
-                appCoordinator.connectRequest();
-            } catch (Exception e) {
-                showFatal("Cannot reach server", e);
-                return;
-            }
-
-            // 1) Wait for LoginNeeded → show username dialog → send login
-            awaitUntil(() -> loginPrompted || disconnected, 0);
-            if (disconnected) { onServerDisconnected(); return; }
-            myUsername = setupScreen.askUsername();
-            try { appCoordinator.createLoginRequest(myUsername); }
-            catch (Exception e) { showFatal("Login failed", e); return; }
-
-            // 2) Wait for HomeUpdate → show home dialog → create or join a game
-            awaitUntil(() -> pendingHomeGames != null || disconnected, 0);
-            if (disconnected) { onServerDisconnected(); return; }
-            SetupScreen.HomeChoice choice = setupScreen.showHome(pendingHomeGames);
-            pendingHomeGames = null;
-            try {
-                if (choice.kind() == SetupScreen.HomeChoice.Kind.CREATE) {
-                    knownTotalPlayers = choice.value();
-                    appCoordinator.createGameRequest(choice.value());
-                } else {
-                    appCoordinator.enterGameRequest(choice.value());
-                }
-            } catch (Exception e) { showFatal("Could not create/join game", e); return; }
-
-            // 3) Lobby phase: re-render on LobbyUpdate, exit when GameUpdate arrives
-            runLobbyPhase();
-            if (disconnected) { onServerDisconnected(); return; }
-
-            // 4) Game loop: render state, collect moves when it's our turn
-            if (currentGame != null) runGameLoop();
-
-            // 5) End-game screen
-            if (endResults != null) endGameScreen.show(endResults);
-            else if (disconnected)  onServerDisconnected();
-
+            currentScreen = new ConnectingScreen(terminal, gui, appCoordinator);
+            appCoordinator.connectRequest();
+            loop();
         } catch (Exception e) {
-            showFatal("Unexpected error", e);
+            showFatal("Startup error", e);
         } finally {
             shutdown();
         }
@@ -134,267 +71,186 @@ public class TUI implements GameUI {
 
     @Override
     public void shutdown() {
+        running = false;
         try {
-            if (screen != null) {
-                screen.stopScreen();
-                screen = null;
+            if (terminal != null) {
+                terminal.stopScreen();
+                terminal = null;
             }
         } catch (IOException ignored) {}
     }
 
-    // ── Phases ────────────────────────────────────────────────────────────────
+    // ── Main loop ─────────────────────────────────────────────────────────────
 
-    private void runLobbyPhase() {
-        // Initial render (may be empty)
-        lobbyScreen.render(safeList(lobbyPlayers), knownTotalPlayers);
-        List<String> lastRendered = lobbyPlayers;
-
-        while (currentGame == null && !disconnected && endResults == null) {
-            // Re-render on any lobby change
-            List<String> players = lobbyPlayers;
-            if (players != null && players != lastRendered) {
-                lobbyScreen.render(players, knownTotalPlayers);
-                lastRendered = players;
-            }
-
-            // Poll for 'S' (host starts the game)
+    private void loop() {
+        while (running && !(currentScreen instanceof ExitScreen)) {
+            // 1. Render the current screen
             try {
-                KeyStroke key = screen.pollInput();
-                if (key != null && key.getKeyType() == KeyType.Character) {
-                    char c = Character.toLowerCase(key.getCharacter());
-                    if (c == 's') {
-                        try { appCoordinator.startGameRequest(); }
-                        catch (Exception e) { flashBottom("Start failed: " + e.getMessage()); }
+                currentScreen.render();
+            } catch (IOException e) {
+                showFatal("Render error", e);
+                return;
+            }
+
+            // 2. Drain server events (enqueued by network callbacks)
+            Event event;
+            while ((event = eventQueue.poll()) != null) {
+                if (event instanceof ErrorEvent ee) {
+                    flashError(ee.getMessage());
+                }
+                Screen next = currentScreen.handleEvent(event);
+                if (next != currentScreen) {
+                    currentScreen = next;
+                    try {
+                        currentScreen.onEnter();
+                    } catch (Exception e) {
+                        showFatal("Screen transition failed", e);
+                        return;
                     }
+                    break; // re-render before processing further events
                 }
-            } catch (IOException ignored) {}
-
-            sleep(100);
-        }
-    }
-
-    private void runGameLoop() {
-        Totem myTotem = findMyTotem(currentGame);
-
-        while (!disconnected && endResults == null) {
-            GameDTO game = currentGame;
-            if (game == null) { sleep(100); continue; }
-
-            Phase phase = game.phase();
-            if (phase == Phase.END_GAME) break;
-
-            // "Pass the keyboard" overlay when the active player changes
-            Totem currentTotem = game.currentPlayerTotem();
-            if (currentTotem != null && !currentTotem.equals(lastPassedTotem)) {
-                String name = nameFor(currentTotem, game);
-                gameScreen.showPassScreen(name, currentTotem);
-                lastPassedTotem = currentTotem;
             }
 
-            gameScreen.renderStatic(game);
-
-            boolean myTurn = (myTotem != null && myTotem.equals(currentTotem));
-            if (myTurn) {
-                Set<Move> moves = collectMovesForPhase(game, phase);
-                if (moves != null) {
-                    try { appCoordinator.makeMoveRequest(moves); }
-                    catch (Exception e) { flashBottom("Move failed: " + e.getMessage()); }
+            // 3. Translate key press into an input event and dispatch via visitor
+            try {
+                KeyStroke key = terminal.pollInput();
+                if (key != null) {
+                    Event inputEvent = toInputEvent(key);
+                    if (inputEvent != null) {
+                        Screen next = inputEvent.accept(currentScreen);
+                        if (next != currentScreen) {
+                            currentScreen = next;
+                            try {
+                                currentScreen.onEnter();
+                            } catch (Exception e) {
+                                showFatal("Screen transition failed", e);
+                                return;
+                            }
+                        }
+                    }
+                } else {
+                    Thread.sleep(20);
                 }
-                waitForStateChangeFrom(game);
-            } else {
-                // Other player's turn / automatic phase: wait for the next update.
-                waitForStateChangeFrom(game);
+            } catch (IOException | InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
             }
         }
     }
 
-    private Set<Move> collectMovesForPhase(GameDTO game, Phase phase) {
-        switch (phase) {
-            case TOTEM_PLACEMENT -> { return gameScreen.collectTotemPlacement(game); }
-            case ACTION_EXECUTION, EXTRA_MOVE -> {
-                int[] counts = resolveMoveCounts(game);
-                return gameScreen.collectCardSelection(game, counts[0], counts[1]);
-            }
-            default -> {
-                // EVENTS_EXECUTION / END_ROUND are server-driven: just wait
-                sleep(800);
-                return null;
-            }
-        }
+    /**
+     * Translates a raw Lanterna keystroke into a semantic input event.
+     * Returns {@code null} for keys that carry no meaning in the TUI.
+     */
+    private Event toInputEvent(KeyStroke key) {
+        return switch (key.getKeyType()) {
+            case Enter      -> new ConfirmEvent();
+            case ArrowLeft  -> new NavigateLeftEvent();
+            case ArrowRight -> new NavigateRightEvent();
+            case ArrowUp    -> new NavigateUpEvent();
+            case ArrowDown  -> new NavigateDownEvent();
+            case Character  -> new CharInputEvent(key.getCharacter());
+            default         -> null;
+        };
     }
 
-    private int[] resolveMoveCounts(GameDTO game) {
-        Totem currentTotem = game.currentPlayerTotem();
-        for (OfferTileDTO tile : game.board().offerTrack()) {
-            if (tile.totem() == currentTotem) {
-                int upper = OfferTileCatalog.upperMoves(tile.id());
-                int lower = OfferTileCatalog.lowerMoves(tile.id());
-                return new int[]{upper, lower};
-            }
-        }
-        return new int[]{1, 0}; // fallback: should not happen in a valid game state
-    }
-
-    // ── GameUI callbacks (network thread → main thread) ───────────────────────
+    // ── GameUI callbacks (network thread) ────────────────────────────────────
 
     @Override
     public void showUsernameField() {
-        synchronized (stateLock) {
-            loginPrompted = true;
-            stateLock.notifyAll();
-        }
+        eventQueue.add(new LoginNeededEvent());
     }
 
     @Override
     public void onHomeUpdate(List<Integer> activeGames) {
-        synchronized (stateLock) {
-            pendingHomeGames = (activeGames != null) ? activeGames : Collections.emptyList();
-            stateLock.notifyAll();
-        }
+        eventQueue.add(new HomeUpdateEvent(
+                activeGames != null ? activeGames : Collections.emptyList()));
     }
 
     @Override
     public void onLobbyUpdate(List<String> players) {
-        synchronized (stateLock) {
-            lobbyPlayers = (players != null) ? players : Collections.emptyList();
-            stateLock.notifyAll();
-        }
+        eventQueue.add(new LobbyUpdateEvent(
+                players != null ? players : Collections.emptyList()));
     }
 
     @Override
     public void onGameUpdate(GameDTO game) {
-        synchronized (stateLock) {
-            currentGame = game;
-            stateLock.notifyAll();
-        }
+        eventQueue.add(new GameUpdateEvent(game));
     }
 
     @Override
     public void onEndGame(List<MatchResult> results) {
-        synchronized (stateLock) {
-            endResults = results;
-            stateLock.notifyAll();
-        }
+        eventQueue.add(new EndGameEvent(results));
     }
 
     @Override
     public void onErrorReceived(String error) {
-        synchronized (stateLock) {
-            lastError = error;
-            stateLock.notifyAll();
-        }
-        flashBottom("! ERROR: " + error);
+        eventQueue.add(new ErrorEvent(error));
     }
 
+    /**
+     * Called directly by {@link AppCoordinator} on disconnection. Does not
+     * go through the event queue or the screen visitor — disconnection is a
+     * system-level concern handled here in the TUI directly.
+     */
     @Override
     public void onServerDisconnected() {
-        synchronized (stateLock) {
-            disconnected = true;
-            stateLock.notifyAll();
-        }
+        running = false;
         try {
-            if (screen != null) {
-                screen.clear();
-                screen.newTextGraphics().putString(2, 2, "Server disconnected. Press any key to exit.");
-                screen.refresh();
-                screen.readInput();
-            }
+            if (terminal == null) return;
+            terminal.clear();
+            TextGraphics tg = terminal.newTextGraphics();
+            tg.setForegroundColor(TextColor.ANSI.RED);
+            tg.putString(2, 2, "Server disconnected. Press any key to exit.");
+            tg.setForegroundColor(TextColor.ANSI.WHITE);
+            terminal.refresh();
+            terminal.readInput();
         } catch (IOException ignored) {}
     }
 
-    // ── Synchronization helpers ───────────────────────────────────────────────
-
-    /** Waits until {@code condition} becomes true, or {@code timeoutMs} elapses (0 = forever). */
-    private void awaitUntil(java.util.function.BooleanSupplier condition, long timeoutMs) {
-        long deadline = timeoutMs > 0 ? System.currentTimeMillis() + timeoutMs : Long.MAX_VALUE;
-        synchronized (stateLock) {
-            while (!condition.getAsBoolean()) {
-                long remaining = deadline - System.currentTimeMillis();
-                if (remaining <= 0) return;
-                try { stateLock.wait(Math.min(remaining, 500)); }
-                catch (InterruptedException e) { Thread.currentThread().interrupt(); return; }
-            }
-        }
-    }
-
-    /** Blocks until {@code currentGame} is replaced (different reference) or the session ends. */
-    private void waitForStateChangeFrom(GameDTO previous) {
-        synchronized (stateLock) {
-            while (currentGame == previous && !disconnected && endResults == null) {
-                try { stateLock.wait(500); }
-                catch (InterruptedException e) { Thread.currentThread().interrupt(); return; }
-            }
-        }
-    }
-
-    // ── Identity helpers ──────────────────────────────────────────────────────
-
-    private Totem findMyTotem(GameDTO game) {
-        if (game == null || myUsername == null) return null;
-        for (PlayerDTO p : game.players()) {
-            if (myUsername.equals(p.name())) return p.totem();
-        }
-        return null;
-    }
-
-    private String nameFor(Totem totem, GameDTO game) {
-        if (game == null || totem == null) return "?";
-        return game.players().stream()
-                .filter(p -> p.totem() == totem)
-                .map(PlayerDTO::name)
-                .findFirst()
-                .orElse("?");
-    }
-
-    // ── Lanterna bootstrap / error rendering ──────────────────────────────────
-
-    private void initLanterna() throws IOException {
-        Terminal terminal;
-        if (System.getProperty("os.name", "").toLowerCase().contains("win")) {
-            // On Windows, DefaultTerminalFactory requires javaw.exe for Swing mode.
-            // We bypass this by explicitly creating a SwingTerminalFrame, which works
-            // with java.exe too and opens the game in a dedicated window.
-            SwingTerminalFrame frame = new SwingTerminalFrame("MESOS – Ancient Tribe Strategy",
-                    TerminalEmulatorAutoCloseTrigger.CloseOnExitPrivateMode);
-            frame.setVisible(true);
-            terminal = frame;
-        } else {
-            terminal = new DefaultTerminalFactory().createTerminal();
-        }
-        screen = new TerminalScreen(terminal);
-        screen.startScreen();
-        setupGui = new MultiWindowTextGUI(screen);
-    }
+    // ── Error rendering ───────────────────────────────────────────────────────
 
     private void showFatal(String label, Exception e) {
         try {
-            if (screen == null) return;
-            screen.clear();
-            TextGraphics tg = screen.newTextGraphics();
+            if (terminal == null) return;
+            terminal.clear();
+            TextGraphics tg = terminal.newTextGraphics();
             tg.setForegroundColor(TextColor.ANSI.RED);
             tg.putString(2, 1, "FATAL: " + label + " (" + e.getClass().getSimpleName() + ")");
             tg.putString(2, 2, e.getMessage() != null ? e.getMessage() : "(no message)");
             tg.setForegroundColor(TextColor.ANSI.WHITE);
             tg.putString(2, 4, "Press ENTER to exit.");
-            screen.refresh();
-            screen.readInput();
+            terminal.refresh();
+            terminal.readInput();
         } catch (IOException ignored) {}
     }
 
-    private void flashBottom(String msg) {
+    private void flashError(String msg) {
         try {
-            if (screen == null) return;
-            int row = screen.getTerminalSize().getRows() - 2;
-            screen.newTextGraphics().putString(2, row, msg);
-            screen.refresh();
+            if (terminal == null) return;
+            int row = terminal.getTerminalSize().getRows() - 2;
+            TextGraphics tg = terminal.newTextGraphics();
+            tg.setForegroundColor(TextColor.ANSI.RED);
+            tg.putString(2, row, "! ERROR: " + msg);
+            tg.setForegroundColor(TextColor.ANSI.WHITE);
+            terminal.refresh();
         } catch (IOException ignored) {}
     }
 
-    // ── Misc ──────────────────────────────────────────────────────────────────
+    // ── Lanterna bootstrap ────────────────────────────────────────────────────
 
-    private static <T> List<T> safeList(List<T> l) { return l != null ? l : Collections.emptyList(); }
-
-    private void sleep(long ms) {
-        try { Thread.sleep(ms); } catch (InterruptedException ignored) { Thread.currentThread().interrupt(); }
+    private void initLanterna() throws IOException {
+        Terminal lanternaTerminal;
+        if (System.getProperty("os.name", "").toLowerCase().contains("win")) {
+            SwingTerminalFrame frame = new SwingTerminalFrame("MESOS – Ancient Tribe Strategy",
+                    TerminalEmulatorAutoCloseTrigger.CloseOnExitPrivateMode);
+            frame.setVisible(true);
+            lanternaTerminal = frame;
+        } else {
+            lanternaTerminal = new DefaultTerminalFactory().createTerminal();
+        }
+        terminal = new TerminalScreen(lanternaTerminal);
+        terminal.startScreen();
+        gui = new MultiWindowTextGUI(terminal);
     }
 }
