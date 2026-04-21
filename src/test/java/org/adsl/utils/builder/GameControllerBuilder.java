@@ -16,4 +16,9 @@ public class GameControllerBuilder {
     public GameController build() {
         return new GameController(loader, persistence, dao);
     }
+
+    public GameControllerBuilder withGameDAO(GameDAO dao) {
+        this.dao = dao;
+        return this;
+    }
 }
