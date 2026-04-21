@@ -7,27 +7,27 @@ import static org.junit.jupiter.api.Assertions.*;
 public class DatabaseConfigTest {
 
     @Test
-    void urlNoDb_isNotNull() {
+    void testUrlNoDb_isNotNull() {
         assertNotNull(DatabaseConfig.URL_NO_DB);
     }
 
     @Test
-    void url_isNotNull() {
+    void testUrl_isNotNull() {
         assertNotNull(DatabaseConfig.URL);
     }
 
     @Test
-    void urlNoDb_containsLocalhost() {
+    void testUrlNoDb_containsLocalhost() {
         assertTrue(DatabaseConfig.URL_NO_DB.contains("localhost"));
     }
 
     @Test
-    void url_containsDbName() {
+    void testUrl_containsDbName() {
         assertTrue(DatabaseConfig.URL.contains(DatabaseConfig.DB_NAME));
     }
 
     @Test
-    void url_startsWithJdbcMysql() {
+    void testUrl_startsWithJdbcMysql() {
         assertTrue(DatabaseConfig.URL.startsWith("jdbc:mysql://"));
     }
 }

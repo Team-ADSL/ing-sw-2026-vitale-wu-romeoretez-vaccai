@@ -17,7 +17,6 @@ public class OrderTileTest {
 
     @BeforeEach
     void setUp() {
-        // Arrange - create two empty cells and one tile
         gianpaolo = new Player("Gianpaolo", 3, 0, Totem.RED, new java.util.HashMap<>());
         gianpiero = new Player("Gianpiero", 2, 0, Totem.BLUE, new java.util.HashMap<>());
 
@@ -29,48 +28,46 @@ public class OrderTileTest {
         orderTile = new OrderTile("order_tile_5p", cells);
     }
 
-    // --- getPlayerAt() tests ---
+    // ──────────────────────────────────────────────
+    // TEST GET PLAYER AT
+    // ──────────────────────────────────────────────
 
     @Test
-    void testGetPlayerAtReturnsEmptyWhenNoPlayer() {
-        // should return empty when no player has been placed
+    void testGetPlayerAt_returnsEmptyWhenNoPlayer() {
         assertTrue(orderTile.getPlayerAt(0).isEmpty());
     }
 
     @Test
-    void testGetPlayerAtReturnsPlayerAfterPlacement() {
-        // should return the player after being placed
+    void testGetPlayerAt_returnsPlayerAfterPlacement() {
         orderTile.placePlayerAtNext(gianpaolo);
         assertTrue(orderTile.getPlayerAt(0).isPresent());
         assertEquals(gianpaolo, orderTile.getPlayerAt(0).get());
     }
 
     @Test
-    void testGetPlayerAtThrowsOnInvalidIndex() {
-        // should throw when index is out of bounds
+    void testGetPlayerAt_throwsOnInvalidIndex() {
         assertThrows(IndexOutOfBoundsException.class, () -> orderTile.getPlayerAt(5));
     }
 
-    // --- placePlayerAtNext() tests ---
+    // ──────────────────────────────────────────────
+    // TEST PLACE PLAYER AT NEXT
+    // ──────────────────────────────────────────────
 
     @Test
-    void testPlacePlayerAtNextReturnsCorrectIndex() {
-        // should return index 0 when all cells are empty
+    void testPlacePlayerAtNext_returnsCorrectIndex() {
         int index = orderTile.placePlayerAtNext(gianpaolo);
         assertEquals(0, index);
     }
 
     @Test
-    void testPlacePlayerAtNextFillsInOrder() {
-        // should fill cells sequentially
+    void testPlacePlayerAtNext_fillsInOrder() {
         orderTile.placePlayerAtNext(gianpaolo);
         int index = orderTile.placePlayerAtNext(gianpiero);
         assertEquals(1, index);
     }
 
     @Test
-    void testPlacePlayerAtNextAssignsCorrectPlayer() {
-        // should assign the correct player to the correct cell
+    void testPlacePlayerAtNext_assignsCorrectPlayer() {
         orderTile.placePlayerAtNext(gianpaolo);
         orderTile.placePlayerAtNext(gianpiero);
         assertEquals(gianpaolo, orderTile.getPlayerAt(0).get());
@@ -78,25 +75,24 @@ public class OrderTileTest {
     }
 
     @Test
-    void testPlacePlayerAtNextThrowsWhenFull() {
-        // should throw when all cells are occupied
+    void testPlacePlayerAtNext_throwsWhenFull() {
         orderTile.placePlayerAtNext(gianpaolo);
         orderTile.placePlayerAtNext(gianpiero);
         orderTile.placePlayerAtNext(new Player("Gianluca", 1, 0, Totem.YELLOW, new java.util.HashMap<>()));
         assertThrows(IndexOutOfBoundsException.class, () -> orderTile.placePlayerAtNext(new Player("Bowser", 1, 0, Totem.WHITE, new java.util.HashMap<>())));
     }
 
-    // --- getCellAt() tests ---
+    // ──────────────────────────────────────────────
+    // TEST GET CELL AT
+    // ──────────────────────────────────────────────
 
     @Test
-    void testGetCellAtReturnsCorrectCell() {
-        // should return the cell at the given index
+    void testGetCellAt_returnsCorrectCell() {
         assertNotNull(orderTile.getCellAt(0));
     }
 
     @Test
-    void testGetCellAtThrowsOnInvalidIndex() {
-        // should throw when index is out of bounds
+    void testGetCellAt_throwsOnInvalidIndex() {
         assertThrows(IndexOutOfBoundsException.class, () -> orderTile.getCellAt(5));
     }
 }

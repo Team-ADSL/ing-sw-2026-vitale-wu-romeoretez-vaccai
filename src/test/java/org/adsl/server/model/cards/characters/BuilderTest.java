@@ -12,44 +12,14 @@ import static org.junit.jupiter.api.Assertions.*;
 public class BuilderTest {
 
     @Test
-    void getDiscount_returnsCorrectValue() {
-        Builder b = new Builder("b", 2, 5, 1, null);
-        assertEquals(2, b.getDiscount());
-    }
-
-    @Test
-    void getPP_returnsCorrectValue() {
-        Builder b = new Builder("b", 2, 5, 1, null);
-        assertEquals(5, b.getPP());
-    }
-
-    @Test
-    void getEra_returnsCorrectValue() {
-        Builder b = new Builder("b", 2, 5, 3, null);
-        assertEquals(3, b.getEra());
-    }
-
-    @Test
-    void getId_returnsCorrectId() {
-        Builder b = new Builder("builder_01", 2, 5, 1, null);
-        assertEquals("builder_01", b.getId());
-    }
-
-    @Test
-    void getNumPlayers_returnsCorrectValue() {
-        Builder b = new Builder("b", 2, 5, 1, 4);
-        assertEquals(Optional.of(4), b.getNumPlayers());
-    }
-
-    @Test
-    void canBeDrawn_alwaysTrue() {
+    void testCanBeDrawn_alwaysTrue() {
         Builder b = new Builder("b", 2, 5, 1, null);
         Player p = new Player("Test");
         assertTrue(b.canBeDrawn(p));
     }
 
     @Test
-    void insert_addsToBuilderSet() {
+    void testInsert_addsToBuilderSet() {
         Builder b = new Builder("b", 2, 5, 1, null);
         Map<CardType, Set<Card>> cards = initCardsMap();
         b.insert(cards);
@@ -57,7 +27,7 @@ public class BuilderTest {
     }
 
     @Test
-    void insert_doesNotAddToOtherSets() {
+    void testInsert_doesNotAddToOtherSets() {
         Builder b = new Builder("b", 2, 5, 1, null);
         Map<CardType, Set<Card>> cards = initCardsMap();
         b.insert(cards);

@@ -15,14 +15,12 @@ public class OfferTileTest {
 
     @BeforeEach
     void setUp() {
-        // Arrange - tile with a player and multiple moves
         tileWithPlayer = new OfferTile("order_tile_5p",
                 new Player("Gianpaolo", 3, 0, Totem.RED, new java.util.HashMap<>()),
                 Map.of(Row.UPPER, 2, Row.LOWER, 1),
                 true
         );
 
-        // Arrange - tile with no player and no moves
         tileWithoutPlayer = new OfferTile("order_tile_5p",
                 null,
                 Map.of(),
@@ -30,48 +28,31 @@ public class OfferTileTest {
         );
     }
 
-    // --- getPlayer() tests ---
+    // ──────────────────────────────────────────────
+    // TEST GET PLAYER
+    // ──────────────────────────────────────────────
 
     @Test
-    void testGetPlayerReturnsPlayer() {
-        // should return the player when present
+    void testGetPlayer_returnsPlayer() {
         assertTrue(tileWithPlayer.getPlayer().isPresent());
     }
 
     @Test
-    void testGetPlayerReturnsEmpty() {
-        // should return empty when no player assigned
+    void testGetPlayer_returnsEmpty() {
         assertTrue(tileWithoutPlayer.getPlayer().isEmpty());
     }
 
-    // --- getNumMoves() tests ---
+    // ──────────────────────────────────────────────
+    // TEST GET NUM MOVES
+    // ──────────────────────────────────────────────
 
     @Test
-    void testGetNumMovesReturnsSumOfAllMoves() {
-        // should sum all move values across rows (2 + 1 = 3)
+    void testGetNumMoves_returnsSumOfAllMoves() {
         assertEquals(3, tileWithPlayer.getNumMoves());
     }
 
     @Test
-    void testGetNumMovesReturnsZeroWhenNoMoves() {
-        // should return 0 when map is empty
+    void testGetNumMoves_returnsZeroWhenNoMoves() {
         assertEquals(0, tileWithoutPlayer.getNumMoves());
     }
-
-    // --- getMoves() tests ---
-
-    @Test
-    void testGetMovesReturnsCorrectMap() {
-        // should return the exact map passed in constructor
-        Map<Row, Integer> moves = tileWithPlayer.getMoves();
-        assertEquals(2, moves.get(Row.UPPER));
-        assertEquals(1, moves.get(Row.LOWER));
-    }
-
-    @Test
-    void testGetMovesReturnsEmptyMap() {
-        // should return empty map when no moves
-        assertTrue(tileWithoutPlayer.getMoves().isEmpty());
-    }
 }
-

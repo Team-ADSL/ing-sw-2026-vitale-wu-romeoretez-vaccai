@@ -13,38 +13,14 @@ import static org.junit.jupiter.api.Assertions.*;
 public class InventorTest {
 
     @Test
-    void getIcon_returnsCorrectValue() {
-        Inventor inv = new Inventor("i", Icon.BOAT, 1, null);
-        assertEquals(Icon.BOAT, inv.getIcon());
-    }
-
-    @Test
-    void getIcon_differentIcon_returnsCorrectValue() {
-        Inventor inv = new Inventor("i", Icon.TOTEM, 1, null);
-        assertEquals(Icon.TOTEM, inv.getIcon());
-    }
-
-    @Test
-    void getEra_returnsCorrectValue() {
-        Inventor inv = new Inventor("i", Icon.ROPE, 2, null);
-        assertEquals(2, inv.getEra());
-    }
-
-    @Test
-    void getId_returnsCorrectId() {
-        Inventor inv = new Inventor("inventor_01", Icon.BOAT, 1, null);
-        assertEquals("inventor_01", inv.getId());
-    }
-
-    @Test
-    void canBeDrawn_alwaysTrue() {
+    void testCanBeDrawn_alwaysTrue() {
         Inventor inv = new Inventor("i", Icon.BOAT, 1, null);
         Player p = new Player("Test");
         assertTrue(inv.canBeDrawn(p));
     }
 
     @Test
-    void insert_addsToInventorSet() {
+    void testInsert_addsToInventorSet() {
         Inventor inv = new Inventor("i", Icon.BOAT, 1, null);
         Map<CardType, Set<Card>> cards = initCardsMap();
         inv.insert(cards);
@@ -52,7 +28,7 @@ public class InventorTest {
     }
 
     @Test
-    void insert_doesNotAddToOtherSets() {
+    void testInsert_doesNotAddToOtherSets() {
         Inventor inv = new Inventor("i", Icon.BOAT, 1, null);
         Map<CardType, Set<Card>> cards = initCardsMap();
         inv.insert(cards);

@@ -21,31 +21,31 @@ public class DuringHuntTest {
     }
 
     @Test
-    void activeEffect_huntTrigger_setsHuntEventBonusTrue() {
+    void testActiveEffect_huntTrigger_setsHuntEventBonusTrue() {
         duringHunt.activeEffect(Set.of(player), Trigger.HUNT);
         assertTrue(player.getBuildingBonus().isHuntEventBonus());
     }
 
     @Test
-    void activeEffect_wrongTrigger_doesNotSetHuntBonus() {
+    void testActiveEffect_wrongTrigger_doesNotSetHuntBonus() {
         duringHunt.activeEffect(Set.of(player), Trigger.SUSTENANCE);
         assertFalse(player.getBuildingBonus().isHuntEventBonus());
     }
 
     @Test
-    void activeEffect_endGameTrigger_doesNotSetHuntBonus() {
+    void testActiveEffect_endGameTrigger_doesNotSetHuntBonus() {
         duringHunt.activeEffect(Set.of(player), Trigger.END_GAME);
         assertFalse(player.getBuildingBonus().isHuntEventBonus());
     }
 
     @Test
-    void activeEffect_shamanicritual_doesNotSetHuntBonus() {
+    void testActiveEffect_shamanicRitual_doesNotSetHuntBonus() {
         duringHunt.activeEffect(Set.of(player), Trigger.SHAMANIC_RITUAL);
         assertFalse(player.getBuildingBonus().isHuntEventBonus());
     }
 
     @Test
-    void activeEffect_emptyPlayerSet_doesNotThrow() {
+    void testActiveEffect_emptyPlayerSet_doesNotThrow() {
         assertDoesNotThrow(() -> duringHunt.activeEffect(Set.of(), Trigger.HUNT));
     }
 }

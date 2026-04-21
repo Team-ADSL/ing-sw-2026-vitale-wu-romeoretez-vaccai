@@ -18,7 +18,6 @@ public class OfferTrackTest {
 
     @BeforeEach
     void setUp() {
-        // Arrange - create two tiles and add them to the track
         tile1 = new OfferTile("order_tile_5p",
                 new Player("Gianpaolo", 3, 0, Totem.RED, new java.util.HashMap<>()),
                 Map.of(Row.UPPER, 1),
@@ -37,41 +36,42 @@ public class OfferTrackTest {
         offerTrack = new OfferTrack(tiles);
     }
 
-    // --- size() tests ---
+    // ──────────────────────────────────────────────
+    // TEST SIZE
+    // ──────────────────────────────────────────────
 
     @Test
-    void testSizeReturnsCorrectCount() {
-        // should return the number of tiles in the track
+    void testSize_returnsCorrectCount() {
         assertEquals(2, offerTrack.size());
     }
 
     @Test
-    void testSizeEmptyTrack() {
-        // empty track should have size 0
+    void testSize_emptyTrack() {
         OfferTrack emptyTrack = new OfferTrack(new ArrayList<>());
         assertEquals(0, emptyTrack.size());
     }
 
-    // --- getTileAt() tests ---
+    // ──────────────────────────────────────────────
+    // TEST GET TILE AT
+    // ──────────────────────────────────────────────
 
     @Test
-    void testGetTileAtReturnsCorrectTile() {
-        // should return the tile at the given index
+    void testGetTileAt_returnsCorrectTile() {
         assertEquals(tile1, offerTrack.getTileAt(0));
         assertEquals(tile2, offerTrack.getTileAt(1));
     }
 
     @Test
-    void testGetTileAtThrowsOnInvalidIndex() {
-        // should throw when index is out of bounds
+    void testGetTileAt_throwsOnInvalidIndex() {
         assertThrows(IndexOutOfBoundsException.class, () -> offerTrack.getTileAt(5));
     }
 
-    // --- placeInOfferTile() tests ---
+    // ──────────────────────────────────────────────
+    // TEST PLACE IN OFFER TILE
+    // ──────────────────────────────────────────────
 
     @Test
-    void testPlaceInOfferTileAssignsPlayer() {
-        // should assign the player to the tile at the given index
+    void testPlaceInOfferTile_assignsPlayer() {
         Player newPlayer = new Player("Gianpiero", 2, 0, Totem.BLUE, new java.util.HashMap<>());
         offerTrack.placeInOfferTile(newPlayer, 1);
         assertTrue(offerTrack.getTileAt(1).getPlayer().isPresent());
@@ -79,8 +79,7 @@ public class OfferTrackTest {
     }
 
     @Test
-    void testPlaceInOfferTileThrowsOnInvalidIndex() {
-        // should throw when index is out of bounds
+    void testPlaceInOfferTile_throwsOnInvalidIndex() {
         Player newPlayer = new Player("Gianpiero", 2, 0, Totem.BLUE, new java.util.HashMap<>());
         assertThrows(IndexOutOfBoundsException.class, () -> offerTrack.placeInOfferTile(newPlayer, 5));
     }

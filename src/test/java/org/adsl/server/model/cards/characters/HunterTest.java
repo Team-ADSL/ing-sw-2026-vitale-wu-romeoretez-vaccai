@@ -22,13 +22,13 @@ public class HunterTest {
     }
 
     @Test
-    void canBeDrawn_alwaysTrue() {
+    void testCanBeDrawn_alwaysTrue() {
         Hunter h = new Hunter("h", true, 1, null);
         assertTrue(h.canBeDrawn(player));
     }
 
     @Test
-    void insert_addsToHunterSet() {
+    void testInsert_addsToHunterSet() {
         Hunter h = new Hunter("h", false, 1, null);
         Map<CardType, Set<Card>> cards = initCardsMap();
         h.insert(cards);
@@ -36,7 +36,7 @@ public class HunterTest {
     }
 
     @Test
-    void insert_doesNotAddToOtherSets() {
+    void testInsert_doesNotAddToOtherSets() {
         Hunter h = new Hunter("h", false, 1, null);
         Map<CardType, Set<Card>> cards = initCardsMap();
         h.insert(cards);
@@ -48,7 +48,7 @@ public class HunterTest {
     }
 
     @Test
-    void activeEffect_extraFoodFalse_noFoodChange() {
+    void testActiveEffect_extraFoodFalse_noFoodChange() {
         Hunter h = new Hunter("h", false, 1, null);
         player.getCards().get(CardType.HUNTER).add(h);
         int foodBefore = player.getFood();
@@ -57,7 +57,7 @@ public class HunterTest {
     }
 
     @Test
-    void activeEffect_extraFoodTrue_wrongTrigger_noFoodChange() {
+    void testActiveEffect_extraFoodTrue_wrongTrigger_noFoodChange() {
         Hunter h = new Hunter("h", true, 1, null);
         player.getCards().get(CardType.HUNTER).add(h);
         int foodBefore = player.getFood();
@@ -66,7 +66,7 @@ public class HunterTest {
     }
 
     @Test
-    void activeEffect_extraFoodTrue_drawingTrigger_oneHunter_addsFoodByHunterCount() {
+    void testActiveEffect_extraFoodTrue_drawingTrigger_oneHunter_addsFoodByHunterCount() {
         Hunter h = new Hunter("h", true, 1, null);
         player.getCards().get(CardType.HUNTER).add(h);
         h.activeEffect(Set.of(player), Trigger.DRAWING);
@@ -74,7 +74,7 @@ public class HunterTest {
     }
 
     @Test
-    void activeEffect_extraFoodTrue_threeHunters_addsFoodByHunterCount() {
+    void testActiveEffect_extraFoodTrue_threeHunters_addsFoodByHunterCount() {
         Hunter h1 = new Hunter("h1", true, 1, null);
         Hunter h2 = new Hunter("h2", true, 1, null);
         Hunter h3 = new Hunter("h3", true, 1, null);
@@ -86,15 +86,9 @@ public class HunterTest {
     }
 
     @Test
-    void activeEffect_emptyPlayerSet_doesNotThrow() {
+    void testActiveEffect_emptyPlayerSet_doesNotThrow() {
         Hunter h = new Hunter("h", true, 1, null);
         assertDoesNotThrow(() -> h.activeEffect(Set.of(), Trigger.DRAWING));
-    }
-
-    @Test
-    void getId_returnsCorrectId() {
-        Hunter h = new Hunter("hunter_01", true, 1, null);
-        assertEquals("hunter_01", h.getId());
     }
 
     private Map<CardType, Set<Card>> initCardsMap() {

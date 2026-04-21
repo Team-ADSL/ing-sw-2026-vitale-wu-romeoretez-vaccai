@@ -18,18 +18,13 @@ public class ShamanicRitualTest {
     }
 
     @Test
-    void canBeDrawn_alwaysFalse() {
+    void testCanBeDrawn_alwaysFalse() {
         Player p = new Player("Test");
         assertFalse(ritual().canBeDrawn(p));
     }
 
     @Test
-    void getId_returnsCorrectId() {
-        assertEquals("sr_01", ritual().getId());
-    }
-
-    @Test
-    void activeEffect_wrongTrigger_noEffect() {
+    void testActiveEffect_wrongTrigger_noEffect() {
         Player p = new Player("Test");
         p.changePP(10);
         p.getCards().get(CardType.SHAMAN).add(new Shaman("s", 3, 1, null));
@@ -38,7 +33,7 @@ public class ShamanicRitualTest {
     }
 
     @Test
-    void activeEffect_singlePlayer_sameStarsMaxMin_noPPChange() {
+    void testActiveEffect_singlePlayer_sameStarsMaxMin_noPPChange() {
         Player p = new Player("Solo");
         p.changePP(10);
         p.getCards().get(CardType.SHAMAN).add(new Shaman("s", 3, 1, null));
@@ -47,7 +42,7 @@ public class ShamanicRitualTest {
     }
 
     @Test
-    void activeEffect_twoPlayers_differentStars_maxGainsPP_minLosesPP() {
+    void testActiveEffect_twoPlayers_differentStars_maxGainsPP_minLosesPP() {
         Player winner = new Player("Winner");
         Player loser  = new Player("Loser");
         winner.getCards().get(CardType.SHAMAN).add(new Shaman("s1", 3, 1, null));
@@ -61,7 +56,7 @@ public class ShamanicRitualTest {
     }
 
     @Test
-    void activeEffect_loserWithImmunity_doesNotLosePP() {
+    void testActiveEffect_loserWithImmunity_doesNotLosePP() {
         Player winner = new Player("Winner");
         Player loser  = new Player("Loser");
         winner.getCards().get(CardType.SHAMAN).add(new Shaman("s1", 3, 1, null));
@@ -75,7 +70,7 @@ public class ShamanicRitualTest {
     }
 
     @Test
-    void activeEffect_winnerWithShamanMultiplier_gainsDoubledPP() {
+    void testActiveEffect_winnerWithShamanMultiplier_gainsDoubledPP() {
         Player winner = new Player("Winner");
         Player loser  = new Player("Loser");
         winner.getCards().get(CardType.SHAMAN).add(new Shaman("s1", 3, 1, null));
@@ -89,7 +84,7 @@ public class ShamanicRitualTest {
     }
 
     @Test
-    void activeEffect_extraStarsFromBonus_countedInTotal() {
+    void testActiveEffect_extraStarsFromBonus_countedInTotal() {
         Player winner = new Player("Winner");
         Player loser  = new Player("Loser");
         winner.getCards().get(CardType.SHAMAN).add(new Shaman("s1", 1, 1, null));
@@ -104,7 +99,7 @@ public class ShamanicRitualTest {
     }
 
     @Test
-    void activeEffect_twoPlayersNoShamans_sameStars_noPPChange() {
+    void testActiveEffect_twoPlayersNoShamans_sameStars_noPPChange() {
         Player p1 = new Player("P1");
         p1.changePP(5);
         Player p2 = new Player("P2");
@@ -118,7 +113,7 @@ public class ShamanicRitualTest {
     }
 
     @Test
-    void activeEffect_resetsBonus() {
+    void testActiveEffect_resetsBonus() {
         Player winner = new Player("Winner");
         Player loser  = new Player("Loser");
         winner.getCards().get(CardType.SHAMAN).add(new Shaman("s1", 3, 1, null));

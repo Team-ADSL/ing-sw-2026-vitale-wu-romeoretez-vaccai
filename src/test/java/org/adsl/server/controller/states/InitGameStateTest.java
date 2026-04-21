@@ -12,10 +12,6 @@ import org.adsl.server.model.cards.Card;
 import org.adsl.server.model.cards.buildings.Building;
 import org.adsl.server.persistence.GameDAO;
 import org.adsl.server.persistence.GamePersistenceManager;
-import org.adsl.shared.model.GameDTO;
-import org.adsl.shared.model.MatchResult;
-import org.adsl.utils.TestDummies;
-import org.adsl.utils.builder.BoardBuilder;
 import org.adsl.utils.fakes.FakeGameDAO;
 import org.adsl.utils.fakes.FakeGamePersistenceManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,23 +24,119 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class InitGameStateTest {
+
     private InitGameState state;
     private Game game;
-    BoardConfigLoader loader = new JsonBoardConfigLoader();
-    GameDAO gameDAO = new FakeGameDAO();
-    GamePersistenceManager persistenceManager = new FakeGamePersistenceManager();
-    GameController controller = new GameController(loader, persistenceManager,gameDAO);
-    BoardBuilder builder = new BoardBuilder();
+    private BoardConfigLoader loader;
+    private GameDAO gameDAO;
+    private GamePersistenceManager persistenceManager;
+    private GameController controller;
 
     @BeforeEach
     void setUp() {
+        loader = new JsonBoardConfigLoader();
+        gameDAO = new FakeGameDAO();
+        persistenceManager = new FakeGamePersistenceManager();
+        controller = new GameController(loader, persistenceManager, gameDAO);
         game = new Game(1, 5);
         state = new InitGameState(game, controller);
     }
 
-    /*--------------------------------------------------------------------*/
-    /* makeBuildingDecks
-    /*--------------------------------------------------------------------*/
+    // ──────────────────────────────────────────────
+    // TEST MAKE BUILDING DECKS
+    // ──────────────────────────────────────────────
+
+    @Test
+    void testMakeBuildingDecks_populatesRemainingBuildings() {
+        initBoardForGame(game, 2);
+        state.makeBuildingDecks(loader.getBuildings(), 2, loader.getSettings(2));
+        assertEquals(2, game.getBoard().remainingBuildings().size());
+    }
+
+    @Test
+    void testMakeBuildingDecks_2players_addsOneEra1BuildingToTopRow() {
+        initBoardForGame(game, 2);
+        int before = countNonNull(game.getBoard().topRow());
+        state.makeBuildingDecks(loader.getBuildings(), 2, loader.getSettings(2));
+        assertEquals(1, countNonNull(game.getBoard().topRow()) - before);
+    }
+
+    @Test
+    void testMakeBuildingDecks_3players_addsTwoEra1BuildingsToTopRow() {
+        Game g = new Game(2, 5);
+        initBoardForGame(g, 3);
+        InitGameState s = new InitGameState(g, null);
+        int before = countNonNull(g.getBoard().topRow());
+        s.makeBuildingDecks(loader.getBuildings(), 3, loader.getSettings(3));
+        assertEquals(2, countNonNull(g.getBoard().topRow()) - before);
+    }
+
+    @Test
+    void testMakeBuildingDecks_remainingBuildingsIndex0HasEra2Cards() {
+        initBoardForGame(game, 2);
+        state.makeBuildingDecks(loader.getBuildings(), 2, loader.getSettings(2));
+        List<Set<Card>> remaining = game.getBoard().remainingBuildings();
+        remaining.getFirst().forEach(c -> assertEquals(2, ((Building) c).getEra()));
+    }
+
+    @Test
+    void testMakeBuildingDecks_remainingBuildingsIndex1HasEra3Cards() {
+        initBoardForGame(game, 2);
+        state.makeBuildingDecks(loader.getBuildings(), 2, loader.getSettings(2));
+        List<Set<Card>> remaining = game.getBoard().remainingBuildings();
+        remaining.get(1).forEach(c -> assertEquals(3, ((Building) c).getEra()));
+    }
+
+    // ──────────────────────────────────────────────
+    // TEST FILL LOW ROW
+    // ──────────────────────────────────────────────
+
+    @Test
+    void testFillLowRow_2players_fillsThreeCharacterSlots() {
+        initBoardForGame(game, 2);
+        state.fillLowRow(2);
+        ArrayList<Card> tribe = game.getBoard().lowRow().getTribeCards();
+        int filled = 0;
+        for (Card c : tribe) if (c != null) filled++;
+        assertEquals(3, filled);
+    }
+
+    @Test
+    void testFillLowRow_lowRowContainsOnlyDrawableCards() {
+        initBoardForGame(game, 2);
+        state.fillLowRow(2);
+        for (Card c : game.getBoard().lowRow().getTribeCards()) {
+            if (c != null) {
+                assertTrue(c.canBeDrawn(null), "Low row should only contain character cards (canBeDrawn=true)");
+            }
+        }
+    }
+
+    // ──────────────────────────────────────────────
+    // TEST FILL TOP ROW
+    // ──────────────────────────────────────────────
+
+    @Test
+    void testFillTopRow_2players_fillsSixCards() {
+        initBoardForGame(game, 2);
+
+        state.fillTopRow(2);
+
+        assertEquals(6, countNonNull(game.getBoard().topRow()));
+    }
+
+    // ──────────────────────────────────────────────
+    // TEST CALC NEXT STATE
+    // ──────────────────────────────────────────────
+
+    @Test
+    void testCalcNextState_defaultState_returnsTotemPlacementState() {
+        assertInstanceOf(TotemPlacementState.class, state.calcNextState());
+    }
+
+    // ──────────────────────────────────────────────
+    // HELPERS
+    // ──────────────────────────────────────────────
 
     private void initBoardForGame(Game g, int numPlayers) {
         GameController gc = new GameController(loader, persistenceManager, gameDAO);
@@ -63,99 +155,6 @@ public class InitGameStateTest {
         );
         g.setBoard(board);
     }
-
-    @Test
-    void makeBuildingDecks_populatesRemainingBuildings() {
-        initBoardForGame(game, 2);
-        state.makeBuildingDecks(loader.getBuildings(), 2, loader.getSettings(2));
-        assertEquals(2, game.getBoard().remainingBuildings().size());
-    }
-
-    @Test
-    void makeBuildingDecks_2players_addsOneEra1BuildingToTopRow() {
-        initBoardForGame(game, 2);
-        int before = countNonNull(game.getBoard().topRow());
-        state.makeBuildingDecks(loader.getBuildings(), 2, loader.getSettings(2));
-        assertEquals(1, countNonNull(game.getBoard().topRow()) - before);
-    }
-
-    @Test
-    void makeBuildingDecks_3players_addsTwoEra1BuildingsToTopRow() {
-        Game g = new Game(2, 5);
-        initBoardForGame(g, 3);
-        InitGameState s = new InitGameState(g, null);
-        int before = countNonNull(g.getBoard().topRow());
-        s.makeBuildingDecks(loader.getBuildings(), 3, loader.getSettings(3));
-        assertEquals(2, countNonNull(g.getBoard().topRow()) - before);
-    }
-
-    @Test
-    void makeBuildingDecks_remainingBuildingsIndex0HasEra2Cards() {
-        initBoardForGame(game, 2);
-        state.makeBuildingDecks(loader.getBuildings(), 2, loader.getSettings(2));
-        List<Set<Card>> remaining = game.getBoard().remainingBuildings();
-        remaining.getFirst().forEach(c -> assertEquals(2, ((Building) c).getEra()));
-    }
-
-    @Test
-    void makeBuildingDecks_remainingBuildingsIndex1HasEra3Cards() {
-        initBoardForGame(game, 2);
-        state.makeBuildingDecks(loader.getBuildings(), 2, loader.getSettings(2));
-        List<Set<Card>> remaining = game.getBoard().remainingBuildings();
-        remaining.get(1).forEach(c -> assertEquals(3, ((Building) c).getEra()));
-    }
-
-    /*--------------------------------------------------------------------*/
-    /* fillLowRow
-    /*--------------------------------------------------------------------*/
-
-    @Test
-    void fillLowRow_2players_fillsThreeCharacterSlots() {
-        initBoardForGame(game, 2);
-        state.fillLowRow(2);
-        ArrayList<Card> tribe = game.getBoard().lowRow().getTribeCards();
-        int filled = 0;
-        for (Card c : tribe) if (c != null) filled++;
-        assertEquals(3, filled);
-    }
-
-    @Test
-    void fillLowRow_lowRowContainsOnlyDrawableCards() {
-        initBoardForGame(game, 2);
-        state.fillLowRow(2);
-        for (Card c : game.getBoard().lowRow().getTribeCards()) {
-            if (c != null) {
-                assertTrue(c.canBeDrawn(null), "Low row should only contain character cards (canBeDrawn=true)");
-            }
-        }
-    }
-
-    /*--------------------------------------------------------------------*/
-    /* fillTopRow
-    /*--------------------------------------------------------------------*/
-
-
-    @Test
-    void fillTopRow_2players_fillsSixCards(){
-        initBoardForGame(game, 2);
-
-        state.fillTopRow(2);
-
-        assertEquals(6, countNonNull(game.getBoard().topRow()));
-    }
-
-    /*--------------------------------------------------------------------*/
-    /* nextState
-    /*--------------------------------------------------------------------*/
-
-    @Test
-    void nextState_returnsTotemPlacementState() {
-        assertInstanceOf(TotemPlacementState.class, state.calcNextState());
-    }
-
-    /*--------------------------------------------------------------------*/
-    /* Helper
-    /*--------------------------------------------------------------------*/
 
     private int countNonNull(CardRow row) {
         int count = 0;

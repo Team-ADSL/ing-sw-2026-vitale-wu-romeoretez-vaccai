@@ -6,32 +6,16 @@ import org.adsl.server.controller.GameController;
 import org.adsl.server.model.Game;
 import org.adsl.server.model.Player;
 import org.adsl.server.model.board.*;
-import org.adsl.server.persistence.GameDAO;
-import org.adsl.server.persistence.GamePersistenceManager;
-import org.adsl.shared.model.GameDTO;
-import org.adsl.shared.model.MatchResult;
+import org.adsl.utils.fakes.FakeGameDAO;
+import org.adsl.utils.fakes.FakeGamePersistenceManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ExtraMoveStateTest {
-
-    private static final GamePersistenceManager NO_OP_PERSISTENCE = new GamePersistenceManager() {
-        @Override public List<Game> recoverGames() { return List.of(); }
-        @Override public void removeGame(int id) {}
-        @Override public void updateLobby(List<String> p) {}
-        @Override public void updateGame(Game g) {}
-    };
-    private static final GameDAO NO_OP_DAO = new GameDAO() {
-        @Override public int createMatch() { return 0; }
-        @Override public void deleteMatch(int id) {}
-        @Override public void saveMatch(int id, int c, List<String> n, List<Integer> s) {}
-        @Override public List<MatchResult> getLeaderboard(int c) { return List.of(); }
-    };
 
     private Game game;
     private Player p1;
@@ -48,7 +32,6 @@ public class ExtraMoveStateTest {
         game.getPlayers().add(p1);
         game.getPlayers().add(p2);
 
-        // Minimal board with empty offer/order tracks
         Board board = new Board(
                 new CardRow(3, 3),
                 new CardRow(6, 6),
@@ -59,27 +42,22 @@ public class ExtraMoveStateTest {
         );
         game.setBoard(board);
 
-        GameController controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
+        GameController controller = new GameController(loader, new FakeGamePersistenceManager(), new FakeGameDAO());
         state = new ExtraMoveState(game, controller);
     }
 
     // ──────────────────────────────────────────────
-    // nextState — no player has extraMove → EventsState
+    // TEST CALC NEXT STATE
     // ──────────────────────────────────────────────
 
     @Test
-    void nextState_returnsEventsStateWhenNoPlayerHasExtraMove() {
-        // By default BuildingBonus.isExtraMove() == false for both players
+    void testCalcNextState_noPlayerHasExtraMove_returnsEventsState() {
         ControllerState next = state.calcNextState();
         assertInstanceOf(EventsState.class, next);
     }
 
-    // ──────────────────────────────────────────────
-    // nextState — a player has extraMove → self
-    // ──────────────────────────────────────────────
-
     @Test
-    void nextState_returnsSelfWhenPlayerHasExtraMove() {
+    void testCalcNextState_playerHasExtraMove_returnsSelf() {
         p1.getBuildingBonus().setExtraMove(true);
 
         ControllerState next = state.calcNextState();
@@ -88,16 +66,16 @@ public class ExtraMoveStateTest {
     }
 
     @Test
-    void nextState_setsCurrentPlayerWhenExtraMove() {
+    void testCalcNextState_playerHasExtraMove_setsCurrentPlayer() {
         p2.getBuildingBonus().setExtraMove(true);
         state.calcNextState();
-        // current player must be set to the one with extra move
+
         assertTrue(game.getCurrentPlayer().isPresent());
         assertEquals("p2", game.getCurrentPlayer().get().getName());
     }
 
     @Test
-    void nextState_clearsCurrentPlayerWhenNoExtraMove() {
+    void testCalcNextState_noExtraMove_clearsCurrentPlayer() {
         game.setCurrentPlayer(p1);
         state.calcNextState();
         assertFalse(game.getCurrentPlayer().isPresent());

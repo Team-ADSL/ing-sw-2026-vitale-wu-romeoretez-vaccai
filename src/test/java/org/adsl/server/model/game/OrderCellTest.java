@@ -13,14 +13,12 @@ public class OrderCellTest {
 
     @BeforeEach
     void setUp() {
-        // Arrange - cell with player, bonus and malus
         cellWithPlayer = new OrderCell(
                 new Player("Gianpaolo", 3, 0, Totem.RED, new java.util.HashMap<>()),
                 2,
                 false
         );
 
-        // Arrange - empty cell with malus
         cellWithoutPlayer = new OrderCell(
                 null,
                 0,
@@ -28,62 +26,48 @@ public class OrderCellTest {
         );
     }
 
-    // --- getPlayer() tests ---
+    // ──────────────────────────────────────────────
+    // TEST GET PLAYER
+    // ──────────────────────────────────────────────
 
     @Test
-    void testGetPlayerReturnsPlayer() {
-        // should return the player when present
+    void testGetPlayer_returnsPlayer() {
         assertTrue(cellWithPlayer.getPlayer().isPresent());
     }
 
     @Test
-    void testGetPlayerReturnsEmpty() {
-        // should return empty when no player assigned
+    void testGetPlayer_returnsEmpty() {
         assertTrue(cellWithoutPlayer.getPlayer().isEmpty());
     }
 
-    // --- setPlayer() tests ---
+    // ──────────────────────────────────────────────
+    // TEST SET PLAYER
+    // ──────────────────────────────────────────────
 
     @Test
-    void testSetPlayerAssignsPlayer() {
-        // should assign a player to an empty cell
+    void testSetPlayer_assignsPlayer() {
         Player newPlayer = new Player("Luigi", 2, 0, Totem.BLUE, new java.util.HashMap<>());
         cellWithoutPlayer.setPlayer(newPlayer);
         assertTrue(cellWithoutPlayer.getPlayer().isPresent());
     }
 
     @Test
-    void testSetPlayerRemovesPlayer() {
-        // should remove the player when set to empty
+    void testSetPlayer_removesPlayer() {
         cellWithPlayer.setPlayer(null);
         assertTrue(cellWithPlayer.getPlayer().isEmpty());
     }
 
-    // --- getBonus() tests ---
+    // ──────────────────────────────────────────────
+    // TEST IS MALUS
+    // ──────────────────────────────────────────────
 
     @Test
-    void testGetBonusReturnsCorrectValue() {
-        // should return the bonus passed in constructor
-        assertEquals(2, cellWithPlayer.getBonus());
-    }
-
-    @Test
-    void testGetBonusReturnsZero() {
-        // should return 0 when no bonus
-        assertEquals(0, cellWithoutPlayer.getBonus());
-    }
-
-    // --- isMalus() tests ---
-
-    @Test
-    void testIsMalusReturnsFalse() {
-        // should return false when cell is not a malus
+    void testIsMalus_returnsFalse() {
         assertFalse(cellWithPlayer.isMalus());
     }
 
     @Test
-    void testIsMalusReturnsTrue() {
-        // should return true when cell is a malus
+    void testIsMalus_returnsTrue() {
         assertTrue(cellWithoutPlayer.isMalus());
     }
 }

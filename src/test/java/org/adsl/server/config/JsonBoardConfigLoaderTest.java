@@ -28,19 +28,19 @@ public class JsonBoardConfigLoaderTest {
     // ──────────────────────────────────────────────
 
     @Test
-    void getCards_2p_returnsThreeErasAndFinalEvents() {
+    void testGetCards_2p_returnsThreeErasAndFinalEvents() {
         ArrayList<Set<Card>> cards = loader.getCards(2);
         assertEquals(4, cards.size());
     }
 
     @ParameterizedTest
     @ValueSource(ints = {2, 3, 4, 5})
-    void getCards_allPlayerCounts_returnsThreeErasAndFinalEvents(int n) {
+    void testGetCards_allPlayerCounts_returnsThreeErasAndFinalEvents(int n) {
         assertEquals(4, loader.getCards(n).size());
     }
 
     @Test
-    void getCards_2p_eachEraIsNonEmpty() {
+    void testGetCards_2p_eachEraIsNonEmpty() {
         ArrayList<Set<Card>> cards = loader.getCards(2);
         for (Set<Card> era : cards) {
             assertFalse(era.isEmpty(), "Era set should not be empty for 2 players");
@@ -48,14 +48,14 @@ public class JsonBoardConfigLoaderTest {
     }
 
     @Test
-    void getCards_5p_hasMoreCardsThan2p() {
+    void testGetCards_5p_hasMoreCardsThan2p() {
         int total2p = loader.getCards(2).stream().mapToInt(Set::size).sum();
         int total5p = loader.getCards(5).stream().mapToInt(Set::size).sum();
         assertTrue(total5p > total2p, "5-player game should have more cards than 2-player");
     }
 
     @Test
-    void getCards_allCardsHaveValidEra() {
+    void testGetCards_allCardsHaveValidEra() {
         ArrayList<Set<Card>> cards = loader.getCards(2);
         for (int i = 0; i < cards.size() - 1; i++) {
             int era = i + 1;
@@ -63,14 +63,13 @@ public class JsonBoardConfigLoaderTest {
                 assertEquals(era, c.getEra(), "Card era mismatch in era set " + era);
             }
         }
-        // Control final events
         for (Card c : cards.get(3)) {
             assertEquals(3, c.getEra(), "Card era mismatch in final events set ");
         }
     }
 
     @Test
-    void getCards_2p_numPlayersIsSetOnCards() {
+    void testGetCards_2p_numPlayersIsSetOnCards() {
         ArrayList<Set<Card>> cards = loader.getCards(2);
         for (Set<Card> era : cards) {
             for (Card c : era) {
@@ -81,7 +80,7 @@ public class JsonBoardConfigLoaderTest {
     }
 
     @Test
-    void getCards_allIdsAreNonNull() {
+    void testGetCards_allIdsAreNonNull() {
         ArrayList<Set<Card>> cards = loader.getCards(3);
         for (Set<Card> era : cards) {
             for (Card c : era) {
@@ -96,25 +95,25 @@ public class JsonBoardConfigLoaderTest {
     // ──────────────────────────────────────────────
 
     @Test
-    void getOfferTrack_2p_returnsNonNull() {
+    void testGetOfferTrack_2p_returnsNonNull() {
         assertNotNull(loader.getOfferTrack(2));
     }
 
     @Test
-    void getOfferTrack_2p_hasAtLeastOneTile() {
+    void testGetOfferTrack_2p_hasAtLeastOneTile() {
         OfferTrack track = loader.getOfferTrack(2);
         assertTrue(track.size() > 0);
     }
 
     @Test
-    void getOfferTrack_5p_hasMoreTilesThan2p() {
+    void testGetOfferTrack_5p_hasMoreTilesThan2p() {
         int size2p = loader.getOfferTrack(2).size();
         int size5p = loader.getOfferTrack(5).size();
         assertTrue(size5p > size2p, "5p should have more offer tiles than 2p");
     }
 
     @Test
-    void getOfferTrack_2p_allTilesStartWithNoPlayer() {
+    void testGetOfferTrack_2p_allTilesStartWithNoPlayer() {
         OfferTrack track = loader.getOfferTrack(2);
         for (int i = 0; i < track.size(); i++) {
             assertTrue(track.getTileAt(i).getPlayer().isEmpty(),
@@ -127,31 +126,31 @@ public class JsonBoardConfigLoaderTest {
     // ──────────────────────────────────────────────
 
     @Test
-    void getOrderTile_2p_returnsNonNull() {
+    void testGetOrderTile_2p_returnsNonNull() {
         assertNotNull(loader.getOrderTile(2));
     }
 
     @ParameterizedTest
     @ValueSource(ints = {2, 3, 4, 5})
-    void getOrderTile_allPlayerCounts_returnsNonNull(int n) {
+    void testGetOrderTile_allPlayerCounts_returnsNonNull(int n) {
         assertNotNull(loader.getOrderTile(n));
     }
 
     @Test
-    void getOrderTile_2p_hasCorrectCellCount() {
+    void testGetOrderTile_2p_hasCorrectCellCount() {
         OrderTile tile = loader.getOrderTile(2);
         assertEquals(2, tile.size());
     }
 
     @ParameterizedTest
     @ValueSource(ints = {2, 3, 4, 5})
-    void getOrderTile_cellCountMatchesPlayerCount(int n) {
+    void testGetOrderTile_cellCountMatchesPlayerCount(int n) {
         OrderTile tile = loader.getOrderTile(n);
         assertEquals(n, tile.size());
     }
 
     @Test
-    void getOrderTile_allCellsStartWithNoPlayer() {
+    void testGetOrderTile_allCellsStartWithNoPlayer() {
         OrderTile tile = loader.getOrderTile(3);
         for (int i = 0; i < tile.size(); i++) {
             assertTrue(tile.getPlayerAt(i).isEmpty(),
@@ -164,12 +163,12 @@ public class JsonBoardConfigLoaderTest {
     // ──────────────────────────────────────────────
 
     @Test
-    void getBuildings_returnsNonEmptySet() {
+    void testGetBuildings_returnsNonEmptySet() {
         assertFalse(loader.getBuildings().isEmpty());
     }
 
     @Test
-    void getBuildings_allBuildingsHaveValidEra() {
+    void testGetBuildings_allBuildingsHaveValidEra() {
         for (Building b : loader.getBuildings()) {
             assertTrue(b.getEra() >= 1 && b.getEra() <= 3,
                     "Building " + b.getId() + " has invalid era " + b.getEra());
@@ -177,7 +176,7 @@ public class JsonBoardConfigLoaderTest {
     }
 
     @Test
-    void getBuildings_coversAllThreeEras() {
+    void testGetBuildings_coversAllThreeEras() {
         Set<Building> buildings = loader.getBuildings();
         boolean hasEra1 = buildings.stream().anyMatch(b -> b.getEra() == 1);
         boolean hasEra2 = buildings.stream().anyMatch(b -> b.getEra() == 2);
@@ -190,7 +189,7 @@ public class JsonBoardConfigLoaderTest {
     }
 
     @Test
-    void getBuildings_allIdsAreNonNull() {
+    void testGetBuildings_allIdsAreNonNull() {
         for (Building b : loader.getBuildings()) {
             assertNotNull(b.getId());
             assertFalse(b.getId().isBlank());

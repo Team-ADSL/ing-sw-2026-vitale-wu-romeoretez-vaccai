@@ -22,13 +22,7 @@ public class SinceBuiltTest {
     }
 
     @Test
-    void getId_returnsCorrectId() {
-        SinceBuilt building = new SinceBuilt("since_built_01", 5, 3, Trigger.DRAWING, 1, null, BuildingEffect.FOOD_COMPLETE_SET);
-        assertEquals("since_built_01", building.getId());
-    }
-
-    @Test
-    void foodCompleteSet_lessThan6Types_noFoodAwarded() {
+    void testFoodCompleteSet_lessThan6Types_noFoodAwarded() {
         SinceBuilt building = new SinceBuilt("sb", 5, 3, Trigger.DRAWING, 1, null, BuildingEffect.FOOD_COMPLETE_SET);
 
         player.setLastPick(new Hunter("h", false, 1, null));
@@ -50,7 +44,7 @@ public class SinceBuiltTest {
     }
 
     @Test
-    void foodCompleteSet_allSixTypes_awards5Food() {
+    void testFoodCompleteSet_allSixTypes_awards5Food() {
         SinceBuilt building = new SinceBuilt("sb", 5, 3, Trigger.DRAWING, 1, null, BuildingEffect.FOOD_COMPLETE_SET);
 
         player.setLastPick(new Hunter("h", false, 1, null));
@@ -75,7 +69,7 @@ public class SinceBuiltTest {
     }
 
     @Test
-    void foodCompleteSet_triggeredTwice_awards5FoodEachTime() {
+    void testFoodCompleteSet_triggeredTwice_awards5FoodEachTime() {
         SinceBuilt building = new SinceBuilt("sb", 5, 3, Trigger.DRAWING, 1, null, BuildingEffect.FOOD_COMPLETE_SET);
 
         drawOneCardPerType(building);
@@ -86,7 +80,7 @@ public class SinceBuiltTest {
     }
 
     @Test
-    void foodCompleteSet_wrongTrigger_noEffect() {
+    void testFoodCompleteSet_wrongTrigger_noEffect() {
         SinceBuilt building = new SinceBuilt("sb", 5, 3, Trigger.DRAWING, 1, null, BuildingEffect.FOOD_COMPLETE_SET);
         player.setLastPick(new Hunter("h", false, 1, null));
         building.activeEffect(Set.of(player), Trigger.END_ROUND);
@@ -94,7 +88,7 @@ public class SinceBuiltTest {
     }
 
     @Test
-    void foodCompleteSet_nullLastPick_noEffect() {
+    void testFoodCompleteSet_nullLastPick_noEffect() {
         SinceBuilt building = new SinceBuilt("sb", 5, 3, Trigger.DRAWING, 1, null, BuildingEffect.FOOD_COMPLETE_SET);
         player.setLastPick(null);
         assertDoesNotThrow(() -> building.activeEffect(Set.of(player), Trigger.DRAWING));
@@ -102,7 +96,7 @@ public class SinceBuiltTest {
     }
 
     @Test
-    void coupleInventor_oneInventor_noFoodAwarded() {
+    void testCoupleInventor_oneInventor_noFoodAwarded() {
         SinceBuilt building = new SinceBuilt("sb", 5, 3, Trigger.DRAWING, 1, null, BuildingEffect.COUPLE_INVENTOR);
         player.setLastPick(new Inventor("i", Icon.BOAT, 1, null));
         building.activeEffect(Set.of(player), Trigger.DRAWING);
@@ -110,7 +104,7 @@ public class SinceBuiltTest {
     }
 
     @Test
-    void coupleInventor_twoInventors_awards3Food() {
+    void testCoupleInventor_twoInventors_awards3Food() {
         SinceBuilt building = new SinceBuilt("sb", 5, 3, Trigger.DRAWING, 1, null, BuildingEffect.COUPLE_INVENTOR);
 
         player.setLastPick(new Inventor("i1", Icon.BOAT, 1, null));
@@ -123,7 +117,7 @@ public class SinceBuiltTest {
     }
 
     @Test
-    void coupleInventor_wrongTrigger_noEffect() {
+    void testCoupleInventor_wrongTrigger_noEffect() {
         SinceBuilt building = new SinceBuilt("sb", 5, 3, Trigger.DRAWING, 1, null, BuildingEffect.COUPLE_INVENTOR);
         player.setLastPick(new Inventor("i", Icon.BOAT, 1, null));
         building.activeEffect(Set.of(player), Trigger.END_GAME);

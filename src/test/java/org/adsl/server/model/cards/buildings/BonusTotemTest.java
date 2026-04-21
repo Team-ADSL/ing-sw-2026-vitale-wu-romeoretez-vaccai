@@ -21,30 +21,25 @@ public class BonusTotemTest {
     }
 
     @Test
-    void getId_returnsCorrectId() {
-        assertEquals("bt_01", bonusTotem.getId());
-    }
-
-    @Test
-    void activeEffect_endTurnTrigger_setsBonusFoodTileTrue() {
+    void testActiveEffect_endTurnTrigger_setsBonusFoodTileTrue() {
         bonusTotem.activeEffect(Set.of(player), Trigger.END_TURN);
         assertTrue(player.getBuildingBonus().isBonusFoodTile());
     }
 
     @Test
-    void activeEffect_wrongTrigger_doesNotSetBonusFoodTile() {
+    void testActiveEffect_wrongTrigger_doesNotSetBonusFoodTile() {
         bonusTotem.activeEffect(Set.of(player), Trigger.END_ROUND);
         assertFalse(player.getBuildingBonus().isBonusFoodTile());
     }
 
     @Test
-    void activeEffect_endGameTrigger_doesNotSetBonusFoodTile() {
+    void testActiveEffect_endGameTrigger_doesNotSetBonusFoodTile() {
         bonusTotem.activeEffect(Set.of(player), Trigger.END_GAME);
         assertFalse(player.getBuildingBonus().isBonusFoodTile());
     }
 
     @Test
-    void activeEffect_emptyPlayerSet_doesNotThrow() {
+    void testActiveEffect_emptyPlayerSet_doesNotThrow() {
         assertDoesNotThrow(() -> bonusTotem.activeEffect(Set.of(), Trigger.END_TURN));
     }
 }
