@@ -15,6 +15,7 @@ import org.adsl.server.persistence.GamePersistenceManager;
 import org.adsl.shared.model.GameDTO;
 import org.adsl.shared.model.MatchResult;
 import org.adsl.utils.TestDummies;
+import org.adsl.utils.builder.BoardBuilder;
 import org.adsl.utils.fakes.FakeGameDAO;
 import org.adsl.utils.fakes.FakeGamePersistenceManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,20 +30,21 @@ import static org.junit.jupiter.api.Assertions.*;
 public class InitGameStateTest {
     private InitGameState state;
     private Game game;
-    BoardConfigLoader loader = new TestDummies.DummyBoardConfigLoader();
+    BoardConfigLoader loader = new JsonBoardConfigLoader();
     GameDAO gameDAO = new FakeGameDAO();
     GamePersistenceManager persistenceManager = new FakeGamePersistenceManager();
+    GameController controller = new GameController(loader, persistenceManager,gameDAO);
+    BoardBuilder builder = new BoardBuilder();
 
     @BeforeEach
     void setUp() {
         game = new Game(1, 5);
-        GameController controller = new GameController(loader, persistenceManager,gameDAO);
         state = new InitGameState(game, controller);
     }
 
-    // ──────────────────────────────────────────────
-    // makeBuildingDecks
-    // ──────────────────────────────────────────────
+    /*--------------------------------------------------------------------*/
+    /* makeBuildingDecks
+    /*--------------------------------------------------------------------*/
 
     private void initBoardForGame(Game g, int numPlayers) {
         GameController gc = new GameController(loader, persistenceManager, gameDAO);
@@ -72,20 +74,19 @@ public class InitGameStateTest {
     @Test
     void makeBuildingDecks_2players_addsOneEra1BuildingToTopRow() {
         initBoardForGame(game, 2);
-        int before = countTopRowCards(game.getBoard().topRow());
+        int before = countNonNull(game.getBoard().topRow());
         state.makeBuildingDecks(loader.getBuildings(), 2, loader.getSettings(2));
-        assertEquals(1, countTopRowCards(game.getBoard().topRow()) - before);
+        assertEquals(1, countNonNull(game.getBoard().topRow()) - before);
     }
 
     @Test
     void makeBuildingDecks_3players_addsTwoEra1BuildingsToTopRow() {
         Game g = new Game(2, 5);
         initBoardForGame(g, 3);
-        GameController gc = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
-        InitGameState s = new InitGameState(g, gc);
-        int before = countTopRowCards(g.getBoard().topRow());
+        InitGameState s = new InitGameState(g, null);
+        int before = countNonNull(g.getBoard().topRow());
         s.makeBuildingDecks(loader.getBuildings(), 3, loader.getSettings(3));
-        assertEquals(2, countTopRowCards(g.getBoard().topRow()) - before);
+        assertEquals(2, countNonNull(g.getBoard().topRow()) - before);
     }
 
     @Test
@@ -93,7 +94,7 @@ public class InitGameStateTest {
         initBoardForGame(game, 2);
         state.makeBuildingDecks(loader.getBuildings(), 2, loader.getSettings(2));
         List<Set<Card>> remaining = game.getBoard().remainingBuildings();
-        remaining.get(0).forEach(c -> assertEquals(2, ((Building) c).getEra()));
+        remaining.getFirst().forEach(c -> assertEquals(2, ((Building) c).getEra()));
     }
 
     @Test
@@ -104,9 +105,9 @@ public class InitGameStateTest {
         remaining.get(1).forEach(c -> assertEquals(3, ((Building) c).getEra()));
     }
 
-    // ──────────────────────────────────────────────
-    // fillLowRow
-    // ──────────────────────────────────────────────
+    /*--------------------------------------------------------------------*/
+    /* fillLowRow
+    /*--------------------------------------------------------------------*/
 
     @Test
     void fillLowRow_2players_fillsThreeCharacterSlots() {
@@ -129,31 +130,34 @@ public class InitGameStateTest {
         }
     }
 
-    // ──────────────────────────────────────────────
-    // fillTopRow
-    // ──────────────────────────────────────────────
+    /*--------------------------------------------------------------------*/
+    /* fillTopRow
+    /*--------------------------------------------------------------------*/
+
 
     @Test
     void fillTopRow_2players_fillsSixCards(){
         initBoardForGame(game, 2);
 
-        assertEquals(6, game.getBoard().topRow().size());
+        state.fillTopRow(2);
+
+        assertEquals(6, countNonNull(game.getBoard().topRow()));
     }
 
-    // ──────────────────────────────────────────────
-    // nextState
-    // ──────────────────────────────────────────────
+    /*--------------------------------------------------------------------*/
+    /* nextState
+    /*--------------------------------------------------------------------*/
 
     @Test
     void nextState_returnsTotemPlacementState() {
         assertInstanceOf(TotemPlacementState.class, state.calcNextState());
     }
 
-    // ──────────────────────────────────────────────
-    // Helper
-    // ──────────────────────────────────────────────
+    /*--------------------------------------------------------------------*/
+    /* Helper
+    /*--------------------------------------------------------------------*/
 
-    private int countTopRowCards(CardRow row) {
+    private int countNonNull(CardRow row) {
         int count = 0;
         for (Card c : row.getTribeCards()) if (c != null) count++;
         count += row.getBuildings().size();

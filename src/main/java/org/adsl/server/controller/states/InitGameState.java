@@ -110,9 +110,7 @@ public class InitGameState extends ControllerState {
         Deck deck = getGame().getBoard().deck();
 
         int targetSize = numPlayers + 4;
-        int cardsToDraw = targetSize - topRow.size();
-
-        for (int i = 0; i < cardsToDraw; i++) {
+        for (int i = 0; i < targetSize; i++) {
             if (deck.isEmpty()) {
                 break;
             }
