@@ -8,12 +8,7 @@ public class GameScreen implements Screen{
     
 
     public Screen handleEvent(){
-        if(GameEvent){
-            ....
-            tui.toUpdate = true;
-        }else {
-            return new EndGameScreen();
-        }
+       event.accePT(())
     }
 
     public void handleInput(){
