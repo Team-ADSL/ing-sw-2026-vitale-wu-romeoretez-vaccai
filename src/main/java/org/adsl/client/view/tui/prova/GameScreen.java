@@ -8,7 +8,8 @@ public class GameScreen implements Screen{
     
 
     public Screen handleEvent(){
-       event.accePT(())
+       event.accept(())
+               return new Scre
     }
 
     public void handleInput(){
