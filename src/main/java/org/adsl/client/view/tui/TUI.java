@@ -152,6 +152,7 @@ public class TUI implements GameUI {
         while (currentGame == null && !disconnected && endResults == null) {
             // Re-render on any lobby change
             List<String> players = lobbyPlayers;
+
             if (players != null && players != lastRendered) {
                 lobbyScreen.render(players, knownTotalPlayers);
                 lastRendered = players;
