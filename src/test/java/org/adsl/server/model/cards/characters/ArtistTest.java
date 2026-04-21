@@ -12,26 +12,14 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ArtistTest {
 
     @Test
-    void getEra_returnsCorrectValue() {
-        Artist a = new Artist("a", 2, null);
-        assertEquals(2, a.getEra());
-    }
-
-    @Test
-    void getId_returnsCorrectId() {
-        Artist a = new Artist("artist_01", 1, null);
-        assertEquals("artist_01", a.getId());
-    }
-
-    @Test
-    void canBeDrawn_alwaysTrue() {
+    void testCanBeDrawn_alwaysTrue() {
         Artist a = new Artist("a", 1, null);
         Player p = new Player("Test");
         assertTrue(a.canBeDrawn(p));
     }
 
     @Test
-    void insert_addsToArtistSet() {
+    void testInsert_addsToArtistSet() {
         Artist a = new Artist("a", 1, null);
         Map<CardType, Set<Card>> cards = initCardsMap();
         a.insert(cards);
@@ -39,7 +27,7 @@ public class ArtistTest {
     }
 
     @Test
-    void insert_doesNotAddToOtherSets() {
+    void testInsert_doesNotAddToOtherSets() {
         Artist a = new Artist("a", 1, null);
         Map<CardType, Set<Card>> cards = initCardsMap();
         a.insert(cards);

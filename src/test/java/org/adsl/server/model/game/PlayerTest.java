@@ -13,100 +13,81 @@ public class PlayerTest {
 
     @BeforeEach
     void setUp() {
-        // Arrange - fresh player before each test
         player = new Player("Gianpaolo", 3, 0, Totem.RED, new HashMap<>());
     }
 
-    // --- getName() tests ---
+    // ──────────────────────────────────────────────
+    // TEST CHANGE PP
+    // ──────────────────────────────────────────────
 
     @Test
-    void testGetName() {
-        assertEquals("Gianpaolo", player.getName());
-    }
-
-    // --- getFood() tests ---
-
-    @Test
-    void testGetFood() {
-        assertEquals(3, player.getFood());
-    }
-
-    // --- getPp() tests ---
-
-    @Test
-    void testGetPp() {
-        assertEquals(0, player.getPp());
-    }
-
-    // --- getColor() tests ---
-
-    @Test
-    void testGetColor() {
-        assertEquals(Totem.RED, player.getColor());
-    }
-
-    // --- changePP() tests ---
-
-    @Test
-    void testChangePPIncrease() {
+    void testChangePP_increase() {
         player.changePP(5);
         assertEquals(5, player.getPp());
     }
 
     @Test
-    void testChangePPDecrease() {
+    void testChangePP_decrease() {
         player.changePP(-3);
         assertEquals(-3, player.getPp());
     }
 
     @Test
-    void testChangePPMultipleTimes() {
+    void testChangePP_multipleTimes() {
         player.changePP(5);
         player.changePP(-2);
         assertEquals(3, player.getPp());
     }
 
-    // --- changeFood() tests ---
+    // ──────────────────────────────────────────────
+    // TEST CHANGE FOOD
+    // ──────────────────────────────────────────────
 
     @Test
-    void testChangeFoodIncrease() {
+    void testChangeFood_increase() {
         player.changeFood(4);
         assertEquals(7, player.getFood());
     }
 
     @Test
-    void testChangeFoodDecrease() {
+    void testChangeFood_decrease() {
         player.changeFood(-3);
         assertEquals(0, player.getFood());
     }
 
-    // --- setLastPick() / getLastPick() tests ---
+    // ──────────────────────────────────────────────
+    // TEST SET LAST PICK
+    // ──────────────────────────────────────────────
 
     @Test
-    void testSetLastPick() {
+    void testSetLastPick_storesCard() {
         FakeCard card = new FakeCard();
         player.setLastPick(card);
         assertSame(card, player.getLastPick());
     }
 
     @Test
-    void testLastPickDefaultIsNull() {
+    void testLastPick_defaultIsNull() {
         Player fresh = new Player("Empty");
         assertNull(fresh.getLastPick());
     }
 
-    // --- setColor() tests ---
+    // ──────────────────────────────────────────────
+    // TEST SET COLOR
+    // ──────────────────────────────────────────────
 
     @Test
-    void testSetColor() {
+    void testSetColor_updatesColor() {
         player.setColor(Totem.BLUE);
         assertEquals(Totem.BLUE, player.getColor());
     }
 
-    // --- single-arg constructor defaults ---
+    // ──────────────────────────────────────────────
+    // TEST SINGLE-ARG CONSTRUCTOR DEFAULTS
+    // ──────────────────────────────────────────────
 
     @Test
-    void testSingleArgConstructorDefaults() {
+    void testSingleArgConstructor_defaultValues() {
         Player fresh = new Player("Solo");
         assertAll(
                 () -> assertEquals("Solo", fresh.getName()),

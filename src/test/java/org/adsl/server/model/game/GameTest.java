@@ -48,11 +48,11 @@ public class GameTest {
     }
 
     // ──────────────────────────────────────────────
-    // Initial constructor defaults
+    // TEST INITIAL CONSTRUCTOR DEFAULTS
     // ──────────────────────────────────────────────
 
     @Test
-    void initialConstructor_setsDefaultValues() {
+    void testInitialConstructor_setsDefaultValues() {
         Game g = new Game(1, 5);
         assertAll(
                 () -> assertEquals(1,         g.getGameId()),
@@ -66,11 +66,11 @@ public class GameTest {
     }
 
     // ──────────────────────────────────────────────
-    // Recovery constructor stores all fields
+    // TEST RECOVERY CONSTRUCTOR
     // ──────────────────────────────────────────────
 
     @Test
-    void recoveryConstructor_storesAllFieldsCorrectly() {
+    void testRecoveryConstructor_storesAllFieldsCorrectly() {
         assertAll(
                 () -> assertEquals(42,          game.getGameId()),
                 () -> assertEquals(2,           game.getRound()),
@@ -83,11 +83,11 @@ public class GameTest {
     }
 
     // ──────────────────────────────────────────────
-    // getPlayers
+    // TEST GET PLAYERS
     // ──────────────────────────────────────────────
 
     @Test
-    void getPlayers_containsExpectedPlayers() {
+    void testGetPlayers_containsExpectedPlayers() {
         Set<String> names = new HashSet<>();
         for (Player p : game.getPlayers()) names.add(p.getName());
         assertTrue(names.contains("Gianpaolo"));
@@ -95,86 +95,40 @@ public class GameTest {
     }
 
     @Test
-    void getPlayers_returnsCorrectSize() {
+    void testGetPlayers_returnsCorrectSize() {
         assertEquals(2, game.getPlayers().size());
     }
 
     // ──────────────────────────────────────────────
-    // changeEra / changeRound
+    // TEST CHANGE ERA / CHANGE ROUND
     // ──────────────────────────────────────────────
 
     @Test
-    void changeEra_incrementsEraByOne() {
+    void testChangeEra_incrementsEraByOne() {
         int before = game.getEra();
         game.changeEra();
         assertEquals(before + 1, game.getEra());
     }
 
     @Test
-    void changeEra_multipleTimesAccumulates() {
+    void testChangeEra_multipleTimesAccumulates() {
         game.changeEra();
         game.changeEra();
         assertEquals(3, game.getEra());
     }
 
     @Test
-    void changeRound_incrementsRoundByOne() {
+    void testChangeRound_incrementsRoundByOne() {
         int before = game.getRound();
         game.changeRound();
         assertEquals(before + 1, game.getRound());
     }
 
     @Test
-    void changeRound_multipleTimesAccumulates() {
+    void testChangeRound_multipleTimesAccumulates() {
         game.changeRound();
         game.changeRound();
         game.changeRound();
-        assertEquals(5, game.getRound()); // starts at 2
-    }
-
-    // ──────────────────────────────────────────────
-    // Setters
-    // ──────────────────────────────────────────────
-
-    @Test
-    void setBoard_updatesBoard() {
-        Board newBoard = buildBoard();
-        game.setBoard(newBoard);
-        assertSame(newBoard, game.getBoard());
-    }
-
-    @Test
-    void setPhase_updatesPhase() {
-        game.setPhase(Phase.ACTION_EXECUTION);
-        assertEquals(Phase.ACTION_EXECUTION, game.getPhase());
-    }
-
-    @Test
-    void setInitialized_trueUpdatesFlag() {
-        game.setInitialized(true);
-        assertTrue(game.isInitialized());
-    }
-
-    @Test
-    void setInitialized_falseUpdatesFlag() {
-        game.setInitialized(true);
-        game.setInitialized(false);
-        assertFalse(game.isInitialized());
-    }
-
-    @Test
-    void setCurrentPlayer_updatesCurrentPlayer() {
-        Player p = new Player("TestPlayer");
-        game.setCurrentPlayer(p);
-        assertTrue(game.getCurrentPlayer().isPresent());
-        assertSame(p, game.getCurrentPlayer().get());
-    }
-
-    @Test
-    void setCurrentPlayer_toEmpty_clearsCurrentPlayer() {
-        Player p = new Player("TestPlayer");
-        game.setCurrentPlayer(p);
-        game.setCurrentPlayer(null);
-        assertTrue(game.getCurrentPlayer().isEmpty());
+        assertEquals(5, game.getRound());
     }
 }

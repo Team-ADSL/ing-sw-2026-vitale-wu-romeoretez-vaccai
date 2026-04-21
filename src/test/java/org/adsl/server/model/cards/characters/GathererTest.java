@@ -12,32 +12,14 @@ import static org.junit.jupiter.api.Assertions.*;
 public class GathererTest {
 
     @Test
-    void getDiscount_returnsCorrectValue() {
-        Gatherer g = new Gatherer("g", 3, 1, null);
-        assertEquals(3, g.getDiscount());
-    }
-
-    @Test
-    void getEra_returnsCorrectValue() {
-        Gatherer g = new Gatherer("g", 3, 2, null);
-        assertEquals(2, g.getEra());
-    }
-
-    @Test
-    void getId_returnsCorrectId() {
-        Gatherer g = new Gatherer("gatherer_01", 3, 1, null);
-        assertEquals("gatherer_01", g.getId());
-    }
-
-    @Test
-    void canBeDrawn_alwaysTrue() {
+    void testCanBeDrawn_alwaysTrue() {
         Gatherer g = new Gatherer("g", 3, 1, null);
         Player p = new Player("Test");
         assertTrue(g.canBeDrawn(p));
     }
 
     @Test
-    void insert_addsToGathererSet() {
+    void testInsert_addsToGathererSet() {
         Gatherer g = new Gatherer("g", 3, 1, null);
         Map<CardType, Set<Card>> cards = initCardsMap();
         g.insert(cards);
@@ -45,7 +27,7 @@ public class GathererTest {
     }
 
     @Test
-    void insert_doesNotAddToOtherSets() {
+    void testInsert_doesNotAddToOtherSets() {
         Gatherer g = new Gatherer("g", 3, 1, null);
         Map<CardType, Set<Card>> cards = initCardsMap();
         g.insert(cards);

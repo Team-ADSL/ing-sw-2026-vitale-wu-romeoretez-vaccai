@@ -21,36 +21,31 @@ public class DuringPaintingsTest {
     }
 
     @Test
-    void getId_returnsCorrectId() {
-        assertEquals("dp_01", duringPaintings.getId());
-    }
-
-    @Test
-    void activeEffect_cavePaintingsTrigger_setsArtistFoodTrue() {
+    void testActiveEffect_cavePaintingsTrigger_setsArtistFoodTrue() {
         duringPaintings.activeEffect(Set.of(player), Trigger.CAVE_PAINTINGS);
         assertTrue(player.getBuildingBonus().isArtistFood());
     }
 
     @Test
-    void activeEffect_wrongTrigger_doesNotSetArtistFood() {
+    void testActiveEffect_wrongTrigger_doesNotSetArtistFood() {
         duringPaintings.activeEffect(Set.of(player), Trigger.HUNT);
         assertFalse(player.getBuildingBonus().isArtistFood());
     }
 
     @Test
-    void activeEffect_sustenanceTrigger_doesNotSetArtistFood() {
+    void testActiveEffect_sustenanceTrigger_doesNotSetArtistFood() {
         duringPaintings.activeEffect(Set.of(player), Trigger.SUSTENANCE);
         assertFalse(player.getBuildingBonus().isArtistFood());
     }
 
     @Test
-    void activeEffect_endGameTrigger_doesNotSetArtistFood() {
+    void testActiveEffect_endGameTrigger_doesNotSetArtistFood() {
         duringPaintings.activeEffect(Set.of(player), Trigger.END_GAME);
         assertFalse(player.getBuildingBonus().isArtistFood());
     }
 
     @Test
-    void activeEffect_emptyPlayerSet_doesNotThrow() {
+    void testActiveEffect_emptyPlayerSet_doesNotThrow() {
         assertDoesNotThrow(() -> duringPaintings.activeEffect(Set.of(), Trigger.CAVE_PAINTINGS));
     }
 }

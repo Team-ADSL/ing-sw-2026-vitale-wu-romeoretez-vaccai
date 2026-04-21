@@ -7,13 +7,11 @@ import org.adsl.server.model.Game;
 import org.adsl.server.model.Player;
 import org.adsl.server.model.board.*;
 import org.adsl.server.model.cards.Card;
-import org.adsl.server.persistence.GameDAO;
-import org.adsl.server.persistence.GamePersistenceManager;
 import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Phase;
 import org.adsl.shared.enums.Trigger;
-import org.adsl.shared.model.GameDTO;
-import org.adsl.shared.model.MatchResult;
+import org.adsl.utils.fakes.FakeGameDAO;
+import org.adsl.utils.fakes.FakeGamePersistenceManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -23,20 +21,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class EndRoundStateTest {
 
-    private static final GamePersistenceManager NO_OP_PERSISTENCE = new GamePersistenceManager() {
-        @Override public List<Game> recoverGames() { return List.of(); }
-        @Override public void removeGame(int id) {}
-        @Override public void updateLobby(List<String> p) {}
-        @Override public void updateGame(Game g) {}
-    };
-    private static final GameDAO NO_OP_DAO = new GameDAO() {
-        @Override public int createMatch() { return 0; }
-        @Override public void deleteMatch(int id) {}
-        @Override public void saveMatch(int id, int c, List<String> n, List<Integer> s) {}
-        @Override public List<MatchResult> getLeaderboard(int c) { return List.of(); }
-    };
-
-    // Minimal concrete card for testing
     private static Card fakeCard(int era) {
         return new Card("fake_" + era, era, null) {
             @Override public boolean canBeDrawn(Player p) { return true; }
@@ -54,7 +38,6 @@ public class EndRoundStateTest {
         loader = new JsonBoardConfigLoader();
         game = new Game(1, 5);
 
-        // Build board: lowRow=3 slots, topRow=6 slots, 3 tribe slots each, with era-1 cards
         Set<Card> era1 = new HashSet<>();
         for (int i = 0; i < 15; i++) era1.add(fakeCard(1));
         ArrayList<Set<Card>> deckCards = new ArrayList<>(List.of(era1));
@@ -66,63 +49,54 @@ public class EndRoundStateTest {
                 deck);
         game.setBoard(board);
 
-        GameController controller = new GameController(loader, NO_OP_PERSISTENCE, NO_OP_DAO);
+        GameController controller = new GameController(loader, new FakeGamePersistenceManager(), new FakeGameDAO());
         endRoundState = new EndRoundState(game, controller);
     }
 
     // ──────────────────────────────────────────────
-    // nextState
+    // TEST CALC NEXT STATE
     // ──────────────────────────────────────────────
 
     @Test
-    void nextState_returnsTotemPlacementState() {
+    void testCalcNextState_defaultState_returnsTotemPlacementState() {
         assertInstanceOf(TotemPlacementState.class, endRoundState.calcNextState());
     }
 
     // ──────────────────────────────────────────────
-    // onEntry — round and phase
+    // TEST ON ENTRY
     // ──────────────────────────────────────────────
 
     @Test
-    void after_onEntry_setsPhaseToTotemPlacement() throws Exception {
+    void testOnEntry_setsPhaseToTotemPlacement() throws Exception {
         endRoundState.onEntry();
         assertEquals(Phase.TOTEM_PLACEMENT, game.getPhase());
     }
 
     @Test
-    void onEntry_incrementsRound() throws Exception {
+    void testOnEntry_incrementsRound() throws Exception {
         int before = game.getRound();
         endRoundState.onEntry();
         assertEquals(before + 1, game.getRound());
     }
 
-    // ──────────────────────────────────────────────
-    // onEntry — card movement
-    // ──────────────────────────────────────────────
-
     @Test
-    void onEntry_topRowTribeCardsClearedAfterMove() throws Exception {
-        // Pre-fill top row tribe slots (indices 0..numTribeCard-1)
+    void testOnEntry_topRowTribeCardsClearedAfterMove() throws Exception {
         CardRow topRow = game.getBoard().topRow();
         topRow.add(fakeCard(1));
         topRow.add(fakeCard(1));
 
         endRoundState.onEntry();
 
-        // Top tribe slots should have been cleared and refilled from deck
-        // (we just verify no exception and round advanced)
         assertEquals(2, game.getRound());
     }
 
     @Test
-    void onEntry_lowRowReceivesCardsFromTopRow() throws Exception {
+    void testOnEntry_lowRowReceivesCardsFromTopRow() throws Exception {
         Card sentinel = fakeCard(1);
-        // Place sentinel in top tribe slot
         game.getBoard().topRow().add(sentinel);
 
         endRoundState.onEntry();
 
-        // The low row tribe cards should now contain what was in the top row
         ArrayList<Card> lowTribe = game.getBoard().lowRow().getTribeCards();
         boolean found = false;
         for (Card c : lowTribe) {

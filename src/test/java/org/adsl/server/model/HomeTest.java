@@ -25,19 +25,19 @@ public class HomeTest {
     }
 
     @Test
-    void update_withNoObservers_doesNotThrow() {
+    void testUpdate_withNoObservers_doesNotThrow() {
         assertDoesNotThrow(() -> home.update());
     }
 
     @Test
-    void update_notifiesRegisteredObserver() {
+    void testUpdate_notifiesRegisteredObserver() {
         home.addObserver(recordingObserver);
         home.update();
         assertEquals(1, received.size());
     }
 
     @Test
-    void update_notifiesAllObservers() {
+    void testUpdate_notifiesAllObservers() {
         List<Integer> secondReceived = new ArrayList<>();
         HomeObserver second = new HomeObserver() {
             @Override public void updateHome(List<Integer> activeGames) { secondReceived.addAll(activeGames); }
@@ -46,18 +46,17 @@ public class HomeTest {
         home.addObserver(second);
         home.update();
         assertEquals(1, received.size());
-        // second observer also fired (no exception means it was called)
     }
 
     @Test
-    void update_passesEmptyGameListInitially() {
+    void testUpdate_passesEmptyGameListInitially() {
         home.addObserver(recordingObserver);
         home.update();
         assertTrue(received.get(0).isEmpty());
     }
 
     @Test
-    void removeObserver_observerIsNoLongerNotified() {
+    void testRemoveObserver_observerIsNoLongerNotified() {
         home.addObserver(recordingObserver);
         home.removeObserver(recordingObserver);
         home.update();
@@ -65,7 +64,7 @@ public class HomeTest {
     }
 
     @Test
-    void addObserver_multipleTimesNotifiesMultipleTimes() {
+    void testAddObserver_multipleTimesNotifiesMultipleTimes() {
         home.addObserver(recordingObserver);
         home.addObserver(recordingObserver);
         home.update();
@@ -73,7 +72,7 @@ public class HomeTest {
     }
 
     @Test
-    void removeObserver_onlyRemovesOneInstance() {
+    void testRemoveObserver_onlyRemovesOneInstance() {
         home.addObserver(recordingObserver);
         home.addObserver(recordingObserver);
         home.removeObserver(recordingObserver);

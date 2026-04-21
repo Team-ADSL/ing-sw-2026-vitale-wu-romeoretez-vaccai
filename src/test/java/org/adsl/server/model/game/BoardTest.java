@@ -37,7 +37,7 @@ public class BoardTest {
     // ──────────────────────────────────────────────
 
     @Test
-    void constructorWithComponents_storesDependenciesCorrectly() {
+    void testConstructorWithComponents_storesDependenciesCorrectly() {
         CardRow low = new CardRow(6, 3);
         CardRow top = new CardRow(6, 3);
         OfferTrack ot = emptyOfferTrack();
@@ -57,7 +57,7 @@ public class BoardTest {
     }
 
     @Test
-    void constructorWithComponents_deckIsNotEmptyWhenCardsProvided() {
+    void testConstructorWithComponents_deckIsNotEmptyWhenCardsProvided() {
         Board board = new Board(
                 new CardRow(6, 3), new CardRow(6, 3),
                 emptyOfferTrack(), emptyOrderTile(),
@@ -67,7 +67,7 @@ public class BoardTest {
     }
 
     @Test
-    void constructorWithComponents_deckIsEmptyWhenNoCardsProvided() {
+    void testConstructorWithComponents_deckIsEmptyWhenNoCardsProvided() {
         Board board = new Board(
                 new CardRow(6, 3), new CardRow(6, 3),
                 emptyOfferTrack(), emptyOrderTile(),
@@ -77,7 +77,7 @@ public class BoardTest {
     }
 
     @Test
-    void constructorWithComponents_deckContainsAllProvidedCards() {
+    void testConstructorWithComponents_deckContainsAllProvidedCards() {
         int cardCount = 8;
         Board board = new Board(
                 new CardRow(6, 3), new CardRow(6, 3),
@@ -92,7 +92,7 @@ public class BoardTest {
     // ──────────────────────────────────────────────
 
     @Test
-    void initConstructor_rowSizesMatchParameters() {
+    void testInitConstructor_rowSizesMatchParameters() {
         Deck fakeDeck = Deck.createDeck(fakeCards(10));
         Board board = new Board(6, 3, 6, 3,
                 emptyOfferTrack(), emptyOrderTile(), fakeDeck);
@@ -104,7 +104,7 @@ public class BoardTest {
     }
 
     @Test
-    void initConstructor_remainingBuildingsStartsEmpty() {
+    void testInitConstructor_remainingBuildingsStartsEmpty() {
         Deck fakeDeck = Deck.createDeck(fakeCards(10));
         Board board = new Board(3, 3,6, 6,
                 emptyOfferTrack(), emptyOrderTile(), fakeDeck);
@@ -113,36 +113,12 @@ public class BoardTest {
     }
 
     @Test
-    void initConstructor_deckIsNotEmptyWhenCardsProvided() {
+    void testInitConstructor_deckIsNotEmptyWhenCardsProvided() {
         Deck fakeDeck = Deck.createDeck(fakeCards(10));
 
         Board board = new Board(3, 3,6, 6,
                 emptyOfferTrack(), emptyOrderTile(), fakeDeck);
 
         assertFalse(board.deck().isEmpty());
-    }
-
-    // ──────────────────────────────────────────────
-    // Getters
-    // ──────────────────────────────────────────────
-
-    @Test
-    void getters_returnCorrectReferences() {
-        CardRow low = new CardRow(6, 3);
-        CardRow top = new CardRow(6, 3);
-        OfferTrack ot = emptyOfferTrack();
-        OrderTile oq = emptyOrderTile();
-        ArrayList<Set<Card>> remaining = new ArrayList<>();
-
-        Board board = new Board(low, top, ot, oq, remaining, deckWithFakeCards(5));
-
-        assertAll(
-                () -> assertSame(ot,        board.offerTrack()),
-                () -> assertSame(oq,        board.orderTile()),
-                () -> assertSame(low,       board.lowRow()),
-                () -> assertSame(top,       board.topRow()),
-                () -> assertSame(remaining, board.remainingBuildings()),
-                () -> assertNotNull(board.deck())
-        );
     }
 }

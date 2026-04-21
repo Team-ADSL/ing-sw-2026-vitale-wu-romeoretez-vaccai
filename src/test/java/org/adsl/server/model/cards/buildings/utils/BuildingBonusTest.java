@@ -15,31 +15,31 @@ public class BuildingBonusTest {
     }
 
     @Test
-    void reset_setsExtraStarsToZero() {
+    void testReset_setsExtraStarsToZero() {
         bonus.reset();
         assertEquals(0, bonus.getExtraStars());
     }
 
     @Test
-    void reset_setsShamanMultiplierToOne() {
+    void testReset_setsShamanMultiplierToOne() {
         bonus.reset();
         assertEquals(1, bonus.getShamanMulitiplierPP());
     }
 
     @Test
-    void reset_setsBuilderMultiplierToOne() {
+    void testReset_setsBuilderMultiplierToOne() {
         bonus.reset();
         assertEquals(1, bonus.getBuilderMultiplierPP());
     }
 
     @Test
-    void reset_setsSustenanceDiscountToZero() {
+    void testReset_setsSustenanceDiscountToZero() {
         bonus.reset();
         assertEquals(0, bonus.getSustenanceDiscount());
     }
 
     @Test
-    void reset_clearsBooleanFlags() {
+    void testReset_clearsBooleanFlags() {
         bonus.reset();
         assertAll(
                 () -> assertFalse(bonus.isHuntEventBonus()),
@@ -52,20 +52,20 @@ public class BuildingBonusTest {
     }
 
     @Test
-    void setSustenanceDiscount_accumulates() {
+    void testSetSustenanceDiscount_accumulates() {
         bonus.setSustenanceDiscount(2);
         bonus.setSustenanceDiscount(3);
         assertEquals(5, bonus.getSustenanceDiscount());
     }
 
     @Test
-    void setExtraStars_updatesValue() {
+    void testSetExtraStars_updatesValue() {
         bonus.setExtraStars(10);
         assertEquals(10, bonus.getExtraStars());
     }
 
     @Test
-    void setDoubleRitualPP_updatesValue() {
+    void testSetDoubleRitualPP_updatesValue() {
         bonus.setDoubleRitualPP(true);
         assertTrue(bonus.isDoubleRitualPP());
     }
