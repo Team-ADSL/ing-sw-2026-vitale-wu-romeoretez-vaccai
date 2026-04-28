@@ -3,6 +3,7 @@ package org.adsl.client.view.tui.screens;
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.graphics.TextGraphics;
+import org.adsl.client.view.tui.events.CharInputEvent;
 import org.adsl.client.view.tui.events.ConfirmEvent;
 import org.adsl.shared.model.MatchResult;
 
@@ -65,13 +66,21 @@ public class EndGameScreen implements Screen {
         }
 
         tg.setForegroundColor(TextColor.ANSI.WHITE);
-        putCentered(tg, sz.getRows() - 2, cols, "Press ENTER to exit.");
+        putCentered(tg, sz.getRows() - 2, cols, "Press ENTER or [B] to exit.");
         terminal.refresh();
     }
 
     @Override
     public Screen visit(ConfirmEvent e) {
         return ExitScreen.INSTANCE;
+    }
+
+    @Override
+    public Screen visit(CharInputEvent e) {
+        if (Character.toLowerCase(e.getCharacter()) == 'b') {
+            return ExitScreen.INSTANCE;
+        }
+        return this;
     }
 
     private void putCentered(TextGraphics tg, int row, int cols, String text) {

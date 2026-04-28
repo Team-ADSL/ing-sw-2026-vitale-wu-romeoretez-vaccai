@@ -3,6 +3,7 @@ package org.adsl.client.view.tui.screens;
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.graphics.TextGraphics;
+import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.view.tui.events.CharInputEvent;
 import org.adsl.client.view.tui.events.GameUpdateEvent;
@@ -21,17 +22,20 @@ import java.util.List;
 public class LobbyScreen implements Screen {
 
     private final com.googlecode.lanterna.screen.Screen terminal;
+    private final WindowBasedTextGUI gui;
     private final AppCoordinator coordinator;
     private final String username;
     private List<String> players;
     private final int totalPlayers;
 
     public LobbyScreen(com.googlecode.lanterna.screen.Screen terminal,
+                       WindowBasedTextGUI gui,
                        AppCoordinator coordinator,
                        String username,
                        List<String> players,
                        int totalPlayers) {
         this.terminal = terminal;
+        this.gui = gui;
         this.coordinator = coordinator;
         this.username = username;
         this.players = players != null ? players : List.of();
@@ -80,7 +84,8 @@ public class LobbyScreen implements Screen {
 
         row += 2;
         tg.setForegroundColor(TextColor.ANSI.CYAN);
-        tg.putString(4, row, "Press [S] to start the game when you are ready (host only).");
+        tg.putString(4, row++, "Press [S] to start the game when you are ready (host only).");
+        tg.putString(4, row, "Press [B] to go back.");
         tg.setForegroundColor(TextColor.ANSI.WHITE);
 
         terminal.refresh();
@@ -90,12 +95,15 @@ public class LobbyScreen implements Screen {
 
     @Override
     public Screen visit(CharInputEvent e) {
-        if (Character.toLowerCase(e.getCharacter()) == 's') {
+        char ch = Character.toLowerCase(e.getCharacter());
+        if (ch == 's') {
             try {
                 coordinator.startGameRequest();
             } catch (Exception ex) {
                 flashError("Start failed: " + ex.getMessage());
             }
+        } else if (ch == 'b') {
+            return new HomeScreen(terminal, gui, coordinator, username, List.of());
         }
         return this;
     }

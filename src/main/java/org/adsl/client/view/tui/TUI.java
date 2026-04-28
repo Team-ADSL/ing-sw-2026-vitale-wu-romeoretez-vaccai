@@ -16,6 +16,7 @@ import org.adsl.client.view.tui.events.*;
 import org.adsl.client.view.tui.screens.ConnectingScreen;
 import org.adsl.client.view.tui.screens.ExitScreen;
 import org.adsl.client.view.tui.screens.Screen;
+import org.adsl.client.view.tui.screens.DisconnectedScreen;
 import org.adsl.shared.model.GameDTO;
 import org.adsl.shared.model.MatchResult;
 
@@ -101,12 +102,7 @@ public class TUI implements GameUI {
                 Screen next = currentScreen.handleEvent(event);
                 if (next != currentScreen) {
                     currentScreen = next;
-                    try {
-                        currentScreen.onEnter();
-                    } catch (Exception e) {
-                        showFatal("Screen transition failed", e);
-                        return;
-                    }
+                    if (!transitionTo(currentScreen)) return;
                     break; // re-render before processing further events
                 }
             }
@@ -120,12 +116,7 @@ public class TUI implements GameUI {
                         Screen next = inputEvent.accept(currentScreen);
                         if (next != currentScreen) {
                             currentScreen = next;
-                            try {
-                                currentScreen.onEnter();
-                            } catch (Exception e) {
-                                showFatal("Screen transition failed", e);
-                                return;
-                            }
+                            if (!transitionTo(currentScreen)) return;
                         }
                     }
                 } else {
@@ -139,6 +130,26 @@ public class TUI implements GameUI {
     }
 
     /**
+     * Calls {@link Screen#onEnter()} on {@code screen} and follows any redirect
+     * chain returned (each onEnter may return another screen to jump to).
+     * Returns {@code true} on success, {@code false} if a fatal error occurred.
+     */
+    private boolean transitionTo(Screen screen) {
+        currentScreen = screen;
+        try {
+            Screen redirect = currentScreen.onEnter();
+            while (redirect != null) {
+                currentScreen = redirect;
+                redirect = currentScreen.onEnter();
+            }
+        } catch (Exception e) {
+            showFatal("Screen transition failed", e);
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Translates a raw Lanterna keystroke into a semantic input event.
      * Returns {@code null} for keys that carry no meaning in the TUI.
      */
@@ -149,7 +160,10 @@ public class TUI implements GameUI {
             case ArrowRight -> new NavigateRightEvent();
             case ArrowUp    -> new NavigateUpEvent();
             case ArrowDown  -> new NavigateDownEvent();
-            case Character  -> new CharInputEvent(key.getCharacter());
+            case Character  -> {
+                Character c = key.getCharacter();
+                yield (c != null && c == ' ') ? new SelectEvent() : new CharInputEvent(c);
+            }
             default         -> null;
         };
     }
@@ -189,23 +203,16 @@ public class TUI implements GameUI {
     }
 
     /**
-     * Called directly by {@link AppCoordinator} on disconnection. Does not
-     * go through the event queue or the screen visitor — disconnection is a
-     * system-level concern handled here in the TUI directly.
+     * Enqueues a {@link DisconnectedEvent} so that the screen state machine
+     * handles the disconnection through the normal visitor flow. The ping
+     * scheduler is stopped to avoid repeated disconnection events.
      */
     @Override
     public void onServerDisconnected() {
-        running = false;
-        try {
-            if (terminal == null) return;
-            terminal.clear();
-            TextGraphics tg = terminal.newTextGraphics();
-            tg.setForegroundColor(TextColor.ANSI.RED);
-            tg.putString(2, 2, "Server disconnected. Press any key to exit.");
-            tg.setForegroundColor(TextColor.ANSI.WHITE);
-            terminal.refresh();
-            terminal.readInput();
-        } catch (IOException ignored) {}
+        if (terminal == null) return;
+        appCoordinator.stopPingScheduler();
+        eventQueue.add(new DisconnectedEvent(terminal, gui, appCoordinator,
+                "Server disconnected. Check your network connection."));
     }
 
     // ── Error rendering ───────────────────────────────────────────────────────

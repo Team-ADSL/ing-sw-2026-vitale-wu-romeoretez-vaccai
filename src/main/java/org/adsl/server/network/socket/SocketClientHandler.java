@@ -52,6 +52,7 @@ public class SocketClientHandler extends VirtualClient implements Runnable {
         try {
             out.writeObject(response);
             out.flush();
+            out.reset();
         } catch (IOException e) {
             System.err.println("Impossible to send the message.");
         }

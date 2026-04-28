@@ -3,6 +3,7 @@ package org.adsl.client.view.tui.screens;
 import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.graphics.TextGraphics;
 import org.adsl.client.AppCoordinator;
+import org.adsl.client.view.tui.events.CharInputEvent;
 import org.adsl.client.view.tui.events.LoginNeededEvent;
 import org.adsl.client.view.tui.events.HomeUpdateEvent;
 
@@ -39,7 +40,17 @@ public class ConnectingScreen implements Screen {
         String msg = "Connecting to server...";
         tg.putString((cols - msg.length()) / 2, rows / 2, msg);
         tg.setForegroundColor(TextColor.ANSI.WHITE);
+        String hint = "Press [Q] to quit";
+        tg.putString((cols - hint.length()) / 2, rows / 2 + 2, hint);
         terminal.refresh();
+    }
+
+    @Override
+    public Screen visit(CharInputEvent e) {
+        if (Character.toLowerCase(e.getCharacter()) == 'q') {
+            return ExitScreen.INSTANCE;
+        }
+        return this;
     }
 
     @Override

@@ -62,6 +62,7 @@ public class InitGameState extends ControllerState {
         getGame().setInitialized(true);
         getGame().addObserver(getContext().getPersistenceManager());
         setNextState(calcNextState());
+        System.out.println("[INIT] Game config loaded.");
         getGame().sendUpdateGame();
         return getNextState();
     }

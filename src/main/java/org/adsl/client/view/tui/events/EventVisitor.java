@@ -1,5 +1,6 @@
 package org.adsl.client.view.tui.events;
 
+import org.adsl.client.view.tui.screens.DisconnectedScreen;
 import org.adsl.client.view.tui.screens.Screen;
 
 public interface EventVisitor {
@@ -10,6 +11,19 @@ public interface EventVisitor {
     Screen visit(GameUpdateEvent event);
     Screen visit(EndGameEvent event);
     Screen visit(ErrorEvent event);
+
+    /**
+     * Default handler for server disconnection: always transitions to
+     * {@link DisconnectedScreen}, regardless of the current screen.
+     * Individual screens may override this if needed.
+     */
+    default Screen visit(DisconnectedEvent event) {
+        return new DisconnectedScreen(
+                event.getTerminal(),
+                event.getGui(),
+                event.getCoordinator(),
+                event.getMessage());
+    }
 
     // Input events (key presses translated to semantic events by TUI)
     Screen visit(ConfirmEvent event);

@@ -1,6 +1,7 @@
 package org.adsl.server.controller.states;
 
 import org.adsl.server.controller.GameController;
+import org.adsl.server.model.board.*;
 import org.adsl.server.network.VirtualClient;
 import org.adsl.shared.enums.Phase;
 import org.adsl.shared.network.requests.MoveRequest;
@@ -12,20 +13,31 @@ import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Trigger;
 import org.adsl.server.model.Game;
 import org.adsl.server.model.Player;
-import org.adsl.server.model.board.CardRow;
-import org.adsl.server.model.board.OfferTile;
-import org.adsl.server.model.board.OfferTrack;
-import org.adsl.server.model.board.OrderCell;
 
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-
 public class ActionExecutionState extends ControllerState {
 
     public ActionExecutionState(Game game, GameController context) {
         super(game, context);
+    }
+
+    @Override
+    public ControllerState onEntry() throws ServerException {
+        if (getGame().getCurrentPlayer().isEmpty()) {
+            OfferTrack offerTrack = getGame().getBoard().offerTrack();
+            int orderIndex = 0;
+            while (orderIndex < offerTrack.size() && offerTrack.getTileAt(orderIndex).getPlayer().isEmpty()) {
+                orderIndex++;
+            }
+            if (orderIndex < offerTrack.size()) {
+                getGame().setCurrentPlayer(offerTrack.getTileAt(orderIndex).getPlayer().orElse(null));
+                getGame().sendUpdateGame();
+            }
+        }
+        return this;
     }
 
     @Override

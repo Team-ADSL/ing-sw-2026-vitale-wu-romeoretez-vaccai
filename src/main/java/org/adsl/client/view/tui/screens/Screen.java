@@ -34,5 +34,10 @@ public interface Screen extends EventVisitor {
 
     void render() throws IOException;
 
-    default void onEnter() throws Exception {}
+    /**
+     * Called once when the TUI transitions to this screen.
+     * Returns {@code null} to stay on this screen, or a new {@link Screen}
+     * instance to redirect immediately (e.g. back navigation, exit).
+     */
+    default Screen onEnter() throws Exception { return null; }
 }

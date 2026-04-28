@@ -16,21 +16,23 @@ public class RecoverState extends ControllerState {
     @Override
     public void visit(EnterGameRequest req, VirtualClient virtualClient) throws ServerException {
         if(virtualClient.getClientUsername().isEmpty()){
-            throw new ServerException("Virtual client has no username associated.");
+            throw new ServerException("[LOBBY] Virtual client has no username associated.");
         }
         Player reqPlayer = getGame().getPlayers().stream()
                 .filter(p -> p.getName().equals(virtualClient.getClientUsername().get()))
                 .findFirst()
-                .orElseThrow(() -> new ServerException("Player not in current game."));
+                .orElseThrow(() -> new ServerException("[LOBBY] Player not in current game."));
 
         if(reqPlayer.isActive()){
-            throw new ServerException("Player already connected.");
+            throw new ServerException("[LOBBY] Player already connected.");
         }
 
         reqPlayer.setActive(true);
         getGame().addVirtualClient(virtualClient);
         virtualClient.setGameId(getGame().getGameId());
         setNextState(calcNextState());
+        System.out.println("[LOBBY] Player " + virtualClient.getClientUsername().get()
+                + " connected.");
         getGame().sendUpdateLobby();
     }
 
@@ -42,6 +44,7 @@ public class RecoverState extends ControllerState {
         if(activePlayers == getGame().getNumPlayer()){
             getGame().sendUpdateGame();
             getGame().addObserver(getContext().getPersistenceManager());
+            System.out.println("[LOBBY] Starting game...");
             return StateFactory.recover(getGame(), getContext());
         } else {
             return this;

@@ -6,6 +6,7 @@ import com.googlecode.lanterna.gui2.*;
 import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
 import com.googlecode.lanterna.gui2.dialogs.MessageDialogButton;
 import org.adsl.client.AppCoordinator;
+import org.adsl.client.view.tui.events.ErrorEvent;
 import org.adsl.client.view.tui.events.HomeUpdateEvent;
 
 import java.io.IOException;
@@ -22,19 +23,31 @@ public class LoginScreen implements Screen {
     private final WindowBasedTextGUI gui;
     private final AppCoordinator coordinator;
     private String username;
+    private boolean exitRequested = false;
+    private final String initialError;
 
     public LoginScreen(com.googlecode.lanterna.screen.Screen terminal,
                        WindowBasedTextGUI gui,
                        AppCoordinator coordinator) {
+        this(terminal, gui, coordinator, null);
+    }
+
+    public LoginScreen(com.googlecode.lanterna.screen.Screen terminal,
+                       WindowBasedTextGUI gui,
+                       AppCoordinator coordinator,
+                       String initialError) {
         this.terminal = terminal;
         this.gui = gui;
         this.coordinator = coordinator;
+        this.initialError = initialError;
     }
 
     @Override
-    public void onEnter() throws Exception {
+    public Screen onEnter() throws Exception {
         username = collectUsername();
+        if (exitRequested) return ExitScreen.INSTANCE;
         coordinator.createLoginRequest(username);
+        return null;
     }
 
     @Override
@@ -55,9 +68,14 @@ public class LoginScreen implements Screen {
         return new HomeScreen(terminal, gui, coordinator, username, e.getActiveGames());
     }
 
+    @Override
+    public Screen visit(ErrorEvent e) {
+        return new LoginScreen(terminal, gui, coordinator, e.getMessage());
+    }
+
     private String collectUsername() {
         final String[] result = {null};
-        while (result[0] == null || result[0].isBlank()) {
+        while (!exitRequested && (result[0] == null || result[0].isBlank())) {
             BasicWindow window = new BasicWindow("MESOS – Login");
             window.setHints(List.of(Window.Hint.CENTERED));
 
@@ -65,6 +83,12 @@ public class LoginScreen implements Screen {
             root.addComponent(new Label(""));
             root.addComponent(new Label("  MESOS  –  Ancient Tribe Strategy  "));
             root.addComponent(new Label(""));
+            if (initialError != null && !initialError.isBlank()) {
+                Label errorLabel = new Label("  " + initialError);
+                errorLabel.setForegroundColor(com.googlecode.lanterna.TextColor.ANSI.RED);
+                root.addComponent(errorLabel);
+                root.addComponent(new Label(""));
+            }
             root.addComponent(new Label("  Enter your username:"));
 
             TextBox tb = new TextBox(new com.googlecode.lanterna.TerminalSize(20, 1));
@@ -82,6 +106,12 @@ public class LoginScreen implements Screen {
                     return;
                 }
                 result[0] = name;
+                window.close();
+            }));
+            root.addComponent(new Label(""));
+
+            root.addComponent(new Button("  Close Application  ", () -> {
+                exitRequested = true;
                 window.close();
             }));
             root.addComponent(new Label(""));

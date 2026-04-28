@@ -22,6 +22,22 @@ public class TotemPlacementState extends ControllerState {
     }
 
     @Override
+    public ControllerState onEntry() throws ServerException {
+        if (getGame().getCurrentPlayer().isEmpty()) {
+            OrderTile orderTile = getGame().getBoard().orderTile();
+            int orderIndex = 0;
+            while (orderIndex < orderTile.size() && orderTile.getPlayerAt(orderIndex).isEmpty()) {
+                orderIndex++;
+            }
+            if (orderIndex < orderTile.size()) {
+                getGame().setCurrentPlayer(orderTile.getPlayerAt(orderIndex).orElse(null));
+                getGame().sendUpdateGame();
+            }
+        }
+        return this;
+    }
+
+    @Override
     public void visit(MoveRequest req, VirtualClient virtualClient) throws ServerException {
         Player reqPlayer = controlIfPlayerTurn(virtualClient);
 

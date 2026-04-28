@@ -1,29 +1,42 @@
 package org.adsl.client.view.tui.screens;
 
+import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.graphics.TextGraphics;
-import com.googlecode.lanterna.gui2.*;
-import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
-import com.googlecode.lanterna.gui2.dialogs.MessageDialogButton;
+import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import org.adsl.client.AppCoordinator;
+import org.adsl.client.view.tui.events.ConfirmEvent;
+import org.adsl.client.view.tui.events.ErrorEvent;
+import org.adsl.client.view.tui.events.HomeUpdateEvent;
 import org.adsl.client.view.tui.events.LobbyUpdateEvent;
+import org.adsl.client.view.tui.events.NavigateDownEvent;
+import org.adsl.client.view.tui.events.NavigateUpEvent;
+import org.adsl.client.view.tui.events.CharInputEvent;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Lets the player create or join a game via a Lanterna GUI dialog (blocking in
- * {@link #onEnter()}). Stores the chosen player count for the lobby display.
- * Transitions to {@link LobbyScreen} when {@link LobbyUpdateEvent} arrives.
+ * Non-blocking home menu rendered with TextGraphics. Lets the player create
+ * or join a game and stays in sync with {@link HomeUpdateEvent}s as new
+ * active games are announced by the server. Transitions to {@link LobbyScreen}
+ * on {@link LobbyUpdateEvent}.
  */
 public class HomeScreen implements Screen {
+
+    private static final int CREATE_OPTIONS = 4; // 2..5 players
 
     private final com.googlecode.lanterna.screen.Screen terminal;
     private final WindowBasedTextGUI gui;
     private final AppCoordinator coordinator;
     private final String username;
-    private final List<Integer> activeGames;
+
+    private List<Integer> activeGames;
     private int totalPlayers = -1;
+
+    private int cursor = 0;
+    private String pendingError = null;
 
     public HomeScreen(com.googlecode.lanterna.screen.Screen terminal,
                       WindowBasedTextGUI gui,
@@ -34,92 +47,136 @@ public class HomeScreen implements Screen {
         this.gui = gui;
         this.coordinator = coordinator;
         this.username = username;
-        this.activeGames = activeGames != null ? activeGames : List.of();
-    }
-
-    @Override
-    public void onEnter() throws Exception {
-        HomeChoice choice = showHomeDialog();
-        if (choice.kind() == HomeChoice.Kind.CREATE) {
-            totalPlayers = choice.value();
-            coordinator.createGameRequest(choice.value());
-        } else {
-            coordinator.enterGameRequest(choice.value());
-        }
+        this.activeGames = (activeGames != null) ? new ArrayList<>(activeGames) : new ArrayList<>();
     }
 
     @Override
     public void render() throws IOException {
         terminal.clear();
         TextGraphics tg = terminal.newTextGraphics();
-        int rows = terminal.getTerminalSize().getRows();
-        int cols = terminal.getTerminalSize().getColumns();
-        tg.setForegroundColor(TextColor.ANSI.CYAN);
-        String msg = "Waiting for lobby...";
-        tg.putString(Math.max(0, (cols - msg.length()) / 2), rows / 2, msg);
+        TerminalSize size = terminal.getTerminalSize();
+        int cols = size.getColumns();
+
+        tg.setForegroundColor(TextColor.ANSI.BLACK);
+        tg.setBackgroundColor(TextColor.ANSI.YELLOW);
+        String title = "  M E S O S  –  Home  ";
+        tg.putString(Math.max(0, (cols - title.length()) / 2), 0, title);
+
         tg.setForegroundColor(TextColor.ANSI.WHITE);
+        tg.setBackgroundColor(TextColor.ANSI.BLACK);
+
+        int row = 2;
+        tg.putString(4, row++, "Welcome, " + username + "!");
+        row++;
+        tg.putString(4, row++, "Choose an option:  (↑ ↓ to navigate, ENTER to confirm)");
+        row++;
+
+        int totalOptions = totalOptions();
+        for (int i = 0; i < totalOptions; i++) {
+            String prefix = (i == cursor) ? " > " : "   ";
+            tg.setForegroundColor(i == cursor ? TextColor.ANSI.YELLOW : TextColor.ANSI.WHITE);
+            tg.putString(4, row++, prefix + optionLabel(i));
+        }
+        tg.setForegroundColor(TextColor.ANSI.WHITE);
+
+        row++;
+        tg.setForegroundColor(TextColor.ANSI.CYAN);
+        tg.putString(4, row, activeGames.isEmpty()
+                ? "(no active games available to join)"
+                : "Active games: " + activeGames.size());
+        tg.setForegroundColor(TextColor.ANSI.WHITE);
+
+        if (pendingError != null) {
+            int errRow = size.getRows() - 2;
+            tg.setForegroundColor(TextColor.ANSI.RED);
+            tg.putString(2, errRow, "! " + pendingError);
+            tg.setForegroundColor(TextColor.ANSI.WHITE);
+            pendingError = null;
+        }
+
         terminal.refresh();
+    }
+
+    // ── Server events ─────────────────────────────────────────────────────────
+
+    @Override
+    public Screen visit(HomeUpdateEvent e) {
+        List<Integer> incoming = e.getActiveGames();
+        this.activeGames = (incoming != null) ? new ArrayList<>(incoming) : new ArrayList<>();
+        if (cursor >= totalOptions()) {
+            cursor = Math.max(0, totalOptions() - 1);
+        }
+        return this;
     }
 
     @Override
     public Screen visit(LobbyUpdateEvent e) {
-        return new LobbyScreen(terminal, coordinator, username, e.getPlayers(), totalPlayers);
+        return new LobbyScreen(terminal, gui, coordinator, username, e.getPlayers(), totalPlayers);
     }
 
-    private HomeChoice showHomeDialog() {
-        final HomeChoice[] result = {null};
+    @Override
+    public Screen visit(ErrorEvent e) {
+        pendingError = e.getMessage();
+        return this;
+    }
 
-        BasicWindow window = new BasicWindow("MESOS – Home");
-        window.setHints(List.of(Window.Hint.CENTERED));
+    // ── Input events ──────────────────────────────────────────────────────────
 
-        Panel root = new Panel(new LinearLayout(Direction.VERTICAL));
-        root.addComponent(new Label(""));
-        root.addComponent(new Label("  Welcome, " + username + "!  Choose an option:"));
-        root.addComponent(new Label(""));
+    @Override
+    public Screen visit(NavigateUpEvent e) {
+        int total = totalOptions();
+        if (total > 0) cursor = (cursor - 1 + total) % total;
+        return this;
+    }
 
-        root.addComponent(new Label("  Create new game — number of players:"));
-        RadioBoxList<String> playerCount = new RadioBoxList<>();
-        for (int n = 2; n <= 5; n++) playerCount.addItem(n + " players");
-        playerCount.setCheckedItemIndex(0);
-        root.addComponent(playerCount);
-        root.addComponent(new Button("  Create Game  ", () -> {
-            result[0] = HomeChoice.create(playerCount.getCheckedItemIndex() + 2);
-            window.close();
-        }));
+    @Override
+    public Screen visit(NavigateDownEvent e) {
+        int total = totalOptions();
+        if (total > 0) cursor = (cursor + 1) % total;
+        return this;
+    }
 
-        root.addComponent(new Label(""));
-        root.addComponent(new Separator(Direction.HORIZONTAL));
-        root.addComponent(new Label(""));
-
-        if (!activeGames.isEmpty()) {
-            root.addComponent(new Label("  Join an active game:"));
-            RadioBoxList<String> gameList = new RadioBoxList<>();
-            for (Integer gid : activeGames) gameList.addItem("Game #" + gid);
-            gameList.setCheckedItemIndex(0);
-            root.addComponent(gameList);
-            root.addComponent(new Button("  Join Game  ", () -> {
-                int idx = gameList.getCheckedItemIndex();
-                if (idx < 0) {
-                    MessageDialog.showMessageDialog(gui, "Invalid", "Select a game first.", MessageDialogButton.OK);
-                    return;
-                }
-                result[0] = HomeChoice.join(activeGames.get(idx));
-                window.close();
-            }));
-        } else {
-            root.addComponent(new Label("  (no active games available to join)"));
+    @Override
+    public Screen visit(ConfirmEvent e) {
+        try {
+            if (cursor < CREATE_OPTIONS) {
+                int n = cursor + 2;
+                totalPlayers = n;
+                coordinator.createGameRequest(n);
+            } else if (cursor < CREATE_OPTIONS + activeGames.size()) {
+                int gameId = activeGames.get(cursor - CREATE_OPTIONS);
+                coordinator.enterGameRequest(gameId);
+            } else {
+                return new LoginScreen(terminal, gui, coordinator);
+            }
+        } catch (Exception ex) {
+            pendingError = "Request failed: " + ex.getMessage();
         }
-        root.addComponent(new Label(""));
-
-        window.setComponent(root);
-        gui.addWindowAndWait(window);
-
-        return result[0];
+        return this;
     }
 
-    public record HomeChoice(Kind kind, int value) {
-        public enum Kind { CREATE, JOIN }
-        public static HomeChoice create(int numPlayers) { return new HomeChoice(Kind.CREATE, numPlayers); }
-        public static HomeChoice join(int gameId)       { return new HomeChoice(Kind.JOIN, gameId); }
+    @Override
+    public Screen visit(CharInputEvent e) {
+        char ch = Character.toLowerCase(e.getCharacter());
+        if (ch == 'b') {
+            return new LoginScreen(terminal, gui, coordinator);
+        }
+        return this;
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private int totalOptions() {
+        return CREATE_OPTIONS + activeGames.size() + 1; // create variants + joins + back
+    }
+
+    private String optionLabel(int i) {
+        if (i < CREATE_OPTIONS) {
+            return "Create new game (" + (i + 2) + " players)";
+        }
+        if (i < CREATE_OPTIONS + activeGames.size()) {
+            return "Join Game #" + activeGames.get(i - CREATE_OPTIONS);
+        }
+        return "Back to Login";
     }
 }

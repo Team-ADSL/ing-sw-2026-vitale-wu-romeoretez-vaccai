@@ -28,7 +28,6 @@ import java.util.*;
 public class GameScreen implements Screen {
 
     private enum SubState {
-        PASS_SCREEN,
         MY_TURN_TOTEM,
         MY_TURN_CARDS,
         NOT_MY_TURN,
@@ -63,9 +62,10 @@ public class GameScreen implements Screen {
     }
 
     @Override
-    public void onEnter() {
+    public Screen onEnter() {
         myTotem = findMyTotem();
-        subState = SubState.PASS_SCREEN;
+        setupActiveState();
+        return null;
     }
 
     @Override
@@ -75,7 +75,6 @@ public class GameScreen implements Screen {
         TerminalSize sz = terminal.getTerminalSize();
 
         switch (subState) {
-            case PASS_SCREEN    -> renderPassScreen(tg, sz);
             case MY_TURN_TOTEM  -> renderBoard(tg, sz, selectionIndex, Collections.emptySet());
             case MY_TURN_CARDS  -> renderBoard(tg, sz, -1, selectedMoves);
             case NOT_MY_TURN,
@@ -94,7 +93,6 @@ public class GameScreen implements Screen {
 
     @Override
     public Screen visit(GameUpdateEvent e) {
-        GameDTO prev = this.game;
         this.game = e.getGame();
         this.myTotem = findMyTotem();
 
@@ -103,12 +101,7 @@ public class GameScreen implements Screen {
             return this;
         }
 
-        Totem prevTotem = (prev != null) ? prev.currentPlayerTotem() : null;
-        if (!Objects.equals(prevTotem, game.currentPlayerTotem())) {
-            subState = SubState.PASS_SCREEN;
-        } else if (subState == SubState.WAITING_SERVER) {
-            setupActiveState();
-        }
+        setupActiveState();
         return this;
     }
 
@@ -122,7 +115,6 @@ public class GameScreen implements Screen {
     @Override
     public Screen visit(ConfirmEvent e) {
         switch (subState) {
-            case PASS_SCREEN   -> confirmPassScreen();
             case MY_TURN_TOTEM -> confirmTotemPlacement();
             case MY_TURN_CARDS -> confirmCardSelection();
             default            -> {}
@@ -180,10 +172,6 @@ public class GameScreen implements Screen {
     }
 
     // ── Confirm handlers ──────────────────────────────────────────────────────
-
-    private void confirmPassScreen() {
-        setupActiveState();
-    }
 
     private void confirmTotemPlacement() {
         OfferTileDTO tile = game.board().offerTrack().get(selectionIndex);
@@ -283,24 +271,6 @@ public class GameScreen implements Screen {
     }
 
     // ── Rendering ─────────────────────────────────────────────────────────────
-
-    private void renderPassScreen(TextGraphics tg, TerminalSize sz) {
-        Totem totem = game.currentPlayerTotem();
-        String name = nameFor(totem);
-        int midRow = sz.getRows() / 2;
-        int cols = sz.getColumns();
-
-        tg.setForegroundColor(totemColor(totem));
-        tg.setBackgroundColor(TextColor.ANSI.BLACK);
-        putCentered(tg, midRow - 3, cols, "────────────────────────────────────");
-        putCentered(tg, midRow - 2, cols, "  Pass the keyboard to:  ");
-        putCentered(tg, midRow - 1, cols, "");
-        putCentered(tg, midRow,     cols, "  " + name.toUpperCase() + "  (" + CardCatalog.totemLabel(totem) + " TRIBE)  ");
-        putCentered(tg, midRow + 1, cols, "");
-        tg.setForegroundColor(TextColor.ANSI.WHITE);
-        putCentered(tg, midRow + 2, cols, "  Press ENTER to continue...  ");
-        putCentered(tg, midRow + 3, cols, "────────────────────────────────────");
-    }
 
     private void renderBoard(TextGraphics tg, TerminalSize sz,
                              int cursorOfferIndex, Set<Move> highlights) {
@@ -556,10 +526,5 @@ public class GameScreen implements Screen {
         if (s == null) s = "";
         if (s.length() >= len) return s.substring(0, len);
         return s + " ".repeat(len - s.length());
-    }
-
-    private void putCentered(TextGraphics tg, int row, int cols, String text) {
-        int col = Math.max(0, (cols - text.length()) / 2);
-        tg.putString(col, row, text);
     }
 }

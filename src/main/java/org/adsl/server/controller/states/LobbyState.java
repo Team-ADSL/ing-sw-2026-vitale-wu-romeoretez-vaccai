@@ -34,6 +34,8 @@ public class LobbyState extends ControllerState {
             getGame().getPlayers().add(new Player(virtualClient.getClientUsername().get()));
             getGame().addVirtualClient(virtualClient);
             virtualClient.setGameId(getGame().getGameId());
+            System.out.println("[LOBBY] Player " + virtualClient.getClientUsername().get()
+                                + " connected.");
             getGame().sendUpdateLobby();
         }
         setNextState(calcNextState());
@@ -52,6 +54,8 @@ public class LobbyState extends ControllerState {
         getGame().getPlayers().remove(reqPlayer);
         getGame().removeVirtualClient(virtualClient);
         virtualClient.setGameId(null);
+        System.out.println("[LOBBY] Player " + virtualClient.getClientUsername().get()
+                + " disconnected.");
 
         if(getGame().getPlayers().isEmpty()){
             getGame().sendEndGameResults(null);
@@ -74,6 +78,7 @@ public class LobbyState extends ControllerState {
     @Override
     public ControllerState calcNextState() {
         if(readyToStart){
+            System.out.println("[LOBBY] Starting game...");
             return new InitGameState(getGame(), getContext());
         } else {
             return this;
