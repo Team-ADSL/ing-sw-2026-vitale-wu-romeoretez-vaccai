@@ -33,7 +33,7 @@ public class SocketClientHandler extends VirtualClient implements Runnable {
                 processRequest(request);
             }
         } catch (IOException | ClassNotFoundException e) {
-            System.out.println("Client disconnected or network error: " + e.getMessage());
+            System.out.println("[SOCKET] Client disconnected or network error: " + e.getMessage());
             handleDisconnection();
         }
     }
@@ -42,8 +42,9 @@ public class SocketClientHandler extends VirtualClient implements Runnable {
     public void closeConnection() {
         try {
             socket.close();
+            System.out.println("[SOCKET] Connection closed for: " + getClientUsername());
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            System.err.println("ERROR: [SOCKET] Error closing connection: " + e.getMessage());
         }
     }
 
@@ -54,7 +55,7 @@ public class SocketClientHandler extends VirtualClient implements Runnable {
             out.flush();
             out.reset();
         } catch (IOException e) {
-            System.err.println("Impossible to send the message.");
+            System.err.println("ERROR: [SOCKET] Failed to send response to: " + getClientUsername());
         }
     }
 }

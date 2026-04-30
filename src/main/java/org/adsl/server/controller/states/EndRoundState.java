@@ -37,6 +37,7 @@ public class EndRoundState extends ControllerState {
         // Handle new era
         if(deck.isNewEra(getGame().getEra())){
             getGame().changeEra();
+            System.out.println("[END ROUND] New era started: " + getGame().getEra());
 
             if(getGame().getEra() == 3){
                 lowRow.clearBuildings();
@@ -51,6 +52,7 @@ public class EndRoundState extends ControllerState {
             topRow.addBuildings(newBuildings);
         }
         getGame().changeRound();
+        System.out.println("[END ROUND] Round " + getGame().getRound() + ", Era " + getGame().getEra());
         setNextState(calcNextState());
         getGame().sendUpdateGame();
         return getNextState();

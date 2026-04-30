@@ -25,6 +25,7 @@ public class RMIClientHandler extends VirtualClient {
         try {
             clientStub.sendResponse(response);
         } catch (RemoteException e) {
+            System.err.println("ERROR: [RMI] Failed to send response to: " + getClientUsername() + " - " + e.getMessage());
             handleDisconnection();
         }
     }
@@ -32,5 +33,6 @@ public class RMIClientHandler extends VirtualClient {
     @Override
     public void closeConnection(){
         serverService.remove(clientStub);
+        System.out.println("[RMI] Connection closed for: " + getClientUsername());
     }
 }

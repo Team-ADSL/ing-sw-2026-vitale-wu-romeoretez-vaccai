@@ -102,6 +102,7 @@ public class ActionExecutionState extends ControllerState {
         OfferTrack offerTrack = getGame().getBoard().offerTrack();
         offerTrack.removePlayer(p);
         placeTotem(p);
+        System.out.println("[ACTION] Player " + p.getName() + " picked " + moves.size() + " card(s).");
         setNextState(calcNextState());
         getGame().sendUpdateGame();
     }

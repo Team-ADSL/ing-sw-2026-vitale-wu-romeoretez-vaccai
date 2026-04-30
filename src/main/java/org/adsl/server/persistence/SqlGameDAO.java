@@ -23,7 +23,9 @@ public class SqlGameDAO implements GameDAO{
             ps.executeUpdate();
             ResultSet keys = ps.getGeneratedKeys();
             if(keys.next()){
-                return keys.getInt(1);
+                int id = keys.getInt(1);
+                System.out.println("[DB] Match created with ID: " + id);
+                return id;
             } else {
                 throw new SQLException("Match creation failed, no ID generated.");
             }
@@ -42,6 +44,7 @@ public class SqlGameDAO implements GameDAO{
             if(rowAffected == 0){
                 throw new SQLException("No match found with id: " + gameId);
             }
+            System.out.println("[DB] Match " + gameId + " deleted.");
         }
     }
 
