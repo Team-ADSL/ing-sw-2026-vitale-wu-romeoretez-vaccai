@@ -226,8 +226,8 @@ public class App
         System.out.println("  <rmi-port>          : RMI registry listening port (e.g. 1099)");
         System.out.println("  <recover-directory> : Path for recovery files (e.g. ./saves)");
 
-        System.out.println("\nTo start in LOCAL mode (same terminal, no network):");
-        System.out.println("java -jar mesos.jar --local");
+        System.out.println("\nTo start in TEST-TUI mode (same terminal, in-process fake server):");
+        System.out.println("java -jar mesos.jar --test-tui");
 
         System.out.println("\nTo start as CLIENT:");
         System.out.println("java -jar mesos.jar --client <connection> <interface> <ip-server> <port>");

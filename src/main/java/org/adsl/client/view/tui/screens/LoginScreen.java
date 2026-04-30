@@ -25,6 +25,7 @@ public class LoginScreen implements Screen {
     private String username;
     private boolean exitRequested = false;
     private final String initialError;
+    private boolean toRender;
 
     public LoginScreen(com.googlecode.lanterna.screen.Screen terminal,
                        WindowBasedTextGUI gui,
@@ -40,6 +41,7 @@ public class LoginScreen implements Screen {
         this.gui = gui;
         this.coordinator = coordinator;
         this.initialError = initialError;
+        this.toRender = true;
     }
 
     @Override
@@ -52,7 +54,7 @@ public class LoginScreen implements Screen {
 
     @Override
     public boolean isToRender() {
-        return true;
+        return toRender;
     }
 
     @Override
@@ -66,6 +68,11 @@ public class LoginScreen implements Screen {
         tg.putString(Math.max(0, (cols - msg.length()) / 2), rows / 2, msg);
         tg.setForegroundColor(TextColor.ANSI.WHITE);
         terminal.refresh();
+    }
+
+    @Override
+    public void setToRender(boolean value) {
+        toRender = value;
     }
 
     @Override

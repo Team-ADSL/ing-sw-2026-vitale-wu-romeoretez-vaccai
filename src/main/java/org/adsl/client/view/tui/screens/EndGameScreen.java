@@ -18,11 +18,13 @@ public class EndGameScreen implements Screen {
 
     private final com.googlecode.lanterna.screen.Screen terminal;
     private final List<MatchResult> results;
+    private boolean toRender;
 
     public EndGameScreen(com.googlecode.lanterna.screen.Screen terminal,
                          List<MatchResult> results) {
         this.terminal = terminal;
         this.results = results;
+        this.toRender = true;
     }
 
     @Override
@@ -72,7 +74,12 @@ public class EndGameScreen implements Screen {
 
     @Override
     public boolean isToRender() {
-        return true;
+        return toRender;
+    }
+
+    @Override
+    public void setToRender(boolean value) {
+        toRender = value;
     }
 
     @Override

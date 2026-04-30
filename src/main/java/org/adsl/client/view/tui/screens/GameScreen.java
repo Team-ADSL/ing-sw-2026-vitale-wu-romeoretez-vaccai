@@ -49,7 +49,7 @@ public class GameScreen implements Screen {
     private int upperCount = 0;
     private int lowerCount = 0;
 
-    private String pendingError = null;
+    private String error = null;
 
     public GameScreen(com.googlecode.lanterna.screen.Screen terminal,
                       AppCoordinator coordinator,
@@ -86,9 +86,9 @@ public class GameScreen implements Screen {
                  WAITING_SERVER -> renderBoard(tg, sz, -1, Collections.emptySet());
         }
 
-        if (pendingError != null) {
-            flashError(tg, sz, pendingError);
-            pendingError = null;
+        if (error != null) {
+            flashError(tg, sz, error);
+            error = null;
         }
 
         terminal.refresh();
@@ -181,7 +181,7 @@ public class GameScreen implements Screen {
     private void confirmTotemPlacement() {
         OfferTileDTO tile = game.board().offerTrack().get(selectionIndex);
         if (tile.totem() != null) {
-            pendingError = "That tile is already occupied!";
+            error = "That tile is already occupied!";
         } else {
             sendMove(Set.of(new Move(selectionIndex, Row.OFFER)));
         }
@@ -190,14 +190,14 @@ public class GameScreen implements Screen {
     private void confirmCardSelection() {
         int required = upperCount + lowerCount;
         if (selectedMoves.size() != required) {
-            pendingError = String.format("Select exactly %d card(s): %d from top, %d from bottom.",
+            error = String.format("Select exactly %d card(s): %d from top, %d from bottom.",
                     required, upperCount, lowerCount);
             return;
         }
         long selTop = selectedMoves.stream().filter(m -> m.row() == Row.UPPER).count();
         long selBot = selectedMoves.stream().filter(m -> m.row() == Row.LOWER).count();
         if (selTop != upperCount || selBot != lowerCount) {
-            pendingError = String.format("Need %d from top row, %d from bottom row.", upperCount, lowerCount);
+            error = String.format("Need %d from top row, %d from bottom row.", upperCount, lowerCount);
             return;
         }
         sendMove(Collections.unmodifiableSet(new LinkedHashSet<>(selectedMoves)));
@@ -205,7 +205,7 @@ public class GameScreen implements Screen {
 
     private void toggleCardSelection(Row row, List<CardDTO> cards) {
         if (selectionIndex >= cards.size() || cards.get(selectionIndex) == null) {
-            pendingError = "That slot is empty.";
+            error = "That slot is empty.";
             return;
         }
         Move move = new Move(selectionIndex, row);
@@ -215,7 +215,7 @@ public class GameScreen implements Screen {
             int limit = (row == Row.UPPER) ? upperCount : lowerCount;
             long already = selectedMoves.stream().filter(m -> m.row() == row).count();
             if (already >= limit) {
-                pendingError = "You can only pick " + limit + " card(s) from this row.";
+                error = "You can only pick " + limit + " card(s) from this row.";
             } else {
                 selectedMoves.add(move);
             }
@@ -227,7 +227,7 @@ public class GameScreen implements Screen {
             coordinator.makeMoveRequest(moves);
             subState = SubState.WAITING_SERVER;
         } catch (Exception e) {
-            pendingError = "Move failed: " + e.getMessage();
+            error = "Move failed: " + e.getMessage();
         }
     }
 

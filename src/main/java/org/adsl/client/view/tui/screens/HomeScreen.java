@@ -34,9 +34,9 @@ public class HomeScreen implements Screen {
 
     private List<Integer> activeGames;
     private int totalPlayers = -1;
-
+    private boolean toRender;
     private int cursor = 0;
-    private String pendingError = null;
+    private String error = null;
 
     public HomeScreen(com.googlecode.lanterna.screen.Screen terminal,
                       WindowBasedTextGUI gui,
@@ -48,6 +48,8 @@ public class HomeScreen implements Screen {
         this.coordinator = coordinator;
         this.username = username;
         this.activeGames = (activeGames != null) ? new ArrayList<>(activeGames) : new ArrayList<>();
+        this.toRender = true;
+        this.error = null;
     }
 
     @Override
@@ -86,20 +88,24 @@ public class HomeScreen implements Screen {
                 : "Active games: " + activeGames.size());
         tg.setForegroundColor(TextColor.ANSI.WHITE);
 
-        if (pendingError != null) {
+        if (error != null) {
             int errRow = size.getRows() - 2;
             tg.setForegroundColor(TextColor.ANSI.RED);
-            tg.putString(2, errRow, "! " + pendingError);
+            tg.putString(2, errRow, "! " + error);
             tg.setForegroundColor(TextColor.ANSI.WHITE);
-            pendingError = null;
+            error = null;
         }
-
         terminal.refresh();
     }
 
     @Override
     public boolean isToRender() {
-        return true;
+        return toRender;
+    }
+
+    @Override
+    public void setToRender(boolean value) {
+        toRender = value;
     }
 
     // ── Server events ─────────────────────────────────────────────────────────
@@ -111,6 +117,7 @@ public class HomeScreen implements Screen {
         if (cursor >= totalOptions()) {
             cursor = Math.max(0, totalOptions() - 1);
         }
+        toRender = true;
         return this;
     }
 
@@ -121,7 +128,8 @@ public class HomeScreen implements Screen {
 
     @Override
     public Screen visit(ErrorEvent e) {
-        pendingError = e.getMessage();
+        error = e.getMessage();
+        toRender = true;
         return this;
     }
 
@@ -131,6 +139,7 @@ public class HomeScreen implements Screen {
     public Screen visit(NavigateUpEvent e) {
         int total = totalOptions();
         if (total > 0) cursor = (cursor - 1 + total) % total;
+        toRender = true;
         return this;
     }
 
@@ -138,6 +147,7 @@ public class HomeScreen implements Screen {
     public Screen visit(NavigateDownEvent e) {
         int total = totalOptions();
         if (total > 0) cursor = (cursor + 1) % total;
+        toRender = true;
         return this;
     }
 
@@ -155,7 +165,8 @@ public class HomeScreen implements Screen {
                 return new LoginScreen(terminal, gui, coordinator);
             }
         } catch (Exception ex) {
-            pendingError = "Request failed: " + ex.getMessage(); // TODO: see error handling
+            error = "Request failed: " + ex.getMessage(); // TODO: see error handling
+            toRender = true;
         }
         return this;
     }
@@ -167,8 +178,9 @@ public class HomeScreen implements Screen {
             try {
                 coordinator.createLogoutRequest();
                 return new LoginScreen(terminal, gui, coordinator);
-            } catch(Exception ex){
-                pendingError = ex.getMessage();
+            } catch (Exception ex) {
+                error = ex.getMessage();
+                toRender = true;
             }
         }
         return this;

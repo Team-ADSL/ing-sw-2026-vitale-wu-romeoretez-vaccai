@@ -29,6 +29,7 @@ public class DisconnectedScreen implements Screen {
     private final WindowBasedTextGUI gui;
     private final AppCoordinator coordinator;
     private final String message;
+    private boolean toRender;
 
     public DisconnectedScreen(com.googlecode.lanterna.screen.Screen terminal,
                               WindowBasedTextGUI gui,
@@ -38,6 +39,7 @@ public class DisconnectedScreen implements Screen {
         this.gui         = gui;
         this.coordinator = coordinator;
         this.message     = message;
+        this.toRender  = true;
     }
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
@@ -49,7 +51,7 @@ public class DisconnectedScreen implements Screen {
 
     @Override
     public boolean isToRender() {
-        return true;
+        return toRender;
     }
 
     @Override
@@ -63,6 +65,11 @@ public class DisconnectedScreen implements Screen {
         tg.putString(Math.max(0, (cols - msg.length()) / 2), rows / 2, msg);
         tg.setForegroundColor(TextColor.ANSI.WHITE);
         terminal.refresh();
+    }
+
+    @Override
+    public void setToRender(boolean value) {
+        toRender = value;
     }
 
     // ── Dialog ────────────────────────────────────────────────────────────────

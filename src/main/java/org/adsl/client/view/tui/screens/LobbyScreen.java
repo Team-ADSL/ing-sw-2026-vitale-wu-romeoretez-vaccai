@@ -102,13 +102,17 @@ public class LobbyScreen implements Screen {
             error = null;
         }
 
-        toRender = false;
         terminal.refresh();
     }
 
     @Override
     public boolean isToRender() {
         return toRender;
+    }
+
+    @Override
+    public void setToRender(boolean value) {
+        toRender = value;
     }
 
     // ── Input events ──────────────────────────────────────────────────────────

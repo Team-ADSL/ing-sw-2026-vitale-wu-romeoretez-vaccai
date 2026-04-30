@@ -89,6 +89,7 @@ public class TUI implements GameUI {
             try {
                 if(currentScreen.isToRender()){
                     currentScreen.render();
+                    currentScreen.setToRender(false);
                 }
             } catch (IOException e) {
                 showFatal("Render error", e);

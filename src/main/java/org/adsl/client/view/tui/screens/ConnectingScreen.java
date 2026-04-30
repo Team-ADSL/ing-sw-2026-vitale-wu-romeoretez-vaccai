@@ -21,6 +21,7 @@ public class ConnectingScreen implements Screen {
     private final com.googlecode.lanterna.screen.Screen terminal;
     private final WindowBasedTextGUI gui;
     private final AppCoordinator coordinator;
+    private boolean toRender;
 
     public ConnectingScreen(com.googlecode.lanterna.screen.Screen terminal,
                             WindowBasedTextGUI gui,
@@ -28,6 +29,7 @@ public class ConnectingScreen implements Screen {
         this.terminal = terminal;
         this.gui = gui;
         this.coordinator = coordinator;
+        this.toRender = true;
     }
 
     @Override
@@ -47,7 +49,12 @@ public class ConnectingScreen implements Screen {
 
     @Override
     public boolean isToRender() {
-        return true;
+        return toRender;
+    }
+
+    @Override
+    public void setToRender(boolean value) {
+        toRender = value;
     }
 
     @Override
