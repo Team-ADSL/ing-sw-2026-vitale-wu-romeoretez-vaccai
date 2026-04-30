@@ -209,6 +209,11 @@ public class App
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 System.out.println("\nClosing signal. Starting Shutdown...");
                 gameUI.shutdown();
+                try {
+                    appCoordinator.disconnect();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
             }));
         } catch (Exception e) {
             System.err.println("Critical error during client starting: " + e.getMessage());
