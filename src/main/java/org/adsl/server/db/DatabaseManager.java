@@ -8,6 +8,10 @@ import java.sql.Statement;
 public class DatabaseManager {
 
     public static void initDatabase() {
+        if (DatabaseConfig.PASSWORD == null) {
+            throw new RuntimeException(new SQLException(
+                    "[SECURITY FATAL] Variabile d'ambiente 'DB_PASSWORD' non trovata. Impossibile connettersi al database."));
+        }
         try (Connection conn = DriverManager.getConnection(
                 DatabaseConfig.URL_NO_DB,
                 DatabaseConfig.USER,

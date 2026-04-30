@@ -158,6 +158,7 @@ public class HomeScreen implements Screen {
                 int gameId = activeGames.get(cursor - CREATE_OPTIONS);
                 coordinator.enterGameRequest(gameId);
             } else {
+                coordinator.createLogoutRequest();
                 return new LoginScreen(terminal, gui, coordinator);
             }
         } catch (Exception ex) {
