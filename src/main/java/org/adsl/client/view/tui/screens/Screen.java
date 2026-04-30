@@ -30,7 +30,11 @@ public interface Screen extends EventVisitor {
     default Screen visit(NavigateDownEvent e)  { return this; }
     default Screen visit(CharInputEvent e)     { return this; }
 
-    default Screen handleEvent(Event event) { return event.accept(this); }
+    default Screen handleEvent(Event event) {
+        Screen newScreen = event.accept(this);
+        setToRender(true);
+        return newScreen;
+    }
 
     void render() throws IOException;
 

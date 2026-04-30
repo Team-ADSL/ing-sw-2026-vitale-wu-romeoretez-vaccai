@@ -117,7 +117,6 @@ public class HomeScreen implements Screen {
         if (cursor >= totalOptions()) {
             cursor = Math.max(0, totalOptions() - 1);
         }
-        toRender = true;
         return this;
     }
 
@@ -129,7 +128,6 @@ public class HomeScreen implements Screen {
     @Override
     public Screen visit(ErrorEvent e) {
         error = e.getMessage();
-        toRender = true;
         return this;
     }
 
@@ -139,7 +137,6 @@ public class HomeScreen implements Screen {
     public Screen visit(NavigateUpEvent e) {
         int total = totalOptions();
         if (total > 0) cursor = (cursor - 1 + total) % total;
-        toRender = true;
         return this;
     }
 
@@ -147,7 +144,6 @@ public class HomeScreen implements Screen {
     public Screen visit(NavigateDownEvent e) {
         int total = totalOptions();
         if (total > 0) cursor = (cursor + 1) % total;
-        toRender = true;
         return this;
     }
 
@@ -166,7 +162,6 @@ public class HomeScreen implements Screen {
             }
         } catch (Exception ex) {
             error = "Request failed: " + ex.getMessage(); // TODO: see error handling
-            toRender = true;
         }
         return this;
     }
@@ -180,7 +175,6 @@ public class HomeScreen implements Screen {
                 return new LoginScreen(terminal, gui, coordinator);
             } catch (Exception ex) {
                 error = ex.getMessage();
-                toRender = true;
             }
         }
         return this;

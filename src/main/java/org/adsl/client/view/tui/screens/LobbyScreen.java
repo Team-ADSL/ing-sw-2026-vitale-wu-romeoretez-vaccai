@@ -125,10 +125,8 @@ public class LobbyScreen implements Screen {
                 coordinator.startGameRequest();
             } catch (Exception ex) {
                 error = ex.getMessage();
-                toRender = true;
             }
         } else if (ch == 'b') {
-            toRender = true;
             try {
                 coordinator.createExitLobbyRequest();
                 return new HomeScreen(terminal, gui, coordinator, username, List.of());
@@ -144,19 +142,16 @@ public class LobbyScreen implements Screen {
     @Override
     public Screen visit(LobbyUpdateEvent e) {
         this.players = e.getPlayers() != null ? e.getPlayers() : List.of();
-        toRender = true;
         return this;
     }
 
     @Override
     public Screen visit(GameUpdateEvent e) {
-        toRender = true;
         return new GameScreen(terminal, coordinator, username, e.getGame());
     }
 
     @Override
     public Screen visit(ErrorEvent e) {
-        toRender = true;
         error = e.getMessage();
         return this;
     }
