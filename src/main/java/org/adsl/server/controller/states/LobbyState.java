@@ -41,15 +41,15 @@ public class LobbyState extends ControllerState {
 
     @Override
     public void visit(ExitLobbyRequest req, VirtualClient virtualClient) throws ServerException {
-        playerExit(req, virtualClient);
+        playerExit(virtualClient);
     }
 
     @Override
     public void visit(ClientDisconnected req, VirtualClient virtualClient) throws ServerException {
-        playerExit(req, virtualClient);
+        playerExit(virtualClient);
     }
 
-    public void playerExit(ClientRequest req, VirtualClient virtualClient){
+    public void playerExit(VirtualClient virtualClient){
         if(virtualClient.getClientUsername().isEmpty()){
             throw new ServerException("[LOBBY] Virtual client has no username associated.");
         }

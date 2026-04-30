@@ -222,6 +222,7 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         }
         sendToGameController(virtualClient.getGameId().get(), req, virtualClient);
         home.addObserver(virtualClient);
+        home.update();
     }
 
     public void sendToGameController(int gameId, ClientRequest req, VirtualClient virtualClient) throws ServerException {

@@ -116,7 +116,7 @@ public class TUI implements GameUI {
                 if (key != null) {
                     Event inputEvent = toInputEvent(key);
                     if (inputEvent != null) {
-                        Screen next = inputEvent.accept(currentScreen);
+                        Screen next = currentScreen.handleEvent(inputEvent);
                         if (next != currentScreen) {
                             currentScreen = next;
                             if (!transitionTo(currentScreen)) return; // TODO: endGame does not imply end session
