@@ -6,6 +6,8 @@ public interface RequestVisitor<T> {
     void visit(ClientPing req, T context) throws ServerException;
     void visit(ClientConnection req, T context) throws ServerException;
     void visit(LoginRequest req, T context) throws ServerException;
+    void visit(LogoutRequest req, T context) throws ServerException;
+    void visit(ExitLobbyRequest req, T context) throws ServerException;
     void visit(CreateGameRequest req, T context) throws ServerException;
     void visit(EnterGameRequest req, T context) throws ServerException;
     void visit(StartGameRequest req, T context) throws ServerException;

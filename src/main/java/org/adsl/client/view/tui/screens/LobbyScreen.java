@@ -6,6 +6,7 @@ import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.view.tui.events.CharInputEvent;
+import org.adsl.client.view.tui.events.ErrorEvent;
 import org.adsl.client.view.tui.events.GameUpdateEvent;
 import org.adsl.client.view.tui.events.LobbyUpdateEvent;
 
@@ -27,6 +28,8 @@ public class LobbyScreen implements Screen {
     private final String username;
     private List<String> players;
     private final int totalPlayers;
+    private boolean toRender;
+    private String error;
 
     public LobbyScreen(com.googlecode.lanterna.screen.Screen terminal,
                        WindowBasedTextGUI gui,
@@ -40,6 +43,8 @@ public class LobbyScreen implements Screen {
         this.username = username;
         this.players = players != null ? players : List.of();
         this.totalPlayers = totalPlayers;
+        this.toRender = true;
+        this.error = null;
     }
 
     @Override
@@ -88,7 +93,22 @@ public class LobbyScreen implements Screen {
         tg.putString(4, row, "Press [B] to go back.");
         tg.setForegroundColor(TextColor.ANSI.WHITE);
 
+        if(error != null){
+            row = terminal.getTerminalSize().getRows() - 2;
+            tg = terminal.newTextGraphics();
+            tg.setForegroundColor(TextColor.ANSI.RED);
+            tg.putString(2, row, "! " + error);
+            tg.setForegroundColor(TextColor.ANSI.WHITE);
+            error = null;
+        }
+
+        toRender = false;
         terminal.refresh();
+    }
+
+    @Override
+    public boolean isToRender() {
+        return toRender;
     }
 
     // ── Input events ──────────────────────────────────────────────────────────
@@ -100,10 +120,17 @@ public class LobbyScreen implements Screen {
             try {
                 coordinator.startGameRequest();
             } catch (Exception ex) {
-                flashError("Start failed: " + ex.getMessage());
+                error = ex.getMessage();
+                toRender = true;
             }
         } else if (ch == 'b') {
-            return new HomeScreen(terminal, gui, coordinator, username, List.of());
+            toRender = true;
+            try {
+                coordinator.createExitLobbyRequest();
+                return new HomeScreen(terminal, gui, coordinator, username, List.of());
+            } catch(Exception ex){
+                error = ex.getMessage();
+            }
         }
         return this;
     }
@@ -113,26 +140,24 @@ public class LobbyScreen implements Screen {
     @Override
     public Screen visit(LobbyUpdateEvent e) {
         this.players = e.getPlayers() != null ? e.getPlayers() : List.of();
+        toRender = true;
         return this;
     }
 
     @Override
     public Screen visit(GameUpdateEvent e) {
+        toRender = true;
         return new GameScreen(terminal, coordinator, username, e.getGame());
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
-    private void flashError(String msg) {
-        try {
-            int row = terminal.getTerminalSize().getRows() - 2;
-            TextGraphics tg = terminal.newTextGraphics();
-            tg.setForegroundColor(TextColor.ANSI.RED);
-            tg.putString(2, row, "! " + msg);
-            tg.setForegroundColor(TextColor.ANSI.WHITE);
-            terminal.refresh();
-        } catch (IOException ignored) {}
+    @Override
+    public Screen visit(ErrorEvent e) {
+        toRender = true;
+        error = e.getMessage();
+        return this;
     }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private void fillRow(TextGraphics tg, int row, int cols, TextColor fg, TextColor bg, char c) {
         tg.setForegroundColor(fg);

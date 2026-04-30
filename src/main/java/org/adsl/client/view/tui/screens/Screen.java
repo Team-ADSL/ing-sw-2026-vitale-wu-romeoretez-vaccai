@@ -40,4 +40,6 @@ public interface Screen extends EventVisitor {
      * instance to redirect immediately (e.g. back navigation, exit).
      */
     default Screen onEnter() throws Exception { return null; }
+
+    boolean isToRender();
 }

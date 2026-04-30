@@ -64,6 +64,16 @@ public abstract class ControllerState implements RequestVisitor<VirtualClient> {
     }
 
     @Override
+    public void visit(LogoutRequest req, VirtualClient virtualClient) throws ServerException {
+        throw new ServerException("Logout not allowed in game.");
+    }
+
+    @Override
+    public void visit(ExitLobbyRequest req, VirtualClient virtualClient) throws ServerException {
+        throw new ServerException("Exit not allowed in this phase.");
+    }
+
+    @Override
     public void visit(CreateGameRequest req, VirtualClient virtualClient) throws ServerException {
         throw new ServerException("Create game request rejected.");
     }

@@ -97,6 +97,11 @@ public class HomeScreen implements Screen {
         terminal.refresh();
     }
 
+    @Override
+    public boolean isToRender() {
+        return true;
+    }
+
     // ── Server events ─────────────────────────────────────────────────────────
 
     @Override
@@ -150,7 +155,7 @@ public class HomeScreen implements Screen {
                 return new LoginScreen(terminal, gui, coordinator);
             }
         } catch (Exception ex) {
-            pendingError = "Request failed: " + ex.getMessage();
+            pendingError = "Request failed: " + ex.getMessage(); // TODO: see error handling
         }
         return this;
     }
@@ -159,7 +164,12 @@ public class HomeScreen implements Screen {
     public Screen visit(CharInputEvent e) {
         char ch = Character.toLowerCase(e.getCharacter());
         if (ch == 'b') {
-            return new LoginScreen(terminal, gui, coordinator);
+            try {
+                coordinator.createLogoutRequest();
+                return new LoginScreen(terminal, gui, coordinator);
+            } catch(Exception ex){
+                pendingError = ex.getMessage();
+            }
         }
         return this;
     }

@@ -71,6 +71,11 @@ public class EndGameScreen implements Screen {
     }
 
     @Override
+    public boolean isToRender() {
+        return true;
+    }
+
+    @Override
     public Screen visit(ConfirmEvent e) {
         return ExitScreen.INSTANCE;
     }

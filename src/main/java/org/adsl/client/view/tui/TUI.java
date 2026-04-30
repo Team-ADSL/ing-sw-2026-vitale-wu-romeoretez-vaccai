@@ -87,7 +87,9 @@ public class TUI implements GameUI {
         while (running && !(currentScreen instanceof ExitScreen)) {
             // 1. Render the current screen
             try {
-                currentScreen.render();
+                if(currentScreen.isToRender()){
+                    currentScreen.render();
+                }
             } catch (IOException e) {
                 showFatal("Render error", e);
                 return;
@@ -116,7 +118,7 @@ public class TUI implements GameUI {
                         Screen next = inputEvent.accept(currentScreen);
                         if (next != currentScreen) {
                             currentScreen = next;
-                            if (!transitionTo(currentScreen)) return;
+                            if (!transitionTo(currentScreen)) return; // TODO: endGame does not imply end session
                         }
                     }
                 } else {

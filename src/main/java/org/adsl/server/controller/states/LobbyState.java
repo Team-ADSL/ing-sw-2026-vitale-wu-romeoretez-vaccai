@@ -5,9 +5,7 @@ import org.adsl.server.model.Game;
 import org.adsl.server.model.Player;
 import org.adsl.server.network.VirtualClient;
 import org.adsl.server.exceptions.ServerException;
-import org.adsl.shared.network.requests.ClientDisconnected;
-import org.adsl.shared.network.requests.EnterGameRequest;
-import org.adsl.shared.network.requests.StartGameRequest;
+import org.adsl.shared.network.requests.*;
 
 public class LobbyState extends ControllerState {
     private boolean readyToStart;
@@ -42,7 +40,16 @@ public class LobbyState extends ControllerState {
     }
 
     @Override
+    public void visit(ExitLobbyRequest req, VirtualClient virtualClient) throws ServerException {
+        playerExit(req, virtualClient);
+    }
+
+    @Override
     public void visit(ClientDisconnected req, VirtualClient virtualClient) throws ServerException {
+        playerExit(req, virtualClient);
+    }
+
+    public void playerExit(ClientRequest req, VirtualClient virtualClient){
         if(virtualClient.getClientUsername().isEmpty()){
             throw new ServerException("[LOBBY] Virtual client has no username associated.");
         }

@@ -51,6 +51,11 @@ public class LoginScreen implements Screen {
     }
 
     @Override
+    public boolean isToRender() {
+        return true;
+    }
+
+    @Override
     public void render() throws IOException {
         terminal.clear();
         TextGraphics tg = terminal.newTextGraphics();

@@ -46,6 +46,11 @@ public class ConnectingScreen implements Screen {
     }
 
     @Override
+    public boolean isToRender() {
+        return true;
+    }
+
+    @Override
     public Screen visit(CharInputEvent e) {
         if (Character.toLowerCase(e.getCharacter()) == 'q') {
             return ExitScreen.INSTANCE;

@@ -12,4 +12,9 @@ public final class ExitScreen implements Screen {
 
     @Override
     public void render() {}
+
+    @Override
+    public boolean isToRender() {
+        return true;
+    }
 }
