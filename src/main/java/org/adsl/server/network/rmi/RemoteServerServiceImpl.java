@@ -15,13 +15,13 @@ import java.util.concurrent.Executors;
 public class RemoteServerServiceImpl extends UnicastRemoteObject implements RemoteServerService {
     private ServerController serverController;
     private final Map<RemoteClientStub, RMIClientHandler> clients;
-    private final ExecutorService threadPool;
+    private final Map<RemoteClientStub, ExecutorService> clientExecutors;
 
     public RemoteServerServiceImpl() throws RemoteException {
         super();
         this.serverController = null;
         this.clients = new ConcurrentHashMap<>();
-        this.threadPool = Executors.newCachedThreadPool();
+        this.clientExecutors = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -29,14 +29,17 @@ public class RemoteServerServiceImpl extends UnicastRemoteObject implements Remo
         System.out.println("New client connected with RMI.");
         RMIClientHandler handler = new RMIClientHandler(serverController, clientCallback, this);
         clients.put(clientCallback, handler);
-        threadPool.submit(handler::handleConnection);
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        clientExecutors.put(clientCallback, executor);
+        executor.submit(handler::handleConnection);
     }
 
     @Override
     public void sendRequest(ClientRequest request, RemoteClientStub clientStub) throws RemoteException {
         RMIClientHandler handler = clients.get(clientStub);
-        if (handler != null) {
-            threadPool.submit(() -> handler.processRequest(request));
+        ExecutorService executor = clientExecutors.get(clientStub);
+        if (handler != null && executor != null) {
+            executor.submit(() -> handler.processRequest(request));
         } else {
             System.err.println("Unregistered client.");
         }
@@ -45,8 +48,9 @@ public class RemoteServerServiceImpl extends UnicastRemoteObject implements Remo
     @Override
     public void disconnect(RemoteClientStub clientStub) {
         RMIClientHandler handler = clients.get(clientStub);
-        if (handler != null) {
-            threadPool.submit(handler::handleDisconnection);
+        ExecutorService executor = clientExecutors.get(clientStub);
+        if (handler != null && executor != null) {
+            executor.submit(handler::handleDisconnection);
         } else {
             System.err.println("Unregistered client.");
         }
@@ -56,6 +60,10 @@ public class RemoteServerServiceImpl extends UnicastRemoteObject implements Remo
         RMIClientHandler handler = clients.get(clientStub);
         if (handler != null) {
             clients.remove(clientStub);
+            ExecutorService executor = clientExecutors.remove(clientStub);
+            if (executor != null) {
+                executor.shutdown();
+            }
         } else {
             System.err.println("Unregistered client.");
         }
