@@ -38,7 +38,7 @@ public interface Screen extends EventVisitor {
 
     void render() throws IOException;
 
-    default void setToRender(boolean value) {}
+    void setToRender(boolean value);
 
     /**
      * Called once when the TUI transitions to this screen.

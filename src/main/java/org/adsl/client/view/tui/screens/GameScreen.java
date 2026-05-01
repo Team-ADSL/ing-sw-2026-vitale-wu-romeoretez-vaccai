@@ -50,6 +50,7 @@ public class GameScreen implements Screen {
     private int lowerCount = 0;
 
     private String error = null;
+    private boolean toRender;
 
     public GameScreen(com.googlecode.lanterna.screen.Screen terminal,
                       AppCoordinator coordinator,
@@ -59,6 +60,7 @@ public class GameScreen implements Screen {
         this.coordinator = coordinator;
         this.username = username;
         this.game = initialGame;
+        this.toRender = true;
     }
 
     @Override
@@ -92,6 +94,11 @@ public class GameScreen implements Screen {
         }
 
         terminal.refresh();
+    }
+
+    @Override
+    public void setToRender(boolean value) {
+        toRender = value;
     }
 
     // ── Server event visitors ─────────────────────────────────────────────────
