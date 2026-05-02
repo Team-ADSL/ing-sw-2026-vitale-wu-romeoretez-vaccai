@@ -191,7 +191,6 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
     public void visit(ClientDisconnected req, VirtualClient virtualClient) throws ServerException {
         logout(req, virtualClient);
         virtualClient.setGameId(null);
-        virtualClient.setConnected(false);
         virtualClient.closeConnection();
     }
 
@@ -200,7 +199,7 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
             return;
         }
         userConnected.remove(virtualClient.getClientUsername().get());
-        System.out.println("[DISCONNECTION] Removing " + virtualClient.getClientUsername());
+        System.out.println("[LOGOUT] Removing " + virtualClient.getClientUsername());
         home.removeObserver(virtualClient);
         Optional<Integer> gameID = virtualClient.getGameId();
         if(gameID.isPresent()){
