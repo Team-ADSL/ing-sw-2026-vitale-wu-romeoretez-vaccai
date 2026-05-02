@@ -78,8 +78,6 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
 
     public void handleClientRequest(ClientRequest req, VirtualClient virtualClient){
         try {
-            virtualClient.updateLastPing();
-            virtualClient.sendPing();
             req.accept(this, virtualClient);
         } catch (ServerException e) {
             System.out.println("ERROR: " + e.getMessage());
@@ -87,19 +85,30 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         }
     }
 
+    public void pingRoutine(VirtualClient virtualClient){
+        virtualClient.updateLastPing();
+        virtualClient.sendPing();
+    }
+
     @Override
     public void visit(ClientPing req, VirtualClient virtualClient) throws ServerException {
+        pingRoutine(virtualClient);
+
         System.out.println("[PING] " + virtualClient.getClientUsername());
     }
 
     @Override
     public void visit(ClientConnection req, VirtualClient virtualClient) throws ServerException {
+        pingRoutine(virtualClient);
+
         virtualClient.sendLoginNeededResponse();
         System.out.println("[CONNECTION] " + virtualClient.getClientUsername());
     }
 
     @Override
     public void visit(LoginRequest req, VirtualClient virtualClient) throws ServerException {
+        pingRoutine(virtualClient);
+
         String username = req.getUsername();
 
         if (username == null || username.trim().isEmpty()) {
@@ -119,9 +128,11 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
     }
 
     @Override
-    public void visit(LogoutRequest req, VirtualClient context) throws ServerException {
-        logout(req, context);
-        System.out.println("[LOGOUT] " + context.getClientUsername());
+    public void visit(LogoutRequest req, VirtualClient virtualClient) throws ServerException {
+        pingRoutine(virtualClient);
+
+        logout(req, virtualClient);
+        System.out.println("[LOGOUT] " + virtualClient.getClientUsername());
     }
 
     public void controlIfLogged(VirtualClient virtualClient) throws ServerException {
@@ -132,6 +143,8 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
 
     @Override
     public void visit(CreateGameRequest req, VirtualClient virtualClient) throws ServerException {
+        pingRoutine(virtualClient);
+
         controlIfLogged(virtualClient);
         try{
             if(req.getNumPlayer() < 2 || req.getNumPlayer() > 5 ){
@@ -162,6 +175,8 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
 
     @Override
     public void visit(EnterGameRequest req, VirtualClient virtualClient) throws ServerException {
+        pingRoutine(virtualClient);
+
         controlIfLogged(virtualClient);
         GameController reqGame = games.get(req.getGameId());
         if(reqGame != null){
@@ -199,6 +214,8 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
 
     @Override
     public void visit(StartGameRequest req, VirtualClient virtualClient) throws ServerException {
+        pingRoutine(virtualClient);
+
         controlIfLogged(virtualClient);
         if(virtualClient.getGameId().isEmpty()){
             throw new ServerException("[START GAME REQUEST] Virtual client has no gameId associated.");
@@ -208,6 +225,8 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
 
     @Override
     public void visit(MoveRequest req, VirtualClient virtualClient) throws ServerException {
+        pingRoutine(virtualClient);
+
         controlIfLogged(virtualClient);
         if(virtualClient.getGameId().isEmpty()) {
             throw new ServerException("[MOVE REQUEST] Virtual client has no gameId associated.");
@@ -217,6 +236,8 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
 
     @Override
     public void visit(ExitLobbyRequest req, VirtualClient virtualClient) throws ServerException {
+        pingRoutine(virtualClient);
+
         controlIfLogged(virtualClient);
         if(virtualClient.getGameId().isEmpty()){
             throw new ServerException("[EXIT LOBBY REQUEST] Virtual client has no gameId associated.");
