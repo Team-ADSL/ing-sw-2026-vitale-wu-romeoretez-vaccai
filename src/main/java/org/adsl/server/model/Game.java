@@ -25,8 +25,8 @@ public class Game implements Serializable {
     private Phase phase;
 
     private transient boolean isInitialized;
-    private final transient List<GameObserver> gameObservers = new ArrayList<>();
-    private final transient List<EndGameObserver> endGameObservers = new ArrayList<>();
+    private transient List<GameObserver> gameObservers;
+    private transient List<EndGameObserver> endGameObservers;
 
     // For initial istantiation
     public Game(int gameId, int numPlayer) {
@@ -39,6 +39,8 @@ public class Game implements Serializable {
         this.currentPlayer = null;
         this.phase = null;
         this.isInitialized = false;
+        gameObservers = new ArrayList<>();
+        endGameObservers = new ArrayList<>();
     }
 
     // For recover after crash
@@ -53,6 +55,8 @@ public class Game implements Serializable {
         this.currentPlayer = currentPlayer;
         this.phase = phase;
         this.isInitialized = true;
+        gameObservers = new ArrayList<>();
+        endGameObservers = new ArrayList<>();
     }
 
     public void addVirtualClient(VirtualClient virtualClient){
@@ -85,7 +89,7 @@ public class Game implements Serializable {
     }
 
     public void sendUpdateLobby(){
-        List<String> playerNames = players.stream().map(Player::getName).toList();
+        List<String> playerNames = players.stream().filter(Player::isActive).map(Player::getName).toList();
         for(GameObserver o : gameObservers) o.updateLobby(playerNames);
     }
     public void sendUpdateGame(){
@@ -93,6 +97,12 @@ public class Game implements Serializable {
     }
     public void sendEndGameResults(List<MatchResult> results){
         for(EndGameObserver o : endGameObservers) o.notifyEndGame(gameId, results);
+    }
+
+    public void setupTransientAttributes(){
+        isInitialized = true;
+        gameObservers = new ArrayList<>();
+        endGameObservers = new ArrayList<>();
     }
 
     public void changeEra() {

@@ -3,6 +3,7 @@ package org.adsl.client.view.tui.screens;
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.graphics.TextGraphics;
+import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.view.tui.CardCatalog;
 import org.adsl.client.view.tui.OfferTileCatalog;
@@ -35,6 +36,7 @@ public class GameScreen implements Screen {
     }
 
     private final com.googlecode.lanterna.screen.Screen terminal;
+    private final WindowBasedTextGUI gui;
     private final AppCoordinator coordinator;
     private final String username;
 
@@ -53,10 +55,12 @@ public class GameScreen implements Screen {
     private boolean toRender;
 
     public GameScreen(com.googlecode.lanterna.screen.Screen terminal,
+                      WindowBasedTextGUI gui,
                       AppCoordinator coordinator,
                       String username,
                       GameDTO initialGame) {
         this.terminal = terminal;
+        this.gui = gui;
         this.coordinator = coordinator;
         this.username = username;
         this.game = initialGame;
@@ -72,7 +76,7 @@ public class GameScreen implements Screen {
 
     @Override
     public boolean isToRender() {
-        return true;
+        return toRender;
     }
 
     @Override
@@ -115,6 +119,11 @@ public class GameScreen implements Screen {
 
         setupActiveState();
         return this;
+    }
+
+    @Override
+    public Screen visit(LobbyUpdateEvent e){
+        return new LobbyScreen(terminal, gui, coordinator, username, e.getPlayers(), e.getPlayers().size());
     }
 
     @Override

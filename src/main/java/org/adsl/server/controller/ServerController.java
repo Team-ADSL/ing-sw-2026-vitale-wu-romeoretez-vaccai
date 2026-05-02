@@ -178,14 +178,14 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         virtualClient.setGameId(null);
         virtualClient.setConnected(false);
         virtualClient.closeConnection();
-        System.out.println("[DISCONNECTION] " + virtualClient.getClientUsername());
     }
 
     public void logout(ClientRequest req, VirtualClient virtualClient){
-        if(virtualClient.getClientUsername().isPresent()) {
-            userConnected.remove(virtualClient.getClientUsername().get());
-            virtualClient.setClientUsername(null);
+        if(virtualClient.getClientUsername().isEmpty()) {
+            return;
         }
+        userConnected.remove(virtualClient.getClientUsername().get());
+        System.out.println("[DISCONNECTION] Removing " + virtualClient.getClientUsername());
         home.removeObserver(virtualClient);
         Optional<Integer> gameID = virtualClient.getGameId();
         if(gameID.isPresent()){
@@ -194,6 +194,7 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
                 gc.handleClientRequest(req, virtualClient);
             }
         }
+        virtualClient.setClientUsername(null);
     }
 
     @Override
@@ -272,6 +273,7 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
             List<Game> gamesLoaded = gamePersistenceManager.recoverGames();
             gamesLoaded.forEach(g -> {
                 g.getPlayers().forEach(p -> p.setActive(false));
+                g.setupTransientAttributes();
                 g.addObserver(this);
                 GameController gc = new GameController(boardConfigLoader, gamePersistenceManager, gameDAO);
                 games.put(g.getGameId(), gc);

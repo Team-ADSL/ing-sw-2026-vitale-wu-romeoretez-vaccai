@@ -14,6 +14,13 @@ public class RecoverState extends ControllerState {
     }
 
     @Override
+    public ControllerState onEntry(){
+        getGame().sendUpdateLobby();
+        setToStop(false);
+        return this;
+    }
+
+    @Override
     public void visit(EnterGameRequest req, VirtualClient virtualClient) throws ServerException {
         if(virtualClient.getClientUsername().isEmpty()){
             throw new ServerException("[LOBBY] Virtual client has no username associated.");

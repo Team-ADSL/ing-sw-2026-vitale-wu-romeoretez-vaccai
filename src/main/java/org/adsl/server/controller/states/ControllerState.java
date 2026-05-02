@@ -95,13 +95,17 @@ public abstract class ControllerState implements RequestVisitor<VirtualClient> {
 
     @Override
     public void visit(ClientDisconnected req, VirtualClient virtualClient) throws ServerException {
-        assert virtualClient.getClientUsername().isPresent(); // Already controlled in ServerController
+        if(virtualClient.getClientUsername().isEmpty()){
+            return;
+        }
         getGame().getPlayers().stream()
             .filter(p -> p.getName().equals(virtualClient.getClientUsername().get()))
             .findFirst()
             .orElseThrow(() -> new ServerException("Player not in current game"))
             .setActive(false);
         getGame().removeVirtualClient(virtualClient);
+        System.out.println("[DISCONNECTION] Removing " + virtualClient.getClientUsername()
+        + " from game " + getGame().getGameId());
         toStop = true;
     }
 
@@ -114,6 +118,11 @@ public abstract class ControllerState implements RequestVisitor<VirtualClient> {
     public boolean isToStop() {
         return toStop;
     }
+
+    public void setToStop(boolean toStop) {
+        this.toStop = toStop;
+    }
+
     public ControllerState getNextState() {
         return nextState;
     }

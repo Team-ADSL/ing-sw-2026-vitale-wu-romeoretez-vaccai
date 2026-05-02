@@ -147,7 +147,7 @@ public class LobbyScreen implements Screen {
 
     @Override
     public Screen visit(GameUpdateEvent e) {
-        return new GameScreen(terminal, coordinator, username, e.getGame());
+        return new GameScreen(terminal, gui, coordinator, username, e.getGame());
     }
 
     @Override
