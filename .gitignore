@@ -41,3 +41,5 @@ build/
 .saved/
 .saves/
 .env
+
+o.log
