@@ -1,0 +1,13 @@
+[
+  {
+    "type": "Login", "username": "<string>"
+  },
+  {
+    "type": "Move", "moves": [
+      {
+        "index": "<int>",
+        "row": ["TOP", "LOW", "CENTER"]
+      }
+    ]
+  }
+]

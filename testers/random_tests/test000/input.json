@@ -1,0 +1,17 @@
+{
+  "num_socket": 2,
+  "requests": [
+    {
+      "socket": 1,
+      "request": {
+        "type": "Login"
+      }
+    },
+    {
+      "socket": 2,
+      "request": {
+        "type": "Login"
+      }
+    }
+  ]
+}
