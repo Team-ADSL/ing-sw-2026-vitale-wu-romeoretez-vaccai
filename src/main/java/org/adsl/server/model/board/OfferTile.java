@@ -37,7 +37,7 @@ public class OfferTile implements Serializable {
 
     public OfferTileDTO createDTO(){
         Totem totemColor = (player != null) ? player.getColor() : null;
-        return new OfferTileDTO(id, totemColor);
+        return new OfferTileDTO(id, totemColor, moves);
     }
 
     public void setPlayer(Player player) {

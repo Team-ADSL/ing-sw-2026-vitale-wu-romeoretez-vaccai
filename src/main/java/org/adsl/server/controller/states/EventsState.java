@@ -27,7 +27,7 @@ public class EventsState extends ControllerState {
         events.put(CardType.SUSTENANCE, new HashSet<>());
         events.put(CardType.CAVE_PAINTINGS, new HashSet<>());
         for(Card c : cards){
-            if(c != null){
+            if(c instanceof org.adsl.server.model.cards.events.Event){
                 c.insert(events);
             }
         }

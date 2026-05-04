@@ -34,6 +34,10 @@ public class CardRow implements Serializable {
         return toReturn;
     }
 
+    public Card getCardAt(int index) {
+        return cards.get(index);
+    }
+
     public void add(Card card) {
         for (int i = 0; i < cards.size(); i++) {
             if (cards.get(i) == null) {

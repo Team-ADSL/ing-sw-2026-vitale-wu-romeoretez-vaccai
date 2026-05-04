@@ -39,6 +39,7 @@ public class ExtraMoveState extends ControllerState {
         }
 
         if(moves.isEmpty()){
+            reqPlayer.getBuildingBonus().setExtraMove(false);
             setNextState(calcNextState());
             getGame().sendUpdateGame();
         } else {
@@ -48,8 +49,8 @@ public class ExtraMoveState extends ControllerState {
             }
 
             CardRow selectedRow = getGame().getBoard().topRow();
-            Card selectedCard = selectedRow.pickCardAt(currentMove.rowIndex());
-            if(!selectedCard.canBeDrawn(reqPlayer)){
+            Card selectedCard = selectedRow.getCardAt(currentMove.rowIndex());
+            if(selectedCard == null || !selectedCard.canBeDrawn(reqPlayer)){
                 throw new ServerException("Invalid picking: selected card cannot be picked");
             }
 
@@ -61,6 +62,7 @@ public class ExtraMoveState extends ControllerState {
         CardRow selectedRow = getGame().getBoard().topRow();
         Card selectedCard = selectedRow.pickCardAt(move.rowIndex());
         selectedCard.insert(p.getCards());
+        p.getBuildingBonus().setExtraMove(false);
         setNextState(calcNextState());
         getGame().sendUpdateGame();
     }

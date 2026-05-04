@@ -98,6 +98,15 @@ public class GameScreen extends Screen {
         setupActiveState();
         return this;
     }
+    
+    @Override
+    public Screen visit(ErrorEvent e) {
+        super.visit(e);
+        if (subState == SubState.WAITING_SERVER) {
+            setupActiveState();
+        }
+        return this;
+    }
 
     // ── Input event visitors ──────────────────────────────────────────────────
 
@@ -242,12 +251,18 @@ public class GameScreen extends Screen {
         Totem current = game.currentPlayerTotem();
         for (OfferTileDTO tile : game.board().offerTrack()) {
             if (tile.totem() == current) {
-                upperCount = OfferTileCatalog.upperMoves(tile.id());
-                lowerCount = OfferTileCatalog.lowerMoves(tile.id());
+                Map<Row, Integer> moves = tile.moves();
+                if (moves != null) {
+                    upperCount = moves.getOrDefault(Row.UPPER, 0);
+                    lowerCount = moves.getOrDefault(Row.LOWER, 0);
+                } else {
+                    upperCount = 0;
+                    lowerCount = 0;
+                }
                 return;
             }
         }
-        upperCount = 1;
+        upperCount = 0;
         lowerCount = 0;
     }
 
@@ -269,12 +284,13 @@ public class GameScreen extends Screen {
 
         drawHeader(tg, cols);
 
-        drawSectionLabel(tg, 2, cols, "OFFER TRACK");
-        drawOfferTrack(tg, game.board().offerTrack(), 3, cursorOfferIndex, cols);
-
-        int topRowY = 8;
+        int topRowY = 2;
         drawSectionLabel(tg, topRowY, cols, "TOP ROW");
         drawCardRow(tg, game.board().topRow(), topRowY + 1, highlights, Row.UPPER, cols);
+
+        int offerTrackY = 8;
+        drawSectionLabel(tg, offerTrackY, cols, "OFFER TRACK");
+        drawOfferTrack(tg, game.board().offerTrack(), offerTrackY + 1, cursorOfferIndex, cols);
 
         int botRowY = 14;
         drawSectionLabel(tg, botRowY, cols, "BOTTOM ROW");
@@ -283,6 +299,10 @@ public class GameScreen extends Screen {
         if (subState == SubState.MY_TURN_CARDS) {
             int cursorRow = onTopRow ? topRowY + 1 : botRowY + 1;
             highlightCursor(tg, selectionIndex, cursorRow);
+        }
+
+        if (subState == SubState.MY_TURN_TOTEM) {
+            highlightCursor(tg, selectionIndex, offerTrackY + 1);
         }
 
         drawBuildingDecks(tg, game.board().remainingBuildings(), topRowY + 1, cols);
@@ -394,17 +414,28 @@ public class GameScreen extends Screen {
     private void drawCurrentPlayerTribe(TextGraphics tg, int startRow, int cols) {
         Totem currentTotem = game.currentPlayerTotem();
         PlayerDTO me = game.players().stream()
-                .filter(p -> p.totem() == currentTotem)
+                .filter(p -> p.totem() == myTotem)
                 .findFirst()
                 .orElse(game.players().isEmpty() ? null : game.players().iterator().next());
         if (me == null) return;
 
-        tg.setForegroundColor(totemColor(me.totem()));
+        boolean isMyTurn = (myTotem == currentTotem);
+        if (isMyTurn) {
+            tg.setBackgroundColor(totemColor(me.totem()));
+            tg.setForegroundColor(TextColor.ANSI.BLACK);
+        } else {
+            tg.setForegroundColor(totemColor(me.totem()));
+        }
+        
+        String turnText = isMyTurn ? " (Your Turn)" : "";
+        String label = String.format("%s Tribe%s", CardCatalog.totemLabel(me.totem()), turnText);
         String header = String.format(" ── YOUR TRIBE: %s [%s]  Food: %d  PP: %d %s",
-                me.name(), CardCatalog.totemLabel(me.totem()), me.food(), me.pp(),
-                "─".repeat(Math.max(0, cols - 60)));
+                me.name(), label, me.food(), me.pp(),
+                "─".repeat(Math.max(0, cols - 65)));
+        
         tg.putString(0, startRow, header.substring(0, Math.min(header.length(), cols)));
         tg.setForegroundColor(TextColor.ANSI.WHITE);
+        tg.setBackgroundColor(TextColor.ANSI.BLACK);
 
         StringBuilder sb = new StringBuilder("  ");
         for (CardType type : CardType.values()) {
@@ -424,19 +455,34 @@ public class GameScreen extends Screen {
         Totem currentTotem = game.currentPlayerTotem();
         int row = startRow;
         for (PlayerDTO p : game.players()) {
-            if (p.totem() == currentTotem) continue;
+            if (p.totem() == myTotem) continue;
+            
+            boolean isTheirTurn = (p.totem() == currentTotem);
+            if (isTheirTurn) {
+                tg.setBackgroundColor(totemColor(p.totem()));
+                tg.setForegroundColor(TextColor.ANSI.BLACK);
+            } else {
+                tg.setForegroundColor(totemColor(p.totem()));
+            }
+
+            String turnText = isTheirTurn ? " (Your Turn)" : "";
+            String label = String.format("%s Tribe%s", CardCatalog.totemLabel(p.totem()), turnText);
+            
             StringBuilder sb = new StringBuilder();
-            sb.append(String.format("  %-12s [%-6s] F:%-3d PP:%-4d | ",
-                    p.name(), CardCatalog.totemLabel(p.totem()), p.food(), p.pp()));
+            sb.append(String.format("  %-12s [%s] F:%-3d PP:%-4d | ",
+                    p.name(), label, p.food(), p.pp()));
             for (CardType type : CardType.values()) {
                 Set<CardDTO> cards = p.cards().get(type);
                 if (cards != null && !cards.isEmpty()) {
                     sb.append(CardCatalog.typeSymbol(type)).append(":").append(cards.size()).append(" ");
                 }
             }
-            tg.setForegroundColor(totemColor(p.totem()));
+            if (!isTheirTurn) {
+                tg.setForegroundColor(totemColor(p.totem()));
+            }
             tg.putString(0, row, sb.toString().substring(0, Math.min(sb.length(), cols)));
             tg.setForegroundColor(TextColor.ANSI.WHITE);
+            tg.setBackgroundColor(TextColor.ANSI.BLACK);
             row++;
         }
     }

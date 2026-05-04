@@ -77,8 +77,8 @@ public class ActionExecutionState extends ControllerState {
             } else {
                 selectedRow = getGame().getBoard().lowRow();
             }
-            Card selectedCard = selectedRow.pickCardAt(move.rowIndex());
-            if(!selectedCard.canBeDrawn(reqPlayer)){
+            Card selectedCard = selectedRow.getCardAt(move.rowIndex());
+            if(selectedCard == null || !selectedCard.canBeDrawn(reqPlayer)){
                 throw new ServerException("Invalid picking: " +
                         "card at " + move.row().toString() + " row and index " +
                         move.rowIndex() + " cannot be picked");
