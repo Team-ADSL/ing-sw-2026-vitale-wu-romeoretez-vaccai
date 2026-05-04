@@ -14,17 +14,14 @@ import java.util.List;
  * Displays the final leaderboard. On {@link ConfirmEvent} (Enter) transitions
  * to {@link ExitScreen} to terminate the TUI.
  */
-public class EndGameScreen implements Screen {
+public class EndGameScreen extends Screen {
 
-    private final com.googlecode.lanterna.screen.Screen terminal;
     private final List<MatchResult> results;
-    private boolean toRender;
 
     public EndGameScreen(com.googlecode.lanterna.screen.Screen terminal,
                          List<MatchResult> results) {
-        this.terminal = terminal;
+        super(terminal);
         this.results = results;
-        this.toRender = true;
     }
 
     @Override
@@ -70,16 +67,6 @@ public class EndGameScreen implements Screen {
         tg.setForegroundColor(TextColor.ANSI.WHITE);
         putCentered(tg, sz.getRows() - 2, cols, "Press ENTER or [B] to exit.");
         terminal.refresh();
-    }
-
-    @Override
-    public boolean isToRender() {
-        return toRender;
-    }
-
-    @Override
-    public void setToRender(boolean value) {
-        toRender = value;
     }
 
     @Override

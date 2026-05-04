@@ -6,7 +6,6 @@ import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.view.tui.events.CharInputEvent;
-import org.adsl.client.view.tui.events.ErrorEvent;
 import org.adsl.client.view.tui.events.GameUpdateEvent;
 import org.adsl.client.view.tui.events.LobbyUpdateEvent;
 
@@ -20,16 +19,10 @@ import java.util.List;
  *
  * Input: {@link CharInputEvent} with 's' triggers startGameRequest (host only).
  */
-public class LobbyScreen implements Screen {
+public class LobbyScreen extends Screen {
 
-    private final com.googlecode.lanterna.screen.Screen terminal;
-    private final WindowBasedTextGUI gui;
-    private final AppCoordinator coordinator;
-    private final String username;
     private List<String> players;
     private final int totalPlayers;
-    private boolean toRender;
-    private String error;
 
     public LobbyScreen(com.googlecode.lanterna.screen.Screen terminal,
                        WindowBasedTextGUI gui,
@@ -37,14 +30,9 @@ public class LobbyScreen implements Screen {
                        String username,
                        List<String> players,
                        int totalPlayers) {
-        this.terminal = terminal;
-        this.gui = gui;
-        this.coordinator = coordinator;
-        this.username = username;
+        super(terminal, gui, coordinator, username);
         this.players = players != null ? players : List.of();
         this.totalPlayers = totalPlayers;
-        this.toRender = true;
-        this.error = null;
     }
 
     @Override
@@ -105,16 +93,6 @@ public class LobbyScreen implements Screen {
         terminal.refresh();
     }
 
-    @Override
-    public boolean isToRender() {
-        return toRender;
-    }
-
-    @Override
-    public void setToRender(boolean value) {
-        toRender = value;
-    }
-
     // ── Input events ──────────────────────────────────────────────────────────
 
     @Override
@@ -129,7 +107,7 @@ public class LobbyScreen implements Screen {
         } else if (ch == 'b') {
             try {
                 coordinator.createExitLobbyRequest();
-                return new HomeScreen(terminal, gui, coordinator, username, List.of());
+                // Server will reply with HomeUpdateEvent which routes to HomeScreen.
             } catch(Exception ex){
                 error = ex.getMessage();
             }
@@ -145,16 +123,7 @@ public class LobbyScreen implements Screen {
         return this;
     }
 
-    @Override
-    public Screen visit(GameUpdateEvent e) {
-        return new GameScreen(terminal, gui, coordinator, username, e.getGame());
-    }
 
-    @Override
-    public Screen visit(ErrorEvent e) {
-        error = e.getMessage();
-        return this;
-    }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 

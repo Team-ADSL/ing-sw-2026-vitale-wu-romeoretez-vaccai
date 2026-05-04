@@ -23,23 +23,16 @@ import java.util.List;
  * appropriate next {@link Screen} immediately, so the TUI loop never renders
  * this screen in a waiting state.
  */
-public class DisconnectedScreen implements Screen {
+public class DisconnectedScreen extends Screen {
 
-    private final com.googlecode.lanterna.screen.Screen terminal;
-    private final WindowBasedTextGUI gui;
-    private final AppCoordinator coordinator;
     private final String message;
-    private boolean toRender;
 
     public DisconnectedScreen(com.googlecode.lanterna.screen.Screen terminal,
                               WindowBasedTextGUI gui,
                               AppCoordinator coordinator,
                               String message) {
-        this.terminal    = terminal;
-        this.gui         = gui;
-        this.coordinator = coordinator;
-        this.message     = message;
-        this.toRender  = true;
+        super(terminal, gui, coordinator);
+        this.message = message;
     }
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
@@ -47,11 +40,6 @@ public class DisconnectedScreen implements Screen {
     @Override
     public Screen onEnter() {
         return showDialog();
-    }
-
-    @Override
-    public boolean isToRender() {
-        return toRender;
     }
 
     @Override
@@ -65,11 +53,6 @@ public class DisconnectedScreen implements Screen {
         tg.putString(Math.max(0, (cols - msg.length()) / 2), rows / 2, msg);
         tg.setForegroundColor(TextColor.ANSI.WHITE);
         terminal.refresh();
-    }
-
-    @Override
-    public void setToRender(boolean value) {
-        toRender = value;
     }
 
     // ── Dialog ────────────────────────────────────────────────────────────────

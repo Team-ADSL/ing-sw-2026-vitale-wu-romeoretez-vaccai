@@ -26,7 +26,7 @@ import java.util.*;
  * dispatched through the visitor pattern. No blocking calls are made — the
  * TUI loop handles rendering and event dispatch.
  */
-public class GameScreen implements Screen {
+public class GameScreen extends Screen {
 
     private enum SubState {
         MY_TURN_TOTEM,
@@ -34,11 +34,6 @@ public class GameScreen implements Screen {
         NOT_MY_TURN,
         WAITING_SERVER
     }
-
-    private final com.googlecode.lanterna.screen.Screen terminal;
-    private final WindowBasedTextGUI gui;
-    private final AppCoordinator coordinator;
-    private final String username;
 
     private GameDTO game;
     private Totem myTotem;
@@ -51,20 +46,13 @@ public class GameScreen implements Screen {
     private int upperCount = 0;
     private int lowerCount = 0;
 
-    private String error = null;
-    private boolean toRender;
-
     public GameScreen(com.googlecode.lanterna.screen.Screen terminal,
                       WindowBasedTextGUI gui,
                       AppCoordinator coordinator,
                       String username,
                       GameDTO initialGame) {
-        this.terminal = terminal;
-        this.gui = gui;
-        this.coordinator = coordinator;
-        this.username = username;
+        super(terminal, gui, coordinator, username);
         this.game = initialGame;
-        this.toRender = true;
     }
 
     @Override
@@ -72,11 +60,6 @@ public class GameScreen implements Screen {
         myTotem = findMyTotem();
         setupActiveState();
         return null;
-    }
-
-    @Override
-    public boolean isToRender() {
-        return toRender;
     }
 
     @Override
@@ -100,11 +83,6 @@ public class GameScreen implements Screen {
         terminal.refresh();
     }
 
-    @Override
-    public void setToRender(boolean value) {
-        toRender = value;
-    }
-
     // ── Server event visitors ─────────────────────────────────────────────────
 
     @Override
@@ -119,16 +97,6 @@ public class GameScreen implements Screen {
 
         setupActiveState();
         return this;
-    }
-
-    @Override
-    public Screen visit(LobbyUpdateEvent e){
-        return new LobbyScreen(terminal, gui, coordinator, username, e.getPlayers(), e.getPlayers().size());
-    }
-
-    @Override
-    public Screen visit(EndGameEvent e) {
-        return new EndGameScreen(terminal, e.getResults());
     }
 
     // ── Input event visitors ──────────────────────────────────────────────────

@@ -6,8 +6,8 @@ import com.googlecode.lanterna.gui2.*;
 import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
 import com.googlecode.lanterna.gui2.dialogs.MessageDialogButton;
 import org.adsl.client.AppCoordinator;
-import org.adsl.client.view.tui.events.ErrorEvent;
 import org.adsl.client.view.tui.events.HomeUpdateEvent;
+import org.adsl.client.view.tui.events.LoginNeededEvent;
 
 import java.io.IOException;
 import java.util.List;
@@ -15,17 +15,13 @@ import java.util.List;
 /**
  * Collects the player's username via a Lanterna GUI dialog (blocking in
  * {@link #onEnter()}), then sends the login request and waits for
- * {@link HomeUpdateEvent}, transitioning to {@link HomeScreen}.
+ * {@link HomeUpdateEvent}, transitioning to {@link HomeScreen} via
+ * {@link Screen}'s default handler.
  */
-public class LoginScreen implements Screen {
+public class LoginScreen extends Screen {
 
-    private final com.googlecode.lanterna.screen.Screen terminal;
-    private final WindowBasedTextGUI gui;
-    private final AppCoordinator coordinator;
-    private String username;
     private boolean exitRequested = false;
     private final String initialError;
-    private boolean toRender;
 
     public LoginScreen(com.googlecode.lanterna.screen.Screen terminal,
                        WindowBasedTextGUI gui,
@@ -37,11 +33,8 @@ public class LoginScreen implements Screen {
                        WindowBasedTextGUI gui,
                        AppCoordinator coordinator,
                        String initialError) {
-        this.terminal = terminal;
-        this.gui = gui;
-        this.coordinator = coordinator;
+        super(terminal, gui, coordinator);
         this.initialError = initialError;
-        this.toRender = true;
     }
 
     @Override
@@ -50,11 +43,6 @@ public class LoginScreen implements Screen {
         if (exitRequested) return ExitScreen.INSTANCE;
         coordinator.createLoginRequest(username);
         return null;
-    }
-
-    @Override
-    public boolean isToRender() {
-        return toRender;
     }
 
     @Override
@@ -70,19 +58,15 @@ public class LoginScreen implements Screen {
         terminal.refresh();
     }
 
+    /**
+     * We are already in the login flow: a redundant {@link LoginNeededEvent}
+     * (e.g. server resending it, or a stray one queued before this screen took
+     * over) must NOT recreate this screen, otherwise the username dialog would
+     * pop up a second time.
+     */
     @Override
-    public void setToRender(boolean value) {
-        toRender = value;
-    }
-
-    @Override
-    public Screen visit(HomeUpdateEvent e) {
-        return new HomeScreen(terminal, gui, coordinator, username, e.getActiveGames());
-    }
-
-    @Override
-    public Screen visit(ErrorEvent e) {
-        return new LoginScreen(terminal, gui, coordinator, e.getMessage());
+    public Screen visit(LoginNeededEvent e) {
+        return this;
     }
 
     private String collectUsername() {

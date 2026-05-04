@@ -5,7 +5,6 @@ import com.googlecode.lanterna.graphics.TextGraphics;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.view.tui.events.CharInputEvent;
 import org.adsl.client.view.tui.events.LoginNeededEvent;
-import org.adsl.client.view.tui.events.HomeUpdateEvent;
 
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 
@@ -14,22 +13,14 @@ import java.io.IOException;
 /**
  * Initial screen shown while the TUI waits for the server to confirm the
  * connection and request login. Transitions to {@link LoginScreen} when
- * a {@link LoginNeededEvent} arrives.
+ * a {@link LoginNeededEvent} arrives (handled by {@link Screen}'s default).
  */
-public class ConnectingScreen implements Screen {
-
-    private final com.googlecode.lanterna.screen.Screen terminal;
-    private final WindowBasedTextGUI gui;
-    private final AppCoordinator coordinator;
-    private boolean toRender;
+public class ConnectingScreen extends Screen {
 
     public ConnectingScreen(com.googlecode.lanterna.screen.Screen terminal,
                             WindowBasedTextGUI gui,
                             AppCoordinator coordinator) {
-        this.terminal = terminal;
-        this.gui = gui;
-        this.coordinator = coordinator;
-        this.toRender = true;
+        super(terminal, gui, coordinator);
     }
 
     @Override
@@ -48,31 +39,10 @@ public class ConnectingScreen implements Screen {
     }
 
     @Override
-    public boolean isToRender() {
-        return toRender;
-    }
-
-    @Override
-    public void setToRender(boolean value) {
-        toRender = value;
-    }
-
-    @Override
     public Screen visit(CharInputEvent e) {
         if (Character.toLowerCase(e.getCharacter()) == 'q') {
             return ExitScreen.INSTANCE;
         }
         return this;
-    }
-
-    @Override
-    public Screen visit(LoginNeededEvent e) {
-        return new LoginScreen(terminal, gui, coordinator);
-    }
-
-    @Override
-    public Screen visit(HomeUpdateEvent e) {
-        // Server sent HomeUpdate before LoginNeeded (shouldn't happen, but handle it)
-        return new LoginScreen(terminal, gui, coordinator).visit(e);
     }
 }

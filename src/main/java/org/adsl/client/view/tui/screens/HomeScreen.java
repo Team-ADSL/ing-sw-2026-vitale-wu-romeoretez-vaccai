@@ -6,7 +6,6 @@ import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.view.tui.events.ConfirmEvent;
-import org.adsl.client.view.tui.events.ErrorEvent;
 import org.adsl.client.view.tui.events.HomeUpdateEvent;
 import org.adsl.client.view.tui.events.LobbyUpdateEvent;
 import org.adsl.client.view.tui.events.NavigateDownEvent;
@@ -23,33 +22,20 @@ import java.util.List;
  * active games are announced by the server. Transitions to {@link LobbyScreen}
  * on {@link LobbyUpdateEvent}.
  */
-public class HomeScreen implements Screen {
+public class HomeScreen extends Screen {
 
     private static final int CREATE_OPTIONS = 4; // 2..5 players
 
-    private final com.googlecode.lanterna.screen.Screen terminal;
-    private final WindowBasedTextGUI gui;
-    private final AppCoordinator coordinator;
-    private final String username;
-
     private List<Integer> activeGames;
-    private int totalPlayers = -1;
-    private boolean toRender;
     private int cursor = 0;
-    private String error = null;
 
     public HomeScreen(com.googlecode.lanterna.screen.Screen terminal,
                       WindowBasedTextGUI gui,
                       AppCoordinator coordinator,
                       String username,
                       List<Integer> activeGames) {
-        this.terminal = terminal;
-        this.gui = gui;
-        this.coordinator = coordinator;
-        this.username = username;
+        super(terminal, gui, coordinator, username);
         this.activeGames = (activeGames != null) ? new ArrayList<>(activeGames) : new ArrayList<>();
-        this.toRender = true;
-        this.error = null;
     }
 
     @Override
@@ -98,16 +84,6 @@ public class HomeScreen implements Screen {
         terminal.refresh();
     }
 
-    @Override
-    public boolean isToRender() {
-        return toRender;
-    }
-
-    @Override
-    public void setToRender(boolean value) {
-        toRender = value;
-    }
-
     // ── Server events ─────────────────────────────────────────────────────────
 
     @Override
@@ -117,17 +93,6 @@ public class HomeScreen implements Screen {
         if (cursor >= totalOptions()) {
             cursor = Math.max(0, totalOptions() - 1);
         }
-        return this;
-    }
-
-    @Override
-    public Screen visit(LobbyUpdateEvent e) {
-        return new LobbyScreen(terminal, gui, coordinator, username, e.getPlayers(), totalPlayers);
-    }
-
-    @Override
-    public Screen visit(ErrorEvent e) {
-        error = e.getMessage();
         return this;
     }
 
@@ -152,14 +117,13 @@ public class HomeScreen implements Screen {
         try {
             if (cursor < CREATE_OPTIONS) {
                 int n = cursor + 2;
-                totalPlayers = n;
                 coordinator.createGameRequest(n);
             } else if (cursor < CREATE_OPTIONS + activeGames.size()) {
                 int gameId = activeGames.get(cursor - CREATE_OPTIONS);
                 coordinator.enterGameRequest(gameId);
             } else {
                 coordinator.createLogoutRequest();
-                return new LoginScreen(terminal, gui, coordinator);
+                // Server will reply with LoginNeededEvent which routes to LoginScreen.
             }
         } catch (Exception ex) {
             error = "Request failed: " + ex.getMessage(); // TODO: see error handling
@@ -173,7 +137,7 @@ public class HomeScreen implements Screen {
         if (ch == 'b') {
             try {
                 coordinator.createLogoutRequest();
-                return new LoginScreen(terminal, gui, coordinator);
+                // Server will reply with LoginNeededEvent which routes to LoginScreen.
             } catch (Exception ex) {
                 error = ex.getMessage();
             }
