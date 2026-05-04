@@ -132,6 +132,7 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         pingRoutine(virtualClient);
 
         logout(req, virtualClient);
+        virtualClient.sendLoginNeededResponse();
         System.out.println("[LOGOUT] " + virtualClient.getClientUsername());
     }
 

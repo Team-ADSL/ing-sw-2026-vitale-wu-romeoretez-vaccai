@@ -85,7 +85,8 @@ public abstract class Screen implements EventVisitor {
     /** Server reported an error: jump back to the {@link LoginScreen} carrying the error message. */
     @Override
     public Screen visit(ErrorEvent e) {
-        return new LoginScreen(terminal, gui, coordinator, e.getMessage());
+        error = e.getMessage();
+        return this;
     }
 
     @Override
