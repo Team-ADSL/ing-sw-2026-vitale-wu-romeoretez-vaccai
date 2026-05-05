@@ -84,7 +84,7 @@ public abstract class Screen implements EventVisitor {
     /** Game ended: jump to {@link EndGameScreen} with the final results. */
     @Override
     public Screen visit(EndGameEvent e) {
-        return new EndGameScreen(terminal, coordinator, e.getResults());
+        return new EndGameScreen(terminal, coordinator, username, e.getResults());
     }
 
     /**
