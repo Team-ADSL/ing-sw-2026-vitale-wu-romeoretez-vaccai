@@ -1,5 +1,6 @@
 package org.adsl.client.view.tui.screens;
 
+import org.adsl.client.AppCoordinator;
 import org.adsl.client.view.tui.events.CharInputEvent;
 import org.adsl.client.view.tui.events.ConfirmEvent;
 import org.adsl.client.view.tui.render.TuiColor;
@@ -19,8 +20,8 @@ public class EndGameScreen extends Screen {
 
     private final List<MatchResult> results;
 
-    public EndGameScreen(TuiTerminal terminal, List<MatchResult> results) {
-        super(terminal);
+    public EndGameScreen(TuiTerminal terminal, AppCoordinator coordinator, List<MatchResult> results) {
+        super(terminal, coordinator);
         this.results = results;
     }
 
@@ -64,8 +65,14 @@ public class EndGameScreen extends Screen {
             putCentered(tg, row, cols, "Tie broken by most Food tokens.");
         }
 
+        if (error != null) {
+            tg.setForegroundColor(TuiColor.RED);
+            putCentered(tg, sz.getRows() - 3, cols, error);
+            error = null;
+        }
+
         tg.setForegroundColor(TuiColor.WHITE);
-        putCentered(tg, sz.getRows() - 2, cols, "Press ENTER or [B] to exit.");
+        putCentered(tg, sz.getRows() - 2, cols, "Press [B] to return to Home or ENTER to exit application.");
         terminal.refresh();
     }
 
@@ -77,7 +84,14 @@ public class EndGameScreen extends Screen {
     @Override
     public Screen visit(CharInputEvent e) {
         if (Character.toLowerCase(e.getCharacter()) == 'b') {
-            return ExitScreen.INSTANCE;
+            if (coordinator != null) {
+                try {
+                    coordinator.createExitGameRequest();
+                } catch (Exception ex) {
+                    error = "Failed to return to home: " + ex.getMessage();
+                }
+            }
+            return this;
         }
         return this;
     }
