@@ -20,8 +20,8 @@ public class EndGameScreen extends Screen {
 
     private final List<MatchResult> results;
 
-    public EndGameScreen(TuiTerminal terminal, AppCoordinator coordinator, List<MatchResult> results) {
-        super(terminal, coordinator);
+    public EndGameScreen(TuiTerminal terminal, AppCoordinator coordinator, String username, List<MatchResult> results) {
+        super(terminal, coordinator, username);
         this.results = results;
     }
 
