@@ -254,22 +254,15 @@ public class ServerControllerTest {
     }
 
     @Test
-    void testNotifyEndGame_removeGameIdFromClientOnlyIfInGame() {
+    void testVisitExitGameRequest_removeGameIdFromClient() throws ServerException {
         int targetGameId = 101;
 
         client.setGameId(targetGameId);
         LoginRequest req = new LoginRequest("Player1");
-        serverController.visit(req,client);
+        serverController.visit(req, client);
 
-        FakeVirtualClient client2 = new FakeVirtualClient();
-        client2.setGameId(10);
-        LoginRequest req2 = new LoginRequest("Player2");
-        serverController.visit(req2,client2);
-
-        serverController.notifyEndGame(targetGameId, null);
+        serverController.visit(new ExitGameRequest(), client);
 
         assertTrue(client.getGameId().isEmpty());
-        assertTrue(client2.getGameId().isPresent());
-        assertEquals(10, client2.getGameId().get());
     }
 }

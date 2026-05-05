@@ -109,7 +109,6 @@ public class SqlGameDAO implements GameDAO{
     public List<MatchResult> getLeaderboard(int playerCount) throws SQLException {
         String sql = """
             SELECT
-                RANK() OVER (ORDER BY r.score DESC) AS rank,
                 p.nickname,
                 r.score,
                 m.played_at
@@ -125,13 +124,30 @@ public class SqlGameDAO implements GameDAO{
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, playerCount);
             ResultSet rs = ps.executeQuery();
+            
+            int currentRow = 1;
+            int currentRank = 1;
+            int previousScore = -1;
+            boolean isFirstRow = true;
+            
             while (rs.next()) {
+                int score = rs.getInt("score");
+                
+                if (isFirstRow) {
+                    isFirstRow = false;
+                } else if (score < previousScore) {
+                    currentRank = currentRow;
+                }
+                
                 leaderboard.add(new MatchResult(
-                    rs.getInt("rank"),
+                    currentRank,
                     rs.getString("nickname"),
-                    rs.getInt("score"),
+                    score,
                     rs.getTimestamp("played_at").toLocalDateTime()
                 ));
+                
+                previousScore = score;
+                currentRow++;
             }
         }
         return leaderboard;
