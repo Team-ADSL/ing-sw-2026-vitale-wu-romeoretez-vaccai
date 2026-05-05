@@ -37,10 +37,10 @@ public class RecoverState extends ControllerState {
         reqPlayer.setActive(true);
         getGame().addVirtualClient(virtualClient);
         virtualClient.setGameId(getGame().getGameId());
-        setNextState(calcNextState());
         System.out.println("[LOBBY] Player " + virtualClient.getClientUsername().get()
                 + " connected.");
         getGame().sendUpdateLobby();
+        setNextState(calcNextState());
     }
 
     @Override

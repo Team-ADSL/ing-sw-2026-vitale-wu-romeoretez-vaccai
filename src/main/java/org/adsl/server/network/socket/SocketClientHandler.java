@@ -30,7 +30,12 @@ public class SocketClientHandler extends VirtualClient implements Runnable {
 
             while (!socket.isClosed()) {
                 ClientRequest request = (ClientRequest) in.readObject();
-                processRequest(request);
+                try {
+                    processRequest(request);
+                } catch (RuntimeException e) {
+                    System.err.println("[SOCKET] Error processing request from "
+                            + getClientUsername() + ": " + e);
+                }
             }
         } catch (IOException | ClassNotFoundException e) {
             System.out.println("[SOCKET] Client disconnected or network error: " + e.getMessage());
