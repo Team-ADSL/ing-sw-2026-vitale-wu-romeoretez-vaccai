@@ -12,5 +12,5 @@ public class FakeGamePersistenceManager implements GamePersistenceManager {
     @Override public void removeGame(int id) { removedGames.add(id); }
     @Override public List<Game> recoverGames() { return new ArrayList<>(); }
     @Override public void updateGame(Game game) {}
-    @Override public void updateLobby(List<String> players, int numPlayers) {}
+    @Override public void updateLobby(int gameId, List<String> players, int numPlayers) {}
 }
