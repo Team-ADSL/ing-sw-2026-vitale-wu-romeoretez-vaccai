@@ -1,12 +1,11 @@
 package org.adsl.client.view.tui.screens;
 
-import com.googlecode.lanterna.TextColor;
-import com.googlecode.lanterna.graphics.TextGraphics;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.view.tui.events.CharInputEvent;
 import org.adsl.client.view.tui.events.LoginNeededEvent;
-
-import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
+import org.adsl.client.view.tui.render.TuiColor;
+import org.adsl.client.view.tui.render.TuiTerminal;
+import org.adsl.client.view.tui.render.TuiTextGraphics;
 
 import java.io.IOException;
 
@@ -17,22 +16,20 @@ import java.io.IOException;
  */
 public class ConnectingScreen extends Screen {
 
-    public ConnectingScreen(com.googlecode.lanterna.screen.Screen terminal,
-                            WindowBasedTextGUI gui,
-                            AppCoordinator coordinator) {
-        super(terminal, gui, coordinator);
+    public ConnectingScreen(TuiTerminal terminal, AppCoordinator coordinator) {
+        super(terminal, coordinator);
     }
 
     @Override
     public void render() throws IOException {
         terminal.clear();
-        TextGraphics tg = terminal.newTextGraphics();
+        TuiTextGraphics tg = terminal.newTextGraphics();
         int rows = terminal.getTerminalSize().getRows();
         int cols = terminal.getTerminalSize().getColumns();
-        tg.setForegroundColor(TextColor.ANSI.CYAN);
+        tg.setForegroundColor(TuiColor.CYAN);
         String msg = "Connecting to server...";
         tg.putString((cols - msg.length()) / 2, rows / 2, msg);
-        tg.setForegroundColor(TextColor.ANSI.WHITE);
+        tg.setForegroundColor(TuiColor.WHITE);
         String hint = "Press [Q] to quit";
         tg.putString((cols - hint.length()) / 2, rows / 2 + 2, hint);
         terminal.refresh();

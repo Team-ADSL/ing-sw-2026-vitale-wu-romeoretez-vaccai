@@ -1,70 +1,135 @@
 package org.adsl.client.view.tui.screens;
 
-import com.googlecode.lanterna.TextColor;
-import com.googlecode.lanterna.graphics.TextGraphics;
-import com.googlecode.lanterna.gui2.*;
-import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
-import com.googlecode.lanterna.gui2.dialogs.MessageDialogButton;
 import org.adsl.client.AppCoordinator;
+import org.adsl.client.view.tui.events.BackspaceEvent;
+import org.adsl.client.view.tui.events.CharInputEvent;
+import org.adsl.client.view.tui.events.ConfirmEvent;
+import org.adsl.client.view.tui.events.ErrorEvent;
 import org.adsl.client.view.tui.events.HomeUpdateEvent;
 import org.adsl.client.view.tui.events.LoginNeededEvent;
-import org.adsl.client.view.tui.events.ErrorEvent;
+import org.adsl.client.view.tui.events.NavigateDownEvent;
+import org.adsl.client.view.tui.events.NavigateUpEvent;
+import org.adsl.client.view.tui.render.TuiColor;
+import org.adsl.client.view.tui.render.TuiSize;
+import org.adsl.client.view.tui.render.TuiTerminal;
+import org.adsl.client.view.tui.render.TuiTextGraphics;
 
 import java.io.IOException;
-import java.util.List;
 
 /**
- * Collects the player's username via a Lanterna GUI dialog (blocking in
- * {@link #onEnter()}), then sends the login request and waits for
- * {@link HomeUpdateEvent}, transitioning to {@link HomeScreen} via
- * {@link Screen}'s default handler.
+ * Collects the player's username inline in the TUI loop. The original
+ * Lanterna implementation used a blocking widget dialog; that is replaced
+ * here by manual ANSI rendering plus arrow-key focus management:
+ * <ul>
+ *   <li>Field 0 — text input that captures characters and backspace.</li>
+ *   <li>Field 1 — Login button. Activated with ENTER while focused; also
+ *       activated by ENTER on the text field as a convenience shortcut.</li>
+ *   <li>Field 2 — Close Application button. Returns {@link ExitScreen}.</li>
+ * </ul>
+ *
+ * Up/Down arrows cycle focus between fields. Once the username is submitted
+ * the screen flips to a "waiting for server" state and the default visitors
+ * route the eventual {@link HomeUpdateEvent} to the home screen.
  */
 public class LoginScreen extends Screen {
 
-    private boolean exitRequested = false;
+    private static final int MAX_USERNAME_LENGTH = 20;
+
+    private static final int FIELD_TEXT  = 0;
+    private static final int FIELD_LOGIN = 1;
+    private static final int FIELD_EXIT  = 2;
+    private static final int FIELD_COUNT = 3;
+
     private final String initialError;
 
-    public LoginScreen(com.googlecode.lanterna.screen.Screen terminal,
-                       WindowBasedTextGUI gui,
-                       AppCoordinator coordinator) {
-        this(terminal, gui, coordinator, null);
+    private final StringBuilder typed = new StringBuilder();
+    private int focus = FIELD_TEXT;
+    private boolean submitted = false;
+    private String localValidation;
+
+    public LoginScreen(TuiTerminal terminal, AppCoordinator coordinator) {
+        this(terminal, coordinator, null);
     }
 
-    public LoginScreen(com.googlecode.lanterna.screen.Screen terminal,
-                       WindowBasedTextGUI gui,
+    public LoginScreen(TuiTerminal terminal,
                        AppCoordinator coordinator,
                        String initialError) {
-        super(terminal, gui, coordinator);
+        super(terminal, coordinator);
         this.initialError = initialError;
-    }
-
-    @Override
-    public Screen onEnter() throws Exception {
-        username = collectUsername();
-        if (exitRequested) return ExitScreen.INSTANCE;
-        coordinator.createLoginRequest(username);
-        return null;
     }
 
     @Override
     public void render() throws IOException {
         terminal.clear();
-        TextGraphics tg = terminal.newTextGraphics();
-        int rows = terminal.getTerminalSize().getRows();
-        int cols = terminal.getTerminalSize().getColumns();
-        tg.setForegroundColor(TextColor.ANSI.CYAN);
-        String msg = "Logged in as \"" + username + "\". Waiting for server...";
-        tg.putString(Math.max(0, (cols - msg.length()) / 2), rows / 2, msg);
-        tg.setForegroundColor(TextColor.ANSI.WHITE);
+        TuiTextGraphics tg = terminal.newTextGraphics();
+        TuiSize size = terminal.getTerminalSize();
+        int cols = size.getColumns();
+        int rows = size.getRows();
+
+        tg.setForegroundColor(TuiColor.WHITE);
+        tg.setBackgroundColor(TuiColor.BLACK);
+
+        if (submitted) {
+            tg.setForegroundColor(TuiColor.CYAN);
+            String msg = "Logged in as \"" + username + "\". Waiting for server...";
+            tg.putString(Math.max(0, (cols - msg.length()) / 2), rows / 2, msg);
+            tg.setForegroundColor(TuiColor.WHITE);
+            terminal.refresh();
+            return;
+        }
+
+        int boxWidth  = 44;
+        int boxHeight = 14;
+        int x0 = Math.max(0, (cols - boxWidth) / 2);
+        int y0 = Math.max(0, (rows - boxHeight) / 2);
+
+        drawBox(tg, x0, y0, boxWidth, boxHeight, " MESOS – Login ");
+
+        int innerX = x0 + 2;
+        int row = y0 + 2;
+
+        tg.setForegroundColor(TuiColor.YELLOW);
+        tg.putString(innerX, row++, "MESOS  –  Ancient Tribe Strategy");
+        tg.setForegroundColor(TuiColor.WHITE);
+        row++;
+
+        String activeError = (localValidation != null) ? localValidation
+                : (initialError != null && !initialError.isBlank()) ? initialError
+                : null;
+        if (activeError != null) {
+            tg.setForegroundColor(TuiColor.RED);
+            tg.putString(innerX, row++, truncate(activeError, boxWidth - 4));
+            tg.setForegroundColor(TuiColor.WHITE);
+            row++;
+        } else {
+            row++;
+        }
+
+        tg.putString(innerX, row++, "Enter your username:");
+
+        // Text input field: drawn as [............] with the typed text.
+        int fieldWidth = MAX_USERNAME_LENGTH + 2;
+        if (focus == FIELD_TEXT) {
+            tg.setForegroundColor(TuiColor.YELLOW);
+        }
+        tg.putString(innerX, row, "[" + padField(typed.toString(), MAX_USERNAME_LENGTH) + "]");
+        tg.setForegroundColor(TuiColor.WHITE);
+        row += 2;
+
+        drawButton(tg, innerX,                   row, "  Login  ",            focus == FIELD_LOGIN);
+        drawButton(tg, innerX + 14,              row, "  Close Application  ", focus == FIELD_EXIT);
+
+        row = y0 + boxHeight - 2;
+        tg.setForegroundColor(TuiColor.CYAN);
+        tg.putString(innerX, row, "↑ ↓ to navigate · ENTER to confirm");
+        tg.setForegroundColor(TuiColor.WHITE);
+
         terminal.refresh();
     }
 
-    /**
-     * We are already in the login flow: a redundant {@link LoginNeededEvent}
-     * (e.g. server resending it, or a stray one queued before this screen took
-     * over) must NOT recreate this screen, otherwise the username dialog would
-     * pop up a second time.
-     */
+    // ── Server events ─────────────────────────────────────────────────────────
+
+    /** Already in the login flow: a redundant LoginNeeded must not reset state. */
     @Override
     public Screen visit(LoginNeededEvent e) {
         return this;
@@ -72,56 +137,128 @@ public class LoginScreen extends Screen {
 
     @Override
     public Screen visit(ErrorEvent e) {
-        error = e.getMessage();
-        return new LoginScreen(terminal, gui, coordinator, error);
+        // Restart the form carrying the server error so the user can fix and retry.
+        return new LoginScreen(terminal, coordinator, e.getMessage());
     }
 
-    private String collectUsername() {
-        final String[] result = {null};
-        while (!exitRequested && (result[0] == null || result[0].isBlank())) {
-            BasicWindow window = new BasicWindow("MESOS – Login");
-            window.setHints(List.of(Window.Hint.CENTERED));
+    // ── Input events ──────────────────────────────────────────────────────────
 
-            Panel root = new Panel(new LinearLayout(Direction.VERTICAL));
-            root.addComponent(new Label(""));
-            root.addComponent(new Label("  MESOS  –  Ancient Tribe Strategy  "));
-            root.addComponent(new Label(""));
-            if (initialError != null && !initialError.isBlank()) {
-                Label errorLabel = new Label("  " + initialError);
-                errorLabel.setForegroundColor(com.googlecode.lanterna.TextColor.ANSI.RED);
-                root.addComponent(errorLabel);
-                root.addComponent(new Label(""));
-            }
-            root.addComponent(new Label("  Enter your username:"));
+    @Override
+    public Screen visit(NavigateUpEvent e) {
+        if (submitted) return this;
+        focus = (focus - 1 + FIELD_COUNT) % FIELD_COUNT;
+        return this;
+    }
 
-            TextBox tb = new TextBox(new com.googlecode.lanterna.TerminalSize(20, 1));
-            root.addComponent(tb);
-            root.addComponent(new Label(""));
+    @Override
+    public Screen visit(NavigateDownEvent e) {
+        if (submitted) return this;
+        focus = (focus + 1) % FIELD_COUNT;
+        return this;
+    }
 
-            root.addComponent(new Button("  Login  ", () -> {
-                String name = tb.getText().trim();
-                if (name.isBlank()) {
-                    MessageDialog.showMessageDialog(gui, "Invalid", "Username cannot be empty.", MessageDialogButton.OK);
-                    return;
-                }
-                if (name.length() > 20) {
-                    MessageDialog.showMessageDialog(gui, "Invalid", "Username must be 20 characters or fewer.", MessageDialogButton.OK);
-                    return;
-                }
-                result[0] = name;
-                window.close();
-            }));
-            root.addComponent(new Label(""));
-
-            root.addComponent(new Button("  Close Application  ", () -> {
-                exitRequested = true;
-                window.close();
-            }));
-            root.addComponent(new Label(""));
-
-            window.setComponent(root);
-            gui.addWindowAndWait(window);
+    @Override
+    public Screen visit(ConfirmEvent e) {
+        if (submitted) return this;
+        if (focus == FIELD_EXIT) {
+            return ExitScreen.INSTANCE;
         }
-        return result[0];
+        // FIELD_TEXT and FIELD_LOGIN both attempt submission.
+        return trySubmit();
+    }
+
+    @Override
+    public Screen visit(CharInputEvent e) {
+        if (submitted || focus != FIELD_TEXT) return this;
+        if (typed.length() >= MAX_USERNAME_LENGTH) return this;
+        char c = e.getCharacter();
+        if (c < 0x20) return this;          // ignore non-printable
+        typed.append(c);
+        localValidation = null;
+        return this;
+    }
+
+    @Override
+    public Screen visit(BackspaceEvent e) {
+        if (submitted || focus != FIELD_TEXT) return this;
+        if (typed.length() > 0) {
+            typed.deleteCharAt(typed.length() - 1);
+            localValidation = null;
+        }
+        return this;
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private Screen trySubmit() {
+        String name = typed.toString().trim();
+        if (name.isBlank()) {
+            localValidation = "Username cannot be empty.";
+            return this;
+        }
+        if (name.length() > MAX_USERNAME_LENGTH) {
+            localValidation = "Username must be " + MAX_USERNAME_LENGTH + " characters or fewer.";
+            return this;
+        }
+        username = name;
+        submitted = true;
+        try {
+            coordinator.createLoginRequest(name);
+        } catch (Exception ex) {
+            localValidation = "Login failed: " + ex.getMessage();
+            submitted = false;
+        }
+        return this;
+    }
+
+    private void drawBox(TuiTextGraphics tg, int x, int y, int w, int h, String title) {
+        tg.setForegroundColor(TuiColor.WHITE);
+        tg.setBackgroundColor(TuiColor.BLACK);
+        StringBuilder top    = new StringBuilder("┌");
+        StringBuilder bottom = new StringBuilder("└");
+        for (int i = 0; i < w - 2; i++) {
+            top.append('─');
+            bottom.append('─');
+        }
+        top.append('┐');
+        bottom.append('┘');
+
+        tg.putString(x, y, top.toString());
+        tg.putString(x, y + h - 1, bottom.toString());
+        for (int i = 1; i < h - 1; i++) {
+            tg.putString(x, y + i, "│");
+            tg.putString(x + w - 1, y + i, "│");
+            tg.putString(x + 1, y + i, " ".repeat(w - 2));
+        }
+        if (title != null && !title.isEmpty()) {
+            int tx = x + Math.max(1, (w - title.length()) / 2);
+            tg.setForegroundColor(TuiColor.YELLOW);
+            tg.putString(tx, y, title);
+            tg.setForegroundColor(TuiColor.WHITE);
+        }
+    }
+
+    private void drawButton(TuiTextGraphics tg, int x, int y, String label, boolean focused) {
+        if (focused) {
+            tg.setBackgroundColor(TuiColor.WHITE);
+            tg.setForegroundColor(TuiColor.BLACK);
+        } else {
+            tg.setForegroundColor(TuiColor.WHITE);
+            tg.setBackgroundColor(TuiColor.BLACK);
+        }
+        tg.putString(x, y, label);
+        tg.setForegroundColor(TuiColor.WHITE);
+        tg.setBackgroundColor(TuiColor.BLACK);
+    }
+
+    private static String padField(String text, int width) {
+        if (text == null) text = "";
+        if (text.length() >= width) return text.substring(0, width);
+        return text + " ".repeat(width - text.length());
+    }
+
+    private static String truncate(String s, int max) {
+        if (s == null) return "";
+        return (s.length() <= max) ? s : s.substring(0, max - 1) + "…";
     }
 }
