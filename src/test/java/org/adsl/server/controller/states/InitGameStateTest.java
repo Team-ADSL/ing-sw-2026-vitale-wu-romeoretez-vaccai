@@ -94,7 +94,7 @@ public class InitGameStateTest {
     @Test
     void testFillLowRow_2players_fillsThreeCharacterSlots() {
         initBoardForGame(game, 2);
-        state.fillLowRow(2);
+        state.fillLowRow(2 + 1);
         ArrayList<Card> tribe = game.getBoard().lowRow().getTribeCards();
         int filled = 0;
         for (Card c : tribe) if (c != null) filled++;
@@ -120,7 +120,7 @@ public class InitGameStateTest {
     void testFillTopRow_2players_fillsSixCards() {
         initBoardForGame(game, 2);
 
-        state.fillTopRow(2);
+        state.fillTopRow(2 + 4);
 
         assertEquals(6, countNonNull(game.getBoard().topRow()));
     }

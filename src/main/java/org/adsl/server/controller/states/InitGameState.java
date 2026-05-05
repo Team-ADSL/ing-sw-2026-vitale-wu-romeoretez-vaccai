@@ -33,11 +33,12 @@ public class InitGameState extends ControllerState {
         BoardConfigLoader loader = getContext().getBoardConfigLoader();
         GameSettings gameSettings = loader.getSettings(numPlayers);
         int maxBuildings = maxBuildings(gameSettings);
+        int numRowCard = gameSettings.numTopTribeCard() + maxBuildings;
 
         Board board = new Board(
-                gameSettings.numLowTribeCard() + maxBuildings,
-                gameSettings.numLowTribeCard(),
-                gameSettings.numTopTribeCard() + maxBuildings,
+                numRowCard,
+                gameSettings.numTopTribeCard(),
+                numRowCard,
                 gameSettings.numTopTribeCard(),
                 loader.getOfferTrack(numPlayers),
                 loader.getOrderTile(numPlayers),
@@ -46,8 +47,8 @@ public class InitGameState extends ControllerState {
         getGame().setBoard(board);
 
         makeBuildingDecks(loader.getBuildings(), numPlayers, gameSettings);
-        fillLowRow(numPlayers);
-        fillTopRow(numPlayers);
+        fillLowRow(gameSettings.numLowTribeCard());
+        fillTopRow(gameSettings.numTopTribeCard());
 
         List<Totem> shuffledTotems = new ArrayList<>(Arrays.asList(Totem.values()));
         Collections.shuffle(shuffledTotems);
@@ -83,8 +84,7 @@ public class InitGameState extends ControllerState {
                 .orElse(0);
     }
 
-    public void fillLowRow(int numPlayers){
-        int targetSize = numPlayers + 1;
+    public void fillLowRow(int targetSize){
         int cardsDrawn = 0;
 
         while (cardsDrawn < targetSize) {
@@ -106,11 +106,10 @@ public class InitGameState extends ControllerState {
         }
     }
 
-    public void fillTopRow(int numPlayers){
+    public void fillTopRow(int targetSize){
         CardRow topRow = getGame().getBoard().topRow();
         Deck deck = getGame().getBoard().deck();
 
-        int targetSize = numPlayers + 4;
         for (int i = 0; i < targetSize; i++) {
             if (deck.isEmpty()) {
                 break;
