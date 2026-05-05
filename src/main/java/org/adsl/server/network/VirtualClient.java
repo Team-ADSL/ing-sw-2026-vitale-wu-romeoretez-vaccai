@@ -41,7 +41,7 @@ public abstract class VirtualClient implements GameObserver, HomeObserver, EndGa
             System.out.println("[NETWORK] Disconnection initiated for: " + getClientUsername());
             ClientRequest disconnection = new ClientDisconnected();
 
-            disconnection.accept(serverController, this);
+            serverController.handleClientRequest(disconnection, this);
         }
     }
 

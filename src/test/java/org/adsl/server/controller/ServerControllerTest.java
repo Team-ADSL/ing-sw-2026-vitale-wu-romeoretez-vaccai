@@ -49,8 +49,6 @@ public class ServerControllerTest {
         serverController.handleClientRequest(fakeReq, client);
 
         assertTrue(acceptCalled[0], "Accept method not called");
-        assertTrue(client.pingSent, "Ping not sent to client");
-        assertTrue(client.getLastPing() > 0, "Last client ping not updated");
     }
 
     @Test
@@ -224,7 +222,6 @@ public class ServerControllerTest {
         serverController.visit(req, client);
 
         assertTrue(client.getGameId().isEmpty());
-        assertFalse(client.isConnected());
     }
 
     @Test

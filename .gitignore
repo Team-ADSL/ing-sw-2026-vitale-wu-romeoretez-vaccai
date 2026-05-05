@@ -38,8 +38,8 @@ build/
 ### Claude Code ###
 .claude/
 
-.saved/
-.saves/
+saved/
+saves/
 .env
 
 o.log

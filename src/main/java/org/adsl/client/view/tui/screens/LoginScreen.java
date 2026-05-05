@@ -8,6 +8,7 @@ import com.googlecode.lanterna.gui2.dialogs.MessageDialogButton;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.view.tui.events.HomeUpdateEvent;
 import org.adsl.client.view.tui.events.LoginNeededEvent;
+import org.adsl.client.view.tui.events.ErrorEvent;
 
 import java.io.IOException;
 import java.util.List;
@@ -67,6 +68,12 @@ public class LoginScreen extends Screen {
     @Override
     public Screen visit(LoginNeededEvent e) {
         return this;
+    }
+
+    @Override
+    public Screen visit(ErrorEvent e) {
+        error = e.getMessage();
+        return new LoginScreen(terminal, gui, coordinator, error);
     }
 
     private String collectUsername() {
