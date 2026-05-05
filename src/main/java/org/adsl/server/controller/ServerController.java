@@ -82,6 +82,15 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         } catch (ServerException e) {
             System.out.println("ERROR: " + e.getMessage());
             virtualClient.sendErrorMessage(e.getMessage());
+        } catch (RuntimeException e) {
+            // Unchecked exceptions used to silently kill the request thread,
+            // leaving the client frozen with no log. Print the stack trace and
+            // notify the client so the failure is observable.
+            System.err.println("FATAL: unchecked exception while handling "
+                    + req.getClass().getSimpleName() + " from "
+                    + virtualClient.getClientUsername());
+            e.printStackTrace();
+            virtualClient.sendErrorMessage("Internal server error: " + e.getMessage());
         }
     }
 
