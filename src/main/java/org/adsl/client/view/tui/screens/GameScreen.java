@@ -314,7 +314,7 @@ public class GameScreen extends Screen {
                     "← → Navigate   ↑ ↓ Switch rows   SPACE Select (%d/%d)   ENTER Confirm",
                     selectedMoves.size(), upperCount + lowerCount);
             case WAITING_SERVER -> "Waiting for server...";
-            case NOT_MY_TURN    -> "Waiting for " + nameFor(game.currentPlayerTotem()) + "...";
+            case NOT_MY_TURN    -> waitingHint();
             default             -> "";
         };
         drawControls(tg, sz, hint);
@@ -541,6 +541,25 @@ public class GameScreen extends Screen {
                 .map(PlayerDTO::name)
                 .findFirst()
                 .orElse("?");
+    }
+
+    /**
+     * NOT_MY_TURN hint. Phases without a current player (END_ROUND, EVENTS,
+     * END_GAME) used to render as "Waiting for ?..." which looked broken;
+     * fall back to a phase-specific message instead.
+     */
+    private String waitingHint() {
+        Phase phase = game.phase();
+        if (game.currentPlayerTotem() != null) {
+            return "Waiting for " + nameFor(game.currentPlayerTotem()) + "...";
+        }
+        return switch (phase) {
+            case EVENTS_EXECUTION -> "Resolving events...";
+            case END_ROUND        -> "Resolving end-of-round...";
+            case END_GAME         -> "Game over.";
+            case null             -> "Waiting...";
+            default               -> "Waiting...";
+        };
     }
 
     private String currentPlayerLabel() {
