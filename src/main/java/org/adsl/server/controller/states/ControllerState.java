@@ -94,6 +94,11 @@ public abstract class ControllerState implements RequestVisitor<VirtualClient> {
     }
 
     @Override
+    public void visit(ExitGameRequest req, VirtualClient virtualClient) throws ServerException {
+        throw new ServerException("Exit game request rejected.");
+    }
+
+    @Override
     public void visit(ClientDisconnected req, VirtualClient virtualClient) throws ServerException {
         if(virtualClient.getClientUsername().isEmpty()){
             return;
