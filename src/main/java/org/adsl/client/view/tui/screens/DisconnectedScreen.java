@@ -98,7 +98,7 @@ public class DisconnectedScreen extends Screen {
             return ExitScreen.INSTANCE;
         }
         try {
-            coordinator.connectRequest();
+            coordinator.reconnect();
             return new ConnectingScreen(terminal, coordinator);
         } catch (Exception ex) {
             localError = "Could not reconnect: " + ex.getMessage();

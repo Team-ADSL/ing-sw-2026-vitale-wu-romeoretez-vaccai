@@ -107,6 +107,7 @@ public abstract class ControllerState implements RequestVisitor<VirtualClient> {
         System.out.println("[DISCONNECTION] Removing " + virtualClient.getClientUsername()
         + " from game " + getGame().getGameId());
         toStop = true;
+        setNextState(calcNextState());
     }
 
     public Game getGame() {
