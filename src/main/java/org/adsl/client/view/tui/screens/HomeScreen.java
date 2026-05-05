@@ -1,9 +1,5 @@
 package org.adsl.client.view.tui.screens;
 
-import com.googlecode.lanterna.TerminalSize;
-import com.googlecode.lanterna.TextColor;
-import com.googlecode.lanterna.graphics.TextGraphics;
-import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.view.tui.events.ConfirmEvent;
 import org.adsl.client.view.tui.events.HomeUpdateEvent;
@@ -11,6 +7,10 @@ import org.adsl.client.view.tui.events.LobbyUpdateEvent;
 import org.adsl.client.view.tui.events.NavigateDownEvent;
 import org.adsl.client.view.tui.events.NavigateUpEvent;
 import org.adsl.client.view.tui.events.CharInputEvent;
+import org.adsl.client.view.tui.render.TuiColor;
+import org.adsl.client.view.tui.render.TuiSize;
+import org.adsl.client.view.tui.render.TuiTerminal;
+import org.adsl.client.view.tui.render.TuiTextGraphics;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -29,29 +29,28 @@ public class HomeScreen extends Screen {
     private List<Integer> activeGames;
     private int cursor = 0;
 
-    public HomeScreen(com.googlecode.lanterna.screen.Screen terminal,
-                      WindowBasedTextGUI gui,
+    public HomeScreen(TuiTerminal terminal,
                       AppCoordinator coordinator,
                       String username,
                       List<Integer> activeGames) {
-        super(terminal, gui, coordinator, username);
+        super(terminal, coordinator, username);
         this.activeGames = (activeGames != null) ? new ArrayList<>(activeGames) : new ArrayList<>();
     }
 
     @Override
     public void render() throws IOException {
         terminal.clear();
-        TextGraphics tg = terminal.newTextGraphics();
-        TerminalSize size = terminal.getTerminalSize();
+        TuiTextGraphics tg = terminal.newTextGraphics();
+        TuiSize size = terminal.getTerminalSize();
         int cols = size.getColumns();
 
-        tg.setForegroundColor(TextColor.ANSI.BLACK);
-        tg.setBackgroundColor(TextColor.ANSI.YELLOW);
+        tg.setForegroundColor(TuiColor.BLACK);
+        tg.setBackgroundColor(TuiColor.YELLOW);
         String title = "  M E S O S  –  Home  ";
         tg.putString(Math.max(0, (cols - title.length()) / 2), 0, title);
 
-        tg.setForegroundColor(TextColor.ANSI.WHITE);
-        tg.setBackgroundColor(TextColor.ANSI.BLACK);
+        tg.setForegroundColor(TuiColor.WHITE);
+        tg.setBackgroundColor(TuiColor.BLACK);
 
         int row = 2;
         tg.putString(4, row++, "Welcome, " + username + "!");
@@ -62,23 +61,23 @@ public class HomeScreen extends Screen {
         int totalOptions = totalOptions();
         for (int i = 0; i < totalOptions; i++) {
             String prefix = (i == cursor) ? " > " : "   ";
-            tg.setForegroundColor(i == cursor ? TextColor.ANSI.YELLOW : TextColor.ANSI.WHITE);
+            tg.setForegroundColor(i == cursor ? TuiColor.YELLOW : TuiColor.WHITE);
             tg.putString(4, row++, prefix + optionLabel(i));
         }
-        tg.setForegroundColor(TextColor.ANSI.WHITE);
+        tg.setForegroundColor(TuiColor.WHITE);
 
         row++;
-        tg.setForegroundColor(TextColor.ANSI.CYAN);
+        tg.setForegroundColor(TuiColor.CYAN);
         tg.putString(4, row, activeGames.isEmpty()
                 ? "(no active games available to join)"
                 : "Active games: " + activeGames.size());
-        tg.setForegroundColor(TextColor.ANSI.WHITE);
+        tg.setForegroundColor(TuiColor.WHITE);
 
         if (error != null) {
             int errRow = size.getRows() - 2;
-            tg.setForegroundColor(TextColor.ANSI.RED);
+            tg.setForegroundColor(TuiColor.RED);
             tg.putString(2, errRow, "! " + error);
-            tg.setForegroundColor(TextColor.ANSI.WHITE);
+            tg.setForegroundColor(TuiColor.WHITE);
             error = null;
         }
         terminal.refresh();

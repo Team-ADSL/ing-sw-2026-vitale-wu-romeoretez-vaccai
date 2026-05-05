@@ -1,13 +1,13 @@
 package org.adsl.client.view.tui.screens;
 
-import com.googlecode.lanterna.TerminalSize;
-import com.googlecode.lanterna.TextColor;
-import com.googlecode.lanterna.graphics.TextGraphics;
-import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.view.tui.events.CharInputEvent;
 import org.adsl.client.view.tui.events.GameUpdateEvent;
 import org.adsl.client.view.tui.events.LobbyUpdateEvent;
+import org.adsl.client.view.tui.render.TuiColor;
+import org.adsl.client.view.tui.render.TuiSize;
+import org.adsl.client.view.tui.render.TuiTerminal;
+import org.adsl.client.view.tui.render.TuiTextGraphics;
 
 import java.io.IOException;
 import java.util.List;
@@ -24,13 +24,12 @@ public class LobbyScreen extends Screen {
     private List<String> players;
     private final int totalPlayers;
 
-    public LobbyScreen(com.googlecode.lanterna.screen.Screen terminal,
-                       WindowBasedTextGUI gui,
+    public LobbyScreen(TuiTerminal terminal,
                        AppCoordinator coordinator,
                        String username,
                        List<String> players,
                        int totalPlayers) {
-        super(terminal, gui, coordinator, username);
+        super(terminal, coordinator, username);
         this.players = players != null ? players : List.of();
         this.totalPlayers = totalPlayers;
     }
@@ -38,17 +37,17 @@ public class LobbyScreen extends Screen {
     @Override
     public void render() throws IOException {
         terminal.clear();
-        TextGraphics tg = terminal.newTextGraphics();
-        TerminalSize size = terminal.getTerminalSize();
+        TuiTextGraphics tg = terminal.newTextGraphics();
+        TuiSize size = terminal.getTerminalSize();
         int cols = size.getColumns();
 
-        fillRow(tg, 0, cols, TextColor.ANSI.YELLOW, TextColor.ANSI.BLACK, ' ');
-        tg.setForegroundColor(TextColor.ANSI.BLACK);
-        tg.setBackgroundColor(TextColor.ANSI.YELLOW);
+        fillRow(tg, 0, cols, TuiColor.YELLOW, TuiColor.BLACK, ' ');
+        tg.setForegroundColor(TuiColor.BLACK);
+        tg.setBackgroundColor(TuiColor.YELLOW);
         putCentered(tg, 0, cols, "  M E S O S  –  Game Lobby  ");
 
-        tg.setForegroundColor(TextColor.ANSI.WHITE);
-        tg.setBackgroundColor(TextColor.ANSI.BLACK);
+        tg.setForegroundColor(TuiColor.WHITE);
+        tg.setBackgroundColor(TuiColor.BLACK);
 
         int row = 2;
         tg.putString(4, row++, "Waiting for players to join...");
@@ -64,29 +63,28 @@ public class LobbyScreen extends Screen {
         int slots = (totalPlayers > 0) ? totalPlayers : players.size();
         for (int i = 0; i < slots; i++) {
             if (i < players.size()) {
-                tg.setForegroundColor(TextColor.ANSI.GREEN);
+                tg.setForegroundColor(TuiColor.GREEN);
                 tg.putString(6, row, "✓  " + players.get(i));
-                tg.setForegroundColor(TextColor.ANSI.WHITE);
+                tg.setForegroundColor(TuiColor.WHITE);
             } else {
-                tg.setForegroundColor(TextColor.ANSI.CYAN);
+                tg.setForegroundColor(TuiColor.CYAN);
                 tg.putString(6, row, "○  (waiting...)");
-                tg.setForegroundColor(TextColor.ANSI.WHITE);
+                tg.setForegroundColor(TuiColor.WHITE);
             }
             row++;
         }
 
         row += 2;
-        tg.setForegroundColor(TextColor.ANSI.CYAN);
+        tg.setForegroundColor(TuiColor.CYAN);
         tg.putString(4, row++, "Press [S] to start the game when you are ready (host only).");
         tg.putString(4, row, "Press [B] to go back.");
-        tg.setForegroundColor(TextColor.ANSI.WHITE);
+        tg.setForegroundColor(TuiColor.WHITE);
 
         if(error != null){
-            row = terminal.getTerminalSize().getRows() - 2;
-            tg = terminal.newTextGraphics();
-            tg.setForegroundColor(TextColor.ANSI.RED);
+            row = size.getRows() - 2;
+            tg.setForegroundColor(TuiColor.RED);
             tg.putString(2, row, "! " + error);
-            tg.setForegroundColor(TextColor.ANSI.WHITE);
+            tg.setForegroundColor(TuiColor.WHITE);
             error = null;
         }
 
@@ -127,13 +125,13 @@ public class LobbyScreen extends Screen {
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private void fillRow(TextGraphics tg, int row, int cols, TextColor fg, TextColor bg, char c) {
+    private void fillRow(TuiTextGraphics tg, int row, int cols, TuiColor fg, TuiColor bg, char c) {
         tg.setForegroundColor(fg);
         tg.setBackgroundColor(bg);
         tg.putString(0, row, String.valueOf(c).repeat(cols));
     }
 
-    private void putCentered(TextGraphics tg, int row, int cols, String text) {
+    private void putCentered(TuiTextGraphics tg, int row, int cols, String text) {
         int col = Math.max(0, (cols - text.length()) / 2);
         tg.putString(col, row, text);
     }
