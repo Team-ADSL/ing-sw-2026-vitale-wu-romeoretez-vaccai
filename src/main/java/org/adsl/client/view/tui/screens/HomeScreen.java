@@ -5,6 +5,8 @@ import org.adsl.client.view.tui.events.ConfirmEvent;
 import org.adsl.client.view.tui.events.HomeUpdateEvent;
 import org.adsl.client.view.tui.events.LobbyUpdateEvent;
 import org.adsl.client.view.tui.events.NavigateDownEvent;
+import org.adsl.client.view.tui.events.NavigateLeftEvent;
+import org.adsl.client.view.tui.events.NavigateRightEvent;
 import org.adsl.client.view.tui.events.NavigateUpEvent;
 import org.adsl.client.view.tui.events.CharInputEvent;
 import org.adsl.client.view.tui.render.TuiColor;
@@ -55,7 +57,7 @@ public class HomeScreen extends Screen {
         int row = 2;
         tg.putString(4, row++, "Welcome, " + username + "!");
         row++;
-        tg.putString(4, row++, "Choose an option:  (↑ ↓ to navigate, ENTER to confirm)");
+        tg.putString(4, row++, "Choose an option:  (← → / ↑ ↓ to navigate, ENTER to confirm)");
         row++;
 
         int totalOptions = totalOptions();
@@ -110,6 +112,10 @@ public class HomeScreen extends Screen {
         if (total > 0) cursor = (cursor + 1) % total;
         return this;
     }
+
+    /** Vertical-only menu: lateral arrows mirror up/down. */
+    @Override public Screen visit(NavigateLeftEvent e)  { return visit(new NavigateUpEvent()); }
+    @Override public Screen visit(NavigateRightEvent e) { return visit(new NavigateDownEvent()); }
 
     @Override
     public Screen visit(ConfirmEvent e) {

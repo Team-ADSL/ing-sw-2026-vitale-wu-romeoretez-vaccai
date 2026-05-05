@@ -8,6 +8,8 @@ import org.adsl.client.view.tui.events.ErrorEvent;
 import org.adsl.client.view.tui.events.HomeUpdateEvent;
 import org.adsl.client.view.tui.events.LoginNeededEvent;
 import org.adsl.client.view.tui.events.NavigateDownEvent;
+import org.adsl.client.view.tui.events.NavigateLeftEvent;
+import org.adsl.client.view.tui.events.NavigateRightEvent;
 import org.adsl.client.view.tui.events.NavigateUpEvent;
 import org.adsl.client.view.tui.render.TuiColor;
 import org.adsl.client.view.tui.render.TuiSize;
@@ -121,7 +123,7 @@ public class LoginScreen extends Screen {
 
         row = y0 + boxHeight - 2;
         tg.setForegroundColor(TuiColor.CYAN);
-        tg.putString(innerX, row, "↑ ↓ to navigate · ENTER to confirm");
+        tg.putString(innerX, row, "← → / ↑ ↓ to navigate · ENTER to confirm");
         tg.setForegroundColor(TuiColor.WHITE);
 
         terminal.refresh();
@@ -156,6 +158,10 @@ public class LoginScreen extends Screen {
         focus = (focus + 1) % FIELD_COUNT;
         return this;
     }
+
+    /** Vertical-only menu: lateral arrows mirror up/down. */
+    @Override public Screen visit(NavigateLeftEvent e)  { return visit(new NavigateUpEvent()); }
+    @Override public Screen visit(NavigateRightEvent e) { return visit(new NavigateDownEvent()); }
 
     @Override
     public Screen visit(ConfirmEvent e) {
