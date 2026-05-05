@@ -21,15 +21,18 @@ import java.util.List;
  */
 public class LobbyScreen extends Screen {
 
+    private int gameId;
     private List<String> players;
     private final int totalPlayers;
 
     public LobbyScreen(TuiTerminal terminal,
                        AppCoordinator coordinator,
                        String username,
+                       int gameId,
                        List<String> players,
                        int totalPlayers) {
         super(terminal, coordinator, username);
+        this.gameId = gameId;
         this.players = players != null ? players : List.of();
         this.totalPlayers = totalPlayers;
     }
@@ -44,7 +47,7 @@ public class LobbyScreen extends Screen {
         fillRow(tg, 0, cols, TuiColor.YELLOW, TuiColor.BLACK, ' ');
         tg.setForegroundColor(TuiColor.BLACK);
         tg.setBackgroundColor(TuiColor.YELLOW);
-        putCentered(tg, 0, cols, "  M E S O S  –  Game Lobby  ");
+        putCentered(tg, 0, cols, "  M E S O S  –  Game #" + gameId + "  ");
 
         tg.setForegroundColor(TuiColor.WHITE);
         tg.setBackgroundColor(TuiColor.BLACK);
@@ -117,6 +120,7 @@ public class LobbyScreen extends Screen {
 
     @Override
     public Screen visit(LobbyUpdateEvent e) {
+        this.gameId = e.getGameId();
         this.players = e.getPlayers() != null ? e.getPlayers() : List.of();
         return this;
     }
