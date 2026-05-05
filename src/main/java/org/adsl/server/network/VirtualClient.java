@@ -65,8 +65,8 @@ public abstract class VirtualClient implements GameObserver, HomeObserver, EndGa
     }
 
     @Override
-    public void updateLobby(List<String> players){
-        ServerResponse serverResponse = new LobbyUpdate(players);
+    public void updateLobby(List<String> players, int numPlayersAllowed){
+        ServerResponse serverResponse = new LobbyUpdate(players, numPlayersAllowed);
         System.out.println("[SENDING] Lobby update:" + serverResponse + " to: " + getClientUsername());
         this.sendResponse(serverResponse);
     }

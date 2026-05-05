@@ -90,7 +90,7 @@ public class Game implements Serializable {
 
     public void sendUpdateLobby(){
         List<String> playerNames = players.stream().filter(Player::isActive).map(Player::getName).toList();
-        for(GameObserver o : gameObservers) o.updateLobby(playerNames);
+        for(GameObserver o : gameObservers) o.updateLobby(playerNames, numPlayer);
     }
     public void sendUpdateGame(){
         for(GameObserver o : gameObservers) o.updateGame(this);
