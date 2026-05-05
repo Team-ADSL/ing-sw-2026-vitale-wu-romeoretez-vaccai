@@ -46,9 +46,9 @@ public class GameScreen extends Screen {
     private int lowerCount = 0;
 
     public GameScreen(TuiTerminal terminal,
-                      AppCoordinator coordinator,
-                      String username,
-                      GameDTO initialGame) {
+            AppCoordinator coordinator,
+            String username,
+            GameDTO initialGame) {
         super(terminal, coordinator, username);
         this.game = initialGame;
     }
@@ -67,10 +67,11 @@ public class GameScreen extends Screen {
         TuiSize sz = terminal.getTerminalSize();
 
         switch (subState) {
-            case MY_TURN_TOTEM  -> renderBoard(tg, sz, selectionIndex, Collections.emptySet());
-            case MY_TURN_CARDS  -> renderBoard(tg, sz, -1, selectedMoves);
+            case MY_TURN_TOTEM -> renderBoard(tg, sz, selectionIndex, Collections.emptySet());
+            case MY_TURN_CARDS -> renderBoard(tg, sz, -1, selectedMoves);
             case NOT_MY_TURN,
-                 WAITING_SERVER -> renderBoard(tg, sz, -1, Collections.emptySet());
+                    WAITING_SERVER ->
+                renderBoard(tg, sz, -1, Collections.emptySet());
         }
 
         if (error != null) {
@@ -113,7 +114,8 @@ public class GameScreen extends Screen {
         switch (subState) {
             case MY_TURN_TOTEM -> confirmTotemPlacement();
             case MY_TURN_CARDS -> confirmCardSelection();
-            default            -> {}
+            default -> {
+            }
         }
         return this;
     }
@@ -265,9 +267,11 @@ public class GameScreen extends Screen {
     }
 
     private Totem findMyTotem() {
-        if (game == null || username == null) return null;
+        if (game == null || username == null)
+            return null;
         for (PlayerDTO p : game.players()) {
-            if (username.equals(p.name())) return p.totem();
+            if (username.equals(p.name()))
+                return p.totem();
         }
         return null;
     }
@@ -275,7 +279,7 @@ public class GameScreen extends Screen {
     // ── Rendering ─────────────────────────────────────────────────────────────
 
     private void renderBoard(TuiTextGraphics tg, TuiSize sz,
-                             int cursorOfferIndex, Set<Move> highlights) {
+            int cursorOfferIndex, Set<Move> highlights) {
         int cols = sz.getColumns();
         tg.setForegroundColor(TuiColor.WHITE);
         tg.setBackgroundColor(TuiColor.BLACK);
@@ -287,7 +291,20 @@ public class GameScreen extends Screen {
         drawCardRow(tg, game.board().topRow(), topRowY + 1, highlights, Row.UPPER, cols);
 
         int offerTrackY = 8;
-        drawSectionLabel(tg, offerTrackY, cols, "OFFER TRACK");
+        String turnOrderText = "Turn Order: ";
+        if (game.board().orderTile() != null) {
+            List<Totem> order = game.board().orderTile().totems();
+            if (order != null) {
+                StringBuilder sb = new StringBuilder("Turn Order: ");
+                for (int i = 0; i < order.size(); i++) {
+                    sb.append(CardCatalog.totemLabel(order.get(i)));
+                    if (i < order.size() - 1)
+                        sb.append(" → ");
+                }
+                turnOrderText = sb.toString();
+            }
+        }
+        drawSectionLabel(tg, offerTrackY, cols, "OFFER TRACK", turnOrderText);
         drawOfferTrack(tg, game.board().offerTrack(), offerTrackY + 1, cursorOfferIndex, cols);
 
         int botRowY = 14;
@@ -303,19 +320,17 @@ public class GameScreen extends Screen {
             highlightOfferCursor(tg, selectionIndex, offerTrackY + 1);
         }
 
-        drawBuildingDecks(tg, game.board().remainingBuildings(), topRowY + 1, cols);
         drawCurrentPlayerTribe(tg, 20, cols);
         drawOtherPlayers(tg, 24, cols);
-        drawTurnOrder(tg, 29, cols);
 
         String hint = switch (subState) {
-            case MY_TURN_TOTEM  -> "← → Navigate offer tiles   ENTER Place totem";
-            case MY_TURN_CARDS  -> String.format(
+            case MY_TURN_TOTEM -> "← → Navigate offer tiles   ENTER Place totem";
+            case MY_TURN_CARDS -> String.format(
                     "← → Navigate   ↑ ↓ Switch rows   SPACE Select (%d/%d)   ENTER Confirm",
                     selectedMoves.size(), upperCount + lowerCount);
             case WAITING_SERVER -> "Waiting for server...";
-            case NOT_MY_TURN    -> waitingHint();
-            default             -> "";
+            case NOT_MY_TURN -> waitingHint();
+            default -> "";
         };
         drawControls(tg, sz, hint);
     }
@@ -327,72 +342,102 @@ public class GameScreen extends Screen {
         tg.setBackgroundColor(TuiColor.YELLOW);
         String header = String.format("  MESOS  │  Round %d/10  │  Era %d  │  Phase: %-18s │  Current: %s  ",
                 game.round(), game.era(), phaseLabel(game.phase()), currentPlayerLabel());
-        if (header.length() < cols) header += " ".repeat(cols - header.length());
+        if (header.length() < cols)
+            header += " ".repeat(cols - header.length());
         tg.putString(0, 0, header.substring(0, Math.min(header.length(), cols)));
         tg.setForegroundColor(TuiColor.WHITE);
         tg.setBackgroundColor(TuiColor.BLACK);
     }
 
-    private void drawSectionLabel(TuiTextGraphics tg, int row, int cols, String label) {
+    private void drawSectionLabel(TuiTextGraphics tg, int row, int cols, String leftLabel, String rightLabel) {
         tg.setForegroundColor(TuiColor.CYAN);
-        String line = " ── " + label + " " + "─".repeat(Math.max(0, cols - label.length() - 6));
-        tg.putString(0, row, line.substring(0, Math.min(line.length(), cols)));
+        if (rightLabel == null || rightLabel.isEmpty()) {
+            String line = " ── " + leftLabel + " " + "─".repeat(Math.max(0, cols - leftLabel.length() - 6));
+            tg.putString(0, row, line.substring(0, Math.min(line.length(), cols)));
+        } else {
+            int dashCount = cols - leftLabel.length() - rightLabel.length() - 9;
+            if (dashCount < 1)
+                dashCount = 1;
+            String line = " ── " + leftLabel + " " + "─".repeat(dashCount) + " " + rightLabel + " ──";
+            tg.putString(0, row, line.substring(0, Math.min(line.length(), cols)));
+        }
         tg.setForegroundColor(TuiColor.WHITE);
     }
 
+    private void drawSectionLabel(TuiTextGraphics tg, int row, int cols, String label) {
+        drawSectionLabel(tg, row, cols, label, null);
+    }
+
     private void drawOfferTrack(TuiTextGraphics tg, List<OfferTileDTO> tiles,
-                                int startRow, int cursorIndex, int cols) {
+            int startRow, int cursorIndex, int cols) {
         int col = 2;
         for (int i = 0; i < tiles.size(); i++) {
             OfferTileDTO tile = tiles.get(i);
             boolean selected = (i == cursorIndex);
-            tg.setForegroundColor(selected ? TuiColor.YELLOW : TuiColor.WHITE);
+
+            if (selected) {
+                tg.setForegroundColor(TuiColor.YELLOW);
+            } else if (tile.totem() != null) {
+                tg.setForegroundColor(totemColor(tile.totem()));
+            } else {
+                tg.setForegroundColor(TuiColor.WHITE);
+            }
+
+            String playerName = (tile.totem() != null) ? nameFor(tile.totem()) : "";
             String movesLabel = formatMovesLabel(tile);
-            tg.putString(col, startRow,     "┌──────────┐");
-            tg.putString(col, startRow + 1, "│ [" + padRight(movesLabel, 7) + "] │");
-            String playerLabel = (tile.totem() != null)
-                    ? "(" + CardCatalog.totemLabel(tile.totem()) + ")" : "(empty)";
-            tg.putString(col, startRow + 2, "│ " + padRight(playerLabel, 9) + " │");
+
+            tg.putString(col, startRow, "┌──────────┐");
+            tg.putString(col, startRow + 1, "│ " + padRight(playerName, 8) + " │");
+            tg.putString(col, startRow + 2, "│ " + padRight(movesLabel, 8) + " │");
             tg.putString(col, startRow + 3, "└──────────┘");
             tg.setForegroundColor(TuiColor.WHITE);
             col += 14;
-            if (col + 14 > cols) break;
+            if (col + 14 > cols)
+                break;
         }
     }
 
     private void drawCardRow(TuiTextGraphics tg, List<CardDTO> cards, int startRow,
-                             Set<Move> highlights, Row rowType, int cols) {
+            Set<Move> highlights, Row rowType, int cols) {
         int col = 2;
         for (int i = 0; i < cards.size(); i++) {
             CardDTO card = cards.get(i);
             if (card == null) {
-                tg.setForegroundColor(TuiColor.BLACK);
-                tg.putString(col, startRow,     "┌────────┐");
+                tg.setForegroundColor(TuiColor.DARK_GRAY);
+                tg.putString(col, startRow, "┌────────┐");
                 tg.putString(col, startRow + 1, "│        │");
                 tg.putString(col, startRow + 2, "│  empty │");
                 tg.putString(col, startRow + 3, "└────────┘");
                 tg.setForegroundColor(TuiColor.WHITE);
             } else {
                 boolean highlighted = highlights.contains(new Move(i, rowType));
-                tg.setForegroundColor(highlighted ? TuiColor.GREEN : TuiColor.WHITE);
                 CardType type = CardCatalog.typeFromId(card.id());
+
+                TuiColor cardColor = TuiColor.WHITE;
+                if (type == CardType.BUILDINGS)
+                    cardColor = TuiColor.MAGENTA;
+                else if (CardCatalog.isEvent(type))
+                    cardColor = TuiColor.ORANGE;
+
+                tg.setForegroundColor(highlighted ? TuiColor.GREEN : cardColor);
+
                 String typeStr = padRight(CardCatalog.typeLabel(type), 8);
-                String idStr   = padRight(card.id().length() > 8 ? card.id().substring(0, 8) : card.id(), 8);
-                tg.putString(col, startRow,     "┌────────┐");
-                if (CardCatalog.isEvent(type)) tg.setForegroundColor(TuiColor.MAGENTA);
+                String idStr = padRight(card.id().length() > 8 ? card.id().substring(0, 8) : card.id(), 8);
+
+                tg.putString(col, startRow, "┌────────┐");
                 tg.putString(col, startRow + 1, "│" + typeStr + "│");
-                tg.putString(col, startRow + 2, "│" + idStr   + "│");
-                tg.setForegroundColor(highlighted ? TuiColor.GREEN : TuiColor.WHITE);
+                tg.putString(col, startRow + 2, "│" + idStr + "│");
                 tg.putString(col, startRow + 3, "└────────┘");
                 tg.setForegroundColor(TuiColor.WHITE);
             }
             col += 11;
-            if (col + 11 > cols - 20) break;
+            if (col + 11 > cols - 20)
+                break;
         }
     }
 
     private void highlightCursor(TuiTextGraphics tg, int index, int rowY) {
-        int col = 2 + index * 11;
+        int col = 2 + index * 11 + 4;
         tg.setForegroundColor(TuiColor.YELLOW);
         tg.putString(col, rowY - 1, "▼");
         tg.setForegroundColor(TuiColor.WHITE);
@@ -406,24 +451,16 @@ public class GameScreen extends Screen {
     }
 
     private static String formatMovesLabel(OfferTileDTO tile) {
-        if (tile.givesFood()) return "+3food";
+        if (tile.givesFood())
+            return "+3food";
         Map<Row, Integer> moves = tile.moves();
-        if (moves == null) return "—";
+        if (moves == null)
+            return "—";
         int up = moves.getOrDefault(Row.UPPER, 0);
         int lo = moves.getOrDefault(Row.LOWER, 0);
-        if (up == 0 && lo == 0) return "—";
+        if (up == 0 && lo == 0)
+            return "—";
         return "▲".repeat(up) + "▼".repeat(lo);
-    }
-
-    private void drawBuildingDecks(TuiTextGraphics tg, List<Boolean> decks, int startRow, int cols) {
-        int col = cols - 18;
-        tg.setForegroundColor(TuiColor.YELLOW);
-        tg.putString(col, startRow, "BUILDINGS:");
-        String[] eras = {"Era I", "Era II", "Era III"};
-        for (int i = 0; i < Math.min(decks.size(), 3); i++) {
-            tg.putString(col, startRow + 1 + i, eras[i] + (decks.get(i) ? " [▣]" : " [ ]"));
-        }
-        tg.setForegroundColor(TuiColor.WHITE);
     }
 
     private void drawCurrentPlayerTribe(TuiTextGraphics tg, int startRow, int cols) {
@@ -432,7 +469,8 @@ public class GameScreen extends Screen {
                 .filter(p -> p.totem() == myTotem)
                 .findFirst()
                 .orElse(game.players().isEmpty() ? null : game.players().iterator().next());
-        if (me == null) return;
+        if (me == null)
+            return;
 
         boolean isMyTurn = (myTotem == currentTotem);
         if (isMyTurn) {
@@ -470,7 +508,8 @@ public class GameScreen extends Screen {
         Totem currentTotem = game.currentPlayerTotem();
         int row = startRow;
         for (PlayerDTO p : game.players()) {
-            if (p.totem() == myTotem) continue;
+            if (p.totem() == myTotem)
+                continue;
 
             boolean isTheirTurn = (p.totem() == currentTotem);
             if (isTheirTurn) {
@@ -502,19 +541,6 @@ public class GameScreen extends Screen {
         }
     }
 
-    private void drawTurnOrder(TuiTextGraphics tg, int startRow, int cols) {
-        tg.setForegroundColor(TuiColor.CYAN);
-        StringBuilder sb = new StringBuilder(" ── Turn Order: ");
-        List<Totem> order = (game.board().orderTile() != null)
-                ? game.board().orderTile().totems() : Collections.emptyList();
-        for (int i = 0; i < order.size(); i++) {
-            sb.append(CardCatalog.totemLabel(order.get(i)));
-            if (i < order.size() - 1) sb.append(" → ");
-        }
-        tg.putString(0, startRow, sb.toString().substring(0, Math.min(sb.length(), cols)));
-        tg.setForegroundColor(TuiColor.WHITE);
-    }
-
     private void drawControls(TuiTextGraphics tg, TuiSize sz, String hint) {
         int row = sz.getRows() - 1;
         tg.setForegroundColor(TuiColor.BLACK);
@@ -535,7 +561,8 @@ public class GameScreen extends Screen {
     // ── Display helpers ───────────────────────────────────────────────────────
 
     private String nameFor(Totem totem) {
-        if (game == null || totem == null) return "?";
+        if (game == null || totem == null)
+            return "?";
         return game.players().stream()
                 .filter(p -> p.totem() == totem)
                 .map(PlayerDTO::name)
@@ -555,45 +582,50 @@ public class GameScreen extends Screen {
         }
         return switch (phase) {
             case EVENTS_EXECUTION -> "Resolving events...";
-            case END_ROUND        -> "Resolving end-of-round...";
-            case END_GAME         -> "Game over.";
-            case null             -> "Waiting...";
-            default               -> "Waiting...";
+            case END_ROUND -> "Resolving end-of-round...";
+            case END_GAME -> "Game over.";
+            case null -> "Waiting...";
+            default -> "Waiting...";
         };
     }
 
     private String currentPlayerLabel() {
         Totem t = game.currentPlayerTotem();
-        if (t == null) return "---";
+        if (t == null)
+            return "---";
         return nameFor(t) + " [" + CardCatalog.totemLabel(t) + "]";
     }
 
     private String phaseLabel(Phase phase) {
-        if (phase == null) return "---";
+        if (phase == null)
+            return "---";
         return switch (phase) {
-            case TOTEM_PLACEMENT  -> "PLACE TOTEM";
+            case TOTEM_PLACEMENT -> "PLACE TOTEM";
             case ACTION_EXECUTION -> "PICK CARDS";
-            case EXTRA_MOVE       -> "EXTRA PICK";
+            case EXTRA_MOVE -> "EXTRA PICK";
             case EVENTS_EXECUTION -> "EVENTS";
-            case END_ROUND        -> "END OF ROUND";
-            case END_GAME         -> "GAME OVER";
+            case END_ROUND -> "END OF ROUND";
+            case END_GAME -> "GAME OVER";
         };
     }
 
     private TuiColor totemColor(Totem totem) {
-        if (totem == null) return TuiColor.WHITE;
+        if (totem == null)
+            return TuiColor.WHITE;
         return switch (totem) {
-            case RED    -> TuiColor.RED;
-            case BLUE   -> TuiColor.CYAN;
-            case WHITE  -> TuiColor.WHITE;
-            case BLACK  -> TuiColor.WHITE;
+            case RED -> TuiColor.RED;
+            case BLUE -> TuiColor.CYAN;
+            case WHITE -> TuiColor.WHITE;
+            case BLACK -> TuiColor.WHITE;
             case YELLOW -> TuiColor.YELLOW;
         };
     }
 
     private String padRight(String s, int len) {
-        if (s == null) s = "";
-        if (s.length() >= len) return s.substring(0, len);
+        if (s == null)
+            s = "";
+        if (s.length() >= len)
+            return s.substring(0, len);
         return s + " ".repeat(len - s.length());
     }
 }
