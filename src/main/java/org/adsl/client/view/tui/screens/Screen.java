@@ -26,8 +26,8 @@ public abstract class Screen implements EventVisitor {
     protected String error;
 
     protected Screen(TuiTerminal terminal,
-                     AppCoordinator coordinator,
-                     String username) {
+            AppCoordinator coordinator,
+            String username) {
         this.terminal = terminal;
         this.coordinator = coordinator;
         this.username = username;
@@ -36,7 +36,7 @@ public abstract class Screen implements EventVisitor {
     }
 
     protected Screen(TuiTerminal terminal,
-                     AppCoordinator coordinator) {
+            AppCoordinator coordinator) {
         this(terminal, coordinator, null);
     }
 
@@ -44,7 +44,9 @@ public abstract class Screen implements EventVisitor {
         this(terminal, null, null);
     }
 
-    /** No-arg constructor for screens with no resources (e.g. {@link ExitScreen}). */
+    /**
+     * No-arg constructor for screens with no resources (e.g. {@link ExitScreen}).
+     */
     protected Screen() {
         this(null, null, null);
     }
@@ -52,19 +54,25 @@ public abstract class Screen implements EventVisitor {
     // ── Server event defaults ────────────────────────────────────────────────
 
     /** Server asks the client to (re-)authenticate: jump to {@link LoginScreen}. */
-    @Override public Screen visit(LoginNeededEvent e) {
+    @Override
+    public Screen visit(LoginNeededEvent e) {
         return new LoginScreen(terminal, coordinator);
     }
 
-    /** Server published the home view: jump to {@link HomeScreen} with the latest active games. */
-    @Override public Screen visit(HomeUpdateEvent e) {
+    /**
+     * Server published the home view: jump to {@link HomeScreen} with the latest
+     * active games.
+     */
+    @Override
+    public Screen visit(HomeUpdateEvent e) {
         return new HomeScreen(terminal, coordinator, username, e.getActiveGames());
     }
 
     /** Lobby update is screen-specific (HomeScreen and LobbyScreen own it). */
     @Override
     public Screen visit(LobbyUpdateEvent e) {
-        return new LobbyScreen(terminal, coordinator, username, e.getGameId(), e.getPlayers(), e.getNumPlayersAllowed());
+        return new LobbyScreen(terminal, coordinator, username, e.getGameId(), e.getPlayers(),
+                e.getNumPlayersAllowed());
     }
 
     /** Game update is screen-specific (LobbyScreen and GameScreen own it). */
@@ -74,11 +82,15 @@ public abstract class Screen implements EventVisitor {
     }
 
     /** Game ended: jump to {@link EndGameScreen} with the final results. */
-    @Override public Screen visit(EndGameEvent e) {
-        return new EndGameScreen(terminal, e.getResults());
+    @Override
+    public Screen visit(EndGameEvent e) {
+        return new EndGameScreen(terminal, coordinator, e.getResults());
     }
 
-    /** Server reported an error: jump back to the {@link LoginScreen} carrying the error message. */
+    /**
+     * Server reported an error: jump back to the {@link LoginScreen} carrying the
+     * error message.
+     */
     @Override
     public Screen visit(ErrorEvent e) {
         error = e.getMessage();
@@ -92,14 +104,45 @@ public abstract class Screen implements EventVisitor {
 
     // ── Input event defaults (unhandled keep current screen) ─────────────────
 
-    @Override public Screen visit(ConfirmEvent e)       { return this; }
-    @Override public Screen visit(SelectEvent e)        { return this; }
-    @Override public Screen visit(NavigateLeftEvent e)  { return this; }
-    @Override public Screen visit(NavigateRightEvent e) { return this; }
-    @Override public Screen visit(NavigateUpEvent e)    { return this; }
-    @Override public Screen visit(NavigateDownEvent e)  { return this; }
-    @Override public Screen visit(CharInputEvent e)     { return this; }
-    @Override public Screen visit(BackspaceEvent e)     { return this; }
+    @Override
+    public Screen visit(ConfirmEvent e) {
+        return this;
+    }
+
+    @Override
+    public Screen visit(SelectEvent e) {
+        return this;
+    }
+
+    @Override
+    public Screen visit(NavigateLeftEvent e) {
+        return this;
+    }
+
+    @Override
+    public Screen visit(NavigateRightEvent e) {
+        return this;
+    }
+
+    @Override
+    public Screen visit(NavigateUpEvent e) {
+        return this;
+    }
+
+    @Override
+    public Screen visit(NavigateDownEvent e) {
+        return this;
+    }
+
+    @Override
+    public Screen visit(CharInputEvent e) {
+        return this;
+    }
+
+    @Override
+    public Screen visit(BackspaceEvent e) {
+        return this;
+    }
 
     // ── Lifecycle / framework hooks ──────────────────────────────────────────
 

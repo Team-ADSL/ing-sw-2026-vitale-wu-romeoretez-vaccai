@@ -160,4 +160,8 @@ public class AppCoordinator implements ResponseVisitor{
             }
         }
     }
+    public void createExitGameRequest() throws Exception {
+        ClientRequest clientRequest = new ExitGameRequest();
+        serverConnection.sendRequest(clientRequest);
+    }
 }
