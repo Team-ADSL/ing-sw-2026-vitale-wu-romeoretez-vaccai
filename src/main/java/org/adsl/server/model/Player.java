@@ -7,6 +7,8 @@ import org.adsl.shared.enums.Totem;
 import org.adsl.shared.model.CardDTO;
 import org.adsl.shared.model.PlayerDTO;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -20,7 +22,7 @@ public class Player implements Serializable {
 
     private transient Card lastPick; // For SinceBuild building (see activeEffect)
     private transient boolean isActive;
-    private final transient BuildingBonus buildingBonus;
+    private transient BuildingBonus buildingBonus;
 
     public Player(String name) {
         this.name = name;
@@ -103,5 +105,10 @@ public class Player implements Serializable {
     }
     public void setActive(boolean active) {
         isActive = active;
+    }
+
+    private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
+        stream.defaultReadObject();
+        buildingBonus = new BuildingBonus();
     }
 }

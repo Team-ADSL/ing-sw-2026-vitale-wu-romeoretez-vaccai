@@ -18,6 +18,10 @@ public class AppCoordinator implements ResponseVisitor{
     private final ServerConnection serverConnection;
     private ScheduledExecutorService pingScheduler;
     private volatile long lastServerPing = System.currentTimeMillis();
+    private String lastIp;
+    private int lastPort;
+    private int lastPingRatioMs = 5000;
+    private long lastServerTimeoutMs = 10000;
 
     public AppCoordinator(GameUI gameUI, ServerConnection serverConnection) {
         this.gameUI = gameUI;
@@ -25,7 +29,14 @@ public class AppCoordinator implements ResponseVisitor{
         this.pingScheduler = null;
     }
 
+    public void setConnectionParams(String ip, int port) {
+        this.lastIp = ip;
+        this.lastPort = port;
+    }
+
     public void startPingScheduler(int pingRatioMs, long serverTimeoutMs) {
+        this.lastPingRatioMs = pingRatioMs;
+        this.lastServerTimeoutMs = serverTimeoutMs;
         pingScheduler = Executors.newSingleThreadScheduledExecutor();
 
         pingScheduler.scheduleAtFixedRate(() -> {
@@ -99,6 +110,14 @@ public class AppCoordinator implements ResponseVisitor{
     public void connectRequest() throws Exception {
         ClientRequest clientRequest = new ClientConnection();
         serverConnection.sendRequest(clientRequest);
+    }
+
+    public void reconnect() throws Exception {
+        stopPingScheduler();
+        try { serverConnection.disconnect(); } catch (Exception ignored) {}
+        lastServerPing = System.currentTimeMillis();
+        serverConnection.connect(lastIp, lastPort);
+        startPingScheduler(lastPingRatioMs, lastServerTimeoutMs);
     }
     public void createLoginRequest(String username) throws Exception {
         ClientRequest clientRequest = new LoginRequest(username);

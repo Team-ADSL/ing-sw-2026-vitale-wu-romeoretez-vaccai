@@ -201,6 +201,7 @@ public class App
             AppCoordinator appCoordinator = new AppCoordinator(gameUI, serverConnection);
             serverConnection.setAppCoordinator(appCoordinator);
             gameUI.setAppCoordinator(appCoordinator);
+            appCoordinator.setConnectionParams(ipAddress, port);
             appCoordinator.startPingScheduler(5000, 10000);
             serverConnection.connect(ipAddress, port);
             gameUI.start();

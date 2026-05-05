@@ -74,7 +74,7 @@ public class DisconnectedScreen extends Screen {
 
             root.addComponent(new Button("  Reconnect  ", () -> {
                 try {
-                    coordinator.connectRequest();
+                    coordinator.reconnect();
                     result[0] = new ConnectingScreen(terminal, gui, coordinator);
                 } catch (Exception e) {
                     MessageDialog.showMessageDialog(gui, "Error",

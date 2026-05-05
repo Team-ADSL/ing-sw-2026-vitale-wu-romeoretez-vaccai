@@ -24,11 +24,7 @@ public class GameController {
 
     public synchronized void handleClientRequest(ClientRequest req, VirtualClient virtualClient) throws ServerException {
         req.accept(state, virtualClient);
-        // TODO: handle better change state
-        state.setNextState(state.calcNextState());
-        if(state.getNextState() != null){
-            changeState(state.getNextState());
-        }
+        changeState(state.getNextState());
     }
 
     // To handle automatics states
