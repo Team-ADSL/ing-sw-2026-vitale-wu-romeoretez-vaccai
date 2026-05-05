@@ -17,7 +17,14 @@ public enum TuiColor {
     MAGENTA (35),
     CYAN    (36),
     WHITE   (37),
-    DEFAULT (39);
+    DEFAULT (39),
+    DARK_GRAY (90),
+    ORANGE  (0) {
+        @Override
+        public String fg() { return AnsiCodes.CSI + "38;5;208m"; }
+        @Override
+        public String bg() { return AnsiCodes.CSI + "48;5;208m"; }
+    };
 
     private final int fgCode;
 
