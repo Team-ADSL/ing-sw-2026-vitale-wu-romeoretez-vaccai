@@ -76,8 +76,8 @@ public class FakeServerConnection implements ServerConnection {
         ServerResponse response = switch (request) {
             case ClientConnection   r -> new LoginNeeded();
             case LoginRequest       r -> { username = r.getUsername(); yield new HomeUpdate(Collections.emptyList()); }
-            case CreateGameRequest  r -> { numPlayers = r.getNumPlayer(); yield new LobbyUpdate(List.of(username), r.getNumPlayer()); }
-            case EnterGameRequest   r -> new LobbyUpdate(List.of(username), 5);
+            case CreateGameRequest  r -> { numPlayers = r.getNumPlayer(); yield new LobbyUpdate(0, List.of(username), r.getNumPlayer()); }
+            case EnterGameRequest   r -> new LobbyUpdate(0, List.of(username), 5);
             case StartGameRequest   r -> { snapshot = buildSnapshot(); yield new GameUpdate(snapshot); }
             case MoveRequest        r -> new GameUpdate(resendSnapshot());
             case ClientPing         r -> new ServerPing();

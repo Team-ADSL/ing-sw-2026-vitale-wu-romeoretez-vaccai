@@ -170,9 +170,9 @@ public class TUI implements GameUI {
     }
 
     @Override
-    public void onLobbyUpdate(List<String> players, int numPlayersAllowed) {
+    public void onLobbyUpdate(int gameId, List<String> players, int numPlayersAllowed) {
         eventQueue.add(new LobbyUpdateEvent(
-                players != null ? players : Collections.emptyList(), numPlayersAllowed));
+                gameId, players != null ? players : Collections.emptyList(), numPlayersAllowed));
     }
 
     @Override
