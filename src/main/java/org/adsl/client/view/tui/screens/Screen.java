@@ -64,7 +64,7 @@ public abstract class Screen implements EventVisitor {
     /** Lobby update is screen-specific (HomeScreen and LobbyScreen own it). */
     @Override
     public Screen visit(LobbyUpdateEvent e) {
-        return new LobbyScreen(terminal, coordinator, username, e.getPlayers(), 5);//TODO: add attribute totalPlayers in LobbyUpdate
+        return new LobbyScreen(terminal, coordinator, username, e.getPlayers(), e.getNumPlayersAllowed());
     }
 
     /** Game update is screen-specific (LobbyScreen and GameScreen own it). */

@@ -25,7 +25,7 @@ public class VirtualClientTest {
     private static final GamePersistenceManager NO_OP_PERSISTENCE = new GamePersistenceManager() {
         @Override public List<Game> recoverGames() { return List.of(); }
         @Override public void removeGame(int id) {}
-        @Override public void updateLobby(List<String> p) {}
+        @Override public void updateLobby(List<String> p, int numPlayers) {}
         @Override public void updateGame(Game g) {}
     };
     private static final GameDAO NO_OP_DAO = new GameDAO() {

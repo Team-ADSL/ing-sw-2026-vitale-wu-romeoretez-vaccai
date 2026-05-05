@@ -6,9 +6,11 @@ import java.util.List;
 
 public class LobbyUpdate extends ServerResponse{
     private final List<String> players;
+    private final int numPlayerAllowed;
 
-    public LobbyUpdate(List<String> players) {
+    public LobbyUpdate(List<String> players, int numPlayerAllowed) {
         this.players = players;
+        this.numPlayerAllowed = numPlayerAllowed;
     }
 
     @Override
@@ -18,5 +20,9 @@ public class LobbyUpdate extends ServerResponse{
 
     public List<String> getPlayers() {
         return players;
+    }
+
+    public int getNumPlayerAllowed() {
+        return numPlayerAllowed;
     }
 }
