@@ -16,6 +16,9 @@ public class EndRoundState extends ControllerState {
         super(game, context);
     }
 
+    /** Mesos has exactly three eras; advancing past era 3 is invalid. */
+    private static final int MAX_ERA = 3;
+
     @Override
     public ControllerState onEntry() {
         CardRow lowRow = getGame().getBoard().lowRow();
@@ -27,19 +30,22 @@ public class EndRoundState extends ControllerState {
         topRow.clearTribeCards();
         lowRow.addTribeCards(cardsToMove);
 
-        // Re-fill top row
+        // Re-fill top row, but never draw past the bottom of the deck.
         Deck deck = getGame().getBoard().deck();
-        for(int i=0; i < topRow.getNumTribeCard(); i++){
-            Card newCard = deck.drawCard();
-            topRow.add(newCard);
+        for (int i = 0; i < topRow.getNumTribeCard() && !deck.isEmpty(); i++) {
+            topRow.add(deck.drawCard());
         }
 
-        // Handle new era
-        if(deck.isNewEra(getGame().getEra())){
+        // Handle new era. Skip the whole branch if the deck is empty (nothing
+        // left to inspect) or if we are already in the last era — there is no
+        // era 4 in Mesos and no further building deck to swap in.
+        if (!deck.isEmpty()
+                && getGame().getEra() < MAX_ERA
+                && deck.isNewEra(getGame().getEra())) {
             getGame().changeEra();
             System.out.println("[END ROUND] New era started: " + getGame().getEra());
 
-            if(getGame().getEra() == 3){
+            if (getGame().getEra() == 3) {
                 lowRow.clearBuildings();
             }
 
@@ -48,8 +54,11 @@ public class EndRoundState extends ControllerState {
             topRow.clearBuildings();
             lowRow.addBuildings(buildingToMove);
 
-            Set<Card> newBuildings = getGame().getBoard().remainingBuildings().removeFirst();
-            topRow.addBuildings(newBuildings);
+            // Refill top buildings from the next era's pile, when available.
+            if (!getGame().getBoard().remainingBuildings().isEmpty()) {
+                Set<Card> newBuildings = getGame().getBoard().remainingBuildings().removeFirst();
+                topRow.addBuildings(newBuildings);
+            }
         }
         getGame().changeRound();
         System.out.println("[END ROUND] Round " + getGame().getRound() + ", Era " + getGame().getEra());
