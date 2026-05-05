@@ -7,5 +7,5 @@ import java.io.Serializable;
 import java.util.Map;
 import org.adsl.shared.enums.Row;
 
-public record OfferTileDTO(String id, Totem totem, Map<Row, Integer> moves)
+public record OfferTileDTO(String id, Totem totem, Map<Row, Integer> moves, boolean givesFood)
 implements Serializable {}

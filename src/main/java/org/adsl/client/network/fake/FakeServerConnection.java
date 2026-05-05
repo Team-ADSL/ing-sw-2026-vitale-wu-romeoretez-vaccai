@@ -103,10 +103,10 @@ public class FakeServerConnection implements ServerConnection {
         players.add(me);
 
         ArrayList<OfferTileDTO> offerTrack = new ArrayList<>();
-        offerTrack.add(new OfferTileDTO("offer_tile_b", null, Collections.emptyMap()));
-        offerTrack.add(new OfferTileDTO("offer_tile_c", null, Collections.emptyMap()));
-        offerTrack.add(new OfferTileDTO("offer_tile_e", null, Collections.emptyMap()));
-        offerTrack.add(new OfferTileDTO("offer_tile_f", null, Collections.emptyMap()));
+        offerTrack.add(new OfferTileDTO("offer_tile_b", null, Collections.emptyMap(), false));
+        offerTrack.add(new OfferTileDTO("offer_tile_c", null, Collections.emptyMap(), false));
+        offerTrack.add(new OfferTileDTO("offer_tile_e", null, Collections.emptyMap(), false));
+        offerTrack.add(new OfferTileDTO("offer_tile_f", null, Collections.emptyMap(), false));
 
         ArrayList<Totem> turnOrder = new ArrayList<>();
         turnOrder.add(Totem.RED);

@@ -6,7 +6,6 @@ import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.view.tui.CardCatalog;
-import org.adsl.client.view.tui.OfferTileCatalog;
 import org.adsl.client.view.tui.events.*;
 import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Phase;
@@ -302,7 +301,7 @@ public class GameScreen extends Screen {
         }
 
         if (subState == SubState.MY_TURN_TOTEM) {
-            highlightCursor(tg, selectionIndex, offerTrackY + 1);
+            highlightOfferCursor(tg, selectionIndex, offerTrackY + 1);
         }
 
         drawBuildingDecks(tg, game.board().remainingBuildings(), topRowY + 1, cols);
@@ -349,9 +348,9 @@ public class GameScreen extends Screen {
             OfferTileDTO tile = tiles.get(i);
             boolean selected = (i == cursorIndex);
             tg.setForegroundColor(selected ? TextColor.ANSI.YELLOW : TextColor.ANSI.WHITE);
-            String idLabel = tile.id() != null ? tile.id().replace("offer_tile_", "") : "?";
+            String movesLabel = formatMovesLabel(tile);
             tg.putString(col, startRow,     "┌──────────┐");
-            tg.putString(col, startRow + 1, "│ [" + padRight(idLabel.toUpperCase(), 7) + "] │");
+            tg.putString(col, startRow + 1, "│ [" + padRight(movesLabel, 7) + "] │");
             String playerLabel = (tile.totem() != null)
                     ? "(" + CardCatalog.totemLabel(tile.totem()) + ")" : "(empty)";
             tg.putString(col, startRow + 2, "│ " + padRight(playerLabel, 9) + " │");
@@ -398,6 +397,23 @@ public class GameScreen extends Screen {
         tg.setForegroundColor(TextColor.ANSI.YELLOW);
         tg.putString(col, rowY - 1, "▼");
         tg.setForegroundColor(TextColor.ANSI.WHITE);
+    }
+
+    private void highlightOfferCursor(TextGraphics tg, int index, int rowY) {
+        int col = 2 + index * 14 + 5;
+        tg.setForegroundColor(TextColor.ANSI.YELLOW);
+        tg.putString(col, rowY - 1, "▼");
+        tg.setForegroundColor(TextColor.ANSI.WHITE);
+    }
+
+    private static String formatMovesLabel(OfferTileDTO tile) {
+        if (tile.givesFood()) return "+3food";
+        Map<Row, Integer> moves = tile.moves();
+        if (moves == null) return "—";
+        int up = moves.getOrDefault(Row.UPPER, 0);
+        int lo = moves.getOrDefault(Row.LOWER, 0);
+        if (up == 0 && lo == 0) return "—";
+        return "▲".repeat(up) + "▼".repeat(lo);
     }
 
     private void drawBuildingDecks(TextGraphics tg, List<Boolean> decks, int startRow, int cols) {
