@@ -4,5 +4,5 @@ import java.util.List;
 
 public interface GameObserver {
     void updateGame(Game game);
-    void updateLobby(List<String> players, int numPlayersAllowed);
+    void updateLobby(int gameId, List<String> players, int numPlayersAllowed);
 }

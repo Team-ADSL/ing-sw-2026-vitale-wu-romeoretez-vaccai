@@ -10,7 +10,7 @@ public interface GameUI {
     void setAppCoordinator(AppCoordinator appCoordinator);
     void showUsernameField();
     void onHomeUpdate(List<Integer> activeGames);
-    void onLobbyUpdate(List<String> players, int numPlayersAllowed);
+    void onLobbyUpdate(int gameId, List<String> players, int numPlayersAllowed);
     void onGameUpdate(GameDTO game);
     void onEndGame(List<MatchResult> matchResults);
     void onErrorReceived(String error);

@@ -82,5 +82,5 @@ public class SerialGamePersistenceManager implements GamePersistenceManager{
 
     // Need to save only game status update
     @Override
-    public void updateLobby(List<String> players, int numPlayersAllowed) {}
+    public void updateLobby(int gameId, List<String> players, int numPlayersAllowed) {}
 }
