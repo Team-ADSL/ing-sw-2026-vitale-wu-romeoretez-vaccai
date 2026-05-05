@@ -1,8 +1,8 @@
 package org.adsl.client.view.tui.screens;
 
-import com.googlecode.lanterna.gui2.WindowBasedTextGUI;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.view.tui.events.*;
+import org.adsl.client.view.tui.render.TuiTerminal;
 
 import java.io.IOException;
 
@@ -19,62 +19,58 @@ import java.io.IOException;
  */
 public abstract class Screen implements EventVisitor {
 
-    protected final com.googlecode.lanterna.screen.Screen terminal;
-    protected final WindowBasedTextGUI gui;
+    protected final TuiTerminal terminal;
     protected final AppCoordinator coordinator;
     protected String username;
     protected boolean toRender;
     protected String error;
 
-    protected Screen(com.googlecode.lanterna.screen.Screen terminal,
-                     WindowBasedTextGUI gui,
+    protected Screen(TuiTerminal terminal,
                      AppCoordinator coordinator,
                      String username) {
         this.terminal = terminal;
-        this.gui = gui;
         this.coordinator = coordinator;
         this.username = username;
         this.toRender = true;
         this.error = null;
     }
 
-    protected Screen(com.googlecode.lanterna.screen.Screen terminal,
-                     WindowBasedTextGUI gui,
+    protected Screen(TuiTerminal terminal,
                      AppCoordinator coordinator) {
-        this(terminal, gui, coordinator, null);
+        this(terminal, coordinator, null);
     }
 
-    protected Screen(com.googlecode.lanterna.screen.Screen terminal) {
-        this(terminal, null, null, null);
+    protected Screen(TuiTerminal terminal) {
+        this(terminal, null, null);
     }
 
     /** No-arg constructor for screens with no resources (e.g. {@link ExitScreen}). */
     protected Screen() {
-        this(null, null, null, null);
+        this(null, null, null);
     }
 
     // ── Server event defaults ────────────────────────────────────────────────
 
     /** Server asks the client to (re-)authenticate: jump to {@link LoginScreen}. */
     @Override public Screen visit(LoginNeededEvent e) {
-        return new LoginScreen(terminal, gui, coordinator);
+        return new LoginScreen(terminal, coordinator);
     }
 
     /** Server published the home view: jump to {@link HomeScreen} with the latest active games. */
     @Override public Screen visit(HomeUpdateEvent e) {
-        return new HomeScreen(terminal, gui, coordinator, username, e.getActiveGames());
+        return new HomeScreen(terminal, coordinator, username, e.getActiveGames());
     }
 
     /** Lobby update is screen-specific (HomeScreen and LobbyScreen own it). */
     @Override
     public Screen visit(LobbyUpdateEvent e) {
-        return new LobbyScreen(terminal, gui, coordinator, username, e.getPlayers(), 5);//TODO: add attribute totalPlayers in LobbyUpdate
+        return new LobbyScreen(terminal, coordinator, username, e.getPlayers(), 5);//TODO: add attribute totalPlayers in LobbyUpdate
     }
 
     /** Game update is screen-specific (LobbyScreen and GameScreen own it). */
     @Override
     public Screen visit(GameUpdateEvent e) {
-        return new GameScreen(terminal, gui, coordinator, username, e.getGame());
+        return new GameScreen(terminal, coordinator, username, e.getGame());
     }
 
     /** Game ended: jump to {@link EndGameScreen} with the final results. */
@@ -91,7 +87,7 @@ public abstract class Screen implements EventVisitor {
 
     @Override
     public Screen visit(DisconnectedEvent e) {
-        return new DisconnectedScreen(terminal, gui, coordinator, e.getMessage());
+        return new DisconnectedScreen(terminal, coordinator, e.getMessage());
     }
 
     // ── Input event defaults (unhandled keep current screen) ─────────────────
@@ -103,6 +99,7 @@ public abstract class Screen implements EventVisitor {
     @Override public Screen visit(NavigateUpEvent e)    { return this; }
     @Override public Screen visit(NavigateDownEvent e)  { return this; }
     @Override public Screen visit(CharInputEvent e)     { return this; }
+    @Override public Screen visit(BackspaceEvent e)     { return this; }
 
     // ── Lifecycle / framework hooks ──────────────────────────────────────────
 

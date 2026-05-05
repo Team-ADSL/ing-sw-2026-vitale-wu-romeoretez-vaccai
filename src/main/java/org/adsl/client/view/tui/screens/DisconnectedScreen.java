@@ -1,14 +1,17 @@
 package org.adsl.client.view.tui.screens;
 
-import com.googlecode.lanterna.TextColor;
-import com.googlecode.lanterna.graphics.TextGraphics;
-import com.googlecode.lanterna.gui2.*;
-import com.googlecode.lanterna.gui2.dialogs.MessageDialog;
-import com.googlecode.lanterna.gui2.dialogs.MessageDialogButton;
 import org.adsl.client.AppCoordinator;
+import org.adsl.client.view.tui.events.ConfirmEvent;
+import org.adsl.client.view.tui.events.NavigateDownEvent;
+import org.adsl.client.view.tui.events.NavigateLeftEvent;
+import org.adsl.client.view.tui.events.NavigateRightEvent;
+import org.adsl.client.view.tui.events.NavigateUpEvent;
+import org.adsl.client.view.tui.render.TuiColor;
+import org.adsl.client.view.tui.render.TuiSize;
+import org.adsl.client.view.tui.render.TuiTerminal;
+import org.adsl.client.view.tui.render.TuiTextGraphics;
 
 import java.io.IOException;
-import java.util.List;
 
 /**
  * Shown whenever the server connection is lost. Presents the error message and
@@ -19,83 +22,134 @@ import java.util.List;
  *   <li><b>Exit</b> – transitions to {@link ExitScreen} to close the application.</li>
  * </ul>
  *
- * {@link #onEnter()} blocks until the user makes a choice and returns the
- * appropriate next {@link Screen} immediately, so the TUI loop never renders
- * this screen in a waiting state.
+ * Replaces the original Lanterna blocking-dialog implementation with manual
+ * ANSI rendering plus arrow-key focus, integrated into the standard TUI
+ * event loop (no nested run loop, no widget framework).
  */
 public class DisconnectedScreen extends Screen {
 
-    private final String message;
+    private static final int FIELD_RECONNECT = 0;
+    private static final int FIELD_EXIT      = 1;
+    private static final int FIELD_COUNT     = 2;
 
-    public DisconnectedScreen(com.googlecode.lanterna.screen.Screen terminal,
-                              WindowBasedTextGUI gui,
+    private final String message;
+    private int focus = FIELD_RECONNECT;
+    private String localError;
+
+    public DisconnectedScreen(TuiTerminal terminal,
                               AppCoordinator coordinator,
                               String message) {
-        super(terminal, gui, coordinator);
+        super(terminal, coordinator);
         this.message = message;
-    }
-
-    // ── Lifecycle ─────────────────────────────────────────────────────────────
-
-    @Override
-    public Screen onEnter() {
-        return showDialog();
     }
 
     @Override
     public void render() throws IOException {
         terminal.clear();
-        TextGraphics tg = terminal.newTextGraphics();
-        int rows = terminal.getTerminalSize().getRows();
-        int cols = terminal.getTerminalSize().getColumns();
-        tg.setForegroundColor(TextColor.ANSI.RED);
-        String msg = "Connection lost. Select an option…";
-        tg.putString(Math.max(0, (cols - msg.length()) / 2), rows / 2, msg);
-        tg.setForegroundColor(TextColor.ANSI.WHITE);
+        TuiTextGraphics tg = terminal.newTextGraphics();
+        TuiSize size = terminal.getTerminalSize();
+        int cols = size.getColumns();
+        int rows = size.getRows();
+
+        int boxWidth  = 52;
+        int boxHeight = 11;
+        int x0 = Math.max(0, (cols - boxWidth) / 2);
+        int y0 = Math.max(0, (rows - boxHeight) / 2);
+
+        drawBox(tg, x0, y0, boxWidth, boxHeight, " MESOS – Disconnected ");
+
+        int innerX = x0 + 2;
+        int row = y0 + 2;
+
+        tg.setForegroundColor(TuiColor.RED);
+        tg.putString(innerX, row++, "Connection to the server was lost.");
+        tg.setForegroundColor(TuiColor.WHITE);
+        if (message != null && !message.isBlank()) {
+            tg.putString(innerX, row++, truncate(message, boxWidth - 4));
+        }
+        if (localError != null) {
+            tg.setForegroundColor(TuiColor.RED);
+            tg.putString(innerX, row++, truncate("! " + localError, boxWidth - 4));
+            tg.setForegroundColor(TuiColor.WHITE);
+        }
+        row++;
+
+        drawButton(tg, innerX,                row, "  Reconnect  ",         focus == FIELD_RECONNECT);
+        drawButton(tg, innerX + 18,           row, "  Exit Application  ",  focus == FIELD_EXIT);
+
+        row = y0 + boxHeight - 2;
+        tg.setForegroundColor(TuiColor.CYAN);
+        tg.putString(innerX, row, "← → / ↑ ↓ to navigate · ENTER to confirm");
+        tg.setForegroundColor(TuiColor.WHITE);
+
         terminal.refresh();
     }
 
-    // ── Dialog ────────────────────────────────────────────────────────────────
+    // ── Input events ──────────────────────────────────────────────────────────
 
-    private Screen showDialog() {
-        final Screen[] result = {null};
+    @Override public Screen visit(NavigateLeftEvent e)  { focus = (focus - 1 + FIELD_COUNT) % FIELD_COUNT; return this; }
+    @Override public Screen visit(NavigateRightEvent e) { focus = (focus + 1) % FIELD_COUNT;               return this; }
+    @Override public Screen visit(NavigateUpEvent e)    { focus = (focus - 1 + FIELD_COUNT) % FIELD_COUNT; return this; }
+    @Override public Screen visit(NavigateDownEvent e)  { focus = (focus + 1) % FIELD_COUNT;               return this; }
 
-        while (result[0] == null) {
-            BasicWindow window = new BasicWindow("MESOS – Disconnected");
-            window.setHints(List.of(Window.Hint.CENTERED));
-
-            Panel root = new Panel(new LinearLayout(Direction.VERTICAL));
-            root.addComponent(new Label(""));
-            root.addComponent(new Label("  Connection to the server was lost."));
-            if (message != null && !message.isBlank()) {
-                root.addComponent(new Label("  " + message));
-            }
-            root.addComponent(new Label(""));
-
-            root.addComponent(new Button("  Reconnect  ", () -> {
-                try {
-                    coordinator.connectRequest();
-                    result[0] = new ConnectingScreen(terminal, gui, coordinator);
-                } catch (Exception e) {
-                    MessageDialog.showMessageDialog(gui, "Error",
-                            "Could not reconnect: " + e.getMessage(),
-                            MessageDialogButton.OK);
-                }
-                window.close();
-            }));
-
-            root.addComponent(new Label(""));
-
-            root.addComponent(new Button("  Exit Application  ", () -> {
-                result[0] = ExitScreen.INSTANCE;
-                window.close();
-            }));
-
-            root.addComponent(new Label(""));
-            window.setComponent(root);
-            gui.addWindowAndWait(window);
+    @Override
+    public Screen visit(ConfirmEvent e) {
+        if (focus == FIELD_EXIT) {
+            return ExitScreen.INSTANCE;
         }
+        try {
+            coordinator.connectRequest();
+            return new ConnectingScreen(terminal, coordinator);
+        } catch (Exception ex) {
+            localError = "Could not reconnect: " + ex.getMessage();
+            return this;
+        }
+    }
 
-        return result[0];
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private void drawBox(TuiTextGraphics tg, int x, int y, int w, int h, String title) {
+        tg.setForegroundColor(TuiColor.WHITE);
+        tg.setBackgroundColor(TuiColor.BLACK);
+        StringBuilder top    = new StringBuilder("┌");
+        StringBuilder bottom = new StringBuilder("└");
+        for (int i = 0; i < w - 2; i++) {
+            top.append('─');
+            bottom.append('─');
+        }
+        top.append('┐');
+        bottom.append('┘');
+
+        tg.putString(x, y, top.toString());
+        tg.putString(x, y + h - 1, bottom.toString());
+        for (int i = 1; i < h - 1; i++) {
+            tg.putString(x, y + i, "│");
+            tg.putString(x + w - 1, y + i, "│");
+            tg.putString(x + 1, y + i, " ".repeat(w - 2));
+        }
+        if (title != null && !title.isEmpty()) {
+            int tx = x + Math.max(1, (w - title.length()) / 2);
+            tg.setForegroundColor(TuiColor.YELLOW);
+            tg.putString(tx, y, title);
+            tg.setForegroundColor(TuiColor.WHITE);
+        }
+    }
+
+    private void drawButton(TuiTextGraphics tg, int x, int y, String label, boolean focused) {
+        if (focused) {
+            tg.setBackgroundColor(TuiColor.WHITE);
+            tg.setForegroundColor(TuiColor.BLACK);
+        } else {
+            tg.setForegroundColor(TuiColor.WHITE);
+            tg.setBackgroundColor(TuiColor.BLACK);
+        }
+        tg.putString(x, y, label);
+        tg.setForegroundColor(TuiColor.WHITE);
+        tg.setBackgroundColor(TuiColor.BLACK);
+    }
+
+    private static String truncate(String s, int max) {
+        if (s == null) return "";
+        return (s.length() <= max) ? s : s.substring(0, max - 1) + "…";
     }
 }

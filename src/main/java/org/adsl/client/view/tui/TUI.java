@@ -1,22 +1,13 @@
 package org.adsl.client.view.tui;
 
-import com.googlecode.lanterna.TextColor;
-import com.googlecode.lanterna.graphics.TextGraphics;
-import com.googlecode.lanterna.gui2.MultiWindowTextGUI;
-import com.googlecode.lanterna.input.KeyStroke;
-import com.googlecode.lanterna.input.KeyType;
-import com.googlecode.lanterna.screen.TerminalScreen;
-import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
-import com.googlecode.lanterna.terminal.Terminal;
-import com.googlecode.lanterna.terminal.swing.SwingTerminalFrame;
-import com.googlecode.lanterna.terminal.swing.TerminalEmulatorAutoCloseTrigger;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.view.GameUI;
 import org.adsl.client.view.tui.events.*;
+import org.adsl.client.view.tui.render.Key;
+import org.adsl.client.view.tui.render.TuiTerminal;
 import org.adsl.client.view.tui.screens.ConnectingScreen;
 import org.adsl.client.view.tui.screens.ExitScreen;
 import org.adsl.client.view.tui.screens.Screen;
-import org.adsl.client.view.tui.screens.DisconnectedScreen;
 import org.adsl.shared.model.GameDTO;
 import org.adsl.shared.model.MatchResult;
 
@@ -30,10 +21,10 @@ import java.util.concurrent.LinkedBlockingQueue;
  *
  * Both server callbacks and key presses produce {@link Event} objects.
  * Server callbacks (network thread) enqueue events into a thread-safe queue.
- * Key presses are translated by {@link #toInputEvent(KeyStroke)} and
- * dispatched immediately in the main loop. In both cases the current
- * {@link Screen} receives the event via {@code event.accept(screen)} and
- * returns the next screen (same instance = stay, new instance = transition).
+ * Key presses are translated by {@link #toInputEvent(Key)} and dispatched
+ * immediately in the main loop. In both cases the current {@link Screen}
+ * receives the event via {@code event.accept(screen)} and returns the next
+ * screen (same instance = stay, new instance = transition).
  *
  * Disconnection is handled outside the visitor: {@link #onServerDisconnected()}
  * is called directly by {@link AppCoordinator} and runs a dedicated disconnect
@@ -41,8 +32,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class TUI implements GameUI {
 
-    private com.googlecode.lanterna.screen.Screen terminal;
-    private MultiWindowTextGUI gui;
+    private TuiTerminal terminal;
     private AppCoordinator appCoordinator;
 
     private Screen currentScreen;
@@ -59,26 +49,25 @@ public class TUI implements GameUI {
     @Override
     public void start() {
         try {
-            initLanterna();
-            currentScreen = new ConnectingScreen(terminal, gui, appCoordinator);
+            terminal = new TuiTerminal();
+            currentScreen = new ConnectingScreen(terminal, appCoordinator);
             appCoordinator.connectRequest();
             loop();
         } catch (Exception e) {
             showFatal("Startup error", e);
         } finally {
             shutdown();
+            System.exit(0);
         }
     }
 
     @Override
     public void shutdown() {
         running = false;
-        try {
-            if (terminal != null) {
-                terminal.stopScreen();
-                terminal = null;
-            }
-        } catch (IOException ignored) {}
+        if (terminal != null) {
+            terminal.close();
+            terminal = null;
+        }
     }
 
     // ── Main loop ─────────────────────────────────────────────────────────────
@@ -87,7 +76,7 @@ public class TUI implements GameUI {
         while (running && !(currentScreen instanceof ExitScreen)) {
             // 1. Render the current screen
             try {
-                if(currentScreen.isToRender()){
+                if (currentScreen.isToRender()) {
                     currentScreen.render();
                     currentScreen.setToRender(false);
                 }
@@ -99,9 +88,6 @@ public class TUI implements GameUI {
             // 2. Drain server events (enqueued by network callbacks)
             Event event;
             while ((event = eventQueue.poll()) != null) {
-                if (event instanceof ErrorEvent ee) {
-                    flashError(ee.getMessage());
-                }
                 Screen next = currentScreen.handleEvent(event);
                 if (next != currentScreen) {
                     currentScreen = next;
@@ -110,23 +96,21 @@ public class TUI implements GameUI {
                 }
             }
 
-            // 3. Translate key press into an input event and dispatch via visitor
+            // 3. Translate key press into an input event and dispatch via visitor.
+            //    pollInput already has its own short timeout, so no extra sleep.
             try {
-                KeyStroke key = terminal.pollInput();
+                Key key = terminal.pollInput();
                 if (key != null) {
                     Event inputEvent = toInputEvent(key);
                     if (inputEvent != null) {
                         Screen next = currentScreen.handleEvent(inputEvent);
                         if (next != currentScreen) {
                             currentScreen = next;
-                            if (!transitionTo(currentScreen)) return; // TODO: endGame does not imply end session
+                            if (!transitionTo(currentScreen)) return;
                         }
                     }
-                } else {
-                    Thread.sleep(20);
                 }
-            } catch (IOException | InterruptedException e) {
-                Thread.currentThread().interrupt();
+            } catch (IOException e) {
                 return;
             }
         }
@@ -153,21 +137,22 @@ public class TUI implements GameUI {
     }
 
     /**
-     * Translates a raw Lanterna keystroke into a semantic input event.
+     * Translates a raw key into a semantic input event.
      * Returns {@code null} for keys that carry no meaning in the TUI.
      */
-    private Event toInputEvent(KeyStroke key) {
-        return switch (key.getKeyType()) {
-            case Enter      -> new ConfirmEvent();
-            case ArrowLeft  -> new NavigateLeftEvent();
-            case ArrowRight -> new NavigateRightEvent();
-            case ArrowUp    -> new NavigateUpEvent();
-            case ArrowDown  -> new NavigateDownEvent();
-            case Character  -> {
-                Character c = key.getCharacter();
-                yield (c != null && c == ' ') ? new SelectEvent() : new CharInputEvent(c);
+    private Event toInputEvent(Key key) {
+        return switch (key.getType()) {
+            case ENTER       -> new ConfirmEvent();
+            case ARROW_LEFT  -> new NavigateLeftEvent();
+            case ARROW_RIGHT -> new NavigateRightEvent();
+            case ARROW_UP    -> new NavigateUpEvent();
+            case ARROW_DOWN  -> new NavigateDownEvent();
+            case BACKSPACE   -> new BackspaceEvent();
+            case CHARACTER   -> {
+                char c = key.getCharacter();
+                yield (c == ' ') ? new SelectEvent() : new CharInputEvent(c);
             }
-            default         -> null;
+            default          -> null;
         };
     }
 
@@ -214,7 +199,7 @@ public class TUI implements GameUI {
     public void onServerDisconnected() {
         if (terminal == null) return;
         appCoordinator.stopPingScheduler();
-        eventQueue.add(new DisconnectedEvent(terminal, gui, appCoordinator,
+        eventQueue.add(new DisconnectedEvent(
                 "Server disconnected. Check your network connection."));
     }
 
@@ -223,44 +208,16 @@ public class TUI implements GameUI {
     private void showFatal(String label, Exception e) {
         try {
             if (terminal == null) return;
+            // Best-effort: write the message in plain ANSI red, wait for any key, then unwind.
+            org.adsl.client.view.tui.render.TuiTextGraphics tg = terminal.newTextGraphics();
             terminal.clear();
-            TextGraphics tg = terminal.newTextGraphics();
-            tg.setForegroundColor(TextColor.ANSI.RED);
+            tg.setForegroundColor(org.adsl.client.view.tui.render.TuiColor.RED);
             tg.putString(2, 1, "FATAL: " + label + " (" + e.getClass().getSimpleName() + ")");
             tg.putString(2, 2, e.getMessage() != null ? e.getMessage() : "(no message)");
-            tg.setForegroundColor(TextColor.ANSI.WHITE);
-            tg.putString(2, 4, "Press ENTER to exit.");
+            tg.setForegroundColor(org.adsl.client.view.tui.render.TuiColor.WHITE);
+            tg.putString(2, 4, "Press any key to exit.");
             terminal.refresh();
-            terminal.readInput();
+            terminal.pollInput(60_000L);
         } catch (IOException ignored) {}
-    }
-
-    private void flashError(String msg) {
-        try {
-            if (terminal == null) return;
-            int row = terminal.getTerminalSize().getRows() - 2;
-            TextGraphics tg = terminal.newTextGraphics();
-            tg.setForegroundColor(TextColor.ANSI.RED);
-            tg.putString(2, row, "! ERROR: " + msg);
-            tg.setForegroundColor(TextColor.ANSI.WHITE);
-            terminal.refresh();
-        } catch (IOException ignored) {}
-    }
-
-    // ── Lanterna bootstrap ────────────────────────────────────────────────────
-
-    private void initLanterna() throws IOException {
-        Terminal lanternaTerminal;
-        if (System.getProperty("os.name", "").toLowerCase().contains("win")) {
-            SwingTerminalFrame frame = new SwingTerminalFrame("MESOS – Ancient Tribe Strategy",
-                    TerminalEmulatorAutoCloseTrigger.CloseOnExitPrivateMode);
-            frame.setVisible(true);
-            lanternaTerminal = frame;
-        } else {
-            lanternaTerminal = new DefaultTerminalFactory().createTerminal();
-        }
-        terminal = new TerminalScreen(lanternaTerminal);
-        terminal.startScreen();
-        gui = new MultiWindowTextGUI(terminal);
     }
 }
