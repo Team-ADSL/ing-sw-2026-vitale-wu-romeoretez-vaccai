@@ -52,8 +52,6 @@ public class EndGameStateTest {
         state.onEntry();
 
         assertTrue(fakeGame.endGameResultsSent, "sendEndGameResults must be called");
-        assertTrue(fakeGame.updateGameSent, "sendUpdateGame must be called after results are sent");
-        assertNull(fakeGame.getPhase(), "Phase must be cleared to null after end game");
     }
 
     @Test

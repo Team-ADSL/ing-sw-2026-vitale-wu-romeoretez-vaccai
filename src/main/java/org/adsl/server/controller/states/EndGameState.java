@@ -69,8 +69,6 @@ public class EndGameState extends ControllerState {
             System.err.println("ERROR: [END GAME] Failed to save results for game " + getGame().getGameId() + ": " + e.getMessage());
             throw new ServerException("Error during saving match results.");
         }
-        getGame().setPhase(null);
-        getGame().sendUpdateGame();
-        return getNextState();
+        return null;
     }
 }

@@ -256,6 +256,20 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         home.update();
     }
 
+    @Override
+    public void visit(ExitGameRequest req, VirtualClient virtualClient) throws ServerException {
+        pingRoutine(virtualClient);
+
+        controlIfLogged(virtualClient);
+        if(virtualClient.getGameId().isEmpty()){
+            throw new ServerException("[EXIT GAME REQUEST] Virtual client has no gameId associated.");
+        }
+        
+        home.addObserver(virtualClient);
+        virtualClient.setGameId(null);
+        home.update();
+    }
+
     public void sendToGameController(int gameId, ClientRequest req, VirtualClient virtualClient) throws ServerException {
         GameController gameController = games.get(gameId);
         if(gameController != null){
@@ -270,16 +284,6 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         games.remove(gameId);
 
         home.removeGame(gameId);
-        List<VirtualClient> newClientInHome = userConnected.values().stream()
-                .filter(c -> c.getGameId().isPresent())
-                .filter(c -> c.getGameId().get() == gameId)
-                .toList();
-        for(VirtualClient c : newClientInHome){
-            home.addObserver(c);
-            c.setGameId(null);
-        }
-        home.update();
-
         try {
             gamePersistenceManager.removeGame(gameId);
         } catch(Exception e){
