@@ -67,6 +67,7 @@ public class TUI implements GameUI {
             showFatal("Startup error", e);
         } finally {
             shutdown();
+            System.exit(0);
         }
     }
 
