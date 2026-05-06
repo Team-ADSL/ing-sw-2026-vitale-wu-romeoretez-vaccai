@@ -5,6 +5,7 @@ import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Trigger;
 import org.adsl.server.model.cards.buildings.utils.BuildingBonus;
 import org.adsl.server.model.Player;
+import org.adsl.shared.model.CardToken;
 
 import java.util.Map;
 import java.util.Set;
@@ -46,5 +47,15 @@ public class Sustenance extends Event {
                 bonus.reset();
             }
         }
+    }
+
+    @Override
+    protected String getTypeLabel() {
+        return CardToken.SUSTENANCE + " " + eraToRoman(getEra());
+    }
+
+    @Override
+    protected String getEffectsLabel() {
+        return CardToken.PP + "-" + lostPP;
     }
 }

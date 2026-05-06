@@ -2,6 +2,7 @@ package org.adsl.server.model.cards.characters;
 
 import org.adsl.server.model.cards.Card;
 import org.adsl.shared.enums.CardType;
+import org.adsl.shared.model.CardToken;
 
 import java.util.Map;
 import java.util.Set;
@@ -22,5 +23,15 @@ public class Gatherer extends Character {
 
     public int getDiscount() {
         return discount;
+    }
+
+    @Override
+    protected String getTypeLabel() {
+        return CardToken.GATHERER + " " + eraToRoman(getEra());
+    }
+
+    @Override
+    protected String getEffectsLabel() {
+        return CardToken.FOOD_COST + "-" + discount;
     }
 }

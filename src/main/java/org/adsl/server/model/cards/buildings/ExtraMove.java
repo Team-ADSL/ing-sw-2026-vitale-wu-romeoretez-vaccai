@@ -3,6 +3,7 @@ package org.adsl.server.model.cards.buildings;
 import org.adsl.shared.enums.Trigger;
 import org.adsl.server.model.cards.characters.Character;
 import org.adsl.server.model.Player;
+import org.adsl.shared.model.CardToken;
 
 import java.util.Set;
 
@@ -20,5 +21,15 @@ public class ExtraMove extends Building {
                 p.getBuildingBonus().setExtraMove(true);
             });
         }
+    }
+
+    @Override
+    protected String getTypeLabel() {
+        return CardToken.BUILDING + " " + eraToRoman(getEra());
+    }
+
+    @Override
+    protected String getEffectsLabel() {
+        return "+1 " + CardToken.EXTRA_MOVE + " " + CardToken.PP + getEndGamePP();
     }
 }

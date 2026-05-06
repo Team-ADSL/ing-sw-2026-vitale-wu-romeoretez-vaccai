@@ -26,6 +26,8 @@ public class EndRoundStateTest {
             @Override public boolean canBeDrawn(Player p) { return true; }
             @Override public void insert(Map<CardType, Set<Card>> cards) {}
             @Override public void activeEffect(Set<Player> players, Trigger t) {}
+            @Override protected String getTypeLabel() { return "fake"; }
+            @Override protected String getEffectsLabel() { return ""; }
         };
     }
 

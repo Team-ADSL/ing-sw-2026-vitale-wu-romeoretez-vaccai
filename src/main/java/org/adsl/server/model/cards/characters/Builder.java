@@ -2,6 +2,7 @@ package org.adsl.server.model.cards.characters;
 
 import org.adsl.server.model.cards.Card;
 import org.adsl.shared.enums.CardType;
+import org.adsl.shared.model.CardToken;
 
 import java.util.Map;
 import java.util.Set;
@@ -28,5 +29,15 @@ public class Builder extends Character {
 
     public int getPP() {
         return pp;
+    }
+
+    @Override
+    protected String getTypeLabel() {
+        return CardToken.BUILDER + " " + eraToRoman(getEra());
+    }
+
+    @Override
+    protected String getEffectsLabel() {
+        return CardToken.FOOD_COST + "-" + discount + " " + CardToken.PP + pp;
     }
 }

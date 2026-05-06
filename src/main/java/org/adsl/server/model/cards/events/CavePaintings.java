@@ -5,6 +5,7 @@ import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Trigger;
 import org.adsl.server.model.cards.buildings.utils.BuildingBonus;
 import org.adsl.server.model.Player;
+import org.adsl.shared.model.CardToken;
 
 import java.util.Map;
 import java.util.Set;
@@ -47,5 +48,15 @@ public class CavePaintings extends Event {
                 bonus.reset();
             }
         }
+    }
+
+    @Override
+    protected String getTypeLabel() {
+        return CardToken.PAINTINGS + " " + eraToRoman(getEra());
+    }
+
+    @Override
+    protected String getEffectsLabel() {
+        return CardToken.ARTIST + ">=" + minArtists + " " + CardToken.PP + "x" + multiplierPP + "/-" + lostPP;
     }
 }

@@ -4,6 +4,7 @@ import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Trigger;
 import org.adsl.server.model.cards.buildings.utils.BuildingEffect;
 import org.adsl.server.model.Player;
+import org.adsl.shared.model.CardToken;
 
 import java.util.Optional;
 import java.util.Set;
@@ -43,6 +44,29 @@ public class EndGame extends Building {
                 }
             }
         }
+    }
+
+    @Override
+    protected String getTypeLabel() {
+        return CardToken.BUILDING + " " + eraToRoman(getEra());
+    }
+
+    @Override
+    protected String getEffectsLabel() {
+        String base = CardToken.ENDGAME + " " + CardToken.PP + getEndGamePP();
+        if (characterTypeMultiplier != null) {
+            String charToken = switch (characterTypeMultiplier) {
+                case HUNTER   -> CardToken.HUNTER;
+                case GATHERER -> CardToken.GATHERER;
+                case BUILDER  -> CardToken.BUILDER;
+                case SHAMAN   -> CardToken.SHAMAN;
+                case ARTIST   -> CardToken.ARTIST;
+                case INVENTOR -> CardToken.INVENTOR;
+                default       -> "";
+            };
+            base += " x" + charToken;
+        }
+        return base;
     }
 }
 //GESTIRE IL CAMBIO DI PP MULTIPLIER IN BASE AL PERSONAGGIO
