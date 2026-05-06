@@ -12,7 +12,7 @@ public final class CardTokens {
     private CardTokens() {}
 
     private static final Map<String, String> EMOJI_MAP = Map.ofEntries(
-        Map.entry(CardToken.BUILDING,      "🏗️"),
+        Map.entry(CardToken.BUILDING,      "🏛️"),
         Map.entry(CardToken.HUNTER,        "🏹"),
         Map.entry(CardToken.GATHERER,      "🧺"),
         Map.entry(CardToken.BUILDER,       "🔨"),
