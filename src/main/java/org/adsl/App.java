@@ -227,16 +227,16 @@ public class App
         System.out.println("=== USAGE ===");
 
         System.out.println("\nTo start as SERVER:");
-        System.out.println("java -jar mesos.jar --server <socket-port> <rmi-port> <recover-directory>");
+        System.out.println("java -jar target/mesos.jar --server <socket-port> <rmi-port> <recover-directory>");
         System.out.println("  <socket-port>       : Network socket listening port (e.g. 8080)");
         System.out.println("  <rmi-port>          : RMI registry listening port (e.g. 1099)");
         System.out.println("  <recover-directory> : Path for recovery files (e.g. ./saves)");
 
         System.out.println("\nTo start in TEST-TUI mode (same terminal, in-process fake server):");
-        System.out.println("java -jar mesos.jar --test-tui");
+        System.out.println("java -jar target/mesos.jar --test-tui");
 
         System.out.println("\nTo start as CLIENT:");
-        System.out.println("java -jar mesos.jar --client <connection> <interface> <ip-server> <port>");
+        System.out.println("java -jar target/mesos.jar --client <connection> <interface> <ip-server> <port>");
         System.out.println("  <connection> : --socket or --rmi");
         System.out.println("  <interface>  : --tui or --gui");
         System.out.println("  <ip-server>  : IP address of the server (e.g. 127.0.0.1)");
