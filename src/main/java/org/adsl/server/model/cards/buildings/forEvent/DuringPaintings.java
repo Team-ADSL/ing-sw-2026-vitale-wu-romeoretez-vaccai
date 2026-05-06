@@ -1,4 +1,4 @@
-package org.adsl.server.model.cards.buildings.forEvent;
+﻿package org.adsl.server.model.cards.buildings.forEvent;
 
 import org.adsl.shared.enums.Trigger;
 import org.adsl.server.model.Player;
@@ -22,5 +22,15 @@ public class DuringPaintings extends DuringEvent {
         }
         Player p = playerContainer.get();
         p.getBuildingBonus().setArtistFood(true);
+    }
+
+    @Override
+    protected String getTypeLabel() {
+        return "🏗️ " + eraToRoman(getEra());
+    }
+
+    @Override
+    protected String getEffectsLabel() {
+        return "🗳️➔🍞 🌟" + getEndGamePP();
     }
 }

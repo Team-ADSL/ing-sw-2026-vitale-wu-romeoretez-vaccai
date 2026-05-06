@@ -1,4 +1,4 @@
-package org.adsl.server.model.cards.buildings;
+﻿package org.adsl.server.model.cards.buildings;
 
 import org.adsl.server.model.cards.Card;
 import org.adsl.shared.enums.CardType;
@@ -69,5 +69,19 @@ public class SinceBuilt extends Building {
                 }
             }
         }
+    }
+
+    @Override
+    protected String getTypeLabel() {
+        return "🏗️ " + eraToRoman(getEra());
+    }
+
+    @Override
+    protected String getEffectsLabel() {
+        return switch (buildingEffect) {
+            case FOOD_COMPLETE_SET -> "🍲 6🎨⇒+5";
+            case COUPLE_INVENTOR -> "2💡⇒+🍞";
+            default -> "🌟" + getEndGamePP();
+        };
     }
 }

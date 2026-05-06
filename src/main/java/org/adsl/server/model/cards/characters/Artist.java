@@ -16,4 +16,14 @@ public class Artist extends Character {
     public void insert(Map<CardType, Set<Card>> cards) {
         if(cards.containsKey(CardType.ARTIST)) cards.get(CardType.ARTIST).add(this);
     }
+
+    @Override
+    protected String getTypeLabel() {
+        return "🎨 " + eraToRoman(getEra());
+    }
+
+    @Override
+    protected String getEffectsLabel() {
+        return "";
+    }
 }

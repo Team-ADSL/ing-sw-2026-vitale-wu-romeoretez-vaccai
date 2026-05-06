@@ -23,4 +23,14 @@ public class Gatherer extends Character {
     public int getDiscount() {
         return discount;
     }
+
+    @Override
+    protected String getTypeLabel() {
+        return "🧺 " + eraToRoman(getEra());
+    }
+
+    @Override
+    protected String getEffectsLabel() {
+        return "💰-" + discount;
+    }
 }

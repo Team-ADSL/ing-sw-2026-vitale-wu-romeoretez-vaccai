@@ -1,4 +1,4 @@
-package org.adsl.server.model.cards.buildings;
+﻿package org.adsl.server.model.cards.buildings;
 
 import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Trigger;
@@ -43,6 +43,29 @@ public class EndGame extends Building {
                 }
             }
         }
+    }
+
+    @Override
+    protected String getTypeLabel() {
+        return "🏗️ " + eraToRoman(getEra());
+    }
+
+    @Override
+    protected String getEffectsLabel() {
+        String base = "🏁 🌟" + getEndGamePP();
+        if (characterTypeMultiplier != null) {
+            String charEmoji = switch (characterTypeMultiplier) {
+                case HUNTER -> "🏹";
+                case GATHERER -> "🧺";
+                case BUILDER -> "🔨";
+                case SHAMAN -> "🔮";
+                case ARTIST -> "🎨";
+                case INVENTOR -> "💡";
+                default -> "";
+            };
+            base += " x" + charEmoji;
+        }
+        return base;
     }
 }
 //GESTIRE IL CAMBIO DI PP MULTIPLIER IN BASE AL PERSONAGGIO
