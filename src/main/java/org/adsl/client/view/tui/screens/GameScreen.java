@@ -777,12 +777,13 @@ public class GameScreen extends Screen {
             {"🐗", "Hunt – PP per hunter"},
             {"🍲", "Sustenance – PP penalty"},
             {"🎭", "Shamanic Ritual – PP trade"},
-            {"🗳️", "Cave Paintings – artist bonus"},
+            {"🖌️", "Cave Paintings – artist bonus"},
             {"─── BUILDINGS ─────────────────────"},
             {"🏛️", "All buildings"},
             {"🏁", "End-game PP bonus"},
             {"─── SYMBOLS ───────────────────────"},
             {"🌟", "Prestige Points (PP)"},
+            {"★", "Shaman ritual stars"},
             {"💰", "Food cost"},
             {"🍖", "Extra food on pick"},
             {"🍞", "Food reward"},
@@ -799,7 +800,10 @@ public class GameScreen extends Screen {
                 tg.setForegroundColor(TuiColor.WHITE);
             } else {
                 int tokenW = visualWidth(entry[0]);
-                tg.putString(x + 2, lineY, entry[0] + " " + padRight(entry[1], w - 5 - tokenW));
+                boolean hasFE0F = entry[0].indexOf('️') >= 0;
+                String sep = hasFE0F ? "" : " ";
+                int descW = hasFE0F ? (w - 4 - tokenW) : (w - 5 - tokenW);
+                tg.putString(x + 2, lineY, entry[0] + sep + padRight(entry[1], descW));
             }
             lineY++;
             if (lineY >= y + h - 1) break;
