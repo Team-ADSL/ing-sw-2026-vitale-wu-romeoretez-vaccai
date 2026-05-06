@@ -1,4 +1,4 @@
-package org.adsl.server.model.cards.buildings.forEvent;
+﻿package org.adsl.server.model.cards.buildings.forEvent;
 
 import org.adsl.shared.enums.Trigger;
 import org.adsl.server.model.cards.buildings.utils.BuildingEffect;
@@ -34,5 +34,20 @@ public class DuringRitual extends DuringEvent {
         if (buildingEffect == BuildingEffect.RITUAL_DOUBLE_PP) {
             p.getBuildingBonus().setShamanMulitiplierPP(2);
         }
+    }
+
+    @Override
+    protected String getTypeLabel() {
+        return "🏗️ " + eraToRoman(getEra());
+    }
+
+    @Override
+    protected String getEffectsLabel() {
+        return switch (buildingEffect) {
+            case RITUAL_IMMUNITY -> "🎭⇒🛡️ 🌟" + getEndGamePP();
+            case RITUAL_STARS_BONUS -> "🎭⇒+🌟3 🌟" + getEndGamePP();
+            case RITUAL_DOUBLE_PP -> "🎭⇒x2🌟 🌟" + getEndGamePP();
+            default -> "🌟" + getEndGamePP();
+        };
     }
 }

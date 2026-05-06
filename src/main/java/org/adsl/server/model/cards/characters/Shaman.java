@@ -1,4 +1,4 @@
-package org.adsl.server.model.cards.characters;
+﻿package org.adsl.server.model.cards.characters;
 
 import org.adsl.server.model.cards.Card;
 import org.adsl.shared.enums.CardType;
@@ -22,5 +22,15 @@ public class Shaman extends Character {
     @Override
     public void insert(Map<CardType, Set<Card>> cards) {
         if(cards.containsKey(CardType.SHAMAN)) cards.get(CardType.SHAMAN).add(this);
+    }
+
+    @Override
+    protected String getTypeLabel() {
+        return "🔮 " + eraToRoman(getEra());
+    }
+
+    @Override
+    protected String getEffectsLabel() {
+        return "🌟".repeat(starNum);
     }
 }

@@ -1,4 +1,4 @@
-package org.adsl.server.model.cards.buildings;
+﻿package org.adsl.server.model.cards.buildings;
 
 import org.adsl.shared.enums.Trigger;
 import org.adsl.server.model.Player;
@@ -18,5 +18,15 @@ public class BonusTotem extends Building {
                 p.getBuildingBonus().setBonusFoodTile(true);
             });
         }
+    }
+
+    @Override
+    protected String getTypeLabel() {
+        return "🏗️ " + eraToRoman(getEra());
+    }
+
+    @Override
+    protected String getEffectsLabel() {
+        return "🗿+🍞";
     }
 }

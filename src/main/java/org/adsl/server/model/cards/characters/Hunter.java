@@ -35,4 +35,14 @@ public class Hunter extends Character {
             }
         }
     }
+
+    @Override
+    protected String getTypeLabel() {
+        return "🏹 " + eraToRoman(getEra());
+    }
+
+    @Override
+    protected String getEffectsLabel() {
+        return extraFood ? "🍖+" : "🍖";
+    }
 }

@@ -26,8 +26,20 @@ public abstract class Card implements Serializable {
     public abstract void insert(Map<CardType, Set<Card>> cards);
     public abstract void activeEffect(Set<Player> players, Trigger t);
 
+    protected String eraToRoman(int era) {
+        return switch (era) {
+            case 1 -> "I";
+            case 2 -> "II";
+            case 3 -> "III";
+            default -> String.valueOf(era);
+        };
+    }
+
+    protected abstract String getTypeLabel();
+    protected abstract String getEffectsLabel();
+
     public CardDTO createDTO(){
-        return new CardDTO(id);
+        return new CardDTO(id, getTypeLabel(), getEffectsLabel());
     }
 
     public String getId() {

@@ -1,4 +1,4 @@
-package org.adsl.server.model.cards.events;
+﻿package org.adsl.server.model.cards.events;
 
 import org.adsl.server.model.cards.Card;
 import org.adsl.shared.enums.CardType;
@@ -46,5 +46,15 @@ public class Sustenance extends Event {
                 bonus.reset();
             }
         }
+    }
+
+    @Override
+    protected String getTypeLabel() {
+        return "🍲 " + eraToRoman(getEra());
+    }
+
+    @Override
+    protected String getEffectsLabel() {
+        return "🌟-" + lostPP;
     }
 }

@@ -1,4 +1,4 @@
-package org.adsl.server.model.cards.buildings.forEvent;
+﻿package org.adsl.server.model.cards.buildings.forEvent;
 
 import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Trigger;
@@ -30,5 +30,24 @@ public class DuringSustenance extends DuringEvent {
 
     public CardType getTypeMultiplier() {
         return typeMultiplier;
+    }
+
+    @Override
+    protected String getTypeLabel() {
+        return "🏗️ " + eraToRoman(getEra());
+    }
+
+    @Override
+    protected String getEffectsLabel() {
+        String charEmoji = switch (typeMultiplier) {
+            case HUNTER -> "🏹";
+            case GATHERER -> "🧺";
+            case BUILDER -> "🔨";
+            case SHAMAN -> "🔮";
+            case ARTIST -> "🎨";
+            case INVENTOR -> "💡";
+            default -> "";
+        };
+        return "🍲⇒" + charEmoji + "x🍞 🌟" + getEndGamePP();
     }
 }
