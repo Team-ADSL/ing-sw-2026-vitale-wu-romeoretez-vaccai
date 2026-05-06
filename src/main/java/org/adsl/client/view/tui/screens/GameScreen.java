@@ -430,16 +430,24 @@ public class GameScreen extends Screen {
         StringBuilder effectLine = new StringBuilder("  ");
         StringBuilder botLine    = new StringBuilder("  ");
 
+        // Card stride: box (CARD_W+2) + 1 gap = CARD_W+3 columns per card.
+        // The right border of card at rendered-index n sits at 0-based column:
+        //   2  (initial "  " indent)  +  n * (CARD_W+3)  +  (CARD_W+1)
+        // We jump the cursor there with "\033[NG" (N = 1-based) before printing │,
+        // so the right border is always at the correct column regardless of how
+        // the terminal rendered the emoji content.
         int count = 0;
         for (int i = 0; i < cards.size(); i++) {
-            int nextWidth = topLine.length() + CARD_W + 2 + 1; // +1 gap
-            if (nextWidth > cols - 4) break;
+            if (2 + (count + 1) * (CARD_W + 3) > cols - 1) break;
+
+            // 1-based ANSI column of this card's right border
+            String jumpRight = "\033[" + (2 + count * (CARD_W + 3) + CARD_W + 2) + "G";
 
             CardDTO card = cards.get(i);
             if (card == null) {
                 topLine.append(border).append(" ");
-                typeLine.append(emptyMid).append(" ");
-                effectLine.append(emptyLabel).append(" ");
+                typeLine.append("│").append(" ".repeat(CARD_W)).append(jumpRight).append("│").append(" ");
+                effectLine.append("│").append(padRight(padLeft("empty", (CARD_W + 5) / 2), CARD_W)).append(jumpRight).append("│").append(" ");
                 botLine.append(borderBot).append(" ");
             } else {
                 boolean highlighted = highlights.contains(new Move(i, rowType));
@@ -452,10 +460,9 @@ public class GameScreen extends Screen {
                 String tl = padRight(CardTokens.toEmoji(card.typeLabel()   != null ? card.typeLabel()   : ""), CARD_W);
                 String el = padRight(CardTokens.toEmoji(card.effectsLabel() != null ? card.effectsLabel() : ""), CARD_W);
 
-                // Embed ANSI color codes inline for type and effect lines
                 topLine.append(c.fg()).append(border).append(TuiColor.WHITE.fg()).append(" ");
-                typeLine.append(c.fg()).append("│").append(tl).append("│").append(TuiColor.WHITE.fg()).append(" ");
-                effectLine.append(c.fg()).append("│").append(el).append("│").append(TuiColor.WHITE.fg()).append(" ");
+                typeLine.append(c.fg()).append("│").append(tl).append(jumpRight).append("│").append(TuiColor.WHITE.fg()).append(" ");
+                effectLine.append(c.fg()).append("│").append(el).append(jumpRight).append("│").append(TuiColor.WHITE.fg()).append(" ");
                 botLine.append(c.fg()).append(borderBot).append(TuiColor.WHITE.fg()).append(" ");
             }
             count++;
@@ -741,7 +748,7 @@ public class GameScreen extends Screen {
     }
 
     private void drawLegend(TuiTextGraphics tg, TuiSize sz) {
-        int w = 36;
+        int w = 38;
         int h = 26;
         int x = sz.getColumns() - w - 2;
         int y = 1;
@@ -759,24 +766,22 @@ public class GameScreen extends Screen {
         tg.putString(x + 2, y, " LEGEND (L to close) ");
 
         String[][] entries = {
-            {"─── CHARACTERS ──────────────────"}, //TODO: creare una classe java, che renderizza
-                // TODO: le colonne e le emoji esattamente come GameScreen, per testare il corretto allineamento delle emoji, in modo tale da
-                // TODO: dover eseguire sempre lo stesso script ed evitare di startare il gioco ogni volta
-            {"🏹", "Hunter       – draws on pick"},
-            {"🧺", "Gatherer     – building discount"},
-            {"🔨", "Builder      – build discount+PP"},
-            {"🔮", "Shaman       – ritual bonus"},
-            {"🎨", "Artist       – paintings bonus"},
-            {"💡", "Inventor     – activates icon"},
-            {"─── EVENTS ──────────────────────"},
-            {"🐗", "Hunt         – PP per hunter"},
-            {"🍲", "Sustenance   – PP penalty"},
+            {"─── CHARACTERS ────────────────────"},
+            {"🏹", "Hunter – draws on pick"},
+            {"🧺", "Gatherer – building discount"},
+            {"🔨", "Builder – build discount+PP"},
+            {"🔮", "Shaman – ritual bonus"},
+            {"🎨", "Artist – paintings bonus"},
+            {"💡", "Inventor – activates icon"},
+            {"─── EVENTS ────────────────────────"},
+            {"🐗", "Hunt – PP per hunter"},
+            {"🍲", "Sustenance – PP penalty"},
             {"🎭", "Shamanic Ritual – PP trade"},
-            {"🗳️", "Cave Paintings  – artist bonus"},
-            {"─── BUILDINGS ───────────────────"},
-            {"🏗️", "All buildings"},
+            {"🗳️", "Cave Paintings – artist bonus"},
+            {"─── BUILDINGS ─────────────────────"},
+            {"🏛️", "All buildings"},
             {"🏁", "End-game PP bonus"},
-            {"─── SYMBOLS ─────────────────────"},
+            {"─── SYMBOLS ───────────────────────"},
             {"🌟", "Prestige Points (PP)"},
             {"💰", "Food cost"},
             {"🍖", "Extra food on pick"},
@@ -785,18 +790,16 @@ public class GameScreen extends Screen {
             {"I II III", "Card Era"},
         };
 
-
-
         tg.setForegroundColor(TuiColor.WHITE);
         int lineY = y + 2;
         for (String[] entry : entries) {
             if (entry.length == 1) {
-                // Section header
                 tg.setForegroundColor(TuiColor.CYAN);
                 tg.putString(x + 2, lineY, padRight(entry[0], w - 4));
                 tg.setForegroundColor(TuiColor.WHITE);
             } else {
-                tg.putString(x + 2, lineY, entry[0] + " " + padRight(entry[1], w - 5));
+                int tokenW = visualWidth(entry[0]);
+                tg.putString(x + 2, lineY, entry[0] + " " + padRight(entry[1], w - 5 - tokenW));
             }
             lineY++;
             if (lineY >= y + h - 1) break;
