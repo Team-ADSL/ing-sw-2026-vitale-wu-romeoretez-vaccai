@@ -2,7 +2,9 @@ package org.adsl.client.view.tui.screens;
 
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.view.tui.CardCatalog;
+import org.adsl.client.view.tui.CardTokens;
 import org.adsl.client.view.tui.events.*;
+import org.adsl.client.view.tui.events.CharInputEvent;
 import org.adsl.client.view.tui.render.TuiColor;
 import org.adsl.client.view.tui.render.TuiSize;
 import org.adsl.client.view.tui.render.TuiTerminal;
@@ -45,6 +47,10 @@ public class GameScreen extends Screen {
     private int upperCount = 0;
     private int lowerCount = 0;
 
+    // Legend overlay
+    private boolean showLegend = false;
+    private static final int CARD_W = 12;  // inner content width (box = CARD_W+2)
+
     public GameScreen(TuiTerminal terminal,
             AppCoordinator coordinator,
             String username,
@@ -72,6 +78,10 @@ public class GameScreen extends Screen {
             case NOT_MY_TURN,
                     WAITING_SERVER ->
                 renderBoard(tg, sz, -1, Collections.emptySet());
+        }
+
+        if (showLegend) {
+            drawLegend(tg, sz);
         }
 
         if (error != null) {
@@ -126,6 +136,14 @@ public class GameScreen extends Screen {
             Row row = onTopRow ? Row.UPPER : Row.LOWER;
             List<CardDTO> cards = onTopRow ? game.board().topRow() : game.board().lowRow();
             toggleCardSelection(row, cards);
+        }
+        return this;
+    }
+
+    @Override
+    public Screen visit(CharInputEvent e) {
+        if (e.getCharacter() == 'l' || e.getCharacter() == 'L') {
+            showLegend = !showLegend;
         }
         return this;
     }
@@ -324,13 +342,13 @@ public class GameScreen extends Screen {
         drawOtherPlayers(tg, 24, cols);
 
         String hint = switch (subState) {
-            case MY_TURN_TOTEM -> "← → Navigate offer tiles   ENTER Place totem";
+            case MY_TURN_TOTEM -> "← → Navigate offer tiles   ENTER Place totem   L Legend";
             case MY_TURN_CARDS -> String.format(
-                    "← → Navigate   ↑ ↓ Switch rows   SPACE Select (%d/%d)   ENTER Confirm",
+                    "← → Navigate   ↑ ↓ Switch rows   SPACE Select (%d/%d)   ENTER Confirm   L Legend",
                     selectedMoves.size(), upperCount + lowerCount);
-            case WAITING_SERVER -> "Waiting for server...";
-            case NOT_MY_TURN -> waitingHint();
-            default -> "";
+            case WAITING_SERVER -> "Waiting for server...   L Legend";
+            case NOT_MY_TURN -> waitingHint() + "   L Legend";
+            default -> "L Legend";
         };
         drawControls(tg, sz, hint);
     }
@@ -399,45 +417,74 @@ public class GameScreen extends Screen {
 
     private void drawCardRow(TuiTextGraphics tg, List<CardDTO> cards, int startRow,
             Set<Move> highlights, Row rowType, int cols) {
-        int col = 2;
+        // Build card data first (before writing, so colors reset cleanly)
+        String border = "┌" + "─".repeat(CARD_W) + "┐";
+        String borderBot = "└" + "─".repeat(CARD_W) + "┘";
+        String emptyMid = "│" + " ".repeat(CARD_W) + "│";
+        String emptyLabel = "│" + padRight(padLeft("empty", (CARD_W + 5) / 2), CARD_W) + "│";
+
+        // We render row-by-row (all tops, then all type lines, etc.)
+        // so that each output line is a single putString call.
+        StringBuilder topLine    = new StringBuilder("  ");
+        StringBuilder typeLine   = new StringBuilder("  ");
+        StringBuilder effectLine = new StringBuilder("  ");
+        StringBuilder botLine    = new StringBuilder("  ");
+
+        // Card stride: box (CARD_W+2) + 1 gap = CARD_W+3 columns per card.
+        // The right border of card at rendered-index n sits at 0-based column:
+        //   2  (initial "  " indent)  +  n * (CARD_W+3)  +  (CARD_W+1)
+        // We jump the cursor there with "\033[NG" (N = 1-based) before printing │,
+        // so the right border is always at the correct column regardless of how
+        // the terminal rendered the emoji content.
+        int count = 0;
         for (int i = 0; i < cards.size(); i++) {
+            if (2 + (count + 1) * (CARD_W + 3) > cols - 1) break;
+
+            // 1-based ANSI column of this card's right border
+            String jumpRight = "\033[" + (2 + count * (CARD_W + 3) + CARD_W + 2) + "G";
+
             CardDTO card = cards.get(i);
             if (card == null) {
-                tg.setForegroundColor(TuiColor.DARK_GRAY);
-                tg.putString(col, startRow, "┌────────┐");
-                tg.putString(col, startRow + 1, "│        │");
-                tg.putString(col, startRow + 2, "│  empty │");
-                tg.putString(col, startRow + 3, "└────────┘");
-                tg.setForegroundColor(TuiColor.WHITE);
+                topLine.append(border).append(" ");
+                typeLine.append("│").append(" ".repeat(CARD_W)).append(jumpRight).append("│").append(" ");
+                effectLine.append("│").append(padRight(padLeft("empty", (CARD_W + 5) / 2), CARD_W)).append(jumpRight).append("│").append(" ");
+                botLine.append(borderBot).append(" ");
             } else {
                 boolean highlighted = highlights.contains(new Move(i, rowType));
                 CardType type = CardCatalog.typeFromId(card.id());
-
                 TuiColor cardColor = TuiColor.WHITE;
-                if (type == CardType.BUILDINGS)
-                    cardColor = TuiColor.MAGENTA;
-                else if (CardCatalog.isEvent(type))
-                    cardColor = TuiColor.ORANGE;
+                if (type == CardType.BUILDINGS)       cardColor = TuiColor.MAGENTA;
+                else if (CardCatalog.isEvent(type))   cardColor = TuiColor.ORANGE;
+                TuiColor c = highlighted ? TuiColor.GREEN : cardColor;
 
-                tg.setForegroundColor(highlighted ? TuiColor.GREEN : cardColor);
+                String tl = padRight(CardTokens.toEmoji(card.typeLabel()   != null ? card.typeLabel()   : ""), CARD_W);
+                String el = padRight(CardTokens.toEmoji(card.effectsLabel() != null ? card.effectsLabel() : ""), CARD_W);
 
-                String typeStr = padRight(CardCatalog.typeLabel(type), 8);
-                String idStr = padRight(card.id().length() > 8 ? card.id().substring(0, 8) : card.id(), 8);
-
-                tg.putString(col, startRow, "┌────────┐");
-                tg.putString(col, startRow + 1, "│" + typeStr + "│");
-                tg.putString(col, startRow + 2, "│" + idStr + "│");
-                tg.putString(col, startRow + 3, "└────────┘");
-                tg.setForegroundColor(TuiColor.WHITE);
+                topLine.append(c.fg()).append(border).append(TuiColor.WHITE.fg()).append(" ");
+                typeLine.append(c.fg()).append("│").append(tl).append(jumpRight).append("│").append(TuiColor.WHITE.fg()).append(" ");
+                effectLine.append(c.fg()).append("│").append(el).append(jumpRight).append("│").append(TuiColor.WHITE.fg()).append(" ");
+                botLine.append(c.fg()).append(borderBot).append(TuiColor.WHITE.fg()).append(" ");
             }
-            col += 11;
-            if (col + 11 > cols - 20)
-                break;
+            count++;
         }
+
+        tg.setForegroundColor(TuiColor.DARK_GRAY);
+        // We can't use putString's col param accurately for emoji; print each row as one string from col=0
+        // Use raw ANSI cursor positioning then dump the whole built line
+        tg.putString(0, startRow,     topLine.toString());
+        tg.setForegroundColor(TuiColor.DARK_GRAY);
+        tg.putString(0, startRow + 1, typeLine.toString());
+        tg.setForegroundColor(TuiColor.DARK_GRAY);
+        tg.putString(0, startRow + 2, effectLine.toString());
+        tg.setForegroundColor(TuiColor.DARK_GRAY);
+        tg.putString(0, startRow + 3, botLine.toString());
+        tg.setForegroundColor(TuiColor.WHITE);
     }
 
+
     private void highlightCursor(TuiTextGraphics tg, int index, int rowY) {
-        int col = 2 + index * 11 + 4;
+        int step = CARD_W + 3;
+        int col = 2 + index * step + (CARD_W + 2) / 2;
         tg.setForegroundColor(TuiColor.YELLOW);
         tg.putString(col, rowY - 1, "▼");
         tg.setForegroundColor(TuiColor.WHITE);
@@ -621,11 +668,146 @@ public class GameScreen extends Screen {
         };
     }
 
+    /**
+     * Visual width of a string in terminal columns (Windows Terminal rules).
+     *   supplementary emoji (surrogate pair) + U+FE0F  → 3 cols
+     *   supplementary emoji (surrogate pair) no FE0F   → 2 cols
+     *   U+FE0F, U+200D, U+200B..U+200F (zero-width)   → 0 cols
+     *   U+2500..U+257F (box-drawing)                   → 1 col
+     *   U+23E9..U+23FA (BMP emoji presentation, e.g. ⏩) → 2 cols
+     *   everything else (ASCII + regular BMP)          → 1 col
+     */
+    private static int visualWidth(String s) {
+        if (s == null) return 0;
+        int width = 0;
+        int i = 0;
+        while (i < s.length()) {
+            int ch = s.charAt(i);
+            if (ch >= 0xD800 && ch <= 0xDBFF && i + 1 < s.length()) {
+                i += 2;
+                if (i < s.length() && s.charAt(i) == 0xFE0F) {
+                    width += 3; i++;
+                } else {
+                    width += 2;
+                }
+            } else if (ch == 0xFE0F || ch == 0x200D || (ch >= 0x200B && ch <= 0x200F)) {
+                i++;
+            } else if (ch >= 0x2500 && ch <= 0x257F) {
+                width += 1; i++;
+            } else if (ch >= 0x23E9 && ch <= 0x23FA) {
+                width += 1; i++;
+            } else {
+                width += 1; i++;
+            }
+        }
+        return width;
+    }
+
     private String padRight(String s, int len) {
-        if (s == null)
-            s = "";
-        if (s.length() >= len)
-            return s.substring(0, len);
-        return s + " ".repeat(len - s.length());
+        if (s == null) s = "";
+        int vw = visualWidth(s);
+        if (vw == len) return s;
+        if (vw > len) {
+            StringBuilder sb = new StringBuilder();
+            int w = 0;
+            int i = 0;
+            while (i < s.length()) {
+                int ch = s.charAt(i);
+                int cw, advance;
+                if (ch >= 0xD800 && ch <= 0xDBFF && i + 1 < s.length()) {
+                    if (i + 2 < s.length() && s.charAt(i + 2) == 0xFE0F) {
+                        cw = 3; advance = 3;
+                    } else {
+                        cw = 2; advance = 2;
+                    }
+                } else if (ch == 0xFE0F || ch == 0x200D || (ch >= 0x200B && ch <= 0x200F)) {
+                    cw = 0; advance = 1;
+                } else if (ch >= 0x2500 && ch <= 0x257F) {
+                    cw = 1; advance = 1;
+                } else if (ch >= 0x23E9 && ch <= 0x23FA) {
+                    cw = 3; advance = 1;
+                } else {
+                    cw = 1; advance = 1;
+                }
+                if (w + cw > len) break;
+                sb.append(s, i, i + advance);
+                w += cw;
+                i += advance;
+            }
+            if (w < len) sb.append(" ".repeat(len - w));
+            return sb.toString();
+        }
+        return s + " ".repeat(len - vw);
+    }
+
+    private String padLeft(String s, int len) {
+        if (s == null) s = "";
+        int vw = visualWidth(s);
+        if (vw >= len) return s;
+        return " ".repeat(len - vw) + s;
+    }
+
+    private void drawLegend(TuiTextGraphics tg, TuiSize sz) {
+        int w = 38;
+        int h = 26;
+        int x = sz.getColumns() - w - 2;
+        int y = 1;
+
+        tg.setBackgroundColor(TuiColor.BLACK);
+        tg.setForegroundColor(TuiColor.CYAN);
+        String top = "┌" + "─".repeat(w - 2) + "┐";
+        String bot = "└" + "─".repeat(w - 2) + "┘";
+        tg.putString(x, y, top);
+        tg.putString(x, y + h - 1, bot);
+        for (int r = 1; r < h - 1; r++)
+            tg.putString(x, y + r, "│" + " ".repeat(w - 2) + "│");
+
+        tg.setForegroundColor(TuiColor.YELLOW);
+        tg.putString(x + 2, y, " LEGEND (L to close) ");
+
+        String[][] entries = {
+            {"─── CHARACTERS ────────────────────"},
+            {"🏹", "Hunter – draws on pick"},
+            {"🧺", "Gatherer – building discount"},
+            {"🔨", "Builder – build discount+PP"},
+            {"🔮", "Shaman – ritual bonus"},
+            {"🎨", "Artist – paintings bonus"},
+            {"💡", "Inventor – activates icon"},
+            {"─── EVENTS ────────────────────────"},
+            {"🐗", "Hunt – PP per hunter"},
+            {"🍲", "Sustenance – PP penalty"},
+            {"🎭", "Shamanic Ritual – PP trade"},
+            {"🖌️", "Cave Paintings – artist bonus"},
+            {"─── BUILDINGS ─────────────────────"},
+            {"🏛️", "All buildings"},
+            {"🏁", "End-game PP bonus"},
+            {"─── SYMBOLS ───────────────────────"},
+            {"🌟", "Prestige Points (PP)"},
+            {"★", "Shaman ritual stars"},
+            {"💰", "Food cost"},
+            {"🍖", "Extra food on pick"},
+            {"🍞", "Food reward"},
+            {"🗿", "Totem symbol"},
+            {"I II III", "Card Era"},
+        };
+
+        tg.setForegroundColor(TuiColor.WHITE);
+        int lineY = y + 2;
+        for (String[] entry : entries) {
+            if (entry.length == 1) {
+                tg.setForegroundColor(TuiColor.CYAN);
+                tg.putString(x + 2, lineY, padRight(entry[0], w - 4));
+                tg.setForegroundColor(TuiColor.WHITE);
+            } else {
+                int tokenW = visualWidth(entry[0]);
+                boolean hasFE0F = entry[0].indexOf('️') >= 0;
+                String sep = hasFE0F ? "" : " ";
+                int descW = hasFE0F ? (w - 4 - tokenW) : (w - 5 - tokenW);
+                tg.putString(x + 2, lineY, entry[0] + sep + padRight(entry[1], descW));
+            }
+            lineY++;
+            if (lineY >= y + h - 1) break;
+        }
+        tg.setBackgroundColor(TuiColor.BLACK);
     }
 }

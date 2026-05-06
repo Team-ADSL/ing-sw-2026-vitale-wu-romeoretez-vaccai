@@ -3,6 +3,7 @@ package org.adsl.server.model.cards.buildings.forEvent;
 import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Trigger;
 import org.adsl.server.model.Player;
+import org.adsl.shared.model.CardToken;
 
 import java.util.Optional;
 import java.util.Set;
@@ -30,5 +31,24 @@ public class DuringSustenance extends DuringEvent {
 
     public CardType getTypeMultiplier() {
         return typeMultiplier;
+    }
+
+    @Override
+    protected String getTypeLabel() {
+        return CardToken.BUILDING + " " + eraToRoman(getEra());
+    }
+
+    @Override
+    protected String getEffectsLabel() {
+        String charToken = switch (typeMultiplier) {
+            case HUNTER   -> CardToken.HUNTER;
+            case GATHERER -> CardToken.GATHERER;
+            case BUILDER  -> CardToken.BUILDER;
+            case SHAMAN   -> CardToken.SHAMAN;
+            case ARTIST   -> CardToken.ARTIST;
+            case INVENTOR -> CardToken.INVENTOR;
+            default       -> "";
+        };
+        return CardToken.MEAL + "=>" + charToken + "x" + CardToken.FOOD + " " + CardToken.PP + getEndGamePP();
     }
 }
