@@ -1,7 +1,8 @@
-﻿package org.adsl.server.model.cards.buildings.forEvent;
+package org.adsl.server.model.cards.buildings.forEvent;
 
 import org.adsl.shared.enums.Trigger;
 import org.adsl.server.model.Player;
+import org.adsl.shared.model.CardToken;
 
 import java.util.Optional;
 import java.util.Set;
@@ -26,11 +27,11 @@ public class DuringHunt extends DuringEvent {
 
     @Override
     protected String getTypeLabel() {
-        return "🏗️ " + eraToRoman(getEra());
+        return CardToken.BUILDING + " " + eraToRoman(getEra());
     }
 
     @Override
     protected String getEffectsLabel() {
-        return "🐗➔ 🌟" + getEndGamePP();
+        return CardToken.HUNT + "=> " + CardToken.PP + getEndGamePP();
     }
 }

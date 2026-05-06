@@ -4,6 +4,7 @@ import org.adsl.server.model.cards.Card;
 import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Trigger;
 import org.adsl.server.model.Player;
+import org.adsl.shared.model.CardToken;
 
 import java.util.Map;
 import java.util.Set;
@@ -38,11 +39,11 @@ public class Hunter extends Character {
 
     @Override
     protected String getTypeLabel() {
-        return "🏹 " + eraToRoman(getEra());
+        return CardToken.HUNTER + " " + eraToRoman(getEra());
     }
 
     @Override
     protected String getEffectsLabel() {
-        return extraFood ? "🍖+" : "🍖";
+        return extraFood ? CardToken.MEAT + "+" : CardToken.MEAT;
     }
 }

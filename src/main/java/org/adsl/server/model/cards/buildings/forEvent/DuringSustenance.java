@@ -1,8 +1,9 @@
-﻿package org.adsl.server.model.cards.buildings.forEvent;
+package org.adsl.server.model.cards.buildings.forEvent;
 
 import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Trigger;
 import org.adsl.server.model.Player;
+import org.adsl.shared.model.CardToken;
 
 import java.util.Optional;
 import java.util.Set;
@@ -34,20 +35,20 @@ public class DuringSustenance extends DuringEvent {
 
     @Override
     protected String getTypeLabel() {
-        return "🏗️ " + eraToRoman(getEra());
+        return CardToken.BUILDING + " " + eraToRoman(getEra());
     }
 
     @Override
     protected String getEffectsLabel() {
-        String charEmoji = switch (typeMultiplier) {
-            case HUNTER -> "🏹";
-            case GATHERER -> "🧺";
-            case BUILDER -> "🔨";
-            case SHAMAN -> "🔮";
-            case ARTIST -> "🎨";
-            case INVENTOR -> "💡";
-            default -> "";
+        String charToken = switch (typeMultiplier) {
+            case HUNTER   -> CardToken.HUNTER;
+            case GATHERER -> CardToken.GATHERER;
+            case BUILDER  -> CardToken.BUILDER;
+            case SHAMAN   -> CardToken.SHAMAN;
+            case ARTIST   -> CardToken.ARTIST;
+            case INVENTOR -> CardToken.INVENTOR;
+            default       -> "";
         };
-        return "🍲⇒" + charEmoji + "x🍞 🌟" + getEndGamePP();
+        return CardToken.MEAL + "=>" + charToken + "x" + CardToken.FOOD + " " + CardToken.PP + getEndGamePP();
     }
 }

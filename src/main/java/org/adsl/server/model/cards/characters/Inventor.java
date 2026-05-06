@@ -1,8 +1,9 @@
-﻿package org.adsl.server.model.cards.characters;
+package org.adsl.server.model.cards.characters;
 
 import org.adsl.server.model.cards.Card;
 import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Icon;
+import org.adsl.shared.model.CardToken;
 
 import java.util.Map;
 import java.util.Set;
@@ -27,22 +28,22 @@ public class Inventor extends Character {
 
     @Override
     protected String getTypeLabel() {
-        return "💡 " + eraToRoman(getEra());
+        return CardToken.INVENTOR + " " + eraToRoman(getEra());
     }
 
     @Override
     protected String getEffectsLabel() {
         return switch (icon) {
-            case BOAT -> "🚢";
-            case SPEARHEAD -> "🗡️";
-            case HOOK -> "🪝";
-            case NECKLACE -> "📿";
-            case BOWL -> "🥣";
-            case ROPE -> "🪢";
-            case TOTEM -> "🗿";
-            case FLUTE -> "🪈";
-            case LEATHER -> "🧥";
-            case BREAD -> "🍞";
+            case BOAT     -> CardToken.ICON_BOAT;
+            case SPEARHEAD -> CardToken.ICON_SPEAR;
+            case HOOK     -> CardToken.ICON_HOOK;
+            case NECKLACE -> CardToken.ICON_NECKLACE;
+            case BOWL     -> CardToken.ICON_BOWL;
+            case ROPE     -> CardToken.ICON_ROPE;
+            case TOTEM    -> CardToken.TOTEM;
+            case FLUTE    -> CardToken.ICON_FLUTE;
+            case LEATHER  -> CardToken.ICON_LEATHER;
+            case BREAD    -> CardToken.FOOD;
         };
     }
 }
