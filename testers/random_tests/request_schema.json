@@ -5,8 +5,8 @@
   {
     "type": "Move", "moves": [
       {
-        "index": "<int>",
-        "row": ["TOP", "LOW", "CENTER"]
+        "rowIndex": "<int>",
+        "row": ["UPPER", "LOWER", "OFFER"]
       }
     ]
   }

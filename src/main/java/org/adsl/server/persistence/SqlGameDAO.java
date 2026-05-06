@@ -110,42 +110,42 @@ public class SqlGameDAO implements GameDAO{
         String sql = """
             SELECT
                 p.nickname,
-                r.score,
-                m.played_at
+                SUM(r.score) AS total_score
             FROM results r
             JOIN matches m  ON r.match_id  = m.id
             JOIN players p  ON r.player_id = p.id
             WHERE m.player_count = ?
-            ORDER BY r.score DESC
-            LIMIT 100
+            GROUP BY p.id, p.nickname
+            ORDER BY total_score DESC
             """;
+
         List<MatchResult> leaderboard = new ArrayList<>();
         try (Connection conn = connectionProvider.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setInt(1, playerCount);
             ResultSet rs = ps.executeQuery();
-            
+
             int currentRow = 1;
             int currentRank = 1;
             int previousScore = -1;
             boolean isFirstRow = true;
-            
+
             while (rs.next()) {
-                int score = rs.getInt("score");
-                
+                int score = rs.getInt("total_score");
+
                 if (isFirstRow) {
                     isFirstRow = false;
                 } else if (score < previousScore) {
                     currentRank = currentRow;
                 }
-                
+
                 leaderboard.add(new MatchResult(
-                    currentRank,
-                    rs.getString("nickname"),
-                    score,
-                    rs.getTimestamp("played_at").toLocalDateTime()
+                        currentRank,
+                        rs.getString("nickname"),
+                        score
                 ));
-                
+
                 previousScore = score;
                 currentRow++;
             }
