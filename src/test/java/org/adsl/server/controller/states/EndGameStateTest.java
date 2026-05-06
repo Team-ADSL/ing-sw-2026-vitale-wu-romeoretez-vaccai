@@ -59,7 +59,7 @@ public class EndGameStateTest {
         FakeGameDAO daoWithResults = new FakeGameDAO() {
             @Override
             public List<MatchResult> getLeaderboard(int playerCount) {
-                return List.of(new MatchResult(1, "Alice", 100, LocalDateTime.now()));
+                return List.of(new MatchResult(1, "Alice", 100));
             }
         };
         GameController controller = new GameControllerBuilder().build();

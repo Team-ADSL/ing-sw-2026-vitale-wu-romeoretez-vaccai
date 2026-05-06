@@ -1,11 +1,14 @@
 package org.adsl.shared.network.requests;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.adsl.server.exceptions.ServerException;
 
 public class EnterGameRequest extends ClientRequest{
     private final int gameId;
 
-    public EnterGameRequest(int gameId) {
+    @JsonCreator
+    public EnterGameRequest(@JsonProperty("gameId")int gameId) {
         this.gameId = gameId;
     }
 
