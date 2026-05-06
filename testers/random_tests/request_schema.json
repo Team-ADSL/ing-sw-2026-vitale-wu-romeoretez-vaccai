@@ -1,9 +1,12 @@
 [
   {
-    "type": "Login", "username": "<string>"
+    "type": "LOGIN", "username": "<string>"
   },
   {
-    "type": "Move", "moves": [
+    "type": "ENTER_GAME", "gameId": "<int>"
+  },
+  {
+    "type": "MOVE", "moves": [
       {
         "rowIndex": "<int>",
         "row": ["UPPER", "LOWER", "OFFER"]
