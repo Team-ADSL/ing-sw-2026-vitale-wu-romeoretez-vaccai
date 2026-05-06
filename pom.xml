@@ -70,6 +70,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
                 <configuration>
+                    <encoding>UTF-8</encoding>
                     <source>25</source>
                     <target>25</target>
                     <release>25</release>

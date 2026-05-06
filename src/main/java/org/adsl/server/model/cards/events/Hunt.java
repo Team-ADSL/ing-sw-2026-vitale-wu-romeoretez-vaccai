@@ -1,10 +1,11 @@
-﻿package org.adsl.server.model.cards.events;
+package org.adsl.server.model.cards.events;
 
 import org.adsl.server.model.cards.Card;
 import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Trigger;
 import org.adsl.server.model.cards.buildings.utils.BuildingBonus;
 import org.adsl.server.model.Player;
+import org.adsl.shared.model.CardToken;
 
 import java.util.Map;
 import java.util.Set;
@@ -43,11 +44,11 @@ public class Hunt extends Event {
 
     @Override
     protected String getTypeLabel() {
-        return "🐗 " + eraToRoman(getEra());
+        return CardToken.HUNT + " " + eraToRoman(getEra());
     }
 
     @Override
     protected String getEffectsLabel() {
-        return "🌟x" + multiplierPP;
+        return CardToken.PP + "x" + multiplierPP;
     }
 }

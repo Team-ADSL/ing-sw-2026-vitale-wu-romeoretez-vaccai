@@ -1,4 +1,4 @@
-﻿package org.adsl.server.model.cards.events;
+package org.adsl.server.model.cards.events;
 
 import org.adsl.server.model.cards.Card;
 import org.adsl.shared.enums.CardType;
@@ -6,6 +6,7 @@ import org.adsl.shared.enums.Trigger;
 import org.adsl.server.model.cards.buildings.utils.BuildingBonus;
 import org.adsl.server.model.cards.characters.Shaman;
 import org.adsl.server.model.Player;
+import org.adsl.shared.model.CardToken;
 
 import java.util.*;
 
@@ -65,11 +66,11 @@ public class ShamanicRitual extends Event {
 
     @Override
     protected String getTypeLabel() {
-        return "🎭 " + eraToRoman(getEra());
+        return CardToken.RITUAL + " " + eraToRoman(getEra());
     }
 
     @Override
     protected String getEffectsLabel() {
-        return "🌟-" + lostPP + "/+" + gainedPP;
+        return CardToken.PP + "-" + lostPP + "/+" + gainedPP;
     }
 }

@@ -1,9 +1,10 @@
-﻿package org.adsl.server.model.cards.buildings;
+package org.adsl.server.model.cards.buildings;
 
 import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Trigger;
 import org.adsl.server.model.cards.buildings.utils.BuildingEffect;
 import org.adsl.server.model.Player;
+import org.adsl.shared.model.CardToken;
 
 import java.util.Optional;
 import java.util.Set;
@@ -47,23 +48,23 @@ public class EndGame extends Building {
 
     @Override
     protected String getTypeLabel() {
-        return "🏗️ " + eraToRoman(getEra());
+        return CardToken.BUILDING + " " + eraToRoman(getEra());
     }
 
     @Override
     protected String getEffectsLabel() {
-        String base = "🏁 🌟" + getEndGamePP();
+        String base = CardToken.ENDGAME + " " + CardToken.PP + getEndGamePP();
         if (characterTypeMultiplier != null) {
-            String charEmoji = switch (characterTypeMultiplier) {
-                case HUNTER -> "🏹";
-                case GATHERER -> "🧺";
-                case BUILDER -> "🔨";
-                case SHAMAN -> "🔮";
-                case ARTIST -> "🎨";
-                case INVENTOR -> "💡";
-                default -> "";
+            String charToken = switch (characterTypeMultiplier) {
+                case HUNTER   -> CardToken.HUNTER;
+                case GATHERER -> CardToken.GATHERER;
+                case BUILDER  -> CardToken.BUILDER;
+                case SHAMAN   -> CardToken.SHAMAN;
+                case ARTIST   -> CardToken.ARTIST;
+                case INVENTOR -> CardToken.INVENTOR;
+                default       -> "";
             };
-            base += " x" + charEmoji;
+            base += " x" + charToken;
         }
         return base;
     }

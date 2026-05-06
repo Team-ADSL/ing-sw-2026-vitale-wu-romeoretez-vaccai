@@ -2,6 +2,7 @@ package org.adsl.server.model.cards.characters;
 
 import org.adsl.server.model.cards.Card;
 import org.adsl.shared.enums.CardType;
+import org.adsl.shared.model.CardToken;
 
 import java.util.Map;
 import java.util.Set;
@@ -19,7 +20,7 @@ public class Artist extends Character {
 
     @Override
     protected String getTypeLabel() {
-        return "🎨 " + eraToRoman(getEra());
+        return CardToken.ARTIST + " " + eraToRoman(getEra());
     }
 
     @Override

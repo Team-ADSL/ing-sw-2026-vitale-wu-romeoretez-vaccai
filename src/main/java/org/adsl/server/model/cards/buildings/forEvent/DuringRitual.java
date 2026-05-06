@@ -1,8 +1,9 @@
-﻿package org.adsl.server.model.cards.buildings.forEvent;
+package org.adsl.server.model.cards.buildings.forEvent;
 
 import org.adsl.shared.enums.Trigger;
 import org.adsl.server.model.cards.buildings.utils.BuildingEffect;
 import org.adsl.server.model.Player;
+import org.adsl.shared.model.CardToken;
 
 import java.util.Optional;
 import java.util.Set;
@@ -38,16 +39,16 @@ public class DuringRitual extends DuringEvent {
 
     @Override
     protected String getTypeLabel() {
-        return "🏗️ " + eraToRoman(getEra());
+        return CardToken.BUILDING + " " + eraToRoman(getEra());
     }
 
     @Override
     protected String getEffectsLabel() {
         return switch (buildingEffect) {
-            case RITUAL_IMMUNITY -> "🎭⇒🛡️ 🌟" + getEndGamePP();
-            case RITUAL_STARS_BONUS -> "🎭⇒+🌟3 🌟" + getEndGamePP();
-            case RITUAL_DOUBLE_PP -> "🎭⇒x2🌟 🌟" + getEndGamePP();
-            default -> "🌟" + getEndGamePP();
+            case RITUAL_IMMUNITY    -> CardToken.RITUAL + "=>" + CardToken.SHIELD + " " + CardToken.PP + getEndGamePP();
+            case RITUAL_STARS_BONUS -> CardToken.RITUAL + "=>+" + CardToken.PP + "3 " + CardToken.PP + getEndGamePP();
+            case RITUAL_DOUBLE_PP   -> CardToken.RITUAL + "=>x2" + CardToken.PP + " " + CardToken.PP + getEndGamePP();
+            default                 -> CardToken.PP + getEndGamePP();
         };
     }
 }

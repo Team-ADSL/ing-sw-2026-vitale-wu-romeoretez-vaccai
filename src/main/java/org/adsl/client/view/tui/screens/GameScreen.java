@@ -2,6 +2,7 @@ package org.adsl.client.view.tui.screens;
 
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.view.tui.CardCatalog;
+import org.adsl.client.view.tui.CardTokens;
 import org.adsl.client.view.tui.events.*;
 import org.adsl.client.view.tui.events.CharInputEvent;
 import org.adsl.client.view.tui.render.TuiColor;
@@ -448,8 +449,8 @@ public class GameScreen extends Screen {
                 else if (CardCatalog.isEvent(type))   cardColor = TuiColor.ORANGE;
                 TuiColor c = highlighted ? TuiColor.GREEN : cardColor;
 
-                String tl = padRight(card.typeLabel()   != null ? card.typeLabel()   : "", CARD_W);
-                String el = padRight(card.effectsLabel() != null ? card.effectsLabel() : "", CARD_W);
+                String tl = padRight(CardTokens.toEmoji(card.typeLabel()   != null ? card.typeLabel()   : ""), CARD_W);
+                String el = padRight(CardTokens.toEmoji(card.effectsLabel() != null ? card.effectsLabel() : ""), CARD_W);
 
                 // Embed ANSI color codes inline for type and effect lines
                 topLine.append(c.fg()).append(border).append(TuiColor.WHITE.fg()).append(" ");
@@ -661,38 +662,38 @@ public class GameScreen extends Screen {
     }
 
     /**
-     * Visual width of emoji in terminal columns.
-     * Windows Terminal renders supplementary emoji as 3 cols (cursor advances 2
-     * but glyph visually occupies 3). macOS/Linux terminals use standard 2 cols.
-     */
-    private static final int EMOJI_COLS =
-            System.getProperty("os.name", "").toLowerCase().contains("win") ? 3 : 2;
-
-    /**
-     * Returns the number of terminal columns a string occupies.
+     * Visual width of a string in terminal columns (Windows Terminal rules).
+     *   supplementary emoji (surrogate pair) + U+FE0F  → 3 cols
+     *   supplementary emoji (surrogate pair) no FE0F   → 2 cols
+     *   U+FE0F, U+200D, U+200B..U+200F (zero-width)   → 0 cols
+     *   U+2500..U+257F (box-drawing)                   → 1 col
+     *   U+23E9..U+23FA (BMP emoji presentation, e.g. ⏩) → 2 cols
+     *   everything else (ASCII + regular BMP)          → 1 col
      */
     private static int visualWidth(String s) {
         if (s == null) return 0;
         int width = 0;
-        for (int i = 0; i < s.length(); ) {
-            int cp = s.codePointAt(i);
-            i += Character.charCount(cp);
-            if (i < s.length() && s.codePointAt(i) == 0xFE0F)
+        int i = 0;
+        while (i < s.length()) {
+            int ch = s.charAt(i);
+            if (ch >= 0xD800 && ch <= 0xDBFF && i + 1 < s.length()) {
+                i += 2;
+                if (i < s.length() && s.charAt(i) == 0xFE0F) {
+                    width += 3; i++;
+                } else {
+                    width += 2;
+                }
+            } else if (ch == 0xFE0F || ch == 0x200D || (ch >= 0x200B && ch <= 0x200F)) {
                 i++;
-            width += cpWidth(cp);
+            } else if (ch >= 0x2500 && ch <= 0x257F) {
+                width += 1; i++;
+            } else if (ch >= 0x23E9 && ch <= 0x23FA) {
+                width += 1; i++;
+            } else {
+                width += 1; i++;
+            }
         }
         return width;
-    }
-
-    private static int cpWidth(int cp) {
-        if (cp == 0xFE0F || cp == 0x200D ||
-                (cp >= 0x200B && cp <= 0x200F)) return 0;
-        // Supplementary plane emoji: width depends on terminal/OS
-        if (cp >= 0x1F000) return EMOJI_COLS;
-        // Box-drawing: always 1 col
-        if (cp >= 0x2500 && cp <= 0x257F) return 1;
-        // All other BMP (arrows, ASCII, etc.): 1 col
-        return 1;
     }
 
     private String padRight(String s, int len) {
@@ -700,16 +701,31 @@ public class GameScreen extends Screen {
         int vw = visualWidth(s);
         if (vw == len) return s;
         if (vw > len) {
-            // Truncate to fit within len columns
             StringBuilder sb = new StringBuilder();
             int w = 0;
-            for (int i = 0; i < s.length(); ) {
-                int cp = s.codePointAt(i);
-                int cw = cpWidth(cp);
+            int i = 0;
+            while (i < s.length()) {
+                int ch = s.charAt(i);
+                int cw, advance;
+                if (ch >= 0xD800 && ch <= 0xDBFF && i + 1 < s.length()) {
+                    if (i + 2 < s.length() && s.charAt(i + 2) == 0xFE0F) {
+                        cw = 3; advance = 3;
+                    } else {
+                        cw = 2; advance = 2;
+                    }
+                } else if (ch == 0xFE0F || ch == 0x200D || (ch >= 0x200B && ch <= 0x200F)) {
+                    cw = 0; advance = 1;
+                } else if (ch >= 0x2500 && ch <= 0x257F) {
+                    cw = 1; advance = 1;
+                } else if (ch >= 0x23E9 && ch <= 0x23FA) {
+                    cw = 3; advance = 1;
+                } else {
+                    cw = 1; advance = 1;
+                }
                 if (w + cw > len) break;
-                sb.appendCodePoint(cp);
+                sb.append(s, i, i + advance);
                 w += cw;
-                i += Character.charCount(cp);
+                i += advance;
             }
             if (w < len) sb.append(" ".repeat(len - w));
             return sb.toString();
@@ -743,7 +759,9 @@ public class GameScreen extends Screen {
         tg.putString(x + 2, y, " LEGEND (L to close) ");
 
         String[][] entries = {
-            {"─── CHARACTERS ──────────────────"},
+            {"─── CHARACTERS ──────────────────"}, //TODO: creare una classe java, che renderizza
+                // TODO: le colonne e le emoji esattamente come GameScreen, per testare il corretto allineamento delle emoji, in modo tale da
+                // TODO: dover eseguire sempre lo stesso script ed evitare di startare il gioco ogni volta
             {"🏹", "Hunter       – draws on pick"},
             {"🧺", "Gatherer     – building discount"},
             {"🔨", "Builder      – build discount+PP"},

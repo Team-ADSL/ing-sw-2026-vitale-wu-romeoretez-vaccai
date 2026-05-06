@@ -1,10 +1,11 @@
-﻿package org.adsl.server.model.cards.buildings;
+package org.adsl.server.model.cards.buildings;
 
 import org.adsl.server.model.cards.Card;
 import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Trigger;
 import org.adsl.server.model.cards.buildings.utils.BuildingEffect;
 import org.adsl.server.model.Player;
+import org.adsl.shared.model.CardToken;
 
 import java.util.*;
 
@@ -73,15 +74,15 @@ public class SinceBuilt extends Building {
 
     @Override
     protected String getTypeLabel() {
-        return "🏗️ " + eraToRoman(getEra());
+        return CardToken.BUILDING + " " + eraToRoman(getEra());
     }
 
     @Override
     protected String getEffectsLabel() {
         return switch (buildingEffect) {
-            case FOOD_COMPLETE_SET -> "🍲 6🎨⇒+5";
-            case COUPLE_INVENTOR -> "2💡⇒+🍞";
-            default -> "🌟" + getEndGamePP();
+            case FOOD_COMPLETE_SET -> CardToken.MEAL + " 6" + CardToken.ARTIST + "=>+5";
+            case COUPLE_INVENTOR   -> "2" + CardToken.INVENTOR + "=>+" + CardToken.FOOD;
+            default                -> CardToken.PP + getEndGamePP();
         };
     }
 }

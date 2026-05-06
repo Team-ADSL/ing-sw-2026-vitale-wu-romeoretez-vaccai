@@ -21,6 +21,10 @@ public class BuildingTest {
 
         @Override
         public void activeEffect(Set<Player> players, Trigger t) {}
+        @Override
+        protected String getTypeLabel() { return "fake"; }
+        @Override
+        protected String getEffectsLabel() { return ""; }
     }
 
     private Player player;
