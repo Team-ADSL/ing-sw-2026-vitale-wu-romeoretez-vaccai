@@ -9,6 +9,7 @@ import org.adsl.shared.utils.Move;
 import org.adsl.server.exceptions.ServerException;
 import org.adsl.server.model.Game;
 import org.adsl.server.model.Player;
+import org.adsl.server.model.board.OfferTile;
 import org.adsl.server.model.board.OfferTrack;
 import org.adsl.server.model.board.OrderTile;
 
@@ -50,6 +51,17 @@ public class TotemPlacementState extends ControllerState {
         if(!currentMove.row().equals(Row.OFFER)){
             throw new ServerException("Invalid input, you need to choose a tile from the offer track.");
         }
+
+        OfferTrack offerTrack = getGame().getBoard().offerTrack();
+        int idx = currentMove.rowIndex();
+        if (idx < 0 || idx >= offerTrack.size()) {
+            throw new ServerException("Invalid offer tile index: " + idx);
+        }
+        OfferTile selectedTile = offerTrack.getTileAt(idx);
+        if (selectedTile.getPlayer().isPresent()) {
+            throw new ServerException("That tile is already occupied!");
+        }
+
         execute(currentMove, reqPlayer);
     }
 
