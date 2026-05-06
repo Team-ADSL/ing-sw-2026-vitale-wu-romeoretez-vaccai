@@ -1,113 +1,72 @@
-import json
 import socket
+import json
 import sys
+import argparse
 
-def connect_socket(sock, sock_id, host, port):
-    """Connects the socket to the server and checks for an initial banner/response."""
-    sock.connect((host, port))
-    print(f"Socket {sock_id} connecting to server ({host}:{port})")
-    
-    # Tries to read a possible welcome message from the server
-    sock.settimeout(1.0) 
+class CustomArgumentParser(argparse.ArgumentParser):
+    """Common parser to handle error messages and usage examples."""
+    def __init__(self, example_usage, **kwargs):
+        self.example_usage = example_usage
+        super().__init__(**kwargs)
+
+    def error(self, message):
+        sys.stderr.write(f"Error: {message}\n\n")
+        sys.stderr.write("Correct usage example:\n")
+        sys.stderr.write(f"  {self.example_usage}\n")
+        sys.exit(2)
+
+def connect_socket(host, port, sock_id):
+    """Creates, connects and checks for an initial banner."""
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        banner = sock.recv(4096)
-        if banner:
-            print(f"Connection response: {banner.decode('utf-8').strip()}")
-    except socket.timeout:
-        # No message received on connection (normal for many servers)
-        pass
-    
-    # Reset timeout to infinite for normal read operations
-    sock.settimeout(None)
-    print("-" * 40)
+        sock.connect((host, port))
+        print(f"Socket {sock_id} connecting to server ({host}:{port})")
+        
+        sock.settimeout(1.0)
+        try:
+            banner = sock.recv(4096)
+            if banner:
+                print(f"Connection response: {banner.decode('utf-8').strip()}")
+        except socket.timeout:
+            pass
+        
+        sock.settimeout(None)
+        print("-" * 40)
+        return sock
+    except Exception as e:
+        print(f"Unable to connect socket {sock_id}: {e}")
+        return None
 
-def receive_response(sock):
-    """Reads the response from the server and tries to format it as JSON."""
+def receive_json_response(sock):
+    """Reads response from server and returns it as a dict (if JSON)."""
     try:
         response_bytes = sock.recv(4096)
         if not response_bytes:
-            return "Connection closed by the server."
+            return None
         
         raw_response = response_bytes.decode('utf-8').strip()
-        
-        # Tries to parse and format nicely if it's a valid JSON
         try:
-            resp_json = json.loads(raw_response)
-            return json.dumps(resp_json, indent=4)
+            return json.loads(raw_response)
         except json.JSONDecodeError:
-            # If it's not a JSON, return the raw string
             return raw_response
     except Exception as e:
-        return f"Error receiving data: {e}"
+        print(f"Error receiving data: {e}")
+        return None
 
-def send_request(sock, sock_id, request_data):
-    """Sends the request to the server and prints the response."""
+def send_json_request(sock, sock_id, data):
+    """Sends JSON data and returns the parsed response."""
     try:
-        # Formats the request for screen printing
-        req_str = json.dumps(request_data, indent=4)
+        req_str = json.dumps(data, indent=4)
         print(f"Socket {sock_id} sending:\n{req_str}")
         
-        # Sends data to the server (adding \n as a payload delimiter)
-        payload = json.dumps(request_data) + '\n'
+        payload = json.dumps(data) + '\n'
         sock.sendall(payload.encode('utf-8'))
         
-        # Waits and prints the response
-        response_str = receive_response(sock)
-        print(f"Server:\n{response_str}\n")
+        response = receive_json_response(sock)
+        resp_str = json.dumps(response, indent=4) if isinstance(response, dict) else str(response)
+        print(f"Server:\n{resp_str}\n")
         print("-" * 40)
-        
+        return response
     except Exception as e:
         print(f"Communication error on socket {sock_id}: {e}")
-
-def infinite_sending(sockets, num_socket, host, port):
-    while True:
-    try:
-        user_input = input("> ")
-        if not user_input.strip():
-            continue
-        
-        # Splits the input at the first space
-        parts = user_input.split(" ", 1)
-        if len(parts) < 2:
-            print("Wrong format. Use: <socket_id> <json_request>")
-            continue
-        
-        try:
-            sock_id_input = int(parts[0])
-        except ValueError:
-            print("The socket ID must be an integer.")
-            continue
-        
-        json_str = parts[1]
-        
-        if sock_id_input not in sockets:
-            print(f"Invalid socket {sock_id_input}. Valid sockets are from 1 to {num_socket}.")
-            continue
-        
-        # Validate JSON format before sending
-        try:
-            request_data_cli = json.loads(json_str)
-        except json.JSONDecodeError:
-            print("Error: The provided string is not a valid JSON.")
-            continue
-        
-        sock = sockets[sock_id_input]
-        
-        # Connect on the first use of the socket (if not connected during JSON phase)
-        if sock_id_input not in connected_sockets:
-            try:
-                connect_socket(sock, sock_id_input, host, port)
-                connected_sockets.add(sock_id_input)
-            except Exception as e:
-                print(f"Unable to connect socket {sock_id_input}: {e}")
-                continue
-
-        # Send the request and receive the response
-        send_request(sock, sock_id_input, request_data_cli)
-        
-    except KeyboardInterrupt:
-        print("\nClosing script and sockets...")
-        for s in sockets.values():
-            s.close()
-        sys.exit(0)
-
+        return None
