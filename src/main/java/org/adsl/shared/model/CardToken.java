@@ -17,7 +17,8 @@ public final class CardToken {
     public static final String PAINTINGS = "[PAINTINGS]";
 
     // Effect tokens
-    public static final String PP         = "[PP]";
+    public static final String PP           = "[PP]";
+    public static final String SHAMAN_STAR  = "[SHAMAN_STAR]";
     public static final String FOOD_COST  = "[FOOD_COST]";
     public static final String FOOD       = "[FOOD]";
     public static final String MEAT       = "[MEAT]";

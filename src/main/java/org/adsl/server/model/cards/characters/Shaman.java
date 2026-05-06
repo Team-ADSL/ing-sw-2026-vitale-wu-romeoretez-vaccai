@@ -32,6 +32,6 @@ public class Shaman extends Character {
 
     @Override
     protected String getEffectsLabel() {
-        return CardToken.PP.repeat(starNum);
+        return CardToken.SHAMAN_STAR.repeat(starNum);
     }
 }
