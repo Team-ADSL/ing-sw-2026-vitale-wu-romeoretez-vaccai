@@ -19,7 +19,7 @@ import java.util.List;
  *
  * Input: {@link CharInputEvent} with 's' triggers startGameRequest (host only).
  */
-public class LobbyScreen extends Screen {
+public class LobbyScreen extends TUIScreen {
 
     private int gameId;
     private List<String> players;
@@ -97,7 +97,7 @@ public class LobbyScreen extends Screen {
     // ── Input events ──────────────────────────────────────────────────────────
 
     @Override
-    public Screen visit(CharInputEvent e) {
+    public TUIScreen visit(CharInputEvent e) {
         char ch = Character.toLowerCase(e.getCharacter());
         if (ch == 's') {
             try {
@@ -119,7 +119,7 @@ public class LobbyScreen extends Screen {
     // ── Server events ─────────────────────────────────────────────────────────
 
     @Override
-    public Screen visit(LobbyUpdateEvent e) {
+    public TUIScreen visit(LobbyUpdateEvent e) {
         this.gameId = e.getGameId();
         this.players = e.getPlayers() != null ? e.getPlayers() : List.of();
         return this;

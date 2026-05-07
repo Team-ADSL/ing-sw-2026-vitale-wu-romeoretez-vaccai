@@ -1,6 +1,6 @@
 package org.adsl.client.view.tui.events;
 
-import org.adsl.client.view.tui.screens.Screen;
+import org.adsl.client.view.tui.screens.TUIScreen;
 
 public class ErrorEvent extends Event {
     private final String message;
@@ -12,7 +12,7 @@ public class ErrorEvent extends Event {
     public String getMessage() { return message; }
 
     @Override
-    public Screen accept(EventVisitor visitor) {
+    public TUIScreen accept(EventVisitor visitor) {
         return visitor.visit(this);
     }
 }

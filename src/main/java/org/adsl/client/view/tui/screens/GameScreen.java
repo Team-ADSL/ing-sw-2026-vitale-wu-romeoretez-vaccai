@@ -27,7 +27,7 @@ import java.util.*;
  * dispatched through the visitor pattern. No blocking calls are made — the
  * TUI loop handles rendering and event dispatch.
  */
-public class GameScreen extends Screen {
+public class GameScreen extends TUIScreen {
 
     private enum SubState {
         MY_TURN_TOTEM,
@@ -60,7 +60,7 @@ public class GameScreen extends Screen {
     }
 
     @Override
-    public Screen onEnter() {
+    public TUIScreen onEnter() {
         myTotem = findMyTotem();
         setupActiveState();
         return null;
@@ -95,7 +95,7 @@ public class GameScreen extends Screen {
     // ── Server event visitors ─────────────────────────────────────────────────
 
     @Override
-    public Screen visit(GameUpdateEvent e) {
+    public TUIScreen visit(GameUpdateEvent e) {
         this.game = e.getGame();
         this.myTotem = findMyTotem();
 
@@ -109,7 +109,7 @@ public class GameScreen extends Screen {
     }
 
     @Override
-    public Screen visit(ErrorEvent e) {
+    public TUIScreen visit(ErrorEvent e) {
         super.visit(e);
         if (subState == SubState.WAITING_SERVER) {
             setupActiveState();
@@ -120,7 +120,7 @@ public class GameScreen extends Screen {
     // ── Input event visitors ──────────────────────────────────────────────────
 
     @Override
-    public Screen visit(ConfirmEvent e) {
+    public TUIScreen visit(ConfirmEvent e) {
         switch (subState) {
             case MY_TURN_TOTEM -> confirmTotemPlacement();
             case MY_TURN_CARDS -> confirmCardSelection();
@@ -131,7 +131,7 @@ public class GameScreen extends Screen {
     }
 
     @Override
-    public Screen visit(SelectEvent e) {
+    public TUIScreen visit(SelectEvent e) {
         if (subState == SubState.MY_TURN_CARDS) {
             Row row = onTopRow ? Row.UPPER : Row.LOWER;
             List<CardDTO> cards = onTopRow ? game.board().topRow() : game.board().lowRow();
@@ -141,7 +141,7 @@ public class GameScreen extends Screen {
     }
 
     @Override
-    public Screen visit(CharInputEvent e) {
+    public TUIScreen visit(CharInputEvent e) {
         if (e.getCharacter() == 'l' || e.getCharacter() == 'L') {
             showLegend = !showLegend;
         }
@@ -149,7 +149,7 @@ public class GameScreen extends Screen {
     }
 
     @Override
-    public Screen visit(NavigateLeftEvent e) {
+    public TUIScreen visit(NavigateLeftEvent e) {
         if (subState == SubState.MY_TURN_TOTEM) {
             selectionIndex = Math.max(0, selectionIndex - 1);
         } else if (subState == SubState.MY_TURN_CARDS) {
@@ -159,7 +159,7 @@ public class GameScreen extends Screen {
     }
 
     @Override
-    public Screen visit(NavigateRightEvent e) {
+    public TUIScreen visit(NavigateRightEvent e) {
         if (subState == SubState.MY_TURN_TOTEM) {
             selectionIndex = Math.min(game.board().offerTrack().size() - 1, selectionIndex + 1);
         } else if (subState == SubState.MY_TURN_CARDS) {
@@ -170,7 +170,7 @@ public class GameScreen extends Screen {
     }
 
     @Override
-    public Screen visit(NavigateUpEvent e) {
+    public TUIScreen visit(NavigateUpEvent e) {
         if (subState == SubState.MY_TURN_CARDS) {
             onTopRow = true;
             selectionIndex = Math.min(selectionIndex, game.board().topRow().size() - 1);
@@ -179,7 +179,7 @@ public class GameScreen extends Screen {
     }
 
     @Override
-    public Screen visit(NavigateDownEvent e) {
+    public TUIScreen visit(NavigateDownEvent e) {
         if (subState == SubState.MY_TURN_CARDS) {
             onTopRow = false;
             selectionIndex = Math.min(selectionIndex, game.board().lowRow().size() - 1);
