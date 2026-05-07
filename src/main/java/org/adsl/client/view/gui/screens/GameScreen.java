@@ -4,12 +4,13 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.view.events.ErrorEvent;
 import org.adsl.client.view.events.GameUpdateEvent;
+import org.adsl.client.view.tui.CardCatalog;
+import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Phase;
 import org.adsl.shared.enums.Row;
 import org.adsl.shared.enums.Totem;
@@ -27,13 +28,30 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Skeleton game screen. Displays the board state in plain labels and lets the
- * player submit a move via a free-text input field — full of the form
- * {@code OFFER:0} or {@code UPPER:1,LOWER:2}. Validation is delegated to the
- * server (per the existing design — see issue #37); this screen forwards the
- * request and surfaces server errors.
+ * Game screen. Mirrors the TUI {@link org.adsl.client.view.tui.screens.GameScreen}
+ * behaviour: cards are clickable, selection is highlighted in green, building
+ * cards are tinted purple and event cards orange. Selection is unconstrained
+ * client-side — the server validates the request (issue #37).
+ *
+ * <p>Phase rules (matching the TUI):
+ * <ul>
+ *   <li>{@code TOTEM_PLACEMENT}: clicking an offer tile sends the move
+ *       immediately. Tiles already occupied are disabled.</li>
+ *   <li>{@code ACTION_EXECUTION} / {@code EXTRA_MOVE}: clicking a card on
+ *       top/bottom row toggles its selection. The "Confirm Selection" button
+ *       sends the accumulated set.</li>
+ *   <li>Other phases / not-my-turn: every card and tile is disabled.</li>
+ * </ul>
+ *
+ * <p>After sending a move the screen enters a transient
+ * {@code WAITING_SERVER} state where everything is disabled until the next
+ * {@link GameUpdateEvent} or {@link ErrorEvent} arrives.
  */
 public class GameScreen extends GUIScreen {
+
+    private static final String STYLE_SELECTED = "-fx-background-color: #4caf50; -fx-text-fill: white; -fx-font-weight: bold;";
+    private static final String STYLE_BUILDING = "-fx-text-fill: #8e24aa; -fx-font-weight: bold;";
+    private static final String STYLE_EVENT    = "-fx-text-fill: #ef6c00; -fx-font-weight: bold;";
 
     @FXML private Label headerLabel;
     @FXML private Label phaseLabel;
@@ -43,10 +61,15 @@ public class GameScreen extends GUIScreen {
     @FXML private Label tribeLabel;
     @FXML private Label tribeContents;
     @FXML private VBox othersBox;
-    @FXML private TextField moveInput;
+    @FXML private Label hintLabel;
+    @FXML private Button confirmButton;
     @FXML private Label errorLabel;
 
     private GameDTO game;
+    private final Set<Move> selectedMoves = new LinkedHashSet<>();
+    private int upperCount = 0;
+    private int lowerCount = 0;
+    private boolean waitingServer = false;
 
     public GameScreen(AppCoordinator coordinator, String username, GameDTO game) {
         super(coordinator, username);
@@ -58,12 +81,19 @@ public class GameScreen extends GUIScreen {
         } catch (IOException e) {
             throw new RuntimeException("Failed to load game.fxml", e);
         }
+        resolveMoveCounts();
         renderBoard();
     }
 
     @Override
     public GUIScreen visit(GameUpdateEvent e) {
         this.game = e.getGame();
+        waitingServer = false;
+        // Clear selection when leaving a card-pick phase, mirroring TUI setupActiveState().
+        if (game.phase() != Phase.ACTION_EXECUTION && game.phase() != Phase.EXTRA_MOVE) {
+            selectedMoves.clear();
+        }
+        resolveMoveCounts();
         renderBoard();
         return this;
     }
@@ -71,43 +101,101 @@ public class GameScreen extends GUIScreen {
     @Override
     public GUIScreen visit(ErrorEvent e) {
         if (errorLabel != null) errorLabel.setText(e.getMessage());
+        if (waitingServer) {
+            waitingServer = false;
+            renderBoard();
+        }
         return this;
     }
 
     @FXML
     private void onSendMove() {
-        String text = moveInput.getText() == null ? "" : moveInput.getText().trim();
-        if (text.isEmpty()) {
-            errorLabel.setText("Type a move (e.g. OFFER:0 or UPPER:1,LOWER:2).");
+        if (!isMyTurn()) {
+            errorLabel.setText("Not your turn.");
             return;
         }
-        Set<Move> moves = parseMoves(text);
-        if (moves == null) {
-            errorLabel.setText("Bad format. Use OFFER:0 or UPPER:1,LOWER:2.");
+        Phase phase = game.phase();
+        if (phase != Phase.ACTION_EXECUTION && phase != Phase.EXTRA_MOVE) {
+            errorLabel.setText("Cannot confirm selection in this phase.");
             return;
         }
+        Set<Move> toSend = new LinkedHashSet<>(selectedMoves);
         try {
-            coordinator.makeMoveRequest(moves);
+            coordinator.makeMoveRequest(toSend);
+            waitingServer = true;
             errorLabel.setText("");
+            renderBoard();
         } catch (Exception ex) {
             errorLabel.setText("Move failed: " + ex.getMessage());
         }
     }
 
-    private Set<Move> parseMoves(String text) {
-        Set<Move> out = new LinkedHashSet<>();
-        for (String chunk : text.split(",")) {
-            String[] parts = chunk.trim().split(":");
-            if (parts.length != 2) return null;
-            try {
-                Row row = Row.valueOf(parts[0].trim().toUpperCase());
-                int idx = Integer.parseInt(parts[1].trim());
-                out.add(new Move(idx, row));
-            } catch (Exception ex) {
-                return null;
+    // ── Click handlers ──────────────────────────────────────────────────────
+
+    private void onCardClicked(Row row, int idx, CardDTO card) {
+        if (!canPickCards()) return;
+        if (card == null) {
+            errorLabel.setText("That slot is empty.");
+            return;
+        }
+        Move m = new Move(idx, row);
+        if (!selectedMoves.add(m)) {
+            selectedMoves.remove(m);
+        }
+        errorLabel.setText("");
+        renderBoard();
+    }
+
+    private void onOfferTileClicked(int idx, OfferTileDTO tile) {
+        if (!canPlaceTotem()) return;
+        if (tile.totem() != null) {
+            errorLabel.setText("That tile is already occupied!");
+            return;
+        }
+        try {
+            coordinator.makeMoveRequest(Set.of(new Move(idx, Row.OFFER)));
+            waitingServer = true;
+            errorLabel.setText("");
+            renderBoard();
+        } catch (Exception ex) {
+            errorLabel.setText("Move failed: " + ex.getMessage());
+        }
+    }
+
+    // ── Phase / turn helpers ────────────────────────────────────────────────
+
+    private boolean isMyTurn() {
+        if (game == null || username == null) return false;
+        PlayerDTO me = findMe();
+        return me != null && me.totem() == game.currentPlayerTotem();
+    }
+
+    private boolean canPlaceTotem() {
+        return !waitingServer && isMyTurn() && game.phase() == Phase.TOTEM_PLACEMENT;
+    }
+
+    private boolean canPickCards() {
+        return !waitingServer && isMyTurn()
+                && (game.phase() == Phase.ACTION_EXECUTION || game.phase() == Phase.EXTRA_MOVE);
+    }
+
+    /** Required pick counts derived from the offer tile where my totem sits. */
+    private void resolveMoveCounts() {
+        upperCount = 0;
+        lowerCount = 0;
+        if (game == null) return;
+        Totem current = game.currentPlayerTotem();
+        if (current == null || game.board() == null) return;
+        for (OfferTileDTO tile : game.board().offerTrack()) {
+            if (tile.totem() == current) {
+                Map<Row, Integer> moves = tile.moves();
+                if (moves != null) {
+                    upperCount = moves.getOrDefault(Row.UPPER, 0);
+                    lowerCount = moves.getOrDefault(Row.LOWER, 0);
+                }
+                return;
             }
         }
-        return out;
     }
 
     // ── Rendering ───────────────────────────────────────────────────────────
@@ -118,8 +206,8 @@ public class GameScreen extends GUIScreen {
                 game.round(), game.era(), totemLabel(game.currentPlayerTotem())));
         phaseLabel.setText("Phase: " + (game.phase() != null ? game.phase().name() : "—"));
 
-        renderRow(topRow, game.board().topRow());
-        renderRow(bottomRow, game.board().lowRow());
+        renderRow(topRow, game.board().topRow(), Row.UPPER);
+        renderRow(bottomRow, game.board().lowRow(), Row.LOWER);
         renderOfferTrack(offerTrack, game.board().offerTrack());
 
         PlayerDTO me = findMe();
@@ -138,17 +226,39 @@ public class GameScreen extends GUIScreen {
             othersBox.getChildren().add(new Label(String.format("%s [%s]  F:%d  PP:%d  | %s",
                     p.name(), totemLabel(p.totem()), p.food(), p.pp(), summariseCards(p))));
         }
+
+        renderHintAndConfirm();
     }
 
-    private void renderRow(FlowPane pane, List<CardDTO> cards) {
+    private void renderRow(FlowPane pane, List<CardDTO> cards, Row row) {
         pane.getChildren().clear();
         if (cards == null) return;
+        boolean clickable = canPickCards();
         int idx = 0;
         for (CardDTO c : cards) {
-            String label = c == null
-                    ? String.format("[%d] empty", idx)
-                    : String.format("[%d] %s", idx, c.id());
-            pane.getChildren().add(new Label(label));
+            final int i = idx;
+            final CardDTO card = c;
+            Button btn;
+            if (c == null) {
+                btn = new Button(String.format("[%d] empty", idx));
+                btn.setDisable(true);
+            } else {
+                btn = new Button(String.format("[%d] %s", idx, c.id()));
+                boolean selected = selectedMoves.contains(new Move(idx, row));
+                if (selected) {
+                    btn.setStyle(STYLE_SELECTED);
+                } else {
+                    CardType type = CardCatalog.typeFromId(c.id());
+                    if (type == CardType.BUILDINGS) {
+                        btn.setStyle(STYLE_BUILDING);
+                    } else if (CardCatalog.isEvent(type)) {
+                        btn.setStyle(STYLE_EVENT);
+                    }
+                }
+                btn.setDisable(!clickable);
+                btn.setOnAction(e -> onCardClicked(row, i, card));
+            }
+            pane.getChildren().add(btn);
             idx++;
         }
     }
@@ -156,13 +266,69 @@ public class GameScreen extends GUIScreen {
     private void renderOfferTrack(FlowPane pane, List<OfferTileDTO> tiles) {
         pane.getChildren().clear();
         if (tiles == null) return;
+        boolean clickable = canPlaceTotem();
         int idx = 0;
         for (OfferTileDTO t : tiles) {
+            final int i = idx;
+            final OfferTileDTO tile = t;
             String moves = t.givesFood() ? "+3 food" : formatMoves(t.moves());
             String occupant = t.totem() != null ? totemLabel(t.totem()) : "free";
-            pane.getChildren().add(new Label(String.format("[%d] %s  (%s)", idx, moves, occupant)));
+            Button btn = new Button(String.format("[%d] %s  (%s)", idx, moves, occupant));
+            btn.setDisable(!clickable || t.totem() != null);
+            btn.setOnAction(e -> onOfferTileClicked(i, tile));
+            pane.getChildren().add(btn);
             idx++;
         }
+    }
+
+    private void renderHintAndConfirm() {
+        Phase phase = game.phase();
+        if (waitingServer) {
+            hintLabel.setText("Waiting for server...");
+            confirmButton.setDisable(true);
+            return;
+        }
+        if (!isMyTurn()) {
+            hintLabel.setText(waitingHint());
+            confirmButton.setDisable(true);
+            return;
+        }
+        if (phase == Phase.TOTEM_PLACEMENT) {
+            hintLabel.setText("Click an offer tile to place your totem.");
+            confirmButton.setDisable(true);
+        } else if (phase == Phase.ACTION_EXECUTION || phase == Phase.EXTRA_MOVE) {
+            int required = upperCount + lowerCount;
+            hintLabel.setText(String.format(
+                    "Pick cards (top×%d, bottom×%d)  —  Selected: %d / %d",
+                    upperCount, lowerCount, selectedMoves.size(), required));
+            confirmButton.setDisable(false);
+        } else {
+            hintLabel.setText(waitingHint());
+            confirmButton.setDisable(true);
+        }
+    }
+
+    private String waitingHint() {
+        if (game == null) return "Waiting...";
+        Phase phase = game.phase();
+        if (game.currentPlayerTotem() != null) {
+            return "Waiting for " + nameFor(game.currentPlayerTotem()) + "...";
+        }
+        return switch (phase) {
+            case EVENTS_EXECUTION -> "Resolving events...";
+            case END_ROUND -> "Resolving end-of-round...";
+            case END_GAME -> "Game over.";
+            case null -> "Waiting...";
+            default -> "Waiting...";
+        };
+    }
+
+    private String nameFor(Totem totem) {
+        if (game == null || totem == null) return "?";
+        for (PlayerDTO p : game.players()) {
+            if (p.totem() == totem) return p.name();
+        }
+        return "?";
     }
 
     private static String formatMoves(Map<Row, Integer> moves) {
