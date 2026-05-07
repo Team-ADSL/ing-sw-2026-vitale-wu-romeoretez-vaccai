@@ -199,18 +199,6 @@ public class GameScreen extends Screen {
     }
 
     private void confirmCardSelection() {
-        int required = upperCount + lowerCount;
-        if (selectedMoves.size() != required) {
-            error = String.format("Select exactly %d card(s): %d from top, %d from bottom.",
-                    required, upperCount, lowerCount);
-            return;
-        }
-        long selTop = selectedMoves.stream().filter(m -> m.row() == Row.UPPER).count();
-        long selBot = selectedMoves.stream().filter(m -> m.row() == Row.LOWER).count();
-        if (selTop != upperCount || selBot != lowerCount) {
-            error = String.format("Need %d from top row, %d from bottom row.", upperCount, lowerCount);
-            return;
-        }
         sendMove(Collections.unmodifiableSet(new LinkedHashSet<>(selectedMoves)));
     }
 
@@ -223,13 +211,7 @@ public class GameScreen extends Screen {
         if (selectedMoves.contains(move)) {
             selectedMoves.remove(move);
         } else {
-            int limit = (row == Row.UPPER) ? upperCount : lowerCount;
-            long already = selectedMoves.stream().filter(m -> m.row() == row).count();
-            if (already >= limit) {
-                error = "You can only pick " + limit + " card(s) from this row.";
-            } else {
-                selectedMoves.add(move);
-            }
+            selectedMoves.add(move);
         }
     }
 
