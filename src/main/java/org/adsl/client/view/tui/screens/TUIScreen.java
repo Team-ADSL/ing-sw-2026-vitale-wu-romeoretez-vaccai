@@ -1,6 +1,7 @@
 package org.adsl.client.view.tui.screens;
 
 import org.adsl.client.AppCoordinator;
+import org.adsl.client.view.events.*;
 import org.adsl.client.view.tui.events.*;
 import org.adsl.client.view.tui.render.TuiTerminal;
 
@@ -26,8 +27,8 @@ public abstract class TUIScreen implements EventVisitor {
     protected String error;
 
     protected TUIScreen(TuiTerminal terminal,
-                        AppCoordinator coordinator,
-                        String username) {
+            AppCoordinator coordinator,
+            String username) {
         this.terminal = terminal;
         this.coordinator = coordinator;
         this.username = username;
@@ -36,7 +37,7 @@ public abstract class TUIScreen implements EventVisitor {
     }
 
     protected TUIScreen(TuiTerminal terminal,
-                        AppCoordinator coordinator) {
+            AppCoordinator coordinator) {
         this(terminal, coordinator, null);
     }
 
