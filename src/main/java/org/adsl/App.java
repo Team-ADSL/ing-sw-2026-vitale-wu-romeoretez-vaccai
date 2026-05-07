@@ -6,6 +6,7 @@ import org.adsl.client.network.fake.FakeServerConnection;
 import org.adsl.client.network.rmi.RMIServerConnection;
 import org.adsl.client.network.socket.SocketClientConnection;
 import org.adsl.client.view.GameUI;
+import org.adsl.client.view.gui.GUI;
 import org.adsl.client.view.tui.TUI;
 import org.adsl.server.config.BoardConfigLoader;
 import org.adsl.server.config.JsonBoardConfigLoader;
@@ -41,6 +42,7 @@ public class App
         String mode = args[0].toLowerCase();
         switch (mode) {
             case "--test-tui" -> startTestTui();
+            case "--test-gui" -> startTestGui();
             case "--test-server-connection" -> startClientTester();
             case "--server" -> {
                 // Expected args: --server <socket-port> <rmi-port> <recover-directory>
@@ -133,6 +135,18 @@ public class App
         tui.start();
     }
 
+    private static void startTestGui() {
+        System.out.println("[BUILDING] Starting MESOS in test mode (GUI + in-process fake server)...");
+        GUI gui = new GUI();
+        ServerConnection fakeServerConnection = new FakeServerConnection();
+        AppCoordinator appCoordinator = new AppCoordinator(gui, fakeServerConnection);
+        fakeServerConnection.setAppCoordinator(appCoordinator);
+        gui.setAppCoordinator(appCoordinator);
+
+        Runtime.getRuntime().addShutdownHook(new Thread(gui::shutdown));
+        gui.start();
+    }
+
     private static void startServer(int socketPort, int rmiPort, String recoverDirectory) {
         System.out.println("Starting server...");
         try {
@@ -186,8 +200,7 @@ public class App
         try {
             GameUI gameUI;
             if ("--gui".equals(uiType)) {
-                // gameUI = new GUI();
-                return;
+                gameUI = new GUI();
             } else {
                 gameUI = new TUI();
             }

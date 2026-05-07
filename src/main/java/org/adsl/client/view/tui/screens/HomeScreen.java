@@ -2,8 +2,8 @@ package org.adsl.client.view.tui.screens;
 
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.view.tui.events.ConfirmEvent;
-import org.adsl.client.view.tui.events.HomeUpdateEvent;
-import org.adsl.client.view.tui.events.LobbyUpdateEvent;
+import org.adsl.client.view.events.HomeUpdateEvent;
+import org.adsl.client.view.events.LobbyUpdateEvent;
 import org.adsl.client.view.tui.events.NavigateDownEvent;
 import org.adsl.client.view.tui.events.NavigateLeftEvent;
 import org.adsl.client.view.tui.events.NavigateRightEvent;
