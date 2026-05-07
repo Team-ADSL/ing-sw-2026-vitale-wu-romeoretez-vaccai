@@ -38,8 +38,7 @@ public class ExtraMoveState extends ControllerState {
     }
 
     if (moves.isEmpty()) {
-      reqPlayer.getBuildingBonus().setExtraMove(false);
-      setNextState(calcNextState());
+      setNextState(new EventsState(getGame(), getContext()));
       getGame().sendUpdateGame();
     } else {
       Move currentMove = moves.stream().findFirst().get();
@@ -61,8 +60,8 @@ public class ExtraMoveState extends ControllerState {
     CardRow selectedRow = getGame().getBoard().topRow();
     Card selectedCard = selectedRow.pickCardAt(move.rowIndex());
     selectedCard.insert(p.getCards());
-    p.getBuildingBonus().setExtraMove(false);
-    setNextState(calcNextState());
+
+    setNextState(new EventsState(getGame(), getContext()));
     getGame().sendUpdateGame();
   }
 
@@ -71,7 +70,6 @@ public class ExtraMoveState extends ControllerState {
     if (isToStop()) {
       return new RecoverState(getGame(), getContext());
     }
-    // TODO: need to add a controll for already executed action
     getGame().getPlayers().forEach(
         p -> p.getCards().get(CardType.BUILDINGS).forEach(
             b -> b.activeEffect(Set.of(p), Trigger.END_ROUND)));
@@ -79,6 +77,8 @@ public class ExtraMoveState extends ControllerState {
     Optional<Player> playerExtraMove = getGame().getPlayers().stream()
         .filter(p -> p.getBuildingBonus().isExtraMove())
         .findFirst();
+
+    getGame().getPlayers().forEach(p -> p.getBuildingBonus().reset());
 
     if (playerExtraMove.isPresent()) {
       getGame().setCurrentPlayer(playerExtraMove.get());
