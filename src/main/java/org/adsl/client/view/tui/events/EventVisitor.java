@@ -1,24 +1,24 @@
 package org.adsl.client.view.tui.events;
 
-import org.adsl.client.view.tui.screens.Screen;
+import org.adsl.client.view.tui.screens.TUIScreen;
 
 public interface EventVisitor {
     // Server events
-    Screen visit(LoginNeededEvent event);
-    Screen visit(HomeUpdateEvent event);
-    Screen visit(LobbyUpdateEvent event);
-    Screen visit(GameUpdateEvent event);
-    Screen visit(EndGameEvent event);
-    Screen visit(ErrorEvent event);
-    Screen visit(DisconnectedEvent event);
+    TUIScreen visit(LoginNeededEvent event);
+    TUIScreen visit(HomeUpdateEvent event);
+    TUIScreen visit(LobbyUpdateEvent event);
+    TUIScreen visit(GameUpdateEvent event);
+    TUIScreen visit(EndGameEvent event);
+    TUIScreen visit(ErrorEvent event);
+    TUIScreen visit(DisconnectedEvent event);
 
     // Input events (key presses translated to semantic events by TUI)
-    Screen visit(ConfirmEvent event);
-    Screen visit(SelectEvent event);
-    Screen visit(NavigateLeftEvent event);
-    Screen visit(NavigateRightEvent event);
-    Screen visit(NavigateUpEvent event);
-    Screen visit(NavigateDownEvent event);
-    Screen visit(CharInputEvent event);
-    Screen visit(BackspaceEvent event);
+    TUIScreen visit(ConfirmEvent event);
+    TUIScreen visit(SelectEvent event);
+    TUIScreen visit(NavigateLeftEvent event);
+    TUIScreen visit(NavigateRightEvent event);
+    TUIScreen visit(NavigateUpEvent event);
+    TUIScreen visit(NavigateDownEvent event);
+    TUIScreen visit(CharInputEvent event);
+    TUIScreen visit(BackspaceEvent event);
 }

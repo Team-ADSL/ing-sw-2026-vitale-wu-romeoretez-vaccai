@@ -1,6 +1,6 @@
 package org.adsl.client.view.tui.events;
 
-import org.adsl.client.view.tui.screens.Screen;
+import org.adsl.client.view.tui.screens.TUIScreen;
 
 /**
  * Backspace keystroke. Routed as a dedicated event because text-input screens
@@ -10,7 +10,7 @@ import org.adsl.client.view.tui.screens.Screen;
 public class BackspaceEvent extends Event {
 
     @Override
-    public Screen accept(EventVisitor visitor) {
+    public TUIScreen accept(EventVisitor visitor) {
         return visitor.visit(this);
     }
 }

@@ -16,7 +16,7 @@ import java.util.List;
  * Displays the final leaderboard. On {@link ConfirmEvent} (Enter) transitions
  * to {@link ExitScreen} to terminate the TUI.
  */
-public class EndGameScreen extends Screen {
+public class EndGameScreen extends TUIScreen {
 
     private final List<MatchResult> results;
 
@@ -77,12 +77,12 @@ public class EndGameScreen extends Screen {
     }
 
     @Override
-    public Screen visit(ConfirmEvent e) {
+    public TUIScreen visit(ConfirmEvent e) {
         return ExitScreen.INSTANCE;
     }
 
     @Override
-    public Screen visit(CharInputEvent e) {
+    public TUIScreen visit(CharInputEvent e) {
         if (Character.toLowerCase(e.getCharacter()) == 'b') {
             if (coordinator != null) {
                 try {

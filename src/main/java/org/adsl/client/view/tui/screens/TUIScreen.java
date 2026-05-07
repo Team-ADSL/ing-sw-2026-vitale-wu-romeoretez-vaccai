@@ -15,9 +15,9 @@ import java.io.IOException;
  * machine. Server responses and key presses are both delivered as
  * {@link Event} objects and dispatched through the visitor methods inherited
  * from {@link EventVisitor}: returning {@code this} keeps the current screen,
- * returning a new {@link Screen} instance triggers a transition.
+ * returning a new {@link TUIScreen} instance triggers a transition.
  */
-public abstract class Screen implements EventVisitor {
+public abstract class TUIScreen implements EventVisitor {
 
     protected final TuiTerminal terminal;
     protected final AppCoordinator coordinator;
@@ -25,9 +25,9 @@ public abstract class Screen implements EventVisitor {
     protected boolean toRender;
     protected String error;
 
-    protected Screen(TuiTerminal terminal,
-            AppCoordinator coordinator,
-            String username) {
+    protected TUIScreen(TuiTerminal terminal,
+                        AppCoordinator coordinator,
+                        String username) {
         this.terminal = terminal;
         this.coordinator = coordinator;
         this.username = username;
@@ -35,19 +35,19 @@ public abstract class Screen implements EventVisitor {
         this.error = null;
     }
 
-    protected Screen(TuiTerminal terminal,
-            AppCoordinator coordinator) {
+    protected TUIScreen(TuiTerminal terminal,
+                        AppCoordinator coordinator) {
         this(terminal, coordinator, null);
     }
 
-    protected Screen(TuiTerminal terminal) {
+    protected TUIScreen(TuiTerminal terminal) {
         this(terminal, null, null);
     }
 
     /**
      * No-arg constructor for screens with no resources (e.g. {@link ExitScreen}).
      */
-    protected Screen() {
+    protected TUIScreen() {
         this(null, null, null);
     }
 
@@ -55,7 +55,7 @@ public abstract class Screen implements EventVisitor {
 
     /** Server asks the client to (re-)authenticate: jump to {@link LoginScreen}. */
     @Override
-    public Screen visit(LoginNeededEvent e) {
+    public TUIScreen visit(LoginNeededEvent e) {
         return new LoginScreen(terminal, coordinator);
     }
 
@@ -64,26 +64,26 @@ public abstract class Screen implements EventVisitor {
      * active games.
      */
     @Override
-    public Screen visit(HomeUpdateEvent e) {
+    public TUIScreen visit(HomeUpdateEvent e) {
         return new HomeScreen(terminal, coordinator, username, e.getActiveGames());
     }
 
     /** Lobby update is screen-specific (HomeScreen and LobbyScreen own it). */
     @Override
-    public Screen visit(LobbyUpdateEvent e) {
+    public TUIScreen visit(LobbyUpdateEvent e) {
         return new LobbyScreen(terminal, coordinator, username, e.getGameId(), e.getPlayers(),
                 e.getNumPlayersAllowed());
     }
 
     /** Game update is screen-specific (LobbyScreen and GameScreen own it). */
     @Override
-    public Screen visit(GameUpdateEvent e) {
+    public TUIScreen visit(GameUpdateEvent e) {
         return new GameScreen(terminal, coordinator, username, e.getGame());
     }
 
     /** Game ended: jump to {@link EndGameScreen} with the final results. */
     @Override
-    public Screen visit(EndGameEvent e) {
+    public TUIScreen visit(EndGameEvent e) {
         return new EndGameScreen(terminal, coordinator, username, e.getResults());
     }
 
@@ -92,62 +92,62 @@ public abstract class Screen implements EventVisitor {
      * error message.
      */
     @Override
-    public Screen visit(ErrorEvent e) {
+    public TUIScreen visit(ErrorEvent e) {
         error = e.getMessage();
         return this;
     }
 
     @Override
-    public Screen visit(DisconnectedEvent e) {
+    public TUIScreen visit(DisconnectedEvent e) {
         return new DisconnectedScreen(terminal, coordinator, e.getMessage());
     }
 
     // ── Input event defaults (unhandled keep current screen) ─────────────────
 
     @Override
-    public Screen visit(ConfirmEvent e) {
+    public TUIScreen visit(ConfirmEvent e) {
         return this;
     }
 
     @Override
-    public Screen visit(SelectEvent e) {
+    public TUIScreen visit(SelectEvent e) {
         return this;
     }
 
     @Override
-    public Screen visit(NavigateLeftEvent e) {
+    public TUIScreen visit(NavigateLeftEvent e) {
         return this;
     }
 
     @Override
-    public Screen visit(NavigateRightEvent e) {
+    public TUIScreen visit(NavigateRightEvent e) {
         return this;
     }
 
     @Override
-    public Screen visit(NavigateUpEvent e) {
+    public TUIScreen visit(NavigateUpEvent e) {
         return this;
     }
 
     @Override
-    public Screen visit(NavigateDownEvent e) {
+    public TUIScreen visit(NavigateDownEvent e) {
         return this;
     }
 
     @Override
-    public Screen visit(CharInputEvent e) {
+    public TUIScreen visit(CharInputEvent e) {
         return this;
     }
 
     @Override
-    public Screen visit(BackspaceEvent e) {
+    public TUIScreen visit(BackspaceEvent e) {
         return this;
     }
 
     // ── Lifecycle / framework hooks ──────────────────────────────────────────
 
-    public Screen handleEvent(Event event) {
-        Screen newScreen = event.accept(this);
+    public TUIScreen handleEvent(Event event) {
+        TUIScreen newScreen = event.accept(this);
         setToRender(true);
         return newScreen;
     }
@@ -162,10 +162,10 @@ public abstract class Screen implements EventVisitor {
 
     /**
      * Called once when the TUI transitions to this screen.
-     * Returns {@code null} to stay on this screen, or a new {@link Screen}
+     * Returns {@code null} to stay on this screen, or a new {@link TUIScreen}
      * instance to redirect immediately (e.g. back navigation, exit).
      */
-    public Screen onEnter() throws Exception {
+    public TUIScreen onEnter() throws Exception {
         return null;
     }
 

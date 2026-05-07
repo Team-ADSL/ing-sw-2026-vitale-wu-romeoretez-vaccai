@@ -12,9 +12,9 @@ import java.io.IOException;
 /**
  * Initial screen shown while the TUI waits for the server to confirm the
  * connection and request login. Transitions to {@link LoginScreen} when
- * a {@link LoginNeededEvent} arrives (handled by {@link Screen}'s default).
+ * a {@link LoginNeededEvent} arrives (handled by {@link TUIScreen}'s default).
  */
-public class ConnectingScreen extends Screen {
+public class ConnectingScreen extends TUIScreen {
 
     public ConnectingScreen(TuiTerminal terminal, AppCoordinator coordinator) {
         super(terminal, coordinator);
@@ -36,7 +36,7 @@ public class ConnectingScreen extends Screen {
     }
 
     @Override
-    public Screen visit(CharInputEvent e) {
+    public TUIScreen visit(CharInputEvent e) {
         if (Character.toLowerCase(e.getCharacter()) == 'q') {
             return ExitScreen.INSTANCE;
         }
