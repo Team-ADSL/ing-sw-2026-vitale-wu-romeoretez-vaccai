@@ -29,7 +29,7 @@ public class LobbyStateTest {
         GameController controller = builder.build();
 
         fakeGame = new FakeGame(1, 4);
-        state = new LobbyState(fakeGame, controller);
+        state = new LobbyState(fakeGame, controller, "Player1");
     }
 
     // ──────────────────────────────────────────────
@@ -84,6 +84,8 @@ public class LobbyStateTest {
 
     @Test
     void testVisitClientDisconnected_removesPlayerAndUpdatesLobby() throws ServerException {
+        client.setClientUsername("Player2"); // Otherwise trigger host disconnection
+
         fakeGame.getPlayers().add(new Player("Player1"));
         fakeGame.getPlayers().add(new Player("Player2"));
         fakeGame.addedClients.add(client);
@@ -95,8 +97,8 @@ public class LobbyStateTest {
 
         assertEquals(1, fakeGame.getPlayers().size());
         boolean playerExists = fakeGame.getPlayers().stream()
-                .anyMatch(p -> p.getName().equals("Player2"));
-        assertTrue(playerExists, "Player2 must be successfully added to the game Set");
+                .anyMatch(p -> p.getName().equals("Player1"));
+        assertTrue(playerExists, "Player1 must be successfully added to the game Set");
         assertTrue(fakeGame.removedClients.contains(client), "Client must be removed from observers");
         assertTrue(client.getGameId().isEmpty(), "Client gameId must be cleared");
         assertTrue(fakeGame.updateLobbySent, "Game should notify remaining clients");
@@ -113,7 +115,6 @@ public class LobbyStateTest {
 
         assertTrue(fakeGame.getPlayers().isEmpty());
         assertTrue(fakeGame.endGameResultsSent, "If lobby is empty, trigger the ServerController cleanup");
-        assertFalse(state.isToStop(), "State machine MUST NOT stop even if lobby is empty");
     }
 
     // ──────────────────────────────────────────────

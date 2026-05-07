@@ -4,6 +4,7 @@ import org.adsl.server.config.BoardConfigLoader;
 import org.adsl.server.controller.states.ControllerState;
 import org.adsl.server.controller.states.LobbyState;
 import org.adsl.server.controller.states.RecoverState;
+import org.adsl.server.exceptions.HostDisconnectedException;
 import org.adsl.server.network.socket.SocketServer;
 import org.adsl.server.persistence.GameDAO;
 import org.adsl.server.model.EndGameObserver;
@@ -83,13 +84,11 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
             System.out.println("ERROR: " + e.getMessage());
             virtualClient.sendErrorMessage(e.getMessage());
         } catch (RuntimeException e) {
-            // Unchecked exceptions used to silently kill the request thread,
-            // leaving the client frozen with no log. Print the stack trace and
-            // notify the client so the failure is observable.
+
             System.err.println("FATAL: unchecked exception while handling "
                     + req.getClass().getSimpleName() + " from "
-                    + virtualClient.getClientUsername());
-            e.printStackTrace();
+                    + virtualClient.getClientUsername()
+                    + " : " + e.getMessage());
             virtualClient.sendErrorMessage("Internal server error: " + e.getMessage());
         }
     }
@@ -167,7 +166,9 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
             newGame.addObserver(this);
 
             GameController newGameController = new GameController(boardConfigLoader, gamePersistenceManager, gameDAO);
-            newGameController.setState(new LobbyState(newGame, newGameController));
+            String host = virtualClient.getClientUsername().orElseThrow(() ->
+                    new ServerException("[CREATE GAME REQUEST] Client not connected"));
+            newGameController.setState(new LobbyState(newGame, newGameController, host));
             games.put(newId, newGameController);
 
             EnterGameRequest newReq = new EnterGameRequest(newId);
@@ -199,12 +200,16 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
 
     @Override
     public void visit(ClientDisconnected req, VirtualClient virtualClient) throws ServerException {
-        logout(req, virtualClient);
-        virtualClient.setGameId(null);
+        int gameId = virtualClient.getGameId().orElse(-1);
+        try {
+            logout(req, virtualClient);
+        } catch(HostDisconnectedException e){
+            handleHostDisconnection(gameId);
+        }
         virtualClient.closeConnection();
     }
 
-    public void logout(ClientRequest req, VirtualClient virtualClient){
+    public void logout(ClientRequest req, VirtualClient virtualClient) throws ServerException{
         if(virtualClient.getClientUsername().isEmpty()) {
             return;
         }
@@ -251,9 +256,25 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         if(virtualClient.getGameId().isEmpty()){
             throw new ServerException("[EXIT LOBBY REQUEST] Virtual client has no gameId associated.");
         }
-        sendToGameController(virtualClient.getGameId().get(), req, virtualClient);
+
+        int gameId = virtualClient.getGameId().get();
+        try {
+            sendToGameController(gameId, req, virtualClient);
+        } catch(HostDisconnectedException e){
+            handleHostDisconnection(gameId);
+        }
         home.addObserver(virtualClient);
         home.update();
+    }
+
+    public void handleHostDisconnection(int gameId) throws ServerException{
+        List<VirtualClient> clientToDisconnect = userConnected.values().stream()
+                .filter(c -> c.getGameId().orElse(-1) == gameId)
+                .toList();
+        for(VirtualClient c : clientToDisconnect){
+            sendToGameController(gameId, new ExitLobbyRequest(), c);
+            home.addObserver(c);
+        }
     }
 
     @Override

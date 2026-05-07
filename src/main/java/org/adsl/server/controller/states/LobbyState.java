@@ -1,6 +1,7 @@
 package org.adsl.server.controller.states;
 
 import org.adsl.server.controller.GameController;
+import org.adsl.server.exceptions.HostDisconnectedException;
 import org.adsl.server.model.Game;
 import org.adsl.server.model.Player;
 import org.adsl.server.network.VirtualClient;
@@ -9,9 +10,11 @@ import org.adsl.shared.network.requests.*;
 
 public class LobbyState extends ControllerState {
     private boolean readyToStart;
+    private final String host;
 
-    public LobbyState(Game game, GameController context) {
+    public LobbyState(Game game, GameController context, String host) {
         super(game, context);
+        this.host = host;
         readyToStart = false;
     }
 
@@ -66,6 +69,8 @@ public class LobbyState extends ControllerState {
 
         if(getGame().getPlayers().isEmpty()){
             getGame().sendEndGameResults(null);
+        } else if(host.equals(virtualClient.getClientUsername().get())) {
+            throw new HostDisconnectedException("[LOBBY] Host left, every player has been disconnected.");
         } else {
             getGame().sendUpdateLobby();
         }
@@ -74,6 +79,12 @@ public class LobbyState extends ControllerState {
 
     @Override
     public void visit(StartGameRequest req, VirtualClient virtualClient) throws ServerException {
+        if(virtualClient.getClientUsername().isEmpty()){
+            throw new ServerException("[LOBBY] Virtual client has no username associated.");
+        }
+        if(!virtualClient.getClientUsername().get().equals(host)){
+            throw new ServerException("[LOBBY] Only the host can start the game.");
+        }
         if(getGame().getPlayers().size() == getGame().getNumPlayer()){
             readyToStart = true;
         } else {
