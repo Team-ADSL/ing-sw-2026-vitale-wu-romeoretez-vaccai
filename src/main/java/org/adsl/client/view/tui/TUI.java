@@ -2,6 +2,7 @@ package org.adsl.client.view.tui;
 
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.view.GameUI;
+import org.adsl.client.view.events.*;
 import org.adsl.client.view.tui.events.*;
 import org.adsl.client.view.tui.render.Key;
 import org.adsl.client.view.tui.render.TuiTerminal;
@@ -130,7 +131,7 @@ public class TUI implements GameUI {
                 redirect = currentScreen.onEnter();
             }
         } catch (Exception e) {
-            showFatal("Screen transition failed", e);
+            showFatal("TUIScreen transition failed", e);
             return false;
         }
         return true;

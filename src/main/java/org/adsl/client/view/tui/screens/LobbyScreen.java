@@ -2,8 +2,8 @@ package org.adsl.client.view.tui.screens;
 
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.view.tui.events.CharInputEvent;
-import org.adsl.client.view.tui.events.GameUpdateEvent;
-import org.adsl.client.view.tui.events.LobbyUpdateEvent;
+import org.adsl.client.view.events.GameUpdateEvent;
+import org.adsl.client.view.events.LobbyUpdateEvent;
 import org.adsl.client.view.tui.render.TuiColor;
 import org.adsl.client.view.tui.render.TuiSize;
 import org.adsl.client.view.tui.render.TuiTerminal;
