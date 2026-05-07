@@ -24,7 +24,6 @@ public class ActionExecutionState extends ControllerState {
     super(game, context);
   }
 
-  // TODO: need to add a controll for impossible picking
   @Override
   public ControllerState onEntry() throws ServerException {
     if (getGame().getCurrentPlayer().isEmpty()) {
@@ -62,13 +61,20 @@ public class ActionExecutionState extends ControllerState {
     Map<Row, Integer> allowedMoves = offerTile.getMoves();
     int numLowDraw = (int) moves.stream().filter(m -> m.row() == Row.LOWER).count();
     int numUpDraw = (int) moves.stream().filter(m -> m.row() == Row.UPPER).count();
-    int allowedUpper = allowedMoves.getOrDefault(Row.UPPER, 0);
-    int allowedLower = allowedMoves.getOrDefault(Row.LOWER, 0);
-    if (numUpDraw != allowedUpper || numLowDraw != allowedLower) {
+    int maxAllowedUpper = allowedMoves.getOrDefault(Row.UPPER, 0);
+    int maxAllowedLower = allowedMoves.getOrDefault(Row.LOWER, 0);
+    int minUpperAllowed = (int)getGame().getBoard().topRow().getTribeCards().stream()
+            .filter(c -> c.canBeDrawn(null))
+            .count();
+    int minLowerAllowed = (int)getGame().getBoard().lowRow().getTribeCards().stream()
+            .filter(c -> c.canBeDrawn(null))
+            .count();
+    if (numUpDraw > maxAllowedUpper || numUpDraw < minUpperAllowed ||
+            numLowDraw > maxAllowedLower || numLowDraw < minLowerAllowed ) {
       throw new ServerException(
-          "Wrong moves: you can draw "
-              + allowedUpper + " card(s) from the top row and "
-              + allowedLower + " card(s) from the bottom row");
+          "Wrong moves: you can draw max "
+              + maxAllowedUpper + " card(s), min " + minUpperAllowed + "from the top row and "
+              + maxAllowedLower + " card(s), min " + minLowerAllowed + "from the top row.");
     }
 
     for (Move move : moves) {
@@ -128,6 +134,8 @@ public class ActionExecutionState extends ControllerState {
         p.changePP(-2);
       }
     }
+
+    getGame().getPlayers().forEach(player -> player.getBuildingBonus().reset());
   }
 
   @Override

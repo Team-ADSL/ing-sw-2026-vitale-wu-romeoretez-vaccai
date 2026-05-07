@@ -18,8 +18,20 @@ public class EventsState extends ControllerState {
 
   @Override
   public ControllerState onEntry() {
+    ArrayList<Card> cardsLower = getGame().getBoard().lowRow().getTribeCards();
+    execute(cardsLower);
+
+    ArrayList<Card> cardsUpper = getGame().getBoard().lowRow().getTribeCards();
+    if(getGame().getRound() == 10){
+      execute(cardsUpper);
+    }
+    setNextState(calcNextState());
+    getGame().sendUpdateGame();
+    return getNextState();
+  }
+
+  public void execute(ArrayList<Card> cards){
     Set<Player> players = getGame().getPlayers();
-    ArrayList<Card> cards = getGame().getBoard().lowRow().getTribeCards();
 
     Map<CardType, Set<Card>> events = new EnumMap<>(CardType.class);
     events.put(CardType.HUNT, new HashSet<>());
@@ -33,14 +45,14 @@ public class EventsState extends ControllerState {
     }
 
     List<Card> nonSustenanceEvents = events.entrySet().stream()
-        .filter(entry -> entry.getKey() != CardType.SUSTENANCE)
-        .flatMap(entry -> entry.getValue().stream())
-        .sorted(Comparator.comparingInt(Card::getEra))
-        .toList();
+            .filter(entry -> entry.getKey() != CardType.SUSTENANCE)
+            .flatMap(entry -> entry.getValue().stream())
+            .sorted(Comparator.comparingInt(Card::getEra))
+            .toList();
 
     List<Card> sustenanceEvents = events.get(CardType.SUSTENANCE).stream()
-        .sorted(Comparator.comparingInt(Card::getEra))
-        .toList();
+            .sorted(Comparator.comparingInt(Card::getEra))
+            .toList();
 
     for (Card c : nonSustenanceEvents) {
       c.activeEffect(players, Trigger.EVENT_EXECUTION);
@@ -48,10 +60,6 @@ public class EventsState extends ControllerState {
     for (Card c : sustenanceEvents) {
       c.activeEffect(players, Trigger.EVENT_EXECUTION);
     }
-
-    setNextState(calcNextState());
-    getGame().sendUpdateGame();
-    return getNextState();
   }
 
   @Override
