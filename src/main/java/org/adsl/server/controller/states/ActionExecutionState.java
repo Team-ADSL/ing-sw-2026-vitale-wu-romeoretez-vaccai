@@ -15,6 +15,7 @@ import org.adsl.server.model.Game;
 import org.adsl.server.model.Player;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -49,32 +50,32 @@ public class ActionExecutionState extends ControllerState {
     while (offerIndex < offerTrack.size() && offerTrack.getTileAt(offerIndex).getPlayer().isEmpty()) {
       offerIndex++;
     }
-    int remainingMoves = offerTrack.getTileAt(offerIndex).getNumMoves();
     Set<Move> moves = req.getMoves();
-    if (moves.size() != remainingMoves) {
-      throw new ServerException(
-          "Number of cards mismatch. Required: " + remainingMoves
-              + ", provided: " + moves.size());
-    }
 
     OfferTile offerTile = getGame().getBoard().offerTrack().getTileAt(offerIndex);
     Map<Row, Integer> allowedMoves = offerTile.getMoves();
     int numLowDraw = (int) moves.stream().filter(m -> m.row() == Row.LOWER).count();
     int numUpDraw = (int) moves.stream().filter(m -> m.row() == Row.UPPER).count();
+
     int maxAllowedUpper = allowedMoves.getOrDefault(Row.UPPER, 0);
     int maxAllowedLower = allowedMoves.getOrDefault(Row.LOWER, 0);
-    int minUpperAllowed = (int)getGame().getBoard().topRow().getTribeCards().stream()
+    int pickableUpper = (int)getGame().getBoard().topRow().getTribeCards().stream()
+            .filter(Objects::nonNull)
             .filter(c -> c.canBeDrawn(null))
             .count();
-    int minLowerAllowed = (int)getGame().getBoard().lowRow().getTribeCards().stream()
+    int pickableLower = (int)getGame().getBoard().lowRow().getTribeCards().stream()
+            .filter(Objects::nonNull)
             .filter(c -> c.canBeDrawn(null))
             .count();
+    int minLowerAllowed = Math.min(pickableLower, maxAllowedLower);
+    int minUpperAllowed = Math.min(pickableUpper, maxAllowedUpper);
+
     if (numUpDraw > maxAllowedUpper || numUpDraw < minUpperAllowed ||
             numLowDraw > maxAllowedLower || numLowDraw < minLowerAllowed ) {
       throw new ServerException(
           "Wrong moves: you can draw max "
-              + maxAllowedUpper + " card(s), min " + minUpperAllowed + "from the top row and "
-              + maxAllowedLower + " card(s), min " + minLowerAllowed + "from the top row.");
+              + maxAllowedUpper + " card(s), min " + minUpperAllowed + " from the upper row and max "
+              + maxAllowedLower + " card(s), min " + minLowerAllowed + " from the lower row.");
     }
 
     for (Move move : moves) {
