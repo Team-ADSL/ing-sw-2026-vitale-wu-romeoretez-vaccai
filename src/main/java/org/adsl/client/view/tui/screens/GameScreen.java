@@ -3,6 +3,7 @@ package org.adsl.client.view.tui.screens;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.view.tui.CardCatalog;
 import org.adsl.client.view.tui.CardTokens;
+import org.adsl.client.view.events.*;
 import org.adsl.client.view.tui.events.*;
 import org.adsl.client.view.tui.events.CharInputEvent;
 import org.adsl.client.view.tui.render.TuiColor;

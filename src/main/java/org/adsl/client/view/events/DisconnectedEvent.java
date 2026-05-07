@@ -1,4 +1,7 @@
-package org.adsl.client.view.tui.events;
+package org.adsl.client.view.events;
+
+import org.adsl.client.view.gui.screens.GUIScreen;
+import org.adsl.client.view.tui.events.EventVisitor;
 
 import org.adsl.client.view.tui.screens.TUIScreen;
 
@@ -9,7 +12,7 @@ import org.adsl.client.view.tui.screens.TUIScreen;
  * own terminal and coordinator references, so the event itself only needs to
  * carry the human-readable diagnostic message.
  */
-public class DisconnectedEvent extends Event {
+public class DisconnectedEvent extends ServerEvent {
 
     private final String message;
 
@@ -21,6 +24,11 @@ public class DisconnectedEvent extends Event {
 
     @Override
     public TUIScreen accept(EventVisitor visitor) {
+        return visitor.visit(this);
+    }
+
+    @Override
+    public GUIScreen accept(GUIEventVisitor visitor) {
         return visitor.visit(this);
     }
 }

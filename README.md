@@ -87,6 +87,37 @@ java -jar target/mesos.jar --client --rmi --tui 127.0.0.1 1099
 
 ---
 
+### 4. Start a GUI Client (JavaFX)
+
+The GUI client uses JavaFX 21 and is bundled inside the fat jar
+(`win`, `linux`, `mac`, `mac-aarch64` natives are all included).
+
+Over Socket:
+
+```bash
+java -jar target/mesos.jar --client --socket --gui <server-ip> <socket-port>
+```
+
+Over RMI:
+
+```bash
+java -jar target/mesos.jar --client --rmi --gui <server-ip> <rmi-port>
+```
+
+**Examples (local machine):**
+
+```bash
+java -jar target/mesos.jar --client --socket --gui 127.0.0.1 8080
+java -jar target/mesos.jar --client --rmi    --gui 127.0.0.1 1099
+```
+
+> Java 25 may print warnings about native access and `sun.misc.Unsafe`; they
+> come from JavaFX itself and can be silenced by appending
+> `--enable-native-access=ALL-UNNAMED` (cosmetic only — the jar runs fine
+> without it).
+
+---
+
 ### Client Options Reference
 
 ```
@@ -96,7 +127,7 @@ java -jar target/mesos.jar --client <connection> <interface> <server-ip> <port>
 | Argument       | Options              | Description                         |
 |----------------|----------------------|-------------------------------------|
 | `<connection>` | `--socket` / `--rmi` | Network protocol to use             |
-| `<interface>`  | `--tui` / `--gui`    | UI mode (GUI not yet implemented)   |
+| `<interface>`  | `--tui` / `--gui`    | UI mode (TUI = terminal, GUI = JavaFX) |
 | `<server-ip>`  | e.g. `127.0.0.1`     | IP address of the server            |
 | `<port>`       | e.g. `8080` / `1099` | Port matching the chosen protocol   |
 
@@ -108,11 +139,14 @@ java -jar target/mesos.jar --client <connection> <interface> <server-ip> <port>
 Terminal 1 (server):
   java -jar target/mesos.jar --server 8080 1099 ./saved
 
-Terminal 2 (socket client):
+Terminal 2 (socket client, TUI):
   java -jar target/mesos.jar --client --socket --tui 127.0.0.1 8080
 
-Terminal 3 (rmi client):
+Terminal 3 (rmi client, TUI):
   java -jar target/mesos.jar --client --rmi --tui 127.0.0.1 1099
+
+Terminal 4 (socket client, GUI):
+  java -jar target/mesos.jar --client --socket --gui 127.0.0.1 8080
 ```
 
 ---

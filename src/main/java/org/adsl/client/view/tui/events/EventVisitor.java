@@ -1,5 +1,12 @@
 package org.adsl.client.view.tui.events;
 
+import org.adsl.client.view.events.DisconnectedEvent;
+import org.adsl.client.view.events.EndGameEvent;
+import org.adsl.client.view.events.ErrorEvent;
+import org.adsl.client.view.events.GameUpdateEvent;
+import org.adsl.client.view.events.HomeUpdateEvent;
+import org.adsl.client.view.events.LobbyUpdateEvent;
+import org.adsl.client.view.events.LoginNeededEvent;
 import org.adsl.client.view.tui.screens.TUIScreen;
 
 public interface EventVisitor {
