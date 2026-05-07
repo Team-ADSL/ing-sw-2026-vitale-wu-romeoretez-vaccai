@@ -7,7 +7,7 @@ import org.adsl.client.view.tui.render.Key;
 import org.adsl.client.view.tui.render.TuiTerminal;
 import org.adsl.client.view.tui.screens.ConnectingScreen;
 import org.adsl.client.view.tui.screens.ExitScreen;
-import org.adsl.client.view.tui.screens.Screen;
+import org.adsl.client.view.tui.screens.TUIScreen;
 import org.adsl.shared.model.GameDTO;
 import org.adsl.shared.model.MatchResult;
 
@@ -22,7 +22,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  * Both server callbacks and key presses produce {@link Event} objects.
  * Server callbacks (network thread) enqueue events into a thread-safe queue.
  * Key presses are translated by {@link #toInputEvent(Key)} and dispatched
- * immediately in the main loop. In both cases the current {@link Screen}
+ * immediately in the main loop. In both cases the current {@link TUIScreen}
  * receives the event via {@code event.accept(screen)} and returns the next
  * screen (same instance = stay, new instance = transition).
  *
@@ -35,7 +35,7 @@ public class TUI implements GameUI {
     private TuiTerminal terminal;
     private AppCoordinator appCoordinator;
 
-    private Screen currentScreen;
+    private TUIScreen currentScreen;
     private final LinkedBlockingQueue<Event> eventQueue = new LinkedBlockingQueue<>();
     private volatile boolean running = true;
 
@@ -88,7 +88,7 @@ public class TUI implements GameUI {
             // 2. Drain server events (enqueued by network callbacks)
             Event event;
             while ((event = eventQueue.poll()) != null) {
-                Screen next = currentScreen.handleEvent(event);
+                TUIScreen next = currentScreen.handleEvent(event);
                 if (next != currentScreen) {
                     currentScreen = next;
                     if (!transitionTo(currentScreen)) return;
@@ -103,7 +103,7 @@ public class TUI implements GameUI {
                 if (key != null) {
                     Event inputEvent = toInputEvent(key);
                     if (inputEvent != null) {
-                        Screen next = currentScreen.handleEvent(inputEvent);
+                        TUIScreen next = currentScreen.handleEvent(inputEvent);
                         if (next != currentScreen) {
                             currentScreen = next;
                             if (!transitionTo(currentScreen)) return;
@@ -117,14 +117,14 @@ public class TUI implements GameUI {
     }
 
     /**
-     * Calls {@link Screen#onEnter()} on {@code screen} and follows any redirect
+     * Calls {@link TUIScreen#onEnter()} on {@code screen} and follows any redirect
      * chain returned (each onEnter may return another screen to jump to).
      * Returns {@code true} on success, {@code false} if a fatal error occurred.
      */
-    private boolean transitionTo(Screen screen) {
+    private boolean transitionTo(TUIScreen screen) {
         currentScreen = screen;
         try {
-            Screen redirect = currentScreen.onEnter();
+            TUIScreen redirect = currentScreen.onEnter();
             while (redirect != null) {
                 currentScreen = redirect;
                 redirect = currentScreen.onEnter();

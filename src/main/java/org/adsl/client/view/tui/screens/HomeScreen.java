@@ -24,7 +24,7 @@ import java.util.List;
  * active games are announced by the server. Transitions to {@link LobbyScreen}
  * on {@link LobbyUpdateEvent}.
  */
-public class HomeScreen extends Screen {
+public class HomeScreen extends TUIScreen {
 
     private static final int CREATE_OPTIONS = 4; // 2..5 players
 
@@ -88,7 +88,7 @@ public class HomeScreen extends Screen {
     // ── Server events ─────────────────────────────────────────────────────────
 
     @Override
-    public Screen visit(HomeUpdateEvent e) {
+    public TUIScreen visit(HomeUpdateEvent e) {
         List<Integer> incoming = e.getActiveGames();
         this.activeGames = (incoming != null) ? new ArrayList<>(incoming) : new ArrayList<>();
         if (cursor >= totalOptions()) {
@@ -100,25 +100,25 @@ public class HomeScreen extends Screen {
     // ── Input events ──────────────────────────────────────────────────────────
 
     @Override
-    public Screen visit(NavigateUpEvent e) {
+    public TUIScreen visit(NavigateUpEvent e) {
         int total = totalOptions();
         if (total > 0) cursor = (cursor - 1 + total) % total;
         return this;
     }
 
     @Override
-    public Screen visit(NavigateDownEvent e) {
+    public TUIScreen visit(NavigateDownEvent e) {
         int total = totalOptions();
         if (total > 0) cursor = (cursor + 1) % total;
         return this;
     }
 
     /** Vertical-only menu: lateral arrows mirror up/down. */
-    @Override public Screen visit(NavigateLeftEvent e)  { return visit(new NavigateUpEvent()); }
-    @Override public Screen visit(NavigateRightEvent e) { return visit(new NavigateDownEvent()); }
+    @Override public TUIScreen visit(NavigateLeftEvent e)  { return visit(new NavigateUpEvent()); }
+    @Override public TUIScreen visit(NavigateRightEvent e) { return visit(new NavigateDownEvent()); }
 
     @Override
-    public Screen visit(ConfirmEvent e) {
+    public TUIScreen visit(ConfirmEvent e) {
         try {
             if (cursor < CREATE_OPTIONS) {
                 int n = cursor + 2;
@@ -137,7 +137,7 @@ public class HomeScreen extends Screen {
     }
 
     @Override
-    public Screen visit(CharInputEvent e) {
+    public TUIScreen visit(CharInputEvent e) {
         char ch = Character.toLowerCase(e.getCharacter());
         if (ch == 'b') {
             try {

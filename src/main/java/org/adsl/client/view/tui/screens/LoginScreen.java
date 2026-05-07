@@ -33,7 +33,7 @@ import java.io.IOException;
  * the screen flips to a "waiting for server" state and the default visitors
  * route the eventual {@link HomeUpdateEvent} to the home screen.
  */
-public class LoginScreen extends Screen {
+public class LoginScreen extends TUIScreen {
 
     private static final int MAX_USERNAME_LENGTH = 20;
 
@@ -133,12 +133,12 @@ public class LoginScreen extends Screen {
 
     /** Already in the login flow: a redundant LoginNeeded must not reset state. */
     @Override
-    public Screen visit(LoginNeededEvent e) {
+    public TUIScreen visit(LoginNeededEvent e) {
         return this;
     }
 
     @Override
-    public Screen visit(ErrorEvent e) {
+    public TUIScreen visit(ErrorEvent e) {
         // Restart the form carrying the server error so the user can fix and retry.
         return new LoginScreen(terminal, coordinator, e.getMessage());
     }
@@ -146,25 +146,25 @@ public class LoginScreen extends Screen {
     // ── Input events ──────────────────────────────────────────────────────────
 
     @Override
-    public Screen visit(NavigateUpEvent e) {
+    public TUIScreen visit(NavigateUpEvent e) {
         if (submitted) return this;
         focus = (focus - 1 + FIELD_COUNT) % FIELD_COUNT;
         return this;
     }
 
     @Override
-    public Screen visit(NavigateDownEvent e) {
+    public TUIScreen visit(NavigateDownEvent e) {
         if (submitted) return this;
         focus = (focus + 1) % FIELD_COUNT;
         return this;
     }
 
     /** Vertical-only menu: lateral arrows mirror up/down. */
-    @Override public Screen visit(NavigateLeftEvent e)  { return visit(new NavigateUpEvent()); }
-    @Override public Screen visit(NavigateRightEvent e) { return visit(new NavigateDownEvent()); }
+    @Override public TUIScreen visit(NavigateLeftEvent e)  { return visit(new NavigateUpEvent()); }
+    @Override public TUIScreen visit(NavigateRightEvent e) { return visit(new NavigateDownEvent()); }
 
     @Override
-    public Screen visit(ConfirmEvent e) {
+    public TUIScreen visit(ConfirmEvent e) {
         if (submitted) return this;
         if (focus == FIELD_EXIT) {
             return ExitScreen.INSTANCE;
@@ -174,7 +174,7 @@ public class LoginScreen extends Screen {
     }
 
     @Override
-    public Screen visit(CharInputEvent e) {
+    public TUIScreen visit(CharInputEvent e) {
         if (submitted || focus != FIELD_TEXT) return this;
         if (typed.length() >= MAX_USERNAME_LENGTH) return this;
         char c = e.getCharacter();
@@ -185,7 +185,7 @@ public class LoginScreen extends Screen {
     }
 
     @Override
-    public Screen visit(BackspaceEvent e) {
+    public TUIScreen visit(BackspaceEvent e) {
         if (submitted || focus != FIELD_TEXT) return this;
         if (typed.length() > 0) {
             typed.deleteCharAt(typed.length() - 1);
@@ -196,7 +196,7 @@ public class LoginScreen extends Screen {
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private Screen trySubmit() {
+    private TUIScreen trySubmit() {
         String name = typed.toString().trim();
         if (name.isBlank()) {
             localValidation = "Username cannot be empty.";
