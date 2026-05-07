@@ -1,6 +1,6 @@
 package org.adsl.client.view.tui.events;
 
-import org.adsl.client.view.tui.screens.Screen;
+import org.adsl.client.view.tui.screens.TUIScreen;
 
 public class CharInputEvent extends Event {
     private final char character;
@@ -12,7 +12,7 @@ public class CharInputEvent extends Event {
     public char getCharacter() { return character; }
 
     @Override
-    public Screen accept(EventVisitor visitor) {
+    public TUIScreen accept(EventVisitor visitor) {
         return visitor.visit(this);
     }
 }

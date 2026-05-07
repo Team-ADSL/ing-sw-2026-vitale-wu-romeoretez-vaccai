@@ -26,7 +26,7 @@ import java.io.IOException;
  * ANSI rendering plus arrow-key focus, integrated into the standard TUI
  * event loop (no nested run loop, no widget framework).
  */
-public class DisconnectedScreen extends Screen {
+public class DisconnectedScreen extends TUIScreen {
 
     private static final int FIELD_RECONNECT = 0;
     private static final int FIELD_EXIT      = 1;
@@ -87,13 +87,13 @@ public class DisconnectedScreen extends Screen {
 
     // ── Input events ──────────────────────────────────────────────────────────
 
-    @Override public Screen visit(NavigateLeftEvent e)  { focus = (focus - 1 + FIELD_COUNT) % FIELD_COUNT; return this; }
-    @Override public Screen visit(NavigateRightEvent e) { focus = (focus + 1) % FIELD_COUNT;               return this; }
-    @Override public Screen visit(NavigateUpEvent e)    { focus = (focus - 1 + FIELD_COUNT) % FIELD_COUNT; return this; }
-    @Override public Screen visit(NavigateDownEvent e)  { focus = (focus + 1) % FIELD_COUNT;               return this; }
+    @Override public TUIScreen visit(NavigateLeftEvent e)  { focus = (focus - 1 + FIELD_COUNT) % FIELD_COUNT; return this; }
+    @Override public TUIScreen visit(NavigateRightEvent e) { focus = (focus + 1) % FIELD_COUNT;               return this; }
+    @Override public TUIScreen visit(NavigateUpEvent e)    { focus = (focus - 1 + FIELD_COUNT) % FIELD_COUNT; return this; }
+    @Override public TUIScreen visit(NavigateDownEvent e)  { focus = (focus + 1) % FIELD_COUNT;               return this; }
 
     @Override
-    public Screen visit(ConfirmEvent e) {
+    public TUIScreen visit(ConfirmEvent e) {
         if (focus == FIELD_EXIT) {
             return ExitScreen.INSTANCE;
         }

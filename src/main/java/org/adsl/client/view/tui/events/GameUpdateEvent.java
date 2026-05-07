@@ -1,6 +1,6 @@
 package org.adsl.client.view.tui.events;
 
-import org.adsl.client.view.tui.screens.Screen;
+import org.adsl.client.view.tui.screens.TUIScreen;
 import org.adsl.shared.model.GameDTO;
 
 public class GameUpdateEvent extends Event {
@@ -13,7 +13,7 @@ public class GameUpdateEvent extends Event {
     public GameDTO getGame() { return game; }
 
     @Override
-    public Screen accept(EventVisitor visitor) {
+    public TUIScreen accept(EventVisitor visitor) {
         return visitor.visit(this);
     }
 }

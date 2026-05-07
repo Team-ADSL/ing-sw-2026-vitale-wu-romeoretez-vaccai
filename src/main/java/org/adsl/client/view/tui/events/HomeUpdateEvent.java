@@ -1,6 +1,6 @@
 package org.adsl.client.view.tui.events;
 
-import org.adsl.client.view.tui.screens.Screen;
+import org.adsl.client.view.tui.screens.TUIScreen;
 
 import java.util.List;
 
@@ -14,7 +14,7 @@ public class HomeUpdateEvent extends Event {
     public List<Integer> getActiveGames() { return activeGames; }
 
     @Override
-    public Screen accept(EventVisitor visitor) {
+    public TUIScreen accept(EventVisitor visitor) {
         return visitor.visit(this);
     }
 }
