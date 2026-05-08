@@ -38,11 +38,6 @@ public class DuringRitual extends DuringEvent {
     }
 
     @Override
-    protected String getTypeLabel() {
-        return CardToken.BUILDING + " " + eraToRoman(getEra());
-    }
-
-    @Override
     protected String getEffectsLabel() {
         return switch (buildingEffect) {
             case RITUAL_IMMUNITY    -> CardToken.RITUAL + "=>" + CardToken.SHIELD + " " + CardToken.PP + getEndGamePP();

@@ -73,11 +73,6 @@ public class SinceBuilt extends Building {
     }
 
     @Override
-    protected String getTypeLabel() {
-        return CardToken.BUILDING + " " + eraToRoman(getEra());
-    }
-
-    @Override
     protected String getEffectsLabel() {
         return switch (buildingEffect) {
             case FOOD_COMPLETE_SET -> CardToken.MEAL + " 6" + CardToken.ARTIST + "=>+5";
