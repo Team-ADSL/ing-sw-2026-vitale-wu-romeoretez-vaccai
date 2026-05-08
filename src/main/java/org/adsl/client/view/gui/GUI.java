@@ -81,6 +81,9 @@ public class GUI implements GameUI {
 
     @Override
     public void shutdown() {
+        if (coordinator != null) {
+            try { coordinator.disconnect(); } catch (Exception ignored) {}
+        }
         Platform.runLater(() -> {
             if (stage != null) stage.close();
             Platform.exit();
