@@ -147,6 +147,7 @@ public class AppCoordinator implements ResponseVisitor{
         serverConnection.sendRequest(clientRequest);
     }
     public void disconnect() throws Exception {
+        stopPingScheduler();
         try {
             ClientRequest clientRequest = new ClientDisconnected();
             serverConnection.sendRequest(clientRequest);
