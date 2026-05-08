@@ -6,6 +6,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import org.adsl.client.AppCoordinator;
+import org.adsl.client.view.events.ErrorEvent;
 import org.adsl.client.view.events.HomeUpdateEvent;
 
 import java.io.IOException;
@@ -40,6 +41,7 @@ public class HomeScreen extends GUIScreen {
     @FXML private void onCreate5() { create(5); }
 
     private void create(int n) {
+        errorLabel.setText("");
         try {
             coordinator.createGameRequest(n);
         } catch (Exception ex) {
@@ -49,6 +51,7 @@ public class HomeScreen extends GUIScreen {
 
     @FXML
     private void onJoinSelected() {
+        errorLabel.setText("");
         Integer id = gamesList.getSelectionModel().getSelectedItem();
         if (id == null) {
             errorLabel.setText("Select a game to join.");
@@ -63,6 +66,7 @@ public class HomeScreen extends GUIScreen {
 
     @FXML
     private void onLogout() {
+        errorLabel.setText("");
         try {
             coordinator.createLogoutRequest();
         } catch (Exception ex) {
@@ -76,6 +80,13 @@ public class HomeScreen extends GUIScreen {
         List<Integer> incoming = e.getActiveGames();
         this.activeGames = incoming != null ? new ArrayList<>(incoming) : new ArrayList<>();
         gamesList.setItems(FXCollections.observableArrayList(this.activeGames));
+        return this;
+    }
+
+    /** Server-side errors (invalid numPlayer, joining a non-existent game, ...). */
+    @Override
+    public GUIScreen visit(ErrorEvent e) {
+        if (errorLabel != null) errorLabel.setText(e.getMessage());
         return this;
     }
 }
