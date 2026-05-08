@@ -17,10 +17,20 @@ public class RemoteClientStubImpl extends UnicastRemoteObject implements RemoteC
     public RemoteClientStubImpl(AppCoordinator coordinator) throws RemoteException {
         super();
         this.coordinator = coordinator;
-        this.threadPool = Executors.newSingleThreadExecutor();
+        // Daemon threads so the executor never keeps the JVM alive after a
+        // disconnect; explicit shutdown() also kills any in-flight task.
+        this.threadPool = Executors.newSingleThreadExecutor(r -> {
+            Thread t = new Thread(r, "rmi-client-stub");
+            t.setDaemon(true);
+            return t;
+        });
     }
 
     public void sendResponse(ServerResponse response){
         threadPool.submit(() -> coordinator.handleServerResponse(response));
+    }
+
+    public void shutdown() {
+        threadPool.shutdownNow();
     }
 }
