@@ -40,6 +40,7 @@ public class RMIServerConnection implements ServerConnection {
         try {
             if (clientStub != null) {
                 UnicastRemoteObject.unexportObject(clientStub, true);
+                clientStub.shutdown();
                 System.out.println("Local RMI object removed successfully.");
             }
         } catch (Exception e) {
