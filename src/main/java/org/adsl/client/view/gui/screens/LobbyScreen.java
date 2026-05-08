@@ -6,6 +6,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import org.adsl.client.AppCoordinator;
+import org.adsl.client.view.events.ErrorEvent;
 import org.adsl.client.view.events.LobbyUpdateEvent;
 
 import java.io.IOException;
@@ -51,6 +52,7 @@ public class LobbyScreen extends GUIScreen {
 
     @FXML
     private void onStart() {
+        errorLabel.setText("");
         try {
             coordinator.startGameRequest();
         } catch (Exception ex) {
@@ -60,6 +62,7 @@ public class LobbyScreen extends GUIScreen {
 
     @FXML
     private void onLeave() {
+        errorLabel.setText("");
         try {
             coordinator.createExitLobbyRequest();
         } catch (Exception ex) {
@@ -72,6 +75,13 @@ public class LobbyScreen extends GUIScreen {
         this.gameId = e.getGameId();
         this.players = e.getPlayers() != null ? e.getPlayers() : List.of();
         refresh();
+        return this;
+    }
+
+    /** Server-side errors (non-host pressing start, lobby full, ...). */
+    @Override
+    public GUIScreen visit(ErrorEvent e) {
+        if (errorLabel != null) errorLabel.setText(e.getMessage());
         return this;
     }
 }
