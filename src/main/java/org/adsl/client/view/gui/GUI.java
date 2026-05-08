@@ -149,9 +149,7 @@ public class GUI implements GameUI {
             shutdown();
             return;
         }
-        if (stage != null && currentScreen.getRoot() != null) {
-            stage.setScene(new Scene(currentScreen.getRoot(), stage.getWidth(), stage.getHeight()));
-        }
+        swapRoot(currentScreen);
         runOnEnterChain(currentScreen);
     }
 
@@ -164,10 +162,26 @@ public class GUI implements GameUI {
                 shutdown();
                 return;
             }
-            if (stage != null && currentScreen.getRoot() != null) {
-                stage.setScene(new Scene(currentScreen.getRoot(), stage.getWidth(), stage.getHeight()));
-            }
+            swapRoot(currentScreen);
             redirect = currentScreen.onEnter();
+        }
+    }
+
+    /**
+     * Replaces the {@link Scene}'s root instead of building a new {@link Scene}
+     * per transition. Creating a new Scene and calling
+     * {@link Stage#setScene(Scene)} is destructive on macOS: it kicks the
+     * window out of native fullscreen / split-view because the OS treats it
+     * as a fresh window. Keeping a single Scene attached to the Stage and
+     * mutating its root preserves window state across screen changes.
+     */
+    private void swapRoot(GUIScreen screen) {
+        if (stage == null || screen.getRoot() == null) return;
+        Scene scene = stage.getScene();
+        if (scene != null) {
+            scene.setRoot(screen.getRoot());
+        } else {
+            stage.setScene(new Scene(screen.getRoot(), stage.getWidth(), stage.getHeight()));
         }
     }
 }
