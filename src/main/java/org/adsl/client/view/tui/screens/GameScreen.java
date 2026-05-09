@@ -440,11 +440,14 @@ public class GameScreen extends TUIScreen {
                 else if (CardCatalog.isEvent(type))   cardColor = TuiColor.ORANGE;
                 TuiColor c = highlighted ? TuiColor.GREEN : cardColor;
 
-                String typeStr = CardTokens.toEmoji(card.typeLabel()    != null ? card.typeLabel()    : "");
+
+                String rawTl = CardTokens.toEmoji(card.typeLabel() != null ? card.typeLabel() : "");
                 String costStr = card.costLabel() != null ? CardTokens.toEmoji(card.costLabel()) : "";
-                int gap = CARD_W - visualWidth(typeStr) - visualWidth(costStr);
-                String tl = gap >= 0 ? typeStr + " ".repeat(gap) + costStr : padRight(typeStr + costStr, CARD_W);
-                String el = padRight(CardTokens.toEmoji(card.effectsLabel() != null ? card.effectsLabel() : ""), CARD_W);
+                int gap = CARD_W - visualWidth(rawTl) - visualWidth(costStr);
+                String tl = gap >= 0 ? rawTl + " ".repeat(gap) + costStr : padRight(rawTl + costStr, CARD_W);
+                String rawEl = CardTokens.toEffectLabel(card.effectsLabel() != null ? card.effectsLabel() : "");
+                String el = padRight(padLeft(rawEl, (CARD_W + visualWidth(rawEl)) / 2), CARD_W);
+
 
                 topLine.append(c.fg()).append(border).append(TuiColor.WHITE.fg()).append(" ");
                 typeLine.append(c.fg()).append("│").append(tl).append(jumpRight).append("│").append(TuiColor.WHITE.fg()).append(" ");
@@ -736,7 +739,7 @@ public class GameScreen extends TUIScreen {
 
     private void drawLegend(TuiTextGraphics tg, TuiSize sz) {
         int w = 38;
-        int h = 26;
+        int h = 13;
         int x = sz.getColumns() - w - 2;
         int y = 1;
 
@@ -753,21 +756,6 @@ public class GameScreen extends TUIScreen {
         tg.putString(x + 2, y, " LEGEND (L to close) ");
 
         String[][] entries = {
-            {"─── CHARACTERS ────────────────────"},
-            {"🏹", "Hunter – draws on pick"},
-            {"🧺", "Gatherer – building discount"},
-            {"🔨", "Builder – build discount+PP"},
-            {"🔮", "Shaman – ritual bonus"},
-            {"🎨", "Artist – paintings bonus"},
-            {"💡", "Inventor – activates icon"},
-            {"─── EVENTS ────────────────────────"},
-            {"🐗", "Hunt – PP per hunter"},
-            {"🍲", "Sustenance – PP penalty"},
-            {"🎭", "Shamanic Ritual – PP trade"},
-            {"🖌️", "Cave Paintings – artist bonus"},
-            {"─── BUILDINGS ─────────────────────"},
-            {"🏛️", "All buildings"},
-            {"🏁", "End-game PP bonus"},
             {"─── SYMBOLS ───────────────────────"},
             {"🌟", "Prestige Points (PP)"},
             {"★", "Shaman ritual stars"},
@@ -775,6 +763,8 @@ public class GameScreen extends TUIScreen {
             {"🍖", "Extra food on pick"},
             {"🍞", "Food reward"},
             {"🗿", "Totem symbol"},
+            {"🏁", "End-game PP bonus"},
+            {"🌈", "Set collection bonus"},
             {"I II III", "Card Era"},
         };
 

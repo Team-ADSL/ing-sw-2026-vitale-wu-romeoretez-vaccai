@@ -108,6 +108,8 @@ java -jar target/mesos.jar --client --rmi --gui <server-ip> <rmi-port>
 
 ```bash
 java -jar target/mesos.jar --client --socket --gui 127.0.0.1 8080
+```
+```bash
 java -jar target/mesos.jar --client --rmi    --gui 127.0.0.1 1099
 ```
 
@@ -135,17 +137,23 @@ java -jar target/mesos.jar --client <connection> <interface> <server-ip> <port>
 
 ## Typical Local Session
 
-```
 Terminal 1 (server):
+```
   java -jar target/mesos.jar --server 8080 1099 ./saved
-
+```
 Terminal 2 (socket client, TUI):
+
+```
   java -jar target/mesos.jar --client --socket --tui 127.0.0.1 8080
-
+```
 Terminal 3 (rmi client, TUI):
-  java -jar target/mesos.jar --client --rmi --tui 127.0.0.1 1099
 
+```
+  java -jar target/mesos.jar --client --rmi --tui 127.0.0.1 1099
+```
 Terminal 4 (socket client, GUI):
+
+```
   java -jar target/mesos.jar --client --socket --gui 127.0.0.1 8080
 ```
 

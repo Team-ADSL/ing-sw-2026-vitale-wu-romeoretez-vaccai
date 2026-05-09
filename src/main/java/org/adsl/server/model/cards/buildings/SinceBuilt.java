@@ -75,7 +75,7 @@ public class SinceBuilt extends Building {
     @Override
     protected String getEffectsLabel() {
         return switch (buildingEffect) {
-            case FOOD_COMPLETE_SET -> CardToken.MEAL + " 6" + CardToken.ARTIST + "=>+5";
+            case FOOD_COMPLETE_SET -> "+5" + CardToken.FOOD + " X" + CardToken.SET;
             case COUPLE_INVENTOR   -> "2" + CardToken.INVENTOR + "=>+" + CardToken.FOOD;
             default                -> CardToken.PP + getEndGamePP();
         };
