@@ -1,37 +1,34 @@
 # MESOS — macOS Start Scripts
 
-## First-time setup
-
-Make the scripts executable (only needed once):
-
-```bash
-chmod +x tools/start/macos/run_tui.sh
-chmod +x tools/start/macos/run_gui.sh
-```
-
 ## Usage
 
-Run from the **project root**:
+**From IntelliJ:** right-click the script in the Project panel → **Run**.
+
+Alternatively, from the IntelliJ terminal:
 
 ```bash
-./tools/start/macos/run_tui.sh   # TUI clients (terminal)
-./tools/start/macos/run_gui.sh   # GUI clients (JavaFX)
+./tools/start/macos/run_tui.sh          # build + TUI session
+./tools/start/macos/run_gui.sh          # build + GUI session
+./tools/start/macos/run_tui_nobuild.sh  # TUI session (skip build)
+./tools/start/macos/run_gui_nobuild.sh  # GUI session (skip build)
 ```
 
-Or navigate to this folder first:
-
-```bash
-cd tools/start/macos
-./run_tui.sh
-./run_gui.sh
-```
+> If the terminal returns `Permission denied`, run once:
+> ```bash
+> chmod +x tools/start/macos/run_tui.sh tools/start/macos/run_tui_nobuild.sh
+> chmod +x tools/start/macos/run_gui.sh tools/start/macos/run_gui_nobuild.sh
+> ```
 
 ## What each script does
 
-1. Builds the project (`mvn package -DskipTests`)
-2. Opens a new Terminal window with the server
+**`run_tui.sh` / `run_gui.sh`**
+1. Builds the project with `mvn package -DskipTests`
+2. Opens a new Terminal window running the server (socket port 8080, RMI port 1099, saves to `./saved`)
 3. Waits until the server is actually listening on port 8080
-4. Opens two more Terminal windows — one Socket client, one RMI client
+4. Opens two more Terminal windows: one Socket client, one RMI client (TUI or GUI depending on the script)
+
+**`run_tui_nobuild.sh` / `run_gui_nobuild.sh`**
+Same as above but skips the Maven build step — useful when the JAR is already up to date. Fails immediately if `target/mesos.jar` is not found.
 
 ## Requirements
 

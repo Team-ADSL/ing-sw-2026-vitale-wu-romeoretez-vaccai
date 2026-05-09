@@ -87,7 +87,7 @@ def main():
     parser.add_argument("-g", dest="gameId", type=int, required=True, help="Game ID to join")
     parser.add_argument("-p1", type=str, required=True, help="Name of Player 1")
     parser.add_argument("-p2", type=str, required=True, help="Name of Player 2")
-    parser.add_argument("-r", dest="round_to_reach", type=int, required=True, help="Target round to skip")
+    parser.add_argument("-r", dest="round_to_reach", type=int, required=True, help="Number of rounds to advance from the current round")
     
     parser.add_argument("-H", "--host", type=str, default="127.0.0.1", help="Server IP (default: 127.0.0.1)")
     parser.add_argument("-P", "--port", type=int, default=8080, help="Server port (default: 8080)")
