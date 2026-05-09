@@ -46,10 +46,7 @@ public class EndGame extends Building {
         }
     }
 
-    @Override
-    protected String getTypeLabel() {
-        return CardToken.BUILDING + " " + eraToRoman(getEra());
-    }
+
 
     @Override
     protected String getEffectsLabel() {

@@ -25,10 +25,7 @@ public class DuringPaintings extends DuringEvent {
         p.getBuildingBonus().setArtistFood(true);
     }
 
-    @Override
-    protected String getTypeLabel() {
-        return CardToken.BUILDING + " " + eraToRoman(getEra());
-    }
+
 
     @Override
     protected String getEffectsLabel() {
