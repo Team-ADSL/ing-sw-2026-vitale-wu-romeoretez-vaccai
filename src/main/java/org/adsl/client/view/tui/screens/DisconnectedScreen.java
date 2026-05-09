@@ -98,8 +98,8 @@ public class DisconnectedScreen extends TUIScreen {
             return ExitScreen.INSTANCE;
         }
         try {
-            coordinator.reconnect();
-            return new ConnectingScreen(terminal, coordinator);
+            appCoordinator.reconnect();
+            return new ConnectingScreen(terminal, appCoordinator);
         } catch (Exception ex) {
             localError = "Could not reconnect: " + ex.getMessage();
             return this;

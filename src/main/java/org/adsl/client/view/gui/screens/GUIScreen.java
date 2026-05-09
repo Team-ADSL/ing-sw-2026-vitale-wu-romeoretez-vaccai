@@ -2,33 +2,32 @@ package org.adsl.client.view.gui.screens;
 
 import javafx.scene.Parent;
 import org.adsl.client.AppCoordinator;
-import org.adsl.client.view.events.DisconnectedEvent;
-import org.adsl.client.view.events.EndGameEvent;
-import org.adsl.client.view.events.ErrorEvent;
-import org.adsl.client.view.events.GUIEventVisitor;
-import org.adsl.client.view.events.GameUpdateEvent;
-import org.adsl.client.view.events.HomeUpdateEvent;
-import org.adsl.client.view.events.LobbyUpdateEvent;
-import org.adsl.client.view.events.LoginNeededEvent;
+import org.adsl.client.view.Screen;
+import org.adsl.client.serverEvents.DisconnectedEvent;
+import org.adsl.client.serverEvents.EndGameEvent;
+import org.adsl.client.serverEvents.EventVisitor;
+import org.adsl.client.serverEvents.GameUpdateEvent;
+import org.adsl.client.serverEvents.HomeUpdateEvent;
+import org.adsl.client.serverEvents.LobbyUpdateEvent;
+import org.adsl.client.serverEvents.LoginNeededEvent;
 
 /**
  * Base class for every GUI screen. Mirrors {@link org.adsl.client.view.tui.screens.TUIScreen}
  * for the JavaFX side: each concrete screen owns its FXML controller role,
  * exposes the JavaFX {@link Parent} root and reacts to server events via the
- * {@link GUIEventVisitor} contract. Default visit methods route events to the
+ * {@link EventVisitor} contract. Default visit methods route events to the
  * "natural" next screen so concrete screens only override what differs.
  */
-public abstract class GUIScreen implements GUIEventVisitor {
+public abstract class GUIScreen extends Screen<GUIScreen> {
 
-    protected final AppCoordinator coordinator;
     protected String username;
     protected String error;
     protected Parent root;
 
     protected GUIScreen(AppCoordinator coordinator, String username) {
-        this.coordinator = coordinator;
         this.username = username;
         this.error = null;
+        super(coordinator);
     }
 
     protected GUIScreen(AppCoordinator coordinator) {
@@ -50,41 +49,39 @@ public abstract class GUIScreen implements GUIEventVisitor {
     }
 
     // ── Default server-event routing (mirrors TUIScreen defaults) ──────────────
-
     @Override
-    public GUIScreen visit(LoginNeededEvent e) {
-        return new LoginScreen(coordinator);
+    public GUIScreen createLoginScreen(LoginNeededEvent e, AppCoordinator appCoordinator){
+        return new LoginScreen(appCoordinator);
     }
 
     @Override
-    public GUIScreen visit(HomeUpdateEvent e) {
-        return new HomeScreen(coordinator, username, e.getActiveGames());
+    public GUIScreen createHomeScreen(HomeUpdateEvent e, AppCoordinator appCoordinator){
+        return new HomeScreen(appCoordinator, username, e.activeGames());
     }
 
     @Override
-    public GUIScreen visit(LobbyUpdateEvent e) {
-        return new LobbyScreen(coordinator, username, e.getGameId(), e.getPlayers(),
-                e.getNumPlayersAllowed());
+    public GUIScreen createLobbyScreen(LobbyUpdateEvent e, AppCoordinator appCoordinator){
+        return new LobbyScreen(appCoordinator, username, e.gameId(), e.players(),
+                e.numPlayersAllowed());
     }
 
     @Override
-    public GUIScreen visit(GameUpdateEvent e) {
-        return new GameScreen(coordinator, username, e.getGame());
+    public GUIScreen createGameScreen(GameUpdateEvent e, AppCoordinator appCoordinator){
+        return new GameScreen(appCoordinator, username, e.game());
     }
 
     @Override
-    public GUIScreen visit(EndGameEvent e) {
-        return new EndGameScreen(coordinator, username, e.getResults());
+    public GUIScreen createEndGameScreen(EndGameEvent e, AppCoordinator appCoordinator){
+        return new EndGameScreen(appCoordinator, username, e.results());
     }
 
     @Override
-    public GUIScreen visit(ErrorEvent e) {
-        error = e.getMessage();
+    public GUIScreen createDisconnectedScreen(DisconnectedEvent e, AppCoordinator appCoordinator){
+        return new DisconnectedScreen(appCoordinator, e.message());
+    }
+
+    @Override
+    public GUIScreen getThis(){
         return this;
-    }
-
-    @Override
-    public GUIScreen visit(DisconnectedEvent e) {
-        return new DisconnectedScreen(coordinator, e.getMessage());
     }
 }

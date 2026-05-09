@@ -1,20 +1,19 @@
 package org.adsl.client.view.tui;
 
 import org.adsl.client.AppCoordinator;
+import org.adsl.client.serverEvents.DisconnectedEvent;
+import org.adsl.client.serverEvents.Event;
+import org.adsl.client.serverEvents.ServerEvent;
 import org.adsl.client.view.GameUI;
-import org.adsl.client.view.events.*;
+import org.adsl.client.view.Screen;
 import org.adsl.client.view.tui.events.*;
 import org.adsl.client.view.tui.render.Key;
 import org.adsl.client.view.tui.render.TuiTerminal;
 import org.adsl.client.view.tui.screens.ConnectingScreen;
 import org.adsl.client.view.tui.screens.ExitScreen;
 import org.adsl.client.view.tui.screens.TUIScreen;
-import org.adsl.shared.model.GameDTO;
-import org.adsl.shared.model.MatchResult;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -31,19 +30,13 @@ import java.util.concurrent.LinkedBlockingQueue;
  * is called directly by {@link AppCoordinator} and runs a dedicated disconnect
  * flow without involving the screen state machine.
  */
-public class TUI implements GameUI {
+public class TUI extends GameUI {
 
     private TuiTerminal terminal;
-    private AppCoordinator appCoordinator;
 
     private TUIScreen currentScreen;
-    private final LinkedBlockingQueue<Event> eventQueue = new LinkedBlockingQueue<>();
+    private final LinkedBlockingQueue<ServerEvent> eventQueue = new LinkedBlockingQueue<>();
     private volatile boolean running = true;
-
-    @Override
-    public void setAppCoordinator(AppCoordinator appCoordinator) {
-        this.appCoordinator = appCoordinator;
-    }
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
@@ -51,8 +44,8 @@ public class TUI implements GameUI {
     public void start() {
         try {
             terminal = new TuiTerminal();
-            currentScreen = new ConnectingScreen(terminal, appCoordinator);
-            appCoordinator.connectRequest();
+            currentScreen = new ConnectingScreen(terminal, getAppCoordinator());
+            getAppCoordinator().connectRequest();
             loop();
         } catch (Exception e) {
             showFatal("Startup error", e);
@@ -87,7 +80,7 @@ public class TUI implements GameUI {
             }
 
             // 2. Drain server events (enqueued by network callbacks)
-            Event event;
+            ServerEvent event;
             while ((event = eventQueue.poll()) != null) {
                 TUIScreen next = currentScreen.handleEvent(event);
                 if (next != currentScreen) {
@@ -102,7 +95,7 @@ public class TUI implements GameUI {
             try {
                 Key key = terminal.pollInput();
                 if (key != null) {
-                    Event inputEvent = toInputEvent(key);
+                    InputEvent inputEvent = toInputEvent(key);
                     if (inputEvent != null) {
                         TUIScreen next = currentScreen.handleEvent(inputEvent);
                         if (next != currentScreen) {
@@ -122,8 +115,8 @@ public class TUI implements GameUI {
      * chain returned (each onEnter may return another screen to jump to).
      * Returns {@code true} on success, {@code false} if a fatal error occurred.
      */
-    private boolean transitionTo(TUIScreen screen) {
-        currentScreen = screen;
+    public boolean transitionTo(TUIScreen screen) {
+        currentScreen = (TUIScreen) screen;
         try {
             TUIScreen redirect = currentScreen.onEnter();
             while (redirect != null) {
@@ -141,7 +134,7 @@ public class TUI implements GameUI {
      * Translates a raw key into a semantic input event.
      * Returns {@code null} for keys that carry no meaning in the TUI.
      */
-    private Event toInputEvent(Key key) {
+    private InputEvent toInputEvent(Key key) {
         return switch (key.getType()) {
             case ENTER       -> new ConfirmEvent();
             case ARROW_LEFT  -> new NavigateLeftEvent();
@@ -160,35 +153,8 @@ public class TUI implements GameUI {
     // ── GameUI callbacks (network thread) ────────────────────────────────────
 
     @Override
-    public void showUsernameField() {
-        eventQueue.add(new LoginNeededEvent());
-    }
-
-    @Override
-    public void onHomeUpdate(List<Integer> activeGames) {
-        eventQueue.add(new HomeUpdateEvent(
-                activeGames != null ? activeGames : Collections.emptyList()));
-    }
-
-    @Override
-    public void onLobbyUpdate(int gameId, List<String> players, int numPlayersAllowed) {
-        eventQueue.add(new LobbyUpdateEvent(
-                gameId, players != null ? players : Collections.emptyList(), numPlayersAllowed));
-    }
-
-    @Override
-    public void onGameUpdate(GameDTO game) {
-        eventQueue.add(new GameUpdateEvent(game));
-    }
-
-    @Override
-    public void onEndGame(List<MatchResult> results) {
-        eventQueue.add(new EndGameEvent(results));
-    }
-
-    @Override
-    public void onErrorReceived(String error) {
-        eventQueue.add(new ErrorEvent(error));
+    public void dispatch(ServerEvent event){
+        eventQueue.add(event);
     }
 
     /**
@@ -199,7 +165,7 @@ public class TUI implements GameUI {
     @Override
     public void onServerDisconnected() {
         if (terminal == null) return;
-        appCoordinator.stopPingScheduler();
+        getAppCoordinator().stopPingScheduler();
         eventQueue.add(new DisconnectedEvent(
                 "Server disconnected. Check your network connection."));
     }

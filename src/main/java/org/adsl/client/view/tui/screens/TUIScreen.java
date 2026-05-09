@@ -1,7 +1,8 @@
 package org.adsl.client.view.tui.screens;
 
 import org.adsl.client.AppCoordinator;
-import org.adsl.client.view.events.*;
+import org.adsl.client.serverEvents.*;
+import org.adsl.client.view.Screen;
 import org.adsl.client.view.tui.events.*;
 import org.adsl.client.view.tui.render.TuiTerminal;
 
@@ -18,22 +19,19 @@ import java.io.IOException;
  * from {@link EventVisitor}: returning {@code this} keeps the current screen,
  * returning a new {@link TUIScreen} instance triggers a transition.
  */
-public abstract class TUIScreen implements EventVisitor {
+public abstract class TUIScreen extends Screen<TUIScreen> implements InputEventVisitor {
 
     protected final TuiTerminal terminal;
-    protected final AppCoordinator coordinator;
     protected String username;
     protected boolean toRender;
-    protected String error;
 
     protected TUIScreen(TuiTerminal terminal,
-            AppCoordinator coordinator,
+            AppCoordinator appCoordinator,
             String username) {
         this.terminal = terminal;
-        this.coordinator = coordinator;
         this.username = username;
         this.toRender = true;
-        this.error = null;
+        super(appCoordinator);
     }
 
     protected TUIScreen(TuiTerminal terminal,
@@ -52,58 +50,46 @@ public abstract class TUIScreen implements EventVisitor {
         this(null, null, null);
     }
 
-    // ── Server event defaults ────────────────────────────────────────────────
-
-    /** Server asks the client to (re-)authenticate: jump to {@link LoginScreen}. */
-    @Override
-    public TUIScreen visit(LoginNeededEvent e) {
-        return new LoginScreen(terminal, coordinator);
-    }
-
-    /**
-     * Server published the home view: jump to {@link HomeScreen} with the latest
-     * active games.
-     */
-    @Override
-    public TUIScreen visit(HomeUpdateEvent e) {
-        return new HomeScreen(terminal, coordinator, username, e.getActiveGames());
-    }
-
-    /** Lobby update is screen-specific (HomeScreen and LobbyScreen own it). */
-    @Override
-    public TUIScreen visit(LobbyUpdateEvent e) {
-        return new LobbyScreen(terminal, coordinator, username, e.getGameId(), e.getPlayers(),
-                e.getNumPlayersAllowed());
-    }
-
-    /** Game update is screen-specific (LobbyScreen and GameScreen own it). */
-    @Override
-    public TUIScreen visit(GameUpdateEvent e) {
-        return new GameScreen(terminal, coordinator, username, e.getGame());
-    }
-
-    /** Game ended: jump to {@link EndGameScreen} with the final results. */
-    @Override
-    public TUIScreen visit(EndGameEvent e) {
-        return new EndGameScreen(terminal, coordinator, username, e.getResults());
-    }
-
     /**
      * Server reported an error: jump back to the {@link LoginScreen} carrying the
      * error message.
      */
+
     @Override
-    public TUIScreen visit(ErrorEvent e) {
-        error = e.getMessage();
+    public TUIScreen createLoginScreen(LoginNeededEvent e, AppCoordinator appCoordinator){
+        return new LoginScreen(terminal, appCoordinator);
+    }
+
+    @Override
+    public TUIScreen createHomeScreen(HomeUpdateEvent e, AppCoordinator appCoordinator){
+        return new HomeScreen(terminal, appCoordinator, username, e.activeGames());
+    }
+
+    @Override
+    public TUIScreen createLobbyScreen(LobbyUpdateEvent e, AppCoordinator appCoordinator){
+        return new LobbyScreen(terminal, appCoordinator, username, e.gameId(), e.players(),
+                e.numPlayersAllowed());
+    }
+
+    @Override
+    public TUIScreen createGameScreen(GameUpdateEvent e, AppCoordinator appCoordinator){
+        return new GameScreen(terminal, appCoordinator, username, e.game());
+    }
+
+    @Override
+    public TUIScreen createEndGameScreen(EndGameEvent e, AppCoordinator appCoordinator){
+        return new EndGameScreen(terminal, appCoordinator, username, e.results());
+    }
+
+    @Override
+    public TUIScreen createDisconnectedScreen(DisconnectedEvent e, AppCoordinator appCoordinator){
+        return new DisconnectedScreen(terminal, appCoordinator, e.message());
+    }
+
+    @Override
+    public TUIScreen getThis(){
         return this;
     }
-
-    @Override
-    public TUIScreen visit(DisconnectedEvent e) {
-        return new DisconnectedScreen(terminal, coordinator, e.getMessage());
-    }
-
-    // ── Input event defaults (unhandled keep current screen) ─────────────────
 
     @Override
     public TUIScreen visit(ConfirmEvent e) {
@@ -147,7 +133,13 @@ public abstract class TUIScreen implements EventVisitor {
 
     // ── Lifecycle / framework hooks ──────────────────────────────────────────
 
-    public TUIScreen handleEvent(Event event) {
+    public TUIScreen handleEvent(ServerEvent event) {
+        TUIScreen newScreen = event.accept(this);
+        setToRender(true);
+        return newScreen;
+    }
+
+    public TUIScreen handleEvent(InputEvent event) {
         TUIScreen newScreen = event.accept(this);
         setToRender(true);
         return newScreen;

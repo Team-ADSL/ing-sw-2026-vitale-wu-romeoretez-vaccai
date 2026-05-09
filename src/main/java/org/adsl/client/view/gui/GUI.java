@@ -4,23 +4,14 @@ import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import org.adsl.client.AppCoordinator;
+import org.adsl.client.serverEvents.Event;
+import org.adsl.client.serverEvents.EventVisitor;
+import org.adsl.client.serverEvents.ServerEvent;
 import org.adsl.client.view.GameUI;
-import org.adsl.client.view.events.DisconnectedEvent;
-import org.adsl.client.view.events.EndGameEvent;
-import org.adsl.client.view.events.ErrorEvent;
-import org.adsl.client.view.events.GameUpdateEvent;
-import org.adsl.client.view.events.HomeUpdateEvent;
-import org.adsl.client.view.events.LobbyUpdateEvent;
-import org.adsl.client.view.events.LoginNeededEvent;
-import org.adsl.client.view.events.ServerEvent;
+import org.adsl.client.view.Screen;
 import org.adsl.client.view.gui.screens.ConnectingScreen;
 import org.adsl.client.view.gui.screens.ExitScreen;
 import org.adsl.client.view.gui.screens.GUIScreen;
-import org.adsl.shared.model.GameDTO;
-import org.adsl.shared.model.MatchResult;
-
-import java.util.Collections;
-import java.util.List;
 
 /**
  * JavaFX implementation of {@link GameUI}, parallel to
@@ -32,10 +23,10 @@ import java.util.List;
  *
  * <p>Screen transitions use the same visitor pattern as the TUI: each
  * server-derived event is dispatched through the current
- * {@link GUIScreen} via {@link ServerEvent#accept(org.adsl.client.view.events.GUIEventVisitor)},
+ * {@link GUIScreen} via {@link ServerEvent#accept(EventVisitor)},
  * the returned screen replaces the current one if different.
  */
-public class GUI implements GameUI {
+public class GUI extends GameUI {
 
     private static final String WINDOW_TITLE = "MESOS";
     private static final double WINDOW_W = 1280;
@@ -92,43 +83,7 @@ public class GUI implements GameUI {
 
     // ── GameUI callbacks (network thread) ────────────────────────────────────
 
-    @Override
-    public void showUsernameField() {
-        dispatch(new LoginNeededEvent());
-    }
 
-    @Override
-    public void onHomeUpdate(List<Integer> activeGames) {
-        dispatch(new HomeUpdateEvent(activeGames != null ? activeGames : Collections.emptyList()));
-    }
-
-    @Override
-    public void onLobbyUpdate(int gameId, List<String> players, int numPlayersAllowed) {
-        dispatch(new LobbyUpdateEvent(gameId,
-                players != null ? players : Collections.emptyList(),
-                numPlayersAllowed));
-    }
-
-    @Override
-    public void onGameUpdate(GameDTO game) {
-        dispatch(new GameUpdateEvent(game));
-    }
-
-    @Override
-    public void onEndGame(List<MatchResult> matchResults) {
-        dispatch(new EndGameEvent(matchResults));
-    }
-
-    @Override
-    public void onErrorReceived(String error) {
-        dispatch(new ErrorEvent(error));
-    }
-
-    @Override
-    public void onServerDisconnected() {
-        if (coordinator != null) coordinator.stopPingScheduler();
-        dispatch(new DisconnectedEvent("Server disconnected. Check your network connection."));
-    }
 
     // ── Internal ─────────────────────────────────────────────────────────────
 
@@ -136,7 +91,8 @@ public class GUI implements GameUI {
      * Routes the event onto the JavaFX thread, lets the current screen handle
      * it via the visitor, and swaps the scene root when the screen changes.
      */
-    private void dispatch(ServerEvent event) {
+    @Override
+    public void dispatch(ServerEvent event) {
         Platform.runLater(() -> {
             if (currentScreen == null) return;
             GUIScreen next = event.accept(currentScreen);
@@ -146,7 +102,7 @@ public class GUI implements GameUI {
         });
     }
 
-    private void transitionTo(GUIScreen screen) {
+    public void transitionTo(GUIScreen screen) {
         currentScreen = screen;
         if (currentScreen instanceof ExitScreen) {
             shutdown();
