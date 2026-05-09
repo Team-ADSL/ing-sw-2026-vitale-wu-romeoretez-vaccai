@@ -440,10 +440,14 @@ public class GameScreen extends TUIScreen {
                 else if (CardCatalog.isEvent(type))   cardColor = TuiColor.ORANGE;
                 TuiColor c = highlighted ? TuiColor.GREEN : cardColor;
 
+
                 String rawTl = CardTokens.toEmoji(card.typeLabel() != null ? card.typeLabel() : "");
-                String tl = padRight(padLeft(rawTl, (CARD_W + visualWidth(rawTl)) / 2), CARD_W);
+                String costStr = card.costLabel() != null ? CardTokens.toEmoji(card.costLabel()) : "";
+                int gap = CARD_W - visualWidth(rawTl) - visualWidth(costStr);
+                String tl = gap >= 0 ? rawTl + " ".repeat(gap) + costStr : padRight(rawTl + costStr, CARD_W);
                 String rawEl = CardTokens.toEffectLabel(card.effectsLabel() != null ? card.effectsLabel() : "");
                 String el = padRight(padLeft(rawEl, (CARD_W + visualWidth(rawEl)) / 2), CARD_W);
+
 
                 topLine.append(c.fg()).append(border).append(TuiColor.WHITE.fg()).append(" ");
                 typeLine.append(c.fg()).append("│").append(tl).append(jumpRight).append("│").append(TuiColor.WHITE.fg()).append(" ");
@@ -655,7 +659,8 @@ public class GameScreen extends TUIScreen {
 
     /**
      * Visual width of a string in terminal columns (Windows Terminal rules).
-     *   supplementary emoji (surrogate pair) + U+FE0F  → 3 cols
+     *   supplementary emoji (surrogate
+     *   pair) + U+FE0F  → 3 cols
      *   supplementary emoji (surrogate pair) no FE0F   → 2 cols
      *   U+FE0F, U+200D, U+200B..U+200F (zero-width)   → 0 cols
      *   U+2500..U+257F (box-drawing)                   → 1 col

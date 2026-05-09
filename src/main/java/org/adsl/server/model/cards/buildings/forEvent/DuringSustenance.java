@@ -33,10 +33,7 @@ public class DuringSustenance extends DuringEvent {
         return typeMultiplier;
     }
 
-    @Override
-    protected String getTypeLabel() {
-        return CardToken.BUILDING + " " + eraToRoman(getEra());
-    }
+
 
     @Override
     protected String getEffectsLabel() {
