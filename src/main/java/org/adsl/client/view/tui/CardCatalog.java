@@ -42,10 +42,10 @@ public final class CardCatalog {
             case INVENTOR       -> "INVENTOR";
             case ARTIST         -> "ARTIST";
             case BUILDINGS      -> "BUILDING";
-            case HUNT           -> "HUNT evt";
-            case SUSTENANCE     -> "SUSTAIN.";
+            case HUNT           -> "HUNT";
+            case SUSTENANCE     -> "SUSTAIN";
             case SHAMANIC_RITUAL -> "RITUAL";
-            case CAVE_PAINTINGS -> "PAINTNGS";
+            case CAVE_PAINTINGS -> "PAINTINGS";
         };
     }
 
@@ -75,10 +75,7 @@ public final class CardCatalog {
             case INVENTOR       -> "I";
             case ARTIST         -> "A";
             case BUILDINGS      -> "⌂";
-            case HUNT           -> "!";
-            case SUSTENANCE     -> "~";
-            case SHAMANIC_RITUAL -> "*";
-            case CAVE_PAINTINGS -> "°";
+            case SHAMANIC_RITUAL, HUNT, SUSTENANCE, CAVE_PAINTINGS -> null;
         };
     }
 
