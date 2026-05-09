@@ -159,28 +159,95 @@ Terminal 4 (socket client, GUI):
 
 ---
 
+## Quick Start Scripts (`tools/start`)
+
+The `tools/start/` folder contains scripts that automate launching a full local session — server + two clients (one Socket, one RMI) — with a single command from the IntelliJ terminal.
+
+There are four scripts per platform:
+
+| Script | Build | Interface |
+|--------|-------|-----------|
+| `run_tui`        | yes | TUI (terminal) |
+| `run_gui`        | yes | GUI (JavaFX)   |
+| `run_tui_nobuild`| no  | TUI (terminal) |
+| `run_gui_nobuild`| no  | GUI (JavaFX)   |
+
+The `_nobuild` variants skip the Maven build step and fail immediately if `target/mesos.jar` is not found.
+
+### macOS
+
+**From IntelliJ:** right-click the script in the Project panel → **Run**.
+
+Alternatively, from the IntelliJ terminal:
+
+```bash
+./tools/start/macos/run_tui.sh          # build + TUI session
+```
+```bash
+./tools/start/macos/run_gui.sh          # build + GUI session
+```
+```bash
+./tools/start/macos/run_tui_nobuild.sh  # TUI session (skip build)
+```
+```bash
+./tools/start/macos/run_gui_nobuild.sh  # GUI session (skip build)
+```
+
+> If the terminal returns `Permission denied`, run once:
+> ```bash
+> chmod +x tools/start/macos/run_tui.sh tools/start/macos/run_tui_nobuild.sh
+> ```
+> ```bash
+> chmod +x tools/start/macos/run_gui.sh tools/start/macos/run_gui_nobuild.sh
+> ```
+
+Each script builds the project (unless `_nobuild`), starts the server in a new Terminal window, waits for it to be ready on port 8080, then opens two client windows.
+
+### Windows
+
+**From IntelliJ:** right-click the script in the Project panel → **Run**.
+
+Alternatively, from the IntelliJ terminal:
+
+```
+tools\start\windows\run_tui.bat          # build + TUI session
+```
+```
+tools\start\windows\run_gui.bat          # build + GUI session
+```
+```
+tools\start\windows\run_tui_nobuild.bat  # TUI session (skip build)
+```
+```
+tools\start\windows\run_gui_nobuild.bat  # GUI session (skip build)
+```
+
+Each script builds the project (unless `_nobuild`), opens a new `cmd` window for the server, waits for it to be ready on port 8080, then opens two more `cmd` windows for the clients.
+
+---
+
 ## Python Testers
 
 Located in the `testers/` directory. Requires no extra dependencies beyond the Python standard library.
 
 ### socket_auto_plays.py — Automated Round Skip
 
-Automates two players over Socket to fast-forward a game to a target round. Useful for testing mid/late-game states without playing manually.
+Automates two players over Socket to fast-forward a game by a given number of rounds from the current one. Useful for testing mid/late-game states without playing manually.
 
 **Usage:**
 
 ```bash
-python3 testers/socket_auto_plays.py -g <game-id> -p1 <player1-name> -p2 <player2-name> -r <target-round>
+python3 testers/socket_auto_plays.py -g <game-id> -p1 <player1-name> -p2 <player2-name> -r <rounds>
 ```
 
-| Flag | Required | Description                                      |
-|------|----------|--------------------------------------------------|
-| `-g` | yes      | Game ID to join                                  |
-| `-p1`| yes      | Username of Player 1                             |
-| `-p2`| yes      | Username of Player 2                             |
-| `-r` | yes      | Target round to reach (script stops when reached)|
-| `-H` | no       | Server IP (default: `127.0.0.1`)                 |
-| `-P` | no       | Server port (default: `8080`)                    |
+| Flag | Required | Description                                        |
+|------|----------|----------------------------------------------------|
+| `-g` | yes      | Game ID to join                                    |
+| `-p1`| yes      | Username of Player 1                               |
+| `-p2`| yes      | Username of Player 2                               |
+| `-r` | yes      | Number of rounds to advance from the current round |
+| `-H` | no       | Server IP (default: `127.0.0.1`)                   |
+| `-P` | no       | Server port (default: `8080`)                      |
 
 **Example:**
 
@@ -188,7 +255,7 @@ python3 testers/socket_auto_plays.py -g <game-id> -p1 <player1-name> -p2 <player
 python3 testers/socket_auto_plays.py -g 1 -p1 Alice -p2 Bob -r 5
 ```
 
-This logs in as Alice and Bob, joins game `1`, and plays rounds automatically until round `5` is reached.
+This logs in as Alice and Bob, joins game `1`, and automatically plays 5 rounds from the current one.
 
 **Remote server example:**
 
@@ -204,9 +271,19 @@ python3 testers/socket_auto_plays.py -g 1 -p1 Alice -p2 Bob -r 5 -H 192.168.1.10
 
 ```
 java -jar target/mesos.jar --server  <socket-port> <rmi-port> <recover-dir>
+```
+```
 java -jar target/mesos.jar --client  --socket  --tui  <ip> <port>
+```
+```
 java -jar target/mesos.jar --client  --socket  --gui  <ip> <port>
+```
+```
 java -jar target/mesos.jar --client  --rmi     --tui  <ip> <port>
+```
+```
 java -jar target/mesos.jar --client  --rmi     --gui  <ip> <port>
+```
+```
 python3 testers/socket_auto_plays.py -g <id> -p1 <name> -p2 <name> -r <round> [-H <ip>] [-P <port>]
 ```
