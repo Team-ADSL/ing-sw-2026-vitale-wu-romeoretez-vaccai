@@ -49,6 +49,6 @@ public class DuringSustenance extends DuringEvent {
             case INVENTOR -> CardToken.INVENTOR;
             default       -> "";
         };
-        return CardToken.MEAL + "=>" + charToken + "x" + CardToken.FOOD + " " + CardToken.PP + getEndGamePP();
+        return CardToken.SET + "=>" + charToken + "x" + CardToken.FOOD + " " + CardToken.PP + getEndGamePP();
     }
 }
