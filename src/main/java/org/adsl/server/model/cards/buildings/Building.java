@@ -5,6 +5,7 @@ import org.adsl.server.model.cards.Card;
 import org.adsl.shared.enums.CardType;
 import org.adsl.server.model.cards.characters.Builder;
 import org.adsl.server.model.Player;
+import org.adsl.shared.model.CardToken;
 
 import java.util.Map;
 import java.util.Set;
@@ -40,7 +41,17 @@ public abstract class Building extends Card {
         return cost;
     }
 
+    @Override
+    protected String getCostLabel() {
+        return CardToken.FOOD_COST + cost;
+    }
+
     public int getEndGamePP() {
         return endGamePP;
+    }
+
+    @Override
+    protected String getTypeLabel() {
+        return CardToken.BUILDING + " " + eraToRoman(getEra());
     }
 }
