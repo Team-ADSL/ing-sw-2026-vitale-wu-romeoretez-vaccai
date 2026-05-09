@@ -33,10 +33,7 @@ public class DuringSustenance extends DuringEvent {
         return typeMultiplier;
     }
 
-    @Override
-    protected String getTypeLabel() {
-        return CardToken.BUILDING + " " + eraToRoman(getEra());
-    }
+
 
     @Override
     protected String getEffectsLabel() {
@@ -49,6 +46,6 @@ public class DuringSustenance extends DuringEvent {
             case INVENTOR -> CardToken.INVENTOR;
             default       -> "";
         };
-        return CardToken.MEAL + "=>" + charToken + "x" + CardToken.FOOD + " " + CardToken.PP + getEndGamePP();
+        return CardToken.SET + "=>" + charToken + "x" + CardToken.FOOD + " " + CardToken.PP + getEndGamePP();
     }
 }

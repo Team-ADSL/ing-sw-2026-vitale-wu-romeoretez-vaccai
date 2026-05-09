@@ -25,10 +25,7 @@ public class DuringHunt extends DuringEvent {
         p.getBuildingBonus().setHuntEventBonus(true);
     }
 
-    @Override
-    protected String getTypeLabel() {
-        return CardToken.BUILDING + " " + eraToRoman(getEra());
-    }
+
 
     @Override
     protected String getEffectsLabel() {

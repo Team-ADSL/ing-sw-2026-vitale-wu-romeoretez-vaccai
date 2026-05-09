@@ -22,7 +22,7 @@ public final class CardToken {
     public static final String FOOD_COST  = "[FOOD_COST]";
     public static final String FOOD       = "[FOOD]";
     public static final String MEAT       = "[MEAT]";
-    public static final String MEAL       = "[MEAL]";
+    public static final String SET        = "[SET]";
     public static final String ENDGAME    = "[ENDGAME]";
     public static final String EXTRA_MOVE = "[EXTRA_MOVE]";
     public static final String TOTEM      = "[TOTEM]";
