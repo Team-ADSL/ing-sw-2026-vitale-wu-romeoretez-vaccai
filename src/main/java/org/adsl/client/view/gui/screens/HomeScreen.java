@@ -6,8 +6,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import org.adsl.client.AppCoordinator;
-import org.adsl.client.view.events.ErrorEvent;
-import org.adsl.client.view.events.HomeUpdateEvent;
+import org.adsl.client.serverEvents.ErrorEvent;
+import org.adsl.client.serverEvents.HomeUpdateEvent;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -43,7 +43,7 @@ public class HomeScreen extends GUIScreen {
     private void create(int n) {
         errorLabel.setText("");
         try {
-            coordinator.createGameRequest(n);
+            appCoordinator.createGameRequest(n);
         } catch (Exception ex) {
             errorLabel.setText("Failed to create game: " + ex.getMessage());
         }
@@ -58,7 +58,7 @@ public class HomeScreen extends GUIScreen {
             return;
         }
         try {
-            coordinator.enterGameRequest(id);
+            appCoordinator.enterGameRequest(id);
         } catch (Exception ex) {
             errorLabel.setText("Failed to join: " + ex.getMessage());
         }
@@ -68,7 +68,7 @@ public class HomeScreen extends GUIScreen {
     private void onLogout() {
         errorLabel.setText("");
         try {
-            coordinator.createLogoutRequest();
+            appCoordinator.createLogoutRequest();
         } catch (Exception ex) {
             errorLabel.setText("Logout failed: " + ex.getMessage());
         }
@@ -77,7 +77,7 @@ public class HomeScreen extends GUIScreen {
     /** Stay on the screen and refresh the list rather than re-creating it. */
     @Override
     public GUIScreen visit(HomeUpdateEvent e) {
-        List<Integer> incoming = e.getActiveGames();
+        List<Integer> incoming = e.activeGames();
         this.activeGames = incoming != null ? new ArrayList<>(incoming) : new ArrayList<>();
         gamesList.setItems(FXCollections.observableArrayList(this.activeGames));
         return this;
@@ -86,7 +86,7 @@ public class HomeScreen extends GUIScreen {
     /** Server-side errors (invalid numPlayer, joining a non-existent game, ...). */
     @Override
     public GUIScreen visit(ErrorEvent e) {
-        if (errorLabel != null) errorLabel.setText(e.getMessage());
+        if (errorLabel != null) errorLabel.setText(e.message());
         return this;
     }
 }

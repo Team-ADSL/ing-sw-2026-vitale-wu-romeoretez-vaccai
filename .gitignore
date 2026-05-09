@@ -43,6 +43,7 @@ saves/
 .env
 
 o.log
+tools/testers/__pycache__/
 
 hs_err_pid*.log
 replay_pid*.log

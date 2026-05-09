@@ -6,8 +6,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import org.adsl.client.AppCoordinator;
-import org.adsl.client.view.events.ErrorEvent;
-import org.adsl.client.view.events.LobbyUpdateEvent;
+import org.adsl.client.serverEvents.ErrorEvent;
+import org.adsl.client.serverEvents.LobbyUpdateEvent;
 
 import java.io.IOException;
 import java.util.List;
@@ -54,7 +54,7 @@ public class LobbyScreen extends GUIScreen {
     private void onStart() {
         errorLabel.setText("");
         try {
-            coordinator.startGameRequest();
+            appCoordinator.startGameRequest();
         } catch (Exception ex) {
             errorLabel.setText("Start failed: " + ex.getMessage());
         }
@@ -64,7 +64,7 @@ public class LobbyScreen extends GUIScreen {
     private void onLeave() {
         errorLabel.setText("");
         try {
-            coordinator.createExitLobbyRequest();
+            appCoordinator.createExitLobbyRequest();
         } catch (Exception ex) {
             errorLabel.setText("Leave failed: " + ex.getMessage());
         }
@@ -72,8 +72,8 @@ public class LobbyScreen extends GUIScreen {
 
     @Override
     public GUIScreen visit(LobbyUpdateEvent e) {
-        this.gameId = e.getGameId();
-        this.players = e.getPlayers() != null ? e.getPlayers() : List.of();
+        this.gameId = e.gameId();
+        this.players = e.players() != null ? e.players() : List.of();
         refresh();
         return this;
     }
@@ -81,7 +81,7 @@ public class LobbyScreen extends GUIScreen {
     /** Server-side errors (non-host pressing start, lobby full, ...). */
     @Override
     public GUIScreen visit(ErrorEvent e) {
-        if (errorLabel != null) errorLabel.setText(e.getMessage());
+        if (errorLabel != null) errorLabel.setText(e.message());
         return this;
     }
 }

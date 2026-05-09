@@ -2,8 +2,8 @@ package org.adsl.client.view.tui.screens;
 
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.view.tui.events.ConfirmEvent;
-import org.adsl.client.view.events.HomeUpdateEvent;
-import org.adsl.client.view.events.LobbyUpdateEvent;
+import org.adsl.client.serverEvents.HomeUpdateEvent;
+import org.adsl.client.serverEvents.LobbyUpdateEvent;
 import org.adsl.client.view.tui.events.NavigateDownEvent;
 import org.adsl.client.view.tui.events.NavigateLeftEvent;
 import org.adsl.client.view.tui.events.NavigateRightEvent;
@@ -89,7 +89,7 @@ public class HomeScreen extends TUIScreen {
 
     @Override
     public TUIScreen visit(HomeUpdateEvent e) {
-        List<Integer> incoming = e.getActiveGames();
+        List<Integer> incoming = e.activeGames();
         this.activeGames = (incoming != null) ? new ArrayList<>(incoming) : new ArrayList<>();
         if (cursor >= totalOptions()) {
             cursor = Math.max(0, totalOptions() - 1);
@@ -122,12 +122,12 @@ public class HomeScreen extends TUIScreen {
         try {
             if (cursor < CREATE_OPTIONS) {
                 int n = cursor + 2;
-                coordinator.createGameRequest(n);
+                appCoordinator.createGameRequest(n);
             } else if (cursor < CREATE_OPTIONS + activeGames.size()) {
                 int gameId = activeGames.get(cursor - CREATE_OPTIONS);
-                coordinator.enterGameRequest(gameId);
+                appCoordinator.enterGameRequest(gameId);
             } else {
-                coordinator.createLogoutRequest();
+                appCoordinator.createLogoutRequest();
                 // Server will reply with LoginNeededEvent which routes to LoginScreen.
             }
         } catch (Exception ex) {
@@ -141,7 +141,7 @@ public class HomeScreen extends TUIScreen {
         char ch = Character.toLowerCase(e.getCharacter());
         if (ch == 'b') {
             try {
-                coordinator.createLogoutRequest();
+                appCoordinator.createLogoutRequest();
                 // Server will reply with LoginNeededEvent which routes to LoginScreen.
             } catch (Exception ex) {
                 error = ex.getMessage();

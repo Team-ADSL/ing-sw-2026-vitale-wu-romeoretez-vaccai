@@ -6,8 +6,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import org.adsl.client.AppCoordinator;
-import org.adsl.client.view.events.ErrorEvent;
-import org.adsl.client.view.events.LoginNeededEvent;
+import org.adsl.client.serverEvents.ErrorEvent;
+import org.adsl.client.serverEvents.LoginNeededEvent;
 
 import java.io.IOException;
 
@@ -43,7 +43,7 @@ public class LoginScreen extends GUIScreen {
         }
         username = name;
         try {
-            coordinator.createLoginRequest(name);
+            appCoordinator.createLoginRequest(name);
             loginButton.setDisable(true);
         } catch (Exception ex) {
             errorLabel.setText("Login failed: " + ex.getMessage());
@@ -53,14 +53,14 @@ public class LoginScreen extends GUIScreen {
     @FXML
     private void onExit() {
         try {
-            coordinator.disconnect();
+            appCoordinator.disconnect();
         } catch (Exception ignored) {}
         javafx.application.Platform.exit();
     }
 
     @Override
     public GUIScreen visit(ErrorEvent e) {
-        if (errorLabel != null) errorLabel.setText(e.getMessage());
+        if (errorLabel != null) errorLabel.setText(e.message());
         if (loginButton != null) loginButton.setDisable(false);
         return this;
     }

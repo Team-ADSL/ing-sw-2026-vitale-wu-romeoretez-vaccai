@@ -84,9 +84,9 @@ public class EndGameScreen extends TUIScreen {
     @Override
     public TUIScreen visit(CharInputEvent e) {
         if (Character.toLowerCase(e.getCharacter()) == 'b') {
-            if (coordinator != null) {
+            if (appCoordinator != null) {
                 try {
-                    coordinator.createExitGameRequest();
+                    appCoordinator.createExitGameRequest();
                 } catch (Exception ex) {
                     error = "Failed to return to home: " + ex.getMessage();
                 }

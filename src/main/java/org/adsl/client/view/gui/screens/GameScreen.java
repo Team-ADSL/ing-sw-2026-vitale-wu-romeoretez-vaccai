@@ -7,8 +7,8 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
 import org.adsl.client.AppCoordinator;
-import org.adsl.client.view.events.ErrorEvent;
-import org.adsl.client.view.events.GameUpdateEvent;
+import org.adsl.client.serverEvents.ErrorEvent;
+import org.adsl.client.serverEvents.GameUpdateEvent;
 import org.adsl.client.view.tui.CardCatalog;
 import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Phase;
@@ -87,7 +87,7 @@ public class GameScreen extends GUIScreen {
 
     @Override
     public GUIScreen visit(GameUpdateEvent e) {
-        this.game = e.getGame();
+        this.game = e.game();
         waitingServer = false;
         // Clear selection when leaving a card-pick phase, mirroring TUI setupActiveState().
         if (game.phase() != Phase.ACTION_EXECUTION && game.phase() != Phase.EXTRA_MOVE) {
@@ -100,7 +100,7 @@ public class GameScreen extends GUIScreen {
 
     @Override
     public GUIScreen visit(ErrorEvent e) {
-        if (errorLabel != null) errorLabel.setText(e.getMessage());
+        if (errorLabel != null) errorLabel.setText(e.message());
         if (waitingServer) {
             waitingServer = false;
             renderBoard();
@@ -121,7 +121,7 @@ public class GameScreen extends GUIScreen {
         }
         Set<Move> toSend = new LinkedHashSet<>(selectedMoves);
         try {
-            coordinator.makeMoveRequest(toSend);
+            appCoordinator.makeMoveRequest(toSend);
             waitingServer = true;
             errorLabel.setText("");
             renderBoard();
@@ -153,7 +153,7 @@ public class GameScreen extends GUIScreen {
             return;
         }
         try {
-            coordinator.makeMoveRequest(Set.of(new Move(idx, Row.OFFER)));
+            appCoordinator.makeMoveRequest(Set.of(new Move(idx, Row.OFFER)));
             waitingServer = true;
             errorLabel.setText("");
             renderBoard();
