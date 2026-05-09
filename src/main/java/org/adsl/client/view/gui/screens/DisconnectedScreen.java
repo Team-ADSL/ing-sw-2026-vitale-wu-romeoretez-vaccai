@@ -12,11 +12,8 @@ public class DisconnectedScreen extends GUIScreen {
     @FXML private Label messageLabel;
     @FXML private Label errorLabel;
 
-    private final String message;
-
     public DisconnectedScreen(AppCoordinator coordinator, String message) {
         super(coordinator);
-        this.message = message;
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/disconnected.fxml"));
             loader.setController(this);
@@ -30,7 +27,7 @@ public class DisconnectedScreen extends GUIScreen {
     @FXML
     private void onReconnect() {
         try {
-            coordinator.reconnect();
+            appCoordinator.reconnect();
         } catch (Exception ex) {
             errorLabel.setText("Could not reconnect: " + ex.getMessage());
         }
@@ -39,7 +36,7 @@ public class DisconnectedScreen extends GUIScreen {
     @FXML
     private void onExit() {
         try {
-            coordinator.disconnect();
+            appCoordinator.disconnect();
         } catch (Exception ignored) {}
         javafx.application.Platform.exit();
     }

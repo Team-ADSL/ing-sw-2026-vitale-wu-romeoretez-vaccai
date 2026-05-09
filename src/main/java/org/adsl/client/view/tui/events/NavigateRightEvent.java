@@ -1,12 +1,10 @@
 package org.adsl.client.view.tui.events;
 
-import org.adsl.client.view.events.Event;
-
 import org.adsl.client.view.tui.screens.TUIScreen;
 
-public class NavigateRightEvent extends Event {
+public class NavigateRightEvent extends InputEvent {
     @Override
-    public TUIScreen accept(EventVisitor visitor) {
+    public TUIScreen accept(InputEventVisitor visitor) {
         return visitor.visit(this);
     }
 }

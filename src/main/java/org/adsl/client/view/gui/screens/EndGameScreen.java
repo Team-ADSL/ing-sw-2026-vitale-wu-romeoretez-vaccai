@@ -41,7 +41,7 @@ public class EndGameScreen extends GUIScreen {
     @FXML
     private void onBackHome() {
         try {
-            coordinator.createExitGameRequest();
+            appCoordinator.createExitGameRequest();
         } catch (Exception ex) {
             errorLabel.setText("Failed to return home: " + ex.getMessage());
         }
@@ -50,7 +50,7 @@ public class EndGameScreen extends GUIScreen {
     @FXML
     private void onExit() {
         try {
-            coordinator.disconnect();
+            appCoordinator.disconnect();
         } catch (Exception ignored) {}
         javafx.application.Platform.exit();
     }

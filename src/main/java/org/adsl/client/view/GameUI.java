@@ -1,20 +1,56 @@
 package org.adsl.client.view;
 
 import org.adsl.client.AppCoordinator;
+import org.adsl.client.serverEvents.*;
 import org.adsl.shared.model.GameDTO;
 import org.adsl.shared.model.MatchResult;
 
+import java.util.Collections;
 import java.util.List;
 
-public interface GameUI {
-    void setAppCoordinator(AppCoordinator appCoordinator);
-    void showUsernameField();
-    void onHomeUpdate(List<Integer> activeGames);
-    void onLobbyUpdate(int gameId, List<String> players, int numPlayersAllowed);
-    void onGameUpdate(GameDTO game);
-    void onEndGame(List<MatchResult> matchResults);
-    void onErrorReceived(String error);
-    void onServerDisconnected();
-    void start();
-    void shutdown();
+public abstract class GameUI {
+    private AppCoordinator appCoordinator;
+
+    public void showUsernameField() {
+        dispatch(new LoginNeededEvent());
+    }
+
+    public void onHomeUpdate(List<Integer> activeGames) {
+        dispatch(new HomeUpdateEvent(activeGames != null ? activeGames : Collections.emptyList()));
+    }
+
+    public void onLobbyUpdate(int gameId, List<String> players, int numPlayersAllowed) {
+        dispatch(new LobbyUpdateEvent(gameId,
+                players != null ? players : Collections.emptyList(),
+                numPlayersAllowed));
+    }
+
+    public void onGameUpdate(GameDTO game) {
+        dispatch(new GameUpdateEvent(game));
+    }
+
+    public void onEndGame(List<MatchResult> matchResults) {
+        dispatch(new EndGameEvent(matchResults));
+    }
+
+    public void onErrorReceived(String error) {
+        dispatch(new ErrorEvent(error));
+    }
+
+    public void onServerDisconnected() {
+        if (appCoordinator != null) appCoordinator.stopPingScheduler();
+        dispatch(new DisconnectedEvent("Server disconnected. Check your network connection."));
+    }
+
+    public abstract void dispatch(ServerEvent event);
+    public abstract void start();
+    public abstract void shutdown();
+
+    public AppCoordinator getAppCoordinator() {
+        return appCoordinator;
+    }
+
+    public void setAppCoordinator(AppCoordinator appCoordinator) {
+        this.appCoordinator = appCoordinator;
+    }
 }
