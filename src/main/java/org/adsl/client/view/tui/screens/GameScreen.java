@@ -1,9 +1,11 @@
 package org.adsl.client.view.tui.screens;
 
 import org.adsl.client.AppCoordinator;
+import org.adsl.client.serverEvents.EndGameEvent;
+import org.adsl.client.serverEvents.ErrorEvent;
+import org.adsl.client.serverEvents.GameUpdateEvent;
 import org.adsl.client.view.tui.CardCatalog;
 import org.adsl.client.view.tui.CardTokens;
-import org.adsl.client.view.events.*;
 import org.adsl.client.view.tui.events.*;
 import org.adsl.client.view.tui.events.CharInputEvent;
 import org.adsl.client.view.tui.render.TuiColor;
@@ -97,7 +99,7 @@ public class GameScreen extends TUIScreen {
 
     @Override
     public TUIScreen visit(GameUpdateEvent e) {
-        this.game = e.getGame();
+        this.game = e.game();
         this.myTotem = findMyTotem();
 
         if (game.phase() == Phase.END_GAME) {
@@ -218,7 +220,7 @@ public class GameScreen extends TUIScreen {
 
     private void sendMove(Set<Move> moves) {
         try {
-            coordinator.makeMoveRequest(moves);
+            appCoordinator.makeMoveRequest(moves);
             subState = SubState.WAITING_SERVER;
         } catch (Exception e) {
             error = "Move failed: " + e.getMessage();

@@ -4,9 +4,9 @@ import org.adsl.client.AppCoordinator;
 import org.adsl.client.view.tui.events.BackspaceEvent;
 import org.adsl.client.view.tui.events.CharInputEvent;
 import org.adsl.client.view.tui.events.ConfirmEvent;
-import org.adsl.client.view.events.ErrorEvent;
-import org.adsl.client.view.events.HomeUpdateEvent;
-import org.adsl.client.view.events.LoginNeededEvent;
+import org.adsl.client.serverEvents.ErrorEvent;
+import org.adsl.client.serverEvents.HomeUpdateEvent;
+import org.adsl.client.serverEvents.LoginNeededEvent;
 import org.adsl.client.view.tui.events.NavigateDownEvent;
 import org.adsl.client.view.tui.events.NavigateLeftEvent;
 import org.adsl.client.view.tui.events.NavigateRightEvent;
@@ -140,7 +140,7 @@ public class LoginScreen extends TUIScreen {
     @Override
     public TUIScreen visit(ErrorEvent e) {
         // Restart the form carrying the server error so the user can fix and retry.
-        return new LoginScreen(terminal, coordinator, e.getMessage());
+        return new LoginScreen(terminal, appCoordinator, e.message());
     }
 
     // ── Input events ──────────────────────────────────────────────────────────
@@ -209,7 +209,7 @@ public class LoginScreen extends TUIScreen {
         username = name;
         submitted = true;
         try {
-            coordinator.createLoginRequest(name);
+            appCoordinator.createLoginRequest(name);
         } catch (Exception ex) {
             localValidation = "Login failed: " + ex.getMessage();
             submitted = false;

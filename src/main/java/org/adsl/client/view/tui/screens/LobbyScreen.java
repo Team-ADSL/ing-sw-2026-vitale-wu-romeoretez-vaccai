@@ -2,8 +2,8 @@ package org.adsl.client.view.tui.screens;
 
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.view.tui.events.CharInputEvent;
-import org.adsl.client.view.events.GameUpdateEvent;
-import org.adsl.client.view.events.LobbyUpdateEvent;
+import org.adsl.client.serverEvents.GameUpdateEvent;
+import org.adsl.client.serverEvents.LobbyUpdateEvent;
 import org.adsl.client.view.tui.render.TuiColor;
 import org.adsl.client.view.tui.render.TuiSize;
 import org.adsl.client.view.tui.render.TuiTerminal;
@@ -101,13 +101,13 @@ public class LobbyScreen extends TUIScreen {
         char ch = Character.toLowerCase(e.getCharacter());
         if (ch == 's') {
             try {
-                coordinator.startGameRequest();
+                appCoordinator.startGameRequest();
             } catch (Exception ex) {
                 error = ex.getMessage();
             }
         } else if (ch == 'b') {
             try {
-                coordinator.createExitLobbyRequest();
+                appCoordinator.createExitLobbyRequest();
                 // Server will reply with HomeUpdateEvent which routes to HomeScreen.
             } catch(Exception ex){
                 error = ex.getMessage();
@@ -120,8 +120,8 @@ public class LobbyScreen extends TUIScreen {
 
     @Override
     public TUIScreen visit(LobbyUpdateEvent e) {
-        this.gameId = e.getGameId();
-        this.players = e.getPlayers() != null ? e.getPlayers() : List.of();
+        this.gameId = e.gameId();
+        this.players = e.players() != null ? e.players() : List.of();
         return this;
     }
 

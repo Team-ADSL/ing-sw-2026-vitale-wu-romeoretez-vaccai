@@ -1,6 +1,7 @@
-package org.adsl.client.view.events;
+package org.adsl.client.serverEvents;
 
-import org.adsl.client.view.tui.events.EventVisitor;
+import org.adsl.client.view.Screen;
+import org.adsl.client.view.tui.events.InputEventVisitor;
 import org.adsl.client.view.tui.screens.TUIScreen;
 
 /**
@@ -16,10 +17,10 @@ import org.adsl.client.view.tui.screens.TUIScreen;
  *       receives input directly via JavaFX handlers.</li>
  * </ul>
  *
- * Every concrete event must accept a TUI {@link EventVisitor} returning a
+ * Every concrete event must accept a TUI {@link InputEventVisitor} returning a
  * {@link TUIScreen}; server events additionally accept a {@code GUIEventVisitor}
  * returning a {@code GUIScreen} (see {@link ServerEvent}).
  */
-public abstract class Event {
-    public abstract TUIScreen accept(EventVisitor visitor);
+public abstract class Event<S extends Screen<S>> {
+    public abstract S accept(EventVisitor<S> visitor);
 }

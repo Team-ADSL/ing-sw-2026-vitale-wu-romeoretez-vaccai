@@ -2,7 +2,7 @@ package org.adsl.client.view.tui.screens;
 
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.view.tui.events.CharInputEvent;
-import org.adsl.client.view.events.LoginNeededEvent;
+import org.adsl.client.serverEvents.LoginNeededEvent;
 import org.adsl.client.view.tui.render.TuiColor;
 import org.adsl.client.view.tui.render.TuiTerminal;
 import org.adsl.client.view.tui.render.TuiTextGraphics;
