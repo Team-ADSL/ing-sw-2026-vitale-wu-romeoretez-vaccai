@@ -90,7 +90,7 @@ public class AppCoordinator implements ResponseVisitor{
     }
     @Override
     public void visit(GameUpdate response) throws InvalidResponseException {
-        gameUI.onGameUpdate(response.getGame());
+        gameUI.onGameUpdate(response.getGame(), response.getMessage());
     }
     @Override
     public void visit(GameEnded response) throws InvalidResponseException {

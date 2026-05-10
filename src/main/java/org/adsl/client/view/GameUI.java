@@ -26,7 +26,11 @@ public abstract class GameUI {
     }
 
     public void onGameUpdate(GameDTO game) {
-        dispatch(new GameUpdateEvent(game));
+        dispatch(new GameUpdateEvent(game, null));
+    }
+
+    public void onGameUpdate(GameDTO game, String message) {
+        dispatch(new GameUpdateEvent(game, message));
     }
 
     public void onEndGame(List<MatchResult> matchResults) {

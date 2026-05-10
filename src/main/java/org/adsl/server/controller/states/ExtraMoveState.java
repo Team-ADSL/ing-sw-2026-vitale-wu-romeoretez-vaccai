@@ -59,10 +59,20 @@ public class ExtraMoveState extends ControllerState {
   public void execute(Move move, Player p) {
     CardRow selectedRow = getGame().getBoard().topRow();
     Card selectedCard = selectedRow.pickCardAt(move.rowIndex());
+    String pickName = selectedCard.narrationName();
     selectedCard.insert(p.getCards());
 
+    String article = startsWithVowel(pickName) ? "an" : "a";
+    String narrative = p.getName() + " has picked " + article + " " + pickName +
+            " as an extra move from the Top Row.";
     setNextState(new EventsState(getGame(), getContext()));
-    getGame().sendUpdateGame();
+    getGame().sendUpdateGame(narrative);
+  }
+
+  private static boolean startsWithVowel(String s) {
+    if (s == null || s.isEmpty()) return false;
+    char c = Character.toLowerCase(s.charAt(0));
+    return c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u';
   }
 
   @Override

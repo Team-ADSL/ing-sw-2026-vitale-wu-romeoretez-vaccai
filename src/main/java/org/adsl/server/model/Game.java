@@ -95,6 +95,12 @@ public class Game implements Serializable {
     public void sendUpdateGame(){
         for(GameObserver o : gameObservers) o.updateGame(this);
     }
+    public void sendUpdateGame(String message){
+        for(GameObserver o : gameObservers) o.updateGame(this, message);
+    }
+    public void broadcastError(String message){
+        for(GameObserver o : gameObservers) o.notifyError(message);
+    }
     public void sendEndGameResults(List<MatchResult> results){
         for(EndGameObserver o : endGameObservers) o.notifyEndGame(gameId, results);
     }
