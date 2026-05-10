@@ -70,6 +70,7 @@ public class LobbyState extends ControllerState {
         if(getGame().getPlayers().isEmpty()){
             getGame().sendEndGameResults(null);
         } else if(host.equals(virtualClient.getClientUsername().get())) {
+            getGame().broadcastError("The host " + host + " has left the game.");
             throw new HostDisconnectedException("[LOBBY] Host left, every player has been disconnected.");
         } else {
             getGame().sendUpdateLobby();

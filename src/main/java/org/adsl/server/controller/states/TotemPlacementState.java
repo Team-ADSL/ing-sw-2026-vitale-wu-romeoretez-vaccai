@@ -73,8 +73,9 @@ public class TotemPlacementState extends ControllerState {
         offerTrack.placeInOfferTile(p, move.rowIndex());
 
         System.out.println("[TOTEM PLACEMENT] Player " + p.getName() + " placed totem at offer index " + move.rowIndex());
+        String narrative = p.getName() + " has placed their totem on the offer track.";
         setNextState(calcNextState());
-        getGame().sendUpdateGame();
+        getGame().sendUpdateGame(narrative);
     }
 
     @Override

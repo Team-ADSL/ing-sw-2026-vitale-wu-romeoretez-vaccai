@@ -73,9 +73,20 @@ public abstract class VirtualClient implements GameObserver, HomeObserver, EndGa
 
     @Override
     public void updateGame(Game game){
-        ServerResponse serverResponse = new GameUpdate(game.createDTO());
+        updateGame(game, null);
+    }
+
+    @Override
+    public void updateGame(Game game, String message){
+        GameUpdate serverResponse = new GameUpdate(game.createDTO());
+        if (message != null) serverResponse.setMessage(message);
         System.out.println("[SENDING] Game update:" + serverResponse + " to: " + getClientUsername());
         this.sendResponse(serverResponse);
+    }
+
+    @Override
+    public void notifyError(String message){
+        sendErrorMessage(message);
     }
 
     @Override

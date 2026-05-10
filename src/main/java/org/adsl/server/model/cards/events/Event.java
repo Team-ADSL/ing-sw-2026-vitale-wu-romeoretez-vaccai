@@ -29,4 +29,11 @@ public abstract class Event extends Card {
                 .map(c -> (Building)c)
                 .forEach(b -> b.activeEffect(Collections.singleton(p), t));
     }
+
+    @Override
+    public String narrationName() {
+        // Insert spaces before capital letters: CavePaintings -> Cave Paintings event
+        String spaced = getClass().getSimpleName().replaceAll("([a-z])([A-Z])", "$1 $2");
+        return spaced + " event";
+    }
 }
