@@ -59,9 +59,10 @@ public class ExtraMoveState extends ControllerState {
   public void execute(Move move, Player p) {
     CardRow selectedRow = getGame().getBoard().topRow();
     Card selectedCard = selectedRow.pickCardAt(move.rowIndex());
+    String pickName = selectedCard.getClass().getSimpleName();
     selectedCard.insert(p.getCards());
 
-    String log = "[EXTRA MOVE] Player " + p.getName() + " picked 1 card.";
+    String log = "[EXTRA MOVE] Player " + p.getName() + " picked 1 card: " + pickName + ".";
     System.out.println(log);
     setNextState(new EventsState(getGame(), getContext()));
     getGame().sendUpdateGame(log);
