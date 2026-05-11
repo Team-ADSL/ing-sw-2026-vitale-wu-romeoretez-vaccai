@@ -33,8 +33,18 @@ public final class ImageCatalog {
     }
 
     public static Image load(String path) {
-        return CACHE.computeIfAbsent(path, p ->
-                new Image(ImageCatalog.class.getResourceAsStream(p)));
+        return CACHE.computeIfAbsent(path, p -> {
+            var stream = ImageCatalog.class.getResourceAsStream(p);
+            if (stream == null) {
+                System.err.println("[ImageCatalog] missing resource: " + p);
+                throw new IllegalStateException("missing resource: " + p);
+            }
+            Image img = new Image(stream);
+            if (img.isError()) {
+                System.err.println("[ImageCatalog] decode error for " + p + ": " + img.getException());
+            }
+            return img;
+        });
     }
 
     // ── Cards ────────────────────────────────────────────────────────────────
