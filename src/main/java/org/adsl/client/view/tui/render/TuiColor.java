@@ -24,6 +24,12 @@ public enum TuiColor {
         public String fg() { return AnsiCodes.CSI + "38;5;208m"; }
         @Override
         public String bg() { return AnsiCodes.CSI + "48;5;208m"; }
+    },
+    DARK_PURPLE (0) {
+        @Override
+        public String fg() { return AnsiCodes.CSI + "38;5;54m"; }
+        @Override
+        public String bg() { return AnsiCodes.CSI + "48;5;54m"; }
     };
 
     private final int fgCode;

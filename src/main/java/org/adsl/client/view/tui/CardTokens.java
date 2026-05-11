@@ -25,9 +25,7 @@ public final class CardTokens {
         Map.entry(CardToken.PAINTINGS,     "PAINTINGS"),
         Map.entry(CardToken.PP,            "🌟"),
         Map.entry(CardToken.SHAMAN_STAR,   "★"),
-        Map.entry(CardToken.FOOD_COST,     "💰"),
-        Map.entry(CardToken.FOOD,          "🍞"),
-        Map.entry(CardToken.MEAT,          "🍖"),
+        Map.entry(CardToken.FOOD,          "🍖"),
         Map.entry(CardToken.SET,           "🌈"),
         Map.entry(CardToken.ENDGAME,       "🏁"),
         Map.entry(CardToken.EXTRA_MOVE,    "⏩"),
@@ -60,7 +58,8 @@ public final class CardTokens {
 
     public static String toEmoji(String s) {
         if (s == null) return null;
-        String result = s;
+        String result = applyFoodCost(s);
+        result = result.replace(CardToken.MEAT, "🍖");
         for (Map.Entry<String, String> entry : EMOJI_MAP.entrySet()) {
             result = result.replace(entry.getKey(), entry.getValue());
         }
@@ -73,9 +72,18 @@ public final class CardTokens {
         for (Map.Entry<String, String> entry : TYPE_ABBR.entrySet()) {
             result = result.replace(entry.getKey(), entry.getValue());
         }
+        result = applyFoodCost(result);
+        result = result.replace(CardToken.MEAT, "🍖");
         for (Map.Entry<String, String> entry : EMOJI_MAP.entrySet()) {
             result = result.replace(entry.getKey(), entry.getValue());
         }
+        return result;
+    }
+
+    // [FOOD_COST]-N (sconto) → +N🍖 ; [FOOD_COST]N (costo) → -N🍖
+    private static String applyFoodCost(String s) {
+        String result = s.replaceAll("\\[FOOD_COST\\]-(\\d+)", "-$1🍖");
+        result = result.replaceAll("\\[FOOD_COST\\](\\d+)", "-$1🍖");
         return result;
     }
 }

@@ -44,6 +44,6 @@ public class Hunter extends Character {
 
     @Override
     protected String getEffectsLabel() {
-        return extraFood ? CardToken.MEAT + "+" : CardToken.MEAT;
+        return extraFood ? CardToken.MEAT : "";
     }
 }
