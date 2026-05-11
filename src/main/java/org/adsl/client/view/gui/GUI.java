@@ -50,6 +50,7 @@ public class GUI extends GameUI {
         // Thread once initialisation is complete, after which Platform.runLater
         // is the standard way to dispatch onto it.
         Platform.startup(() -> {
+            ImageCatalog.loadFonts();
             stage = new Stage();
             stage.setTitle(WINDOW_TITLE);
             stage.setWidth(WINDOW_W);
