@@ -132,7 +132,7 @@ public class JsonBoardConfigLoader implements BoardConfigLoader {
                     JsonNode movesNode = node.get("moves");
                     movesNode.fields().forEachRemaining(e -> moves.put(Row.valueOf(e.getKey()), e.getValue().asInt()));
                     boolean givesFood = node.get("givesFood").asBoolean();
-                    String id = node.get("id").asToken().asString();
+                    String id = node.get("id").asText();
                     tiles.add(new OfferTile(id,null, moves, givesFood));
                 }
             }
