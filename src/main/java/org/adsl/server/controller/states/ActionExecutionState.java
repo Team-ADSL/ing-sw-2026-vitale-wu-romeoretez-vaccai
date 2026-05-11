@@ -14,9 +14,6 @@ import org.adsl.shared.enums.Trigger;
 import org.adsl.server.model.Game;
 import org.adsl.server.model.Player;
 
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -100,7 +97,6 @@ public class ActionExecutionState extends ControllerState {
   }
 
   private void execute(Set<Move> moves, Player p) {
-    Map<Row, List<String>> picksByRow = new EnumMap<>(Row.class);
     for (Move move : moves) {
       CardRow selectedRow;
       if (move.row() == Row.UPPER) {
@@ -109,42 +105,15 @@ public class ActionExecutionState extends ControllerState {
         selectedRow = getGame().getBoard().lowRow();
       }
       Card selectedCard = selectedRow.pickCardAt(move.rowIndex());
-      picksByRow.computeIfAbsent(move.row(), r -> new ArrayList<>()).add(selectedCard.narrationName());
       selectedCard.insert(p.getCards());
     }
     OfferTrack offerTrack = getGame().getBoard().offerTrack();
     offerTrack.removePlayer(p);
     placeTotem(p);
-    System.out.println("[ACTION] Player " + p.getName() + " picked " + moves.size() + " card(s).");
-    String narrative = buildPickNarrative(p.getName(), picksByRow);
+    String log = "[ACTION] Player " + p.getName() + " picked " + moves.size() + " card(s).";
+    System.out.println(log);
     setNextState(calcNextState());
-    getGame().sendUpdateGame(narrative);
-  }
-
-  private static String buildPickNarrative(String name, Map<Row, List<String>> picks) {
-    List<String> parts = new ArrayList<>();
-    if (picks.containsKey(Row.UPPER) && !picks.get(Row.UPPER).isEmpty()) {
-      parts.add(joinIndefinite(picks.get(Row.UPPER)) + " from the Top Row");
-    }
-    if (picks.containsKey(Row.LOWER) && !picks.get(Row.LOWER).isEmpty()) {
-      parts.add(joinIndefinite(picks.get(Row.LOWER)) + " from the Bottom Row");
-    }
-    return name + " has picked " + String.join(" and ", parts) + ".";
-  }
-
-  private static String joinIndefinite(List<String> names) {
-    List<String> withArticles = new ArrayList<>();
-    for (String n : names) withArticles.add(indefiniteArticle(n) + " " + n);
-    if (withArticles.size() == 1) return withArticles.get(0);
-    if (withArticles.size() == 2) return withArticles.get(0) + " and " + withArticles.get(1);
-    String last = withArticles.get(withArticles.size() - 1);
-    return String.join(", ", withArticles.subList(0, withArticles.size() - 1)) + " and " + last;
-  }
-
-  private static String indefiniteArticle(String word) {
-    if (word == null || word.isEmpty()) return "a";
-    char c = Character.toLowerCase(word.charAt(0));
-    return (c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u') ? "an" : "a";
+    getGame().sendUpdateGame(log);
   }
 
   private void placeTotem(Player p) {

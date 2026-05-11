@@ -1,10 +1,13 @@
 package org.adsl.client.view.gui.screens;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.VBox;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.serverEvents.ErrorEvent;
 import org.adsl.client.serverEvents.HomeUpdateEvent;
@@ -18,6 +21,8 @@ public class HomeScreen extends GUIScreen {
     @FXML private Label welcomeLabel;
     @FXML private Label errorLabel;
     @FXML private ListView<Integer> gamesList;
+    @FXML private VBox chatBox;
+    @FXML private ScrollPane chatScroll;
 
     private List<Integer> activeGames;
 
@@ -80,6 +85,7 @@ public class HomeScreen extends GUIScreen {
         List<Integer> incoming = e.activeGames();
         this.activeGames = incoming != null ? new ArrayList<>(incoming) : new ArrayList<>();
         gamesList.setItems(FXCollections.observableArrayList(this.activeGames));
+        if (e.message() != null && !e.message().isBlank()) appendChat(e.message());
         return this;
     }
 
@@ -88,5 +94,16 @@ public class HomeScreen extends GUIScreen {
     public GUIScreen visit(ErrorEvent e) {
         if (errorLabel != null) errorLabel.setText(e.message());
         return this;
+    }
+
+    private void appendChat(String text) {
+        if (chatBox == null) return;
+        Label entry = new Label(text);
+        entry.setWrapText(true);
+        entry.setStyle("-fx-text-fill: #424242;");
+        chatBox.getChildren().add(entry);
+        if (chatScroll != null) {
+            Platform.runLater(() -> chatScroll.setVvalue(1.0));
+        }
     }
 }

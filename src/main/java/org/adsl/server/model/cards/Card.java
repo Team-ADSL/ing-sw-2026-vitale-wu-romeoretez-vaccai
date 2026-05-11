@@ -39,10 +39,6 @@ public abstract class Card implements Serializable {
     protected abstract String getEffectsLabel();
     protected String getCostLabel() { return null; }
 
-    public String narrationName() {
-        return getClass().getSimpleName();
-    }
-
     public CardDTO createDTO(){
         return new CardDTO(id, getTypeLabel(), getEffectsLabel(), getCostLabel());
     }
