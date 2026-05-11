@@ -35,9 +35,9 @@ public class LobbyState extends ControllerState {
             getGame().getPlayers().add(new Player(virtualClient.getClientUsername().get()));
             getGame().addVirtualClient(virtualClient);
             virtualClient.setGameId(getGame().getGameId());
-            System.out.println("[LOBBY] Player " + virtualClient.getClientUsername().get()
-                                + " connected.");
-            getGame().sendUpdateLobby();
+            String log = "[LOBBY] Player " + virtualClient.getClientUsername().get() + " connected.";
+            System.out.println(log);
+            getGame().sendUpdateLobby(log);
         }
         setNextState(calcNextState());
     }
@@ -64,15 +64,17 @@ public class LobbyState extends ControllerState {
         getGame().getPlayers().remove(reqPlayer);
         getGame().removeVirtualClient(virtualClient);
         virtualClient.setGameId(null);
-        System.out.println("[LOBBY] Player " + virtualClient.getClientUsername().get()
-                + " disconnected.");
+        String exitLog = "[LOBBY] Player " + virtualClient.getClientUsername().get() + " disconnected.";
+        System.out.println(exitLog);
 
         if(getGame().getPlayers().isEmpty()){
-            getGame().sendEndGameResults(null);
+            getGame().sendEndGameResults(null, exitLog);
         } else if(host.equals(virtualClient.getClientUsername().get())) {
-            throw new HostDisconnectedException("[LOBBY] Host left, every player has been disconnected.");
+            String log = "[LOBBY] Host " + host + " left, every player has been disconnected.";
+            getGame().broadcastError(log);
+            throw new HostDisconnectedException(log);
         } else {
-            getGame().sendUpdateLobby();
+            getGame().sendUpdateLobby(exitLog);
         }
         setNextState(calcNextState());
     }

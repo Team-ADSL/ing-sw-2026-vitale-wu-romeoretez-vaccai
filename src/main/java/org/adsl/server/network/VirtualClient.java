@@ -59,28 +59,57 @@ public abstract class VirtualClient implements GameObserver, HomeObserver, EndGa
 
     @Override
     public void updateHome(List<Integer> activeGames){
-        ServerResponse serverResponse = new HomeUpdate(activeGames);
+        updateHome(activeGames, null);
+    }
+
+    @Override
+    public void updateHome(List<Integer> activeGames, String message){
+        HomeUpdate serverResponse = new HomeUpdate(activeGames);
+        if (message != null) serverResponse.setMessage(message);
         System.out.println("[SENDING] Home update:" + serverResponse + " to: " + getClientUsername());
         this.sendResponse(serverResponse);
     }
 
     @Override
     public void updateLobby(int gameId, List<String> players, int numPlayersAllowed){
-        ServerResponse serverResponse = new LobbyUpdate(gameId, players, numPlayersAllowed);
+        updateLobby(gameId, players, numPlayersAllowed, null);
+    }
+
+    @Override
+    public void updateLobby(int gameId, List<String> players, int numPlayersAllowed, String message){
+        LobbyUpdate serverResponse = new LobbyUpdate(gameId, players, numPlayersAllowed);
+        if (message != null) serverResponse.setMessage(message);
         System.out.println("[SENDING] Lobby update:" + serverResponse + " to: " + getClientUsername());
         this.sendResponse(serverResponse);
     }
 
     @Override
     public void updateGame(Game game){
-        ServerResponse serverResponse = new GameUpdate(game.createDTO());
+        updateGame(game, null);
+    }
+
+    @Override
+    public void updateGame(Game game, String message){
+        GameUpdate serverResponse = new GameUpdate(game.createDTO());
+        if (message != null) serverResponse.setMessage(message);
         System.out.println("[SENDING] Game update:" + serverResponse + " to: " + getClientUsername());
         this.sendResponse(serverResponse);
     }
 
     @Override
+    public void notifyError(String message){
+        sendErrorMessage(message);
+    }
+
+    @Override
     public void notifyEndGame(int id, List<MatchResult> results){
-        ServerResponse serverResponse = new GameEnded(results);
+        notifyEndGame(id, results, null);
+    }
+
+    @Override
+    public void notifyEndGame(int id, List<MatchResult> results, String message){
+        GameEnded serverResponse = new GameEnded(results);
+        if (message != null) serverResponse.setMessage(message);
         System.out.println("[SENDING] EndGame update:" + serverResponse + " to: " + getClientUsername());
         this.sendResponse(serverResponse);
     }

@@ -1,5 +1,6 @@
 package org.adsl.shared.network.responses;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.adsl.client.exceptions.InvalidResponseException;
@@ -23,5 +24,24 @@ import java.io.Serializable;
         @JsonSubTypes.Type(value = ErrorResponse.class, name = "ERROR_RESPONSE"),
 })
 public abstract class ServerResponse implements Serializable {
+    @JsonProperty("message")
+    private String message;
+
+    protected ServerResponse() {
+        this.message = null;
+    }
+
+    protected ServerResponse(String message) {
+        this.message = message;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
     public abstract void accept(ResponseVisitor visitor) throws InvalidResponseException;
 }

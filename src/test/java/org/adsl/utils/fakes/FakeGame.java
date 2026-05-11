@@ -39,12 +39,28 @@ public class FakeGame extends Game {
     }
 
     @Override
+    public void sendUpdateLobby(String message) {
+        this.updateLobbySent = true;
+    }
+
+    @Override
     public void sendUpdateGame() {
         this.updateGameSent = true;
     }
 
     @Override
+    public void sendUpdateGame(String message) {
+        this.updateGameSent = true;
+    }
+
+    @Override
     public void sendEndGameResults(List<MatchResult> results) {
+        this.endGameResultsSent = true;
+        this.capturedResults = results;
+    }
+
+    @Override
+    public void sendEndGameResults(List<MatchResult> results, String message) {
         this.endGameResultsSent = true;
         this.capturedResults = results;
     }
