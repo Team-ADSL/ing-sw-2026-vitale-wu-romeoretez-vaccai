@@ -92,6 +92,10 @@ public class Game implements Serializable {
         List<String> playerNames = players.stream().filter(Player::isActive).map(Player::getName).toList();
         for(GameObserver o : gameObservers) o.updateLobby(gameId, playerNames, numPlayer);
     }
+    public void sendUpdateLobby(String message){
+        List<String> playerNames = players.stream().filter(Player::isActive).map(Player::getName).toList();
+        for(GameObserver o : gameObservers) o.updateLobby(gameId, playerNames, numPlayer, message);
+    }
     public void sendUpdateGame(){
         for(GameObserver o : gameObservers) o.updateGame(this);
     }
@@ -103,6 +107,9 @@ public class Game implements Serializable {
     }
     public void sendEndGameResults(List<MatchResult> results){
         for(EndGameObserver o : endGameObservers) o.notifyEndGame(gameId, results);
+    }
+    public void sendEndGameResults(List<MatchResult> results, String message){
+        for(EndGameObserver o : endGameObservers) o.notifyEndGame(gameId, results, message);
     }
 
     public void setupTransientAttributes(){

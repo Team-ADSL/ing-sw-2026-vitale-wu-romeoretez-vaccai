@@ -99,14 +99,13 @@ public class GameScreen extends GUIScreen {
         }
         resolveMoveCounts();
         renderBoard();
-        if (e.message() != null && !e.message().isBlank()) appendChat(e.message(), false);
+        if (e.message() != null && !e.message().isBlank()) appendChat(e.message());
         return this;
     }
 
     @Override
     public GUIScreen visit(ErrorEvent e) {
         if (errorLabel != null) errorLabel.setText(e.message());
-        if (e.message() != null && !e.message().isBlank()) appendChat(e.message(), true);
         if (waitingServer) {
             waitingServer = false;
             renderBoard();
@@ -114,13 +113,11 @@ public class GameScreen extends GUIScreen {
         return this;
     }
 
-    private void appendChat(String text, boolean error) {
+    private void appendChat(String text) {
         if (chatBox == null) return;
         Label entry = new Label(text);
         entry.setWrapText(true);
-        entry.setStyle(error
-                ? "-fx-text-fill: #b00020;"
-                : "-fx-text-fill: #424242;");
+        entry.setStyle("-fx-text-fill: #424242;");
         chatBox.getChildren().add(entry);
         if (chatScroll != null) {
             Platform.runLater(() -> chatScroll.setVvalue(1.0));

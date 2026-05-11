@@ -11,5 +11,9 @@ public interface GameObserver {
 
     void updateLobby(int gameId, List<String> players, int numPlayersAllowed);
 
+    default void updateLobby(int gameId, List<String> players, int numPlayersAllowed, String message) {
+        updateLobby(gameId, players, numPlayersAllowed);
+    }
+
     default void notifyError(String message) {}
 }

@@ -27,6 +27,10 @@ public class Home {
         List<Integer> snapshot = new ArrayList<>(games);
         for(HomeObserver o : observers) o.updateHome(snapshot);
     }
+    public void update(String message) {
+        List<Integer> snapshot = new ArrayList<>(games);
+        for(HomeObserver o : observers) o.updateHome(snapshot, message);
+    }
     public void addObserver(HomeObserver observer) {
         this.observers.add(observer);
     }

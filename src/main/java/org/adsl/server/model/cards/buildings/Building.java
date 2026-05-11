@@ -54,9 +54,4 @@ public abstract class Building extends Card {
     protected String getTypeLabel() {
         return CardToken.BUILDING + " " + eraToRoman(getEra());
     }
-
-    @Override
-    public String narrationName() {
-        return "Building";
-    }
 }
