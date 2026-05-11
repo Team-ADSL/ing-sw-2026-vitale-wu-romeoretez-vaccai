@@ -1,10 +1,13 @@
 package org.adsl.client.view.gui.screens;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.VBox;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.serverEvents.ErrorEvent;
 import org.adsl.client.serverEvents.LobbyUpdateEvent;
@@ -18,6 +21,8 @@ public class LobbyScreen extends GUIScreen {
     @FXML private Label statusLabel;
     @FXML private Label errorLabel;
     @FXML private ListView<String> playersList;
+    @FXML private VBox chatBox;
+    @FXML private ScrollPane chatScroll;
 
     private int gameId;
     private List<String> players;
@@ -75,6 +80,7 @@ public class LobbyScreen extends GUIScreen {
         this.gameId = e.gameId();
         this.players = e.players() != null ? e.players() : List.of();
         refresh();
+        if (e.message() != null && !e.message().isBlank()) appendChat(e.message());
         return this;
     }
 
@@ -83,5 +89,16 @@ public class LobbyScreen extends GUIScreen {
     public GUIScreen visit(ErrorEvent e) {
         if (errorLabel != null) errorLabel.setText(e.message());
         return this;
+    }
+
+    private void appendChat(String text) {
+        if (chatBox == null) return;
+        Label entry = new Label(text);
+        entry.setWrapText(true);
+        entry.setStyle("-fx-text-fill: #424242;");
+        chatBox.getChildren().add(entry);
+        if (chatScroll != null) {
+            Platform.runLater(() -> chatScroll.setVvalue(1.0));
+        }
     }
 }

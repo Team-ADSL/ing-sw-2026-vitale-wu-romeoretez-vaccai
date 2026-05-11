@@ -14,6 +14,8 @@ import org.adsl.shared.enums.Trigger;
 import org.adsl.server.model.Game;
 import org.adsl.server.model.Player;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -98,6 +100,7 @@ public class ActionExecutionState extends ControllerState {
   }
 
   private void execute(Set<Move> moves, Player p) {
+    List<String> pickedNames = new ArrayList<>();
     for (Move move : moves) {
       CardRow selectedRow;
       if (move.row() == Row.UPPER) {
@@ -106,14 +109,17 @@ public class ActionExecutionState extends ControllerState {
         selectedRow = getGame().getBoard().lowRow();
       }
       Card selectedCard = selectedRow.pickCardAt(move.rowIndex());
+      pickedNames.add(selectedCard.getClass().getSimpleName());
       selectedCard.insert(p.getCards());
     }
     OfferTrack offerTrack = getGame().getBoard().offerTrack();
     offerTrack.removePlayer(p);
     placeTotem(p);
-    System.out.println("[ACTION] Player " + p.getName() + " picked " + moves.size() + " card(s).");
+    String log = "[ACTION] Player " + p.getName() + " picked " + moves.size()
+            + " card(s): " + String.join(", ", pickedNames) + ".";
+    System.out.println(log);
     setNextState(calcNextState());
-    getGame().sendUpdateGame();
+    getGame().sendUpdateGame(log);
   }
 
   private void placeTotem(Player p) {
