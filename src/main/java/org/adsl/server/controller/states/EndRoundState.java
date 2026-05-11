@@ -61,9 +61,10 @@ public class EndRoundState extends ControllerState {
             }
         }
         getGame().changeRound();
-        System.out.println("[END ROUND] Round " + getGame().getRound() + ", Era " + getGame().getEra());
+        String log = "[END ROUND] Round " + getGame().getRound() + ", Era " + getGame().getEra();
+        System.out.println(log);
         setNextState(calcNextState());
-        getGame().sendUpdateGame();
+        getGame().sendUpdateGame(log);
         return getNextState();
     }
 

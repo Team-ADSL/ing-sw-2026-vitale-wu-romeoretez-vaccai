@@ -82,15 +82,16 @@ public class AppCoordinator implements ResponseVisitor{
     }
     @Override
     public void visit(HomeUpdate response) throws InvalidResponseException {
-        gameUI.onHomeUpdate(response.getActiveGames());
+        gameUI.onHomeUpdate(response.getActiveGames(), response.getMessage());
     }
     @Override
     public void visit(LobbyUpdate response) throws InvalidResponseException {
-        gameUI.onLobbyUpdate(response.getGameId(), response.getPlayers(), response.getNumPlayerAllowed());
+        gameUI.onLobbyUpdate(response.getGameId(), response.getPlayers(),
+                response.getNumPlayerAllowed(), response.getMessage());
     }
     @Override
     public void visit(GameUpdate response) throws InvalidResponseException {
-        gameUI.onGameUpdate(response.getGame());
+        gameUI.onGameUpdate(response.getGame(), response.getMessage());
     }
     @Override
     public void visit(GameEnded response) throws InvalidResponseException {

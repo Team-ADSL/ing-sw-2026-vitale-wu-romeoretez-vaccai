@@ -2,35 +2,49 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox spacing="10" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
+<HBox spacing="10" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml">
     <padding><Insets top="14" right="14" bottom="14" left="14"/></padding>
 
-    <Label fx:id="headerLabel" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
-    <Label fx:id="phaseLabel"/>
+    <VBox spacing="10" HBox.hgrow="ALWAYS">
+        <Label fx:id="headerLabel" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+        <Label fx:id="phaseLabel"/>
 
-    <Label text="TOP ROW" style="-fx-font-weight: bold;"/>
-    <FlowPane fx:id="topRow" hgap="6" vgap="6"/>
+        <Label text="TOP ROW" style="-fx-font-weight: bold;"/>
+        <FlowPane fx:id="topRow" hgap="6" vgap="6"/>
 
-    <Label text="OFFER TRACK" style="-fx-font-weight: bold;"/>
-    <FlowPane fx:id="offerTrack" hgap="6" vgap="6"/>
+        <Label text="OFFER TRACK" style="-fx-font-weight: bold;"/>
+        <FlowPane fx:id="offerTrack" hgap="6" vgap="6"/>
 
-    <Label text="BOTTOM ROW" style="-fx-font-weight: bold;"/>
-    <FlowPane fx:id="bottomRow" hgap="6" vgap="6"/>
+        <Label text="BOTTOM ROW" style="-fx-font-weight: bold;"/>
+        <FlowPane fx:id="bottomRow" hgap="6" vgap="6"/>
 
-    <Label fx:id="tribeLabel" style="-fx-font-weight: bold;"/>
-    <Label fx:id="tribeContents"/>
+        <Label fx:id="tribeLabel" style="-fx-font-weight: bold;"/>
+        <Label fx:id="tribeContents"/>
 
-    <Label text="Other players:" style="-fx-font-weight: bold;"/>
-    <VBox fx:id="othersBox" spacing="2"/>
+        <Label text="Other players:" style="-fx-font-weight: bold;"/>
+        <VBox fx:id="othersBox" spacing="2"/>
 
-    <HBox spacing="10" alignment="CENTER_LEFT">
-        <Label fx:id="hintLabel"/>
-        <Button fx:id="confirmButton" text="Confirm Selection" onAction="#onSendMove"/>
-    </HBox>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label fx:id="hintLabel"/>
+            <Button fx:id="confirmButton" text="Confirm Selection" onAction="#onSendMove"/>
+        </HBox>
 
-    <Label fx:id="errorLabel" style="-fx-text-fill: #b00020;" wrapText="true"/>
-</VBox>
+        <Label fx:id="errorLabel" style="-fx-text-fill: #b00020;" wrapText="true"/>
+    </VBox>
+
+    <VBox spacing="6" prefWidth="300" minWidth="240">
+        <Label text="Game log" style="-fx-font-weight: bold;"/>
+        <ScrollPane fx:id="chatScroll" fitToWidth="true" VBox.vgrow="ALWAYS"
+                    style="-fx-background: #fafafa; -fx-border-color: #dddddd;">
+            <VBox fx:id="chatBox" spacing="3">
+                <padding><Insets top="6" right="6" bottom="6" left="6"/></padding>
+            </VBox>
+        </ScrollPane>
+    </VBox>
+</HBox>

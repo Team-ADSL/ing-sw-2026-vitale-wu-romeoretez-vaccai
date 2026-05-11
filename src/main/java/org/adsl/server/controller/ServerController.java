@@ -131,8 +131,9 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
 
         virtualClient.setClientUsername(username);
         home.addObserver(virtualClient);
-        home.update();
-        System.out.println("[LOGIN] User connected: " + username);
+        String log = "[LOGIN] User connected: " + username;
+        System.out.println(log);
+        home.update(log);
     }
 
     @Override
@@ -175,8 +176,9 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
             newGameController.handleClientRequest(newReq, virtualClient);
             home.removeObserver(virtualClient);
             home.addGame(newId);
-            home.update();
-            System.out.println("[CREATE] Game created by " + virtualClient.getClientUsername());
+            String log = "[CREATE] Game created by " + virtualClient.getClientUsername();
+            System.out.println(log);
+            home.update(log);
         } catch(ServerException e) {
             throw e;
         } catch (Exception e){

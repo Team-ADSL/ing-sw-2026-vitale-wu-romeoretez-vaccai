@@ -1,9 +1,11 @@
 package org.adsl.client.view.gui.screens;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
 import org.adsl.client.AppCoordinator;
@@ -64,6 +66,8 @@ public class GameScreen extends GUIScreen {
     @FXML private Label hintLabel;
     @FXML private Button confirmButton;
     @FXML private Label errorLabel;
+    @FXML private VBox chatBox;
+    @FXML private ScrollPane chatScroll;
 
     private GameDTO game;
     private final Set<Move> selectedMoves = new LinkedHashSet<>();
@@ -95,6 +99,7 @@ public class GameScreen extends GUIScreen {
         }
         resolveMoveCounts();
         renderBoard();
+        if (e.message() != null && !e.message().isBlank()) appendChat(e.message());
         return this;
     }
 
@@ -106,6 +111,17 @@ public class GameScreen extends GUIScreen {
             renderBoard();
         }
         return this;
+    }
+
+    private void appendChat(String text) {
+        if (chatBox == null) return;
+        Label entry = new Label(text);
+        entry.setWrapText(true);
+        entry.setStyle("-fx-text-fill: #424242;");
+        chatBox.getChildren().add(entry);
+        if (chatScroll != null) {
+            Platform.runLater(() -> chatScroll.setVvalue(1.0));
+        }
     }
 
     @FXML

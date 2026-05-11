@@ -193,14 +193,6 @@ Alternatively, from the IntelliJ terminal:
 ./tools/start/macos/run_gui_nobuild.sh  # GUI session (skip build)
 ```
 
-> If the terminal returns `Permission denied`, run once:
-> ```bash
-> chmod +x tools/start/macos/run_tui.sh tools/start/macos/run_tui_nobuild.sh
-> ```
-> ```bash
-> chmod +x tools/start/macos/run_gui.sh tools/start/macos/run_gui_nobuild.sh
-> ```
-
 Each script builds the project (unless `_nobuild`), starts the server in a new Terminal window, waits for it to be ready on port 8080, then opens two client windows.
 
 ### Windows
