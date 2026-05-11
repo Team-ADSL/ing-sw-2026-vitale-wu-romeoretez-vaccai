@@ -16,6 +16,11 @@ public class FakeHome extends Home {
     }
 
     @Override
+    public void update(String message) {
+        this.updateCalled = true;
+    }
+
+    @Override
     public void addObserver(HomeObserver client) {
         addedObservers.add(client);
     }
