@@ -50,6 +50,10 @@ public class GameScreen extends TUIScreen {
     private int upperCount = 0;
     private int lowerCount = 0;
 
+    // Independent scroll offsets per row (A/D keys)
+    private int topRowOffset = 0;
+    private int lowRowOffset = 0;
+
     // Legend overlay
     private boolean showLegend = false;
     private static final int CARD_W = 12;  // inner content width (box = CARD_W+2)
@@ -145,10 +149,39 @@ public class GameScreen extends TUIScreen {
 
     @Override
     public TUIScreen visit(CharInputEvent e) {
-        if (e.getCharacter() == 'l' || e.getCharacter() == 'L') {
+        char c = e.getCharacter();
+        if (c == 'l' || c == 'L') {
             showLegend = !showLegend;
+        } else if (c == 'a' || c == 'A') {
+            scrollCurrentRowLeft();
+        } else if (c == 'd' || c == 'D') {
+            scrollCurrentRowRight();
         }
         return this;
+    }
+
+    private void scrollCurrentRowLeft() {
+        if (onTopRow) {
+            topRowOffset = Math.max(0, topRowOffset - 1);
+        } else {
+            lowRowOffset = Math.max(0, lowRowOffset - 1);
+        }
+    }
+
+    private void scrollCurrentRowRight() {
+        int visible = visibleCardsCount();
+        if (onTopRow) {
+            int max = Math.max(0, game.board().topRow().size() - visible);
+            topRowOffset = Math.min(max, topRowOffset + 1);
+        } else {
+            int max = Math.max(0, game.board().lowRow().size() - visible);
+            lowRowOffset = Math.min(max, lowRowOffset + 1);
+        }
+    }
+
+    private int visibleCardsCount() {
+        int cols = terminal.getTerminalSize().getColumns();
+        return Math.max(1, (cols - 3) / (CARD_W + 3));
     }
 
     @Override
@@ -291,7 +324,7 @@ public class GameScreen extends TUIScreen {
 
         int topRowY = 2;
         drawSectionLabel(tg, topRowY, cols, "TOP ROW");
-        drawCardRow(tg, game.board().topRow(), topRowY + 1, highlights, Row.UPPER, cols);
+        drawCardRow(tg, game.board().topRow(), topRowY + 1, highlights, Row.UPPER, cols, topRowOffset);
 
         int offerTrackY = 8;
         String turnOrderText = "Turn Order: ";
@@ -312,11 +345,12 @@ public class GameScreen extends TUIScreen {
 
         int botRowY = 14;
         drawSectionLabel(tg, botRowY, cols, "BOTTOM ROW");
-        drawCardRow(tg, game.board().lowRow(), botRowY + 1, highlights, Row.LOWER, cols);
+        drawCardRow(tg, game.board().lowRow(), botRowY + 1, highlights, Row.LOWER, cols, lowRowOffset);
 
         if (subState == SubState.MY_TURN_CARDS) {
             int cursorRow = onTopRow ? topRowY + 1 : botRowY + 1;
-            highlightCursor(tg, selectionIndex, cursorRow);
+            int cursorOffset = onTopRow ? topRowOffset : lowRowOffset;
+            highlightCursor(tg, selectionIndex, cursorRow, cursorOffset, cols);
         }
 
         if (subState == SubState.MY_TURN_TOTEM) {
@@ -329,10 +363,10 @@ public class GameScreen extends TUIScreen {
         String hint = switch (subState) {
             case MY_TURN_TOTEM -> "← → Navigate offer tiles   ENTER Place totem   L Legend";
             case MY_TURN_CARDS -> String.format(
-                    "← → Navigate   ↑ ↓ Switch rows   SPACE Select (%d/%d)   ENTER Confirm   L Legend",
+                    "← → Navigate   ↑ ↓ Switch rows   A/D Scroll row   SPACE Select (%d/%d)   ENTER Confirm   L Legend",
                     selectedMoves.size(), upperCount + lowerCount);
             case WAITING_SERVER -> "Waiting for server...   L Legend";
-            case NOT_MY_TURN -> waitingHint() + "   L Legend";
+            case NOT_MY_TURN -> waitingHint() + "   A/D Scroll   L Legend";
             default -> "L Legend";
         };
         drawControls(tg, sz, hint);
@@ -390,8 +424,8 @@ public class GameScreen extends TUIScreen {
             String movesLabel = formatMovesLabel(tile);
 
             tg.putString(col, startRow, "┌──────────┐");
-            tg.putString(col, startRow + 1, "│ " + padRight(playerName, 8) + " │");
-            tg.putString(col, startRow + 2, "│ " + padRight(movesLabel, 8) + " │");
+            tg.putString(col, startRow + 1, "│ " + padRight(padLeft(playerName, (8 + visualWidth(playerName)) / 2), 8) + " │");
+            tg.putString(col, startRow + 2, "│ " + padRight(padLeft(movesLabel, (8 + visualWidth(movesLabel)) / 2), 8) + " │");
             tg.putString(col, startRow + 3, "└──────────┘");
             tg.setForegroundColor(TuiColor.WHITE);
             col += 14;
@@ -401,12 +435,10 @@ public class GameScreen extends TUIScreen {
     }
 
     private void drawCardRow(TuiTextGraphics tg, List<CardDTO> cards, int startRow,
-            Set<Move> highlights, Row rowType, int cols) {
+            Set<Move> highlights, Row rowType, int cols, int offset) {
         // Build card data first (before writing, so colors reset cleanly)
         String border = "┌" + "─".repeat(CARD_W) + "┐";
         String borderBot = "└" + "─".repeat(CARD_W) + "┘";
-        String emptyMid = "│" + " ".repeat(CARD_W) + "│";
-        String emptyLabel = "│" + padRight(padLeft("empty", (CARD_W + 5) / 2), CARD_W) + "│";
 
         // We render row-by-row (all tops, then all type lines, etc.)
         // so that each output line is a single putString call.
@@ -415,6 +447,9 @@ public class GameScreen extends TUIScreen {
         StringBuilder effectLine = new StringBuilder("  ");
         StringBuilder botLine    = new StringBuilder("  ");
 
+        String dim   = TuiColor.DARK_GRAY.fg();
+        String reset = TuiColor.WHITE.fg();
+
         // Card stride: box (CARD_W+2) + 1 gap = CARD_W+3 columns per card.
         // The right border of card at rendered-index n sits at 0-based column:
         //   2  (initial "  " indent)  +  n * (CARD_W+3)  +  (CARD_W+1)
@@ -422,7 +457,8 @@ public class GameScreen extends TUIScreen {
         // so the right border is always at the correct column regardless of how
         // the terminal rendered the emoji content.
         int count = 0;
-        for (int i = 0; i < cards.size(); i++) {
+        int start = Math.max(0, offset);
+        for (int i = start; i < cards.size(); i++) {
             if (2 + (count + 1) * (CARD_W + 3) > cols - 1) break;
 
             // 1-based ANSI column of this card's right border
@@ -430,10 +466,10 @@ public class GameScreen extends TUIScreen {
 
             CardDTO card = cards.get(i);
             if (card == null) {
-                topLine.append(border).append(" ");
-                typeLine.append("│").append(" ".repeat(CARD_W)).append(jumpRight).append("│").append(" ");
-                effectLine.append("│").append(padRight(padLeft("empty", (CARD_W + 5) / 2), CARD_W)).append(jumpRight).append("│").append(" ");
-                botLine.append(borderBot).append(" ");
+                topLine.append(dim).append(border).append(reset).append(" ");
+                typeLine.append(dim).append("│").append(" ".repeat(CARD_W)).append(jumpRight).append("│").append(reset).append(" ");
+                effectLine.append(dim).append("│").append(" ".repeat(CARD_W)).append(jumpRight).append("│").append(reset).append(" ");
+                botLine.append(dim).append(borderBot).append(reset).append(" ");
             } else {
                 boolean highlighted = highlights.contains(new Move(i, rowType));
                 CardType type = CardCatalog.typeFromId(card.id());
@@ -445,8 +481,12 @@ public class GameScreen extends TUIScreen {
 
                 String rawTl = CardTokens.toEmoji(card.typeLabel() != null ? card.typeLabel() : "");
                 String costStr = card.costLabel() != null ? CardTokens.toEmoji(card.costLabel()) : "";
-                int gap = CARD_W - visualWidth(rawTl) - visualWidth(costStr);
-                String tl = gap >= 0 ? rawTl + " ".repeat(gap) + costStr : padRight(rawTl + costStr, CARD_W);
+                String combined = rawTl.isEmpty() ? costStr
+                        : costStr.isEmpty() ? rawTl
+                        : (visualWidth(rawTl) + 1 + visualWidth(costStr) <= CARD_W)
+                                ? rawTl + " " + costStr
+                                : rawTl + costStr;
+                String tl = padRight(padLeft(combined, (CARD_W + visualWidth(combined)) / 2), CARD_W);
                 String rawEl = CardTokens.toEffectLabel(card.effectsLabel() != null ? card.effectsLabel() : "");
                 String el = padRight(padLeft(rawEl, (CARD_W + visualWidth(rawEl)) / 2), CARD_W);
 
@@ -473,9 +513,13 @@ public class GameScreen extends TUIScreen {
     }
 
 
-    private void highlightCursor(TuiTextGraphics tg, int index, int rowY) {
+    private void highlightCursor(TuiTextGraphics tg, int index, int rowY, int offset, int cols) {
+        int visibleIndex = index - offset;
+        if (visibleIndex < 0) return;
         int step = CARD_W + 3;
-        int col = 2 + index * step + (CARD_W + 2) / 2;
+        int col = 2 + visibleIndex * step + (CARD_W + 2) / 2;
+        if (col >= cols) return;
+        if (2 + (visibleIndex + 1) * (CARD_W + 3) > cols - 1) return;
         tg.setForegroundColor(TuiColor.YELLOW);
         tg.putString(col, rowY - 1, "▼");
         tg.setForegroundColor(TuiColor.WHITE);
@@ -490,7 +534,7 @@ public class GameScreen extends TUIScreen {
 
     private static String formatMovesLabel(OfferTileDTO tile) {
         if (tile.givesFood())
-            return "+3food";
+            return "+3" + CardTokens.toEmoji(CardToken.FOOD);
         Map<Row, Integer> moves = tile.moves();
         if (moves == null)
             return "—";
@@ -654,7 +698,7 @@ public class GameScreen extends TUIScreen {
             case RED -> TuiColor.RED;
             case BLUE -> TuiColor.CYAN;
             case WHITE -> TuiColor.WHITE;
-            case BLACK -> TuiColor.WHITE;
+            case BLACK -> TuiColor.DARK_PURPLE;
             case YELLOW -> TuiColor.YELLOW;
         };
     }
