@@ -6,6 +6,7 @@ import org.adsl.server.controller.ServerController;
 import org.adsl.server.model.Game;
 import org.adsl.server.persistence.GameDAO;
 import org.adsl.server.persistence.GamePersistenceManager;
+import org.adsl.shared.enums.Totem;
 import org.adsl.shared.model.GameDTO;
 import org.adsl.shared.model.MatchResult;
 import org.adsl.shared.network.requests.ClientConnection;
@@ -26,6 +27,8 @@ public class VirtualClientTest {
         @Override public List<Game> recoverGames() { return List.of(); }
         @Override public void removeGame(int id) {}
         @Override public void updateLobby(int gameId, List<String> p, int numPlayers) {}
+        @Override
+        public void updateTotemAvailable(List<Totem> totemsAvailable, String message) {}
         @Override public void updateGame(Game g) {}
     };
     private static final GameDAO NO_OP_DAO = new GameDAO() {

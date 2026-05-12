@@ -4,6 +4,7 @@ import org.adsl.server.controller.ServerController;
 import org.adsl.server.model.EndGameObserver;
 import org.adsl.server.model.Game;
 import org.adsl.server.model.GameObserver;
+import org.adsl.shared.enums.Totem;
 import org.adsl.shared.model.MatchResult;
 import org.adsl.shared.network.requests.ClientConnection;
 import org.adsl.shared.network.requests.ClientDisconnected;
@@ -82,6 +83,15 @@ public abstract class VirtualClient implements GameObserver, HomeObserver, EndGa
         System.out.println("[SENDING] Lobby update:" + serverResponse + " to: " + getClientUsername());
         this.sendResponse(serverResponse);
     }
+
+    @Override
+    public void updateTotemAvailable(List<Totem> totemAvailable, String message){
+        TotemAvailableUpdate serverResponse = new TotemAvailableUpdate(totemAvailable, message);
+        if (message != null) serverResponse.setMessage(message);
+        System.out.println("[SENDING] Lobby update:" + serverResponse + " to: " + getClientUsername());
+        this.sendResponse(serverResponse);
+    }
+
 
     @Override
     public void updateGame(Game game){

@@ -133,7 +133,7 @@ public class LobbyStateTest {
     }
 
     @Test
-    void testVisitStartGameRequest_full_transitionsToInitState() throws ServerException {
+    void testVisitStartGameRequest_full_transitionsToTotemPickingState() throws ServerException {
         fakeGame.getPlayers().add(new Player("P1"));
         fakeGame.getPlayers().add(new Player("P2"));
         fakeGame.getPlayers().add(new Player("P3"));
@@ -143,6 +143,6 @@ public class LobbyStateTest {
         state.visit(req, client);
         ControllerState nextState = state.calcNextState();
 
-        assertInstanceOf(InitGameState.class, nextState, "The state machine must transition to InitGameState when start is valid");
+        assertInstanceOf(TotemPickingState.class, nextState, "The state machine must transition to InitGameState when start is valid");
     }
 }

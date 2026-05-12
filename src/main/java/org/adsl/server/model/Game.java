@@ -96,6 +96,9 @@ public class Game implements Serializable {
         List<String> playerNames = players.stream().filter(Player::isActive).map(Player::getName).toList();
         for(GameObserver o : gameObservers) o.updateLobby(gameId, playerNames, numPlayer, message);
     }
+    public void sendTotemAvailable(List<Totem> totemAvailable, String message){
+        for(GameObserver o : gameObservers) o.updateTotemAvailable(totemAvailable, message);
+    }
     public void sendUpdateGame(){
         for(GameObserver o : gameObservers) o.updateGame(this);
     }

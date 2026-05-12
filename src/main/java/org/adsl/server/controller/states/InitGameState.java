@@ -50,14 +50,14 @@ public class InitGameState extends ControllerState {
         fillLowRow(gameSettings.numLowTribeCard());
         fillTopRow(gameSettings.numTopTribeCard());
 
-        List<Totem> shuffledTotems = new ArrayList<>(Arrays.asList(Totem.values()));
-        Collections.shuffle(shuffledTotems);
-        Iterator<Totem> totemIterator = shuffledTotems.iterator();
-        getGame().getPlayers().forEach(p -> {
-            if (totemIterator.hasNext()) {
-                p.setColor(totemIterator.next());
-            }
-        });
+//        List<Totem> shuffledTotems = new ArrayList<>(Arrays.asList(Totem.values()));
+//        Collections.shuffle(shuffledTotems);
+//        Iterator<Totem> totemIterator = shuffledTotems.iterator();
+//        getGame().getPlayers().forEach(p -> {
+//            if (totemIterator.hasNext()) {
+//                p.setColor(totemIterator.next());
+//            }
+//        });
         board.orderTile().placePlayersRandom(getGame().getPlayers());
 
         getGame().setInitialized(true);
