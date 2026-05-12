@@ -2,6 +2,7 @@ package org.adsl.client.view;
 
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.serverEvents.*;
+import org.adsl.shared.network.responses.TotemAvailableUpdate;
 
 public abstract class Screen<S extends Screen<S>> implements EventVisitor<S> {
     protected final AppCoordinator appCoordinator;
@@ -15,6 +16,7 @@ public abstract class Screen<S extends Screen<S>> implements EventVisitor<S> {
     public abstract S createLoginScreen(LoginNeededEvent e, AppCoordinator appCoordinator);
     public abstract S createHomeScreen(HomeUpdateEvent e, AppCoordinator appCoordinator);
     public abstract S createLobbyScreen(LobbyUpdateEvent e, AppCoordinator appCoordinator);
+    public abstract S createTotemPickingScreen(TotemAvailableEvent e, AppCoordinator appCoordinator);
     public abstract S createGameScreen(GameUpdateEvent e, AppCoordinator appCoordinator);
     public abstract S createEndGameScreen(EndGameEvent e, AppCoordinator appCoordinator);
     public abstract S createDisconnectedScreen(DisconnectedEvent e, AppCoordinator appCoordinator);
@@ -32,6 +34,11 @@ public abstract class Screen<S extends Screen<S>> implements EventVisitor<S> {
     @Override
     public S visit(LobbyUpdateEvent e) {
         return createLobbyScreen(e, appCoordinator);
+    }
+
+    @Override
+    public S visit(TotemAvailableEvent e) {
+        return createTotemPickingScreen(e, appCoordinator);
     }
 
     @Override

@@ -37,7 +37,11 @@ public class AppCoordinator implements ResponseVisitor{
     public void startPingScheduler(int pingRatioMs, long serverTimeoutMs) {
         this.lastPingRatioMs = pingRatioMs;
         this.lastServerTimeoutMs = serverTimeoutMs;
-        pingScheduler = Executors.newSingleThreadScheduledExecutor();
+        pingScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "ping-scheduler");
+            t.setDaemon(true);
+            return t;
+        });
 
         pingScheduler.scheduleAtFixedRate(() -> {
             try {
@@ -88,6 +92,10 @@ public class AppCoordinator implements ResponseVisitor{
     public void visit(LobbyUpdate response) throws InvalidResponseException {
         gameUI.onLobbyUpdate(response.getGameId(), response.getPlayers(),
                 response.getNumPlayerAllowed(), response.getMessage());
+    }
+    @Override
+    public void visit(TotemAvailableUpdate response) throws InvalidResponseException {
+        gameUI.onTotemAvailableUpdate(response.getTotemAvailable(), response.getMessage());
     }
     @Override
     public void visit(GameUpdate response) throws InvalidResponseException {

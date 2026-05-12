@@ -10,6 +10,7 @@ import org.adsl.server.model.board.*;
 import org.adsl.server.network.VirtualClient;
 import org.adsl.shared.enums.Row;
 import org.adsl.server.exceptions.ServerException;
+import org.adsl.shared.enums.Totem;
 import org.adsl.shared.network.requests.MoveRequest;
 import org.adsl.shared.network.responses.ServerResponse;
 import org.adsl.shared.utils.Move;
@@ -19,10 +20,7 @@ import org.adsl.utils.fakes.FakeHome;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 

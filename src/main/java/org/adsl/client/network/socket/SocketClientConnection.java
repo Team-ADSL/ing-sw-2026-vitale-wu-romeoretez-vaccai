@@ -27,7 +27,9 @@ public class SocketClientConnection implements ServerConnection {
 
         isRunning = true;
 
-        new Thread(this::listenToServer).start();
+        Thread listener = new Thread(this::listenToServer, "socket-listener");
+        listener.setDaemon(true);
+        listener.start();
     }
 
     private void listenToServer() {

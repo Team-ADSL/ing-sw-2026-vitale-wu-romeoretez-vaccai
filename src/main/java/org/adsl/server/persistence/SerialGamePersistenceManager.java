@@ -1,7 +1,7 @@
 package org.adsl.server.persistence;
 
 import org.adsl.server.model.Game;
-import org.adsl.shared.model.GameDTO;
+import org.adsl.shared.enums.Totem;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -83,4 +83,7 @@ public class SerialGamePersistenceManager implements GamePersistenceManager{
     // Need to save only game status update
     @Override
     public void updateLobby(int gameId, List<String> players, int numPlayersAllowed) {}
+
+    @Override
+    public void updateTotemAvailable(List<Totem> totemsAvailable, String message) {}
 }
