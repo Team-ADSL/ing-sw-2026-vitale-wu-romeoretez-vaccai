@@ -54,6 +54,6 @@ public abstract class Building extends Card {
     protected String getTypeLabel() {
         return CardToken.BUILDING + eraToRoman(getEra())
                 + "  " + cost + CardToken.FOOD
-                + "  " + endGamePP + CardToken.PP;
+                + endGamePP + CardToken.PP;
     }
 }

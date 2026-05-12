@@ -38,7 +38,8 @@ public final class CardTokens {
         Map.entry(CardToken.ICON_BOWL,     "🥣"),
         Map.entry(CardToken.ICON_ROPE,     "🪢"),
         Map.entry(CardToken.ICON_FLUTE,    "🪈"),
-        Map.entry(CardToken.ICON_LEATHER,  "🧥")
+        Map.entry(CardToken.ICON_LEATHER,  "🧥"),
+        Map.entry(CardToken.ICON_BREAD,    "🍞")
     );
 
     // Abbreviations for type tokens when they appear in effect labels (3 letters)

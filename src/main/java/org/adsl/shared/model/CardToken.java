@@ -37,4 +37,5 @@ public final class CardToken {
     public static final String ICON_ROPE     = "[ICON_ROPE]";
     public static final String ICON_FLUTE    = "[ICON_FLUTE]";
     public static final String ICON_LEATHER  = "[ICON_LEATHER]";
+    public static final String ICON_BREAD    = "[ICON_BREAD]";
 }
