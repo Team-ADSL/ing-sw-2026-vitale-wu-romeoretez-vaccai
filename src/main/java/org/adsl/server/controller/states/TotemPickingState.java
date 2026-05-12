@@ -34,6 +34,9 @@ public class TotemPickingState extends ControllerState {
                 .orElseThrow(() -> new ServerException("Player not in current game"));
 
         if(reqPlayer.getColor() != null){
+            throw new ServerException("[TOTEM PICKING] Player already picked a totem.");
+        }
+        if(!totemToPick.contains(req.getTotem())){
             throw new ServerException("[TOTEM PICKING] Totem already picked.");
         }
         reqPlayer.setColor(req.getTotem());
