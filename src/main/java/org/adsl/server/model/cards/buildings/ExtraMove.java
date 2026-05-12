@@ -27,6 +27,6 @@ public class ExtraMove extends Building {
 
     @Override
     protected String getEffectsLabel() {
-        return "+1 " + CardToken.EXTRA_MOVE + " " + CardToken.PP + getEndGamePP();
+        return "+1 " + CardToken.EXTRA_MOVE;
     }
 }

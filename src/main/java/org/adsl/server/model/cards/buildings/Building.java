@@ -43,7 +43,7 @@ public abstract class Building extends Card {
 
     @Override
     protected String getCostLabel() {
-        return CardToken.FOOD_COST + cost;
+        return null;
     }
 
     public int getEndGamePP() {
@@ -52,6 +52,8 @@ public abstract class Building extends Card {
 
     @Override
     protected String getTypeLabel() {
-        return CardToken.BUILDING + " " + eraToRoman(getEra());
+        return CardToken.BUILDING + eraToRoman(getEra())
+                + "  " + cost + CardToken.FOOD
+                + "  " + endGamePP + CardToken.PP;
     }
 }

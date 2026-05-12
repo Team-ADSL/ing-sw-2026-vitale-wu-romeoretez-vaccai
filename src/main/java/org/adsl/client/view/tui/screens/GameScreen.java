@@ -56,7 +56,7 @@ public class GameScreen extends TUIScreen {
 
     // Legend overlay
     private boolean showLegend = false;
-    private static final int CARD_W = 12;  // inner content width (box = CARD_W+2)
+    private static final int CARD_W = 15;  // inner content width (box = CARD_W+2)
 
     public GameScreen(TuiTerminal terminal,
             AppCoordinator coordinator,
@@ -785,7 +785,7 @@ public class GameScreen extends TUIScreen {
 
     private void drawLegend(TuiTextGraphics tg, TuiSize sz) {
         int w = 38;
-        int h = 13;
+        int h = 14;
         int x = sz.getColumns() - w - 2;
         int y = 1;
 
@@ -809,6 +809,7 @@ public class GameScreen extends TUIScreen {
             {"🍖", "Extra food on pick"},
             {"🍞", "Food reward"},
             {"🗿", "Totem symbol"},
+            {"🛡️", "Immunity"},
             {"🏁", "End-game PP bonus"},
             {"🌈", "Set collection bonus"},
             {"I II III", "Card Era"},

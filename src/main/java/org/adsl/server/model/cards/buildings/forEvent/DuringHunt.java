@@ -1,5 +1,6 @@
 package org.adsl.server.model.cards.buildings.forEvent;
 
+import org.adsl.server.model.cards.Card;
 import org.adsl.shared.enums.Trigger;
 import org.adsl.server.model.Player;
 import org.adsl.shared.model.CardToken;
@@ -29,6 +30,6 @@ public class DuringHunt extends DuringEvent {
 
     @Override
     protected String getEffectsLabel() {
-        return CardToken.HUNT + "=> " + CardToken.PP + getEndGamePP();
+        return CardToken.HUNT + ": +1" + CardToken.FOOD + "+1" + CardToken.PP + "x" + CardToken.HUNTER;
     }
 }

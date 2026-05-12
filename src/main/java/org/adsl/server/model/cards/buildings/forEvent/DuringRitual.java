@@ -40,10 +40,10 @@ public class DuringRitual extends DuringEvent {
     @Override
     protected String getEffectsLabel() {
         return switch (buildingEffect) {
-            case RITUAL_IMMUNITY    -> CardToken.RITUAL + "=>" + CardToken.SHIELD + " " + CardToken.PP + getEndGamePP();
-            case RITUAL_STARS_BONUS -> CardToken.RITUAL + "=>+" + CardToken.PP + "3 " + CardToken.PP + getEndGamePP();
-            case RITUAL_DOUBLE_PP   -> CardToken.RITUAL + "=>x2" + CardToken.PP + " " + CardToken.PP + getEndGamePP();
-            default                 -> CardToken.PP + getEndGamePP();
+            case RITUAL_IMMUNITY    -> CardToken.RITUAL + ":" + CardToken.SHIELD;
+            case RITUAL_STARS_BONUS -> CardToken.RITUAL + ":+3" + CardToken.SHAMAN_STAR;
+            case RITUAL_DOUBLE_PP   -> CardToken.RITUAL + ":x2" + CardToken.PP;
+            default                 -> "";
         };
     }
 }

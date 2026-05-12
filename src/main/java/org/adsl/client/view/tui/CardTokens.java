@@ -12,7 +12,7 @@ public final class CardTokens {
     private CardTokens() {}
 
     private static final Map<String, String> EMOJI_MAP = Map.ofEntries(
-        Map.entry(CardToken.BUILDING,      "BUILDING"),
+        Map.entry(CardToken.BUILDING,      "🏠"),
         Map.entry(CardToken.HUNTER,        "HUNTER"),
         Map.entry(CardToken.GATHERER,      "GATHERER"),
         Map.entry(CardToken.BUILDER,       "BUILDER"),
@@ -82,7 +82,7 @@ public final class CardTokens {
 
     // [FOOD_COST]-N (sconto) → +N🍖 ; [FOOD_COST]N (costo) → -N🍖
     private static String applyFoodCost(String s) {
-        String result = s.replaceAll("\\[FOOD_COST\\]-(\\d+)", "-$1🍖");
+        String result = s.replaceAll("\\[FOOD_COST\\]-(\\d+)", "+$1🍖");
         result = result.replaceAll("\\[FOOD_COST\\](\\d+)", "-$1🍖");
         return result;
     }
