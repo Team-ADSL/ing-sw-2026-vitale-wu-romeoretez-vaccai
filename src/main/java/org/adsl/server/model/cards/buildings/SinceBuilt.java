@@ -76,7 +76,7 @@ public class SinceBuilt extends Building {
     protected String getEffectsLabel() {
         return switch (buildingEffect) {
             case FOOD_COMPLETE_SET -> "+5" + CardToken.FOOD + " x" + CardToken.SET;
-            case COUPLE_INVENTOR   -> "+3" + CardToken.FOOD + " x" + CardToken.INVENTOR;
+            case COUPLE_INVENTOR   -> "+3" + CardToken.FOOD + " x2" + CardToken.INVENTOR;
             default                -> "";
         };
     }

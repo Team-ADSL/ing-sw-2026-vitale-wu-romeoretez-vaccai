@@ -785,7 +785,7 @@ public class GameScreen extends TUIScreen {
 
     private void drawLegend(TuiTextGraphics tg, TuiSize sz) {
         int w = 38;
-        int h = 14;
+        int h = 13;
         int x = sz.getColumns() - w - 2;
         int y = 1;
 
@@ -807,7 +807,6 @@ public class GameScreen extends TUIScreen {
             {"★", "Shaman ritual stars"},
             {"💰", "Food cost"},
             {"🍖", "Extra food on pick"},
-            {"🍞", "Food reward"},
             {"🗿", "Totem symbol"},
             {"🛡️", "Immunity"},
             {"🏁", "End-game PP bonus"},

@@ -43,7 +43,7 @@ public class Inventor extends Character {
             case TOTEM    -> CardToken.TOTEM;
             case FLUTE    -> CardToken.ICON_FLUTE;
             case LEATHER  -> CardToken.ICON_LEATHER;
-            case BREAD    -> CardToken.FOOD;
+            case BREAD    -> CardToken.ICON_BREAD;
         };
     }
 }
