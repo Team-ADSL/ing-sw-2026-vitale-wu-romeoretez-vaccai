@@ -2,14 +2,9 @@ package org.adsl.client.view.gui.screens;
 
 import javafx.scene.Parent;
 import org.adsl.client.AppCoordinator;
+import org.adsl.client.serverEvents.*;
 import org.adsl.client.view.Screen;
-import org.adsl.client.serverEvents.DisconnectedEvent;
-import org.adsl.client.serverEvents.EndGameEvent;
-import org.adsl.client.serverEvents.EventVisitor;
-import org.adsl.client.serverEvents.GameUpdateEvent;
-import org.adsl.client.serverEvents.HomeUpdateEvent;
-import org.adsl.client.serverEvents.LobbyUpdateEvent;
-import org.adsl.client.serverEvents.LoginNeededEvent;
+import org.adsl.shared.network.responses.TotemAvailableUpdate;
 
 /**
  * Base class for every GUI screen. Mirrors {@link org.adsl.client.view.tui.screens.TUIScreen}
@@ -63,6 +58,11 @@ public abstract class GUIScreen extends Screen<GUIScreen> {
     public GUIScreen createLobbyScreen(LobbyUpdateEvent e, AppCoordinator appCoordinator){
         return new LobbyScreen(appCoordinator, username, e.gameId(), e.players(),
                 e.numPlayersAllowed());
+    }
+
+    @Override
+    public GUIScreen createTotemPickingScreen(TotemAvailableEvent e, AppCoordinator appCoordinator){
+        return new TotemPickingScreen(appCoordinator, username, e.totemList());
     }
 
     @Override

@@ -3,8 +3,10 @@ package org.adsl.client.view.tui.screens;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.serverEvents.*;
 import org.adsl.client.view.Screen;
+import org.adsl.client.view.tui.screens.TotemPickingScreen;
 import org.adsl.client.view.tui.events.*;
 import org.adsl.client.view.tui.render.TuiTerminal;
+import org.adsl.shared.network.responses.TotemAvailableUpdate;
 
 import java.io.IOException;
 
@@ -69,6 +71,11 @@ public abstract class TUIScreen extends Screen<TUIScreen> implements InputEventV
     public TUIScreen createLobbyScreen(LobbyUpdateEvent e, AppCoordinator appCoordinator){
         return new LobbyScreen(terminal, appCoordinator, username, e.gameId(), e.players(),
                 e.numPlayersAllowed());
+    }
+
+    @Override
+    public TUIScreen createTotemPickingScreen(TotemAvailableEvent e, AppCoordinator appCoordinator){
+        return new TotemPickingScreen(terminal, appCoordinator, username, e.totemList());
     }
 
     @Override
