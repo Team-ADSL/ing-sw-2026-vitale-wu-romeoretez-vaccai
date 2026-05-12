@@ -99,7 +99,7 @@ public class LobbyState extends ControllerState {
     public ControllerState calcNextState() {
         if(readyToStart){
             System.out.println("[LOBBY] Starting game...");
-            return new InitGameState(getGame(), getContext());
+            return new TotemPickingState(getGame(), getContext());
         } else {
             return this;
         }

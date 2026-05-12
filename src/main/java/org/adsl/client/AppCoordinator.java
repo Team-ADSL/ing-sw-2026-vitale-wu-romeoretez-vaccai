@@ -90,6 +90,10 @@ public class AppCoordinator implements ResponseVisitor{
                 response.getNumPlayerAllowed(), response.getMessage());
     }
     @Override
+    public void visit(TotemAvailableUpdate response) throws InvalidResponseException {
+        gameUI.onTotemAvailableUpdate(response.getTotemAvailable(), response.getMessage());
+    }
+    @Override
     public void visit(GameUpdate response) throws InvalidResponseException {
         gameUI.onGameUpdate(response.getGame(), response.getMessage());
     }

@@ -89,6 +89,11 @@ public abstract class ControllerState implements RequestVisitor<VirtualClient> {
     }
 
     @Override
+    public void visit(TotemPickingRequest req, VirtualClient virtualClient) throws ServerException {
+        throw new ServerException("Totem picking rejected.");
+    }
+
+    @Override
     public void visit(MoveRequest req, VirtualClient virtualClient) throws ServerException {
         throw new ServerException("Move request rejected.");
     }

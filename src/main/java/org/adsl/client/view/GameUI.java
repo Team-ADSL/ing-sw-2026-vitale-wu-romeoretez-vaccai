@@ -2,6 +2,7 @@ package org.adsl.client.view;
 
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.serverEvents.*;
+import org.adsl.shared.enums.Totem;
 import org.adsl.shared.model.GameDTO;
 import org.adsl.shared.model.MatchResult;
 
@@ -33,6 +34,10 @@ public abstract class GameUI {
                 players != null ? players : Collections.emptyList(),
                 numPlayersAllowed,
                 message));
+    }
+
+    public void onTotemAvailableUpdate(List<Totem> totemList, String message) {
+        dispatch(new TotemAvailableEvent(totemList, message));
     }
 
     public void onGameUpdate(GameDTO game) {

@@ -1,6 +1,7 @@
 package org.adsl.utils.fakes;
 
 import org.adsl.server.network.VirtualClient;
+import org.adsl.shared.enums.Totem;
 import org.adsl.shared.network.responses.ServerResponse;
 
 import java.util.*;
@@ -20,4 +21,8 @@ public class FakeVirtualClient extends VirtualClient {
     @Override public void sendLoginNeededResponse() { this.loginNeededSent = true; }
     @Override public void sendErrorMessage(String msg) { this.errorsReceived.add(msg); }
     @Override public void handleDisconnection() {setConnected(false); }
+    @Override
+    public void updateTotemAvailable(List<Totem> totemsAvailable, String message) {
+
+    }
 }
