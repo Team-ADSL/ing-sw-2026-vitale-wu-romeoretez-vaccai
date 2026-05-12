@@ -13,6 +13,8 @@ import org.adsl.client.view.gui.screens.ConnectingScreen;
 import org.adsl.client.view.gui.screens.ExitScreen;
 import org.adsl.client.view.gui.screens.GUIScreen;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * JavaFX implementation of {@link GameUI}, parallel to
  * {@link org.adsl.client.view.tui.TUI}.
@@ -35,6 +37,7 @@ public class GUI extends GameUI {
     private AppCoordinator coordinator;
     private Stage stage;
     private GUIScreen currentScreen;
+    private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
 
     @Override
     public void setAppCoordinator(AppCoordinator coordinator) {
@@ -73,13 +76,51 @@ public class GUI extends GameUI {
 
     @Override
     public void shutdown() {
-        if (coordinator != null) {
-            try { coordinator.disconnect(); } catch (Exception ignored) {}
-        }
-        Platform.runLater(() -> {
-            if (stage != null) stage.close();
-            Platform.exit();
-        });
+        // Idempotent: setOnCloseRequest may fire alongside the JVM shutdown
+        // hook in App.java, both ending up here.
+        if (!shuttingDown.compareAndSet(false, true)) return;
+
+        // Cleanup off the calling thread. coordinator.disconnect() does a
+        // synchronous out.println() on the socket; if the write blocks (server
+        // hung, half-closed socket, full send buffer) we must NOT freeze the
+        // caller — on macOS the close-spinner depends on the process actually
+        // terminating, and freezing the JavaFX thread keeps it spinning.
+        Thread cleanup = new Thread(() -> {
+            if (coordinator != null) {
+                try { coordinator.disconnect(); } catch (Exception ignored) {}
+            }
+            // Hide the window if it's still showing — covers the Ctrl+C and
+            // programmatic-exit paths. For the macOS X-button path JavaFX is
+            // already hiding the window so isShowing() is false and this is a
+            // no-op.
+            //
+            // We deliberately do NOT call Platform.exit() here: when invoked
+            // from within JavaFX's window-close nested event loop (X-button
+            // path), it triggers a NullPointerException inside
+            // QuantumToolkit.exitAllNestedEventLoops (eventLoopMap is null).
+            // The default implicit-exit (last window closed) handles graceful
+            // FX shutdown; the killer thread below is the hard safety net.
+            try {
+                Platform.runLater(() -> {
+                    if (stage != null && stage.isShowing()) stage.close();
+                });
+            } catch (IllegalStateException ignored) {
+                // FX runtime already torn down — nothing to do.
+            }
+        }, "gui-shutdown");
+        cleanup.setDaemon(true);
+        cleanup.start();
+
+        // Safety net: guarantee the JVM terminates within a bounded window
+        // regardless of stuck I/O, JavaFX internals, or AWT threads that
+        // outlive Platform.exit(). Runtime.halt bypasses shutdown hooks
+        // (which themselves could block on the same socket write).
+        Thread killer = new Thread(() -> {
+            try { Thread.sleep(1000); } catch (InterruptedException ignored) {}
+            Runtime.getRuntime().halt(0);
+        }, "gui-force-exit");
+        killer.setDaemon(true);
+        killer.start();
     }
 
     // ── GameUI callbacks (network thread) ────────────────────────────────────

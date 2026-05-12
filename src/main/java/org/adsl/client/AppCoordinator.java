@@ -37,7 +37,11 @@ public class AppCoordinator implements ResponseVisitor{
     public void startPingScheduler(int pingRatioMs, long serverTimeoutMs) {
         this.lastPingRatioMs = pingRatioMs;
         this.lastServerTimeoutMs = serverTimeoutMs;
-        pingScheduler = Executors.newSingleThreadScheduledExecutor();
+        pingScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "ping-scheduler");
+            t.setDaemon(true);
+            return t;
+        });
 
         pingScheduler.scheduleAtFixedRate(() -> {
             try {
