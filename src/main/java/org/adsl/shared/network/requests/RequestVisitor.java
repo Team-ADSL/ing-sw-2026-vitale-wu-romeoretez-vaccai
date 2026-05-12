@@ -11,6 +11,7 @@ public interface RequestVisitor<T> {
     void visit(CreateGameRequest req, T context) throws ServerException;
     void visit(EnterGameRequest req, T context) throws ServerException;
     void visit(StartGameRequest req, T context) throws ServerException;
+    void visit(TotemPickingRequest req, T context) throws ServerException;
     void visit(MoveRequest req, T context) throws ServerException;
     void visit(ExitGameRequest req, T context) throws ServerException;
     void visit(ClientDisconnected req, T context) throws ServerException;
