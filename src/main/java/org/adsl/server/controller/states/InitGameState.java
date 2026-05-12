@@ -110,11 +110,14 @@ public class InitGameState extends ControllerState {
         CardRow topRow = getGame().getBoard().topRow();
         Deck deck = getGame().getBoard().deck();
 
-        for (int i = 0; i < targetSize; i++) {
+        int i=0;
+        while(topRow.getCardAt(i) != null){ i++; }
+        while (i < targetSize) {
             if (deck.isEmpty()) {
                 break;
             }
             topRow.add(deck.drawCard());
+            i++;
         }
     }
 
