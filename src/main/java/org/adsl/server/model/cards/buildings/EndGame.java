@@ -50,7 +50,7 @@ public class EndGame extends Building {
 
     @Override
     protected String getEffectsLabel() {
-        String base = CardToken.ENDGAME + " " + CardToken.PP + getEndGamePP();
+        String base = CardToken.ENDGAME;
         if (characterTypeMultiplier != null) {
             String charToken = switch (characterTypeMultiplier) {
                 case HUNTER   -> CardToken.HUNTER;

@@ -29,6 +29,6 @@ public class DuringPaintings extends DuringEvent {
 
     @Override
     protected String getEffectsLabel() {
-        return CardToken.PAINTINGS + "=>" + CardToken.FOOD + " " + CardToken.PP + getEndGamePP();
+        return CardToken.PAINTINGS + ": +1" + CardToken.FOOD + "x" + CardToken.ARTIST;
     }
 }

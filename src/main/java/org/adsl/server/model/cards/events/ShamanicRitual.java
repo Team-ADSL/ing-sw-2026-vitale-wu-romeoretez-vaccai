@@ -71,6 +71,6 @@ public class ShamanicRitual extends Event {
 
     @Override
     protected String getEffectsLabel() {
-        return CardToken.PP + "-" + lostPP + "/+" + gainedPP;
+        return CardToken.SHAMAN_STAR + ">:" + gainedPP + CardToken.PP + "," + CardToken.SHAMAN_STAR + "<:" + lostPP + CardToken.PP;
     }
 }
