@@ -251,6 +251,17 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
     }
 
     @Override
+    public void visit(TotemPickingRequest req, VirtualClient virtualClient) throws ServerException {
+        pingRoutine(virtualClient);
+
+        controlIfLogged(virtualClient);
+        if(virtualClient.getGameId().isEmpty()) {
+            throw new ServerException("[TOTEM PICKING REQUEST] Virtual client has no gameId associated.");
+        }
+        sendToGameController(virtualClient.getGameId().get(), req, virtualClient);
+    }
+
+    @Override
     public void visit(ExitLobbyRequest req, VirtualClient virtualClient) throws ServerException {
         pingRoutine(virtualClient);
 
