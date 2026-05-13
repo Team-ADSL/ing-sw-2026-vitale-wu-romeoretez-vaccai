@@ -1,32 +1,33 @@
 package org.adsl.client.view.gui.screens;
 
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.serverEvents.ErrorEvent;
 import org.adsl.client.serverEvents.LobbyUpdateEvent;
+import org.adsl.client.view.gui.FloatingLog;
 
 import java.io.IOException;
 import java.util.List;
 
 public class LobbyScreen extends GUIScreen {
 
+    @FXML private StackPane rootStack;
     @FXML private Label titleLabel;
     @FXML private Label statusLabel;
     @FXML private Label errorLabel;
     @FXML private ListView<String> playersList;
-    @FXML private VBox chatBox;
-    @FXML private ScrollPane chatScroll;
+    @FXML private VBox logBox;
 
     private int gameId;
     private List<String> players;
     private final int totalPlayers;
+    private FloatingLog floatingLog;
 
     public LobbyScreen(AppCoordinator coordinator,
                        String username,
@@ -46,6 +47,10 @@ public class LobbyScreen extends GUIScreen {
         }
         refresh();
         applyTheme(this.root);
+
+        floatingLog = new FloatingLog("Lobby log");
+        logBox.getChildren().setAll(floatingLog.getFloatingNode());
+        rootStack.getChildren().add(floatingLog.getFullPanel());
     }
 
     private void refresh() {
@@ -81,25 +86,13 @@ public class LobbyScreen extends GUIScreen {
         this.gameId = e.gameId();
         this.players = e.players() != null ? e.players() : List.of();
         refresh();
-        if (e.message() != null && !e.message().isBlank()) appendChat(e.message());
+        if (e.message() != null && !e.message().isBlank()) floatingLog.append(e.message());
         return this;
     }
 
-    /** Server-side errors (non-host pressing start, lobby full, ...). */
     @Override
     public GUIScreen visit(ErrorEvent e) {
         if (errorLabel != null) errorLabel.setText(e.message());
         return this;
-    }
-
-    private void appendChat(String text) {
-        if (chatBox == null) return;
-        Label entry = new Label(text);
-        entry.setWrapText(true);
-        entry.setStyle("-fx-text-fill: #d2b48c;");
-        chatBox.getChildren().add(entry);
-        if (chatScroll != null) {
-            Platform.runLater(() -> chatScroll.setVvalue(1.0));
-        }
     }
 }

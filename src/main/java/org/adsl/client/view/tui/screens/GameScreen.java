@@ -3,6 +3,7 @@ package org.adsl.client.view.tui.screens;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.serverEvents.EndGameEvent;
 import org.adsl.client.serverEvents.ErrorEvent;
+import org.adsl.client.serverEvents.EventsTriggeredEvent;
 import org.adsl.client.serverEvents.GameUpdateEvent;
 import org.adsl.client.view.tui.CardCatalog;
 import org.adsl.client.view.tui.CardTokens;
@@ -21,6 +22,9 @@ import org.adsl.shared.utils.Move;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -60,6 +64,12 @@ public class GameScreen extends TUIScreen {
     private boolean showLegend = false;
     private static final int CARD_W = 15;  // inner content width (box = CARD_W+2)
 
+    // Events overlay
+    private volatile List<String> overlayTitles = null;
+    private volatile long overlayStartMs = 0L;
+    private volatile long overlayTotalMs = 0L;
+    private ScheduledExecutorService overlayTicker = null;
+
     public GameScreen(TuiTerminal terminal,
             AppCoordinator coordinator,
             String username,
@@ -93,6 +103,10 @@ public class GameScreen extends TUIScreen {
             drawLegend(tg, sz);
         }
 
+        if (overlayTitles != null && !overlayTitles.isEmpty()) {
+            drawEventsOverlay(tg, sz);
+        }
+
         if (error != null) {
             flashError(tg, sz, error);
             error = null;
@@ -115,6 +129,41 @@ public class GameScreen extends TUIScreen {
 
         setupActiveState();
         return this;
+    }
+
+    @Override
+    public TUIScreen visit(EventsTriggeredEvent e) {
+        this.overlayTitles = e.eventTitles();
+        this.overlayTotalMs = Math.max(500L, e.durationMs());
+        this.overlayStartMs = System.currentTimeMillis();
+        startOverlayTicker();
+        return this;
+    }
+
+    private void startOverlayTicker() {
+        stopOverlayTicker();
+        overlayTicker = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "tui-events-overlay");
+            t.setDaemon(true);
+            return t;
+        });
+        overlayTicker.scheduleAtFixedRate(() -> {
+            long elapsed = System.currentTimeMillis() - overlayStartMs;
+            if (elapsed >= overlayTotalMs) {
+                overlayTitles = null;
+                setToRender(true);
+                stopOverlayTicker();
+            } else {
+                setToRender(true);
+            }
+        }, 0, 120, TimeUnit.MILLISECONDS);
+    }
+
+    private void stopOverlayTicker() {
+        if (overlayTicker != null) {
+            overlayTicker.shutdownNow();
+            overlayTicker = null;
+        }
     }
 
     @Override
@@ -561,8 +610,8 @@ public class GameScreen extends TUIScreen {
         String text = String.format("YOUR TRIBE: %s  Food: %d  PP: %d",
                 me.name(), me.food(), me.pp());
 
-        // Prefix dashes — white, never highlighted
-        tg.setForegroundColor(TuiColor.WHITE);
+        // Prefix dashes — totem color, never highlighted
+        tg.setForegroundColor(totemColor(me.totem()));
         tg.setBackgroundColor(TuiColor.BLACK);
         tg.putString(0, startRow, prefix);
 
@@ -579,14 +628,16 @@ public class GameScreen extends TUIScreen {
         tg.putString(textCol, startRow,
                 textEnd <= cols ? text : text.substring(0, cols - textCol));
 
-        // Trailing dashes — white
-        tg.setForegroundColor(TuiColor.WHITE);
+        // Trailing dashes — totem color
+        tg.setForegroundColor(totemColor(me.totem()));
         tg.setBackgroundColor(TuiColor.BLACK);
         int trailCol = textCol + text.length();
         int trailLen = Math.max(0, cols - trailCol - 1);
         if (trailLen > 0) {
             tg.putString(trailCol, startRow, " " + "─".repeat(trailLen - 1));
         }
+        tg.setForegroundColor(TuiColor.WHITE);
+        tg.setBackgroundColor(TuiColor.BLACK);
 
         List<SummaryChunk> chunks = new ArrayList<>();
         appendCharacterChunks(chunks, me);
@@ -609,12 +660,13 @@ public class GameScreen extends TUIScreen {
             boolean isTheirTurn = (p.totem() == currentTotem);
 
             List<SummaryChunk> chunks = new ArrayList<>();
+            chunks.add(new SummaryChunk(p.name(), true));
             chunks.add(new SummaryChunk(
-                    String.format("%s F:%d PP:%d %s ", p.name(), p.food(), p.pp(), SEP),
-                    true));
+                    String.format(" F:%d PP:%d %s ", p.food(), p.pp(), SEP),
+                    false));
             appendCharacterChunks(chunks, p);
             appendBuildingsChunks(chunks, p);
-            renderChunks(tg, 0, row, chunks, p, isTheirTurn, cols);
+            renderChunks(tg, 0, row, chunks, p, isTheirTurn, cols, true);
             row++;
         }
     }
@@ -705,6 +757,15 @@ public class GameScreen extends TUIScreen {
     private void renderChunks(TuiTextGraphics tg, int col, int row,
                               List<SummaryChunk> chunks, PlayerDTO p,
                               boolean isTheirTurn, int cols) {
+        renderChunks(tg, col, row, chunks, p, isTheirTurn, cols, false);
+    }
+
+    private void renderChunks(TuiTextGraphics tg, int col, int row,
+                              List<SummaryChunk> chunks, PlayerDTO p,
+                              boolean isTheirTurn, int cols,
+                              boolean tintNonHighlightedWithTotem) {
+        TuiColor nonHighlightFg = tintNonHighlightedWithTotem
+                ? totemColor(p.totem()) : TuiColor.WHITE;
         for (SummaryChunk ch : chunks) {
             if (col >= cols) break;
             if (ch.highlight()) {
@@ -716,7 +777,7 @@ public class GameScreen extends TUIScreen {
                     tg.setBackgroundColor(TuiColor.BLACK);
                 }
             } else {
-                tg.setForegroundColor(TuiColor.WHITE);
+                tg.setForegroundColor(nonHighlightFg);
                 tg.setBackgroundColor(TuiColor.BLACK);
             }
             String text = ch.text();
@@ -773,6 +834,56 @@ public class GameScreen extends TUIScreen {
         tg.putString(2, sz.getRows() - 2,
                 "! " + msg + " ".repeat(Math.max(0, sz.getColumns() - msg.length() - 4)));
         tg.setForegroundColor(TuiColor.WHITE);
+    }
+
+    /**
+     * Overlay drawn during EVENTS_EXECUTION: every other cell of the board area
+     * gets an orange '/'. The current event title is centered in white over a
+     * cleared band so it stays legible against the pattern.
+     */
+    private void drawEventsOverlay(TuiTextGraphics tg, TuiSize sz) {
+        int cols = sz.getColumns();
+        int rows = sz.getRows();
+        if (cols <= 0 || rows <= 0) return;
+
+        int top = 1;
+        int bottom = Math.max(top, rows - 2);
+
+        tg.setForegroundColor(TuiColor.ORANGE);
+        tg.setBackgroundColor(TuiColor.BLACK);
+        StringBuilder line = new StringBuilder(cols);
+        for (int r = top; r <= bottom; r++) {
+            line.setLength(0);
+            for (int c = 0; c < cols; c++) {
+                line.append(((c + r) % 2 == 0) ? '/' : ' ');
+            }
+            tg.putString(0, r, line.toString());
+        }
+
+        List<String> titles = overlayTitles;
+        if (titles == null || titles.isEmpty()) {
+            tg.setForegroundColor(TuiColor.WHITE);
+            tg.setBackgroundColor(TuiColor.BLACK);
+            return;
+        }
+
+        long perTitleMs = Math.max(1L, overlayTotalMs / titles.size());
+        long elapsed = Math.max(0L, System.currentTimeMillis() - overlayStartMs);
+        int idx = (int) Math.min(titles.size() - 1, elapsed / perTitleMs);
+        String title = "  " + titles.get(idx).toUpperCase() + "  ";
+        int titleW = title.length();
+        int titleCol = Math.max(0, (cols - titleW) / 2);
+        int titleRow = (top + bottom) / 2;
+
+        tg.setForegroundColor(TuiColor.WHITE);
+        tg.setBackgroundColor(TuiColor.BLACK);
+        tg.putString(0, titleRow - 1, " ".repeat(cols));
+        tg.putString(0, titleRow, " ".repeat(cols));
+        tg.putString(0, titleRow + 1, " ".repeat(cols));
+        tg.putString(titleCol, titleRow, title);
+
+        tg.setForegroundColor(TuiColor.WHITE);
+        tg.setBackgroundColor(TuiColor.BLACK);
     }
 
     // ── Display helpers ───────────────────────────────────────────────────────

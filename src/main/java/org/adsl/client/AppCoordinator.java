@@ -8,6 +8,8 @@ import org.adsl.shared.network.requests.*;
 import org.adsl.shared.network.responses.*;
 import org.adsl.shared.utils.Move;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -18,11 +20,16 @@ public class AppCoordinator implements ResponseVisitor{
     private final GameUI gameUI;
     private final ServerConnection serverConnection;
     private ScheduledExecutorService pingScheduler;
+    private ScheduledExecutorService overlayScheduler;
     private volatile long lastServerPing = System.currentTimeMillis();
     private String lastIp;
     private int lastPort;
     private int lastPingRatioMs = 5000;
     private long lastServerTimeoutMs = 10000;
+
+    private final Object overlayLock = new Object();
+    private volatile boolean overlayActive = false;
+    private final List<ServerResponse> pendingResponses = new ArrayList<>();
 
     public AppCoordinator(GameUI gameUI, ServerConnection serverConnection) {
         this.gameUI = gameUI;
@@ -70,11 +77,25 @@ public class AppCoordinator implements ResponseVisitor{
 
     public void handleServerResponse(ServerResponse serverResponse){
         lastServerPing = System.currentTimeMillis();
+        synchronized (overlayLock) {
+            if (overlayActive && shouldBuffer(serverResponse)) {
+                pendingResponses.add(serverResponse);
+                return;
+            }
+        }
+        dispatchResponse(serverResponse);
+    }
+
+    private void dispatchResponse(ServerResponse serverResponse) {
         try {
             serverResponse.accept(this);
         } catch(Exception e){
             System.out.println(e.getMessage());
         }
+    }
+
+    private boolean shouldBuffer(ServerResponse r) {
+        return r instanceof GameUpdate || r instanceof GameEnded;
     }
 
     @Override
@@ -113,6 +134,36 @@ public class AppCoordinator implements ResponseVisitor{
     @Override
     public void visit(ServerDisconnected response) throws InvalidResponseException {
         gameUI.onServerDisconnected();
+    }
+
+    @Override
+    public void visit(EventsTriggered response) throws InvalidResponseException {
+        long duration = Math.max(500L, response.getDurationMs());
+        synchronized (overlayLock) {
+            overlayActive = true;
+        }
+        gameUI.onEventsTriggered(response.getEventTitles(), duration);
+
+        if (overlayScheduler == null || overlayScheduler.isShutdown()) {
+            overlayScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+                Thread t = new Thread(r, "events-overlay-scheduler");
+                t.setDaemon(true);
+                return t;
+            });
+        }
+        overlayScheduler.schedule(this::flushPending, duration, TimeUnit.MILLISECONDS);
+    }
+
+    private void flushPending() {
+        List<ServerResponse> drained;
+        synchronized (overlayLock) {
+            overlayActive = false;
+            drained = new ArrayList<>(pendingResponses);
+            pendingResponses.clear();
+        }
+        for (ServerResponse r : drained) {
+            dispatchResponse(r);
+        }
     }
 
     public void reconnect() throws Exception {
