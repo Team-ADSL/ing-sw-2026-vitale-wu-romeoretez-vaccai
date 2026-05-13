@@ -32,6 +32,7 @@ public class LoginScreen extends GUIScreen {
         } catch (IOException e) {
             throw new RuntimeException("Failed to load login.fxml", e);
         }
+        applyTheme(this.root);
     }
 
     @FXML

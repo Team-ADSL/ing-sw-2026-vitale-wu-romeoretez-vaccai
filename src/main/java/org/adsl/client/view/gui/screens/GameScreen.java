@@ -98,6 +98,7 @@ public class GameScreen extends GUIScreen {
         } catch (IOException e) {
             throw new RuntimeException("Failed to load game.fxml", e);
         }
+        applyTheme(this.root);
         resolveMoveCounts();
         renderBoard();
     }
@@ -130,7 +131,7 @@ public class GameScreen extends GUIScreen {
         if (chatBox == null) return;
         Label entry = new Label(text);
         entry.setWrapText(true);
-        entry.setStyle("-fx-text-fill: #424242;");
+        entry.setStyle("-fx-text-fill: #d2b48c;");
         chatBox.getChildren().add(entry);
         if (chatScroll != null) {
             Platform.runLater(() -> chatScroll.setVvalue(1.0));

@@ -86,7 +86,7 @@ public abstract class VirtualClient implements GameObserver, HomeObserver, EndGa
 
     @Override
     public void updateTotemAvailable(List<Totem> totemAvailable, String message){
-        TotemAvailableUpdate serverResponse = new TotemAvailableUpdate(totemAvailable, message);
+        TotemAvailableUpdate serverResponse = new TotemAvailableUpdate(totemAvailable);
         if (message != null) serverResponse.setMessage(message);
         System.out.println("[SENDING] Lobby update:" + serverResponse + " to: " + getClientUsername());
         this.sendResponse(serverResponse);
