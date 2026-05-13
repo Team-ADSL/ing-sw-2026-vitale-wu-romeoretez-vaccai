@@ -36,6 +36,7 @@ public class EndGameScreen extends GUIScreen {
         if (results != null) {
             resultsTable.setItems(FXCollections.observableArrayList(results));
         }
+        applyTheme(this.root);
     }
 
     @FXML
