@@ -18,8 +18,8 @@
   "era3": {
     "characters": [
       { "id": "hunter_12",          "type": "HUNTER",          "extraFood": true },
-      { "id": "builder_09",         "type": "BUILDER",         "discount": 1, "pp": 4 },
-      { "id": "gatherer_11",        "type": "GATHERER",        "discount": 3 },
+      { "id": "builder_11",         "type": "BUILDER",         "discount": 1, "pp": 4 },
+      { "id": "gatherer_09",        "type": "GATHERER",        "discount": 3 },
       { "id": "artist_10",          "type": "ARTIST" }
     ]
   }
