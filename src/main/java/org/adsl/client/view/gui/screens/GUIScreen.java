@@ -103,17 +103,27 @@ public abstract class GUIScreen extends Screen<GUIScreen> {
 
     private static void applyChalkFonts(Parent node) {
         for (Node child : node.getChildrenUnmodifiable()) {
-            if (child instanceof Label l) {
-                l.setFont(ImageCatalog.chalkFont(extractFontSize(l.getStyle(), 15.0)));
-            } else if (child instanceof Button b) {
-                b.setFont(ImageCatalog.chalkFont(extractFontSize(b.getStyle(), 16.0)));
-            } else if (child instanceof TextField tf) {
-                tf.setFont(ImageCatalog.chalkFont(15.0));
-            }
-            if (child instanceof Pane p) {
-                applyChalkFonts(p);
+            switch (child) {
+                case Label l     -> setFont(l);
+                case Button b    -> setFont(b);
+                case TextField t -> setFont(t);
+                case Pane p      -> setFont(p);
+                default          -> { /* node type with no chalk font */ }
             }
         }
+    }
+
+    private static void setFont(Label node){
+        node.setFont(ImageCatalog.chalkFont(extractFontSize(node.getStyle(), 15.0)));
+    }
+    private static void setFont(Button node){
+        node.setFont(ImageCatalog.chalkFont(extractFontSize(node.getStyle(), 16.0)));
+    }
+    private static void setFont(TextField node){
+        node.setFont(ImageCatalog.chalkFont(extractFontSize(node.getStyle(), 15.0)));
+    }
+    private static void setFont(Pane node){
+        applyChalkFonts(node);
     }
 
     private static double extractFontSize(String style, double fallback) {
