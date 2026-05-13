@@ -296,7 +296,9 @@ public class GameScreen extends GUIScreen {
         boolean clickable = canPickCards();
         int idx = 0;
         for (CardDTO c : cards) {
-            pane.getChildren().add(buildCardCell(c, row, idx, clickable));
+            if (c != null) {
+                pane.getChildren().add(buildCardCell(c, row, idx, clickable));
+            }
             idx++;
         }
     }

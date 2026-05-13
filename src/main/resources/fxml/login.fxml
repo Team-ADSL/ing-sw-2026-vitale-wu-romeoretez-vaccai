@@ -3,13 +3,14 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
 <VBox alignment="CENTER" spacing="16" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
       style="-fx-background-color: #2c1a0e;">
     <padding><Insets top="60" right="80" bottom="60" left="80"/></padding>
-    <Label text="M E S O S" style="-fx-font-size: 36px; -fx-text-fill: #f5deb3;"/>
+    <ImageView fx:id="logoImage" fitWidth="420" preserveRatio="true"/>
     <Label text="Ancient Tribe Strategy" style="-fx-font-size: 16px; -fx-text-fill: #b8946c;"/>
     <Label fx:id="errorLabel" style="-fx-text-fill: #e53935; -fx-font-size: 14px;" wrapText="true"/>
     <Label text="Username:" style="-fx-font-size: 15px;"/>
