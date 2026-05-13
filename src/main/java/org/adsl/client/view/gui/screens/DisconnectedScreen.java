@@ -22,6 +22,7 @@ public class DisconnectedScreen extends GUIScreen {
             throw new RuntimeException("Failed to load disconnected.fxml", e);
         }
         messageLabel.setText(message != null ? message : "");
+        applyTheme(this.root);
     }
 
     @FXML

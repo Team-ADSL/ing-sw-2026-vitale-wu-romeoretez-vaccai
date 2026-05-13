@@ -3,6 +3,7 @@ package org.adsl.client;
 import org.adsl.client.network.ServerConnection;
 import org.adsl.client.view.GameUI;
 import org.adsl.client.exceptions.InvalidResponseException;
+import org.adsl.shared.enums.Totem;
 import org.adsl.shared.network.requests.*;
 import org.adsl.shared.network.responses.*;
 import org.adsl.shared.utils.Move;
@@ -149,6 +150,10 @@ public class AppCoordinator implements ResponseVisitor{
     }
     public void startGameRequest() throws Exception {
         ClientRequest clientRequest = new StartGameRequest();
+        serverConnection.sendRequest(clientRequest);
+    }
+    public void createTotemPickingRequest(Totem totem) throws Exception {
+        ClientRequest clientRequest = new TotemPickingRequest(totem);
         serverConnection.sendRequest(clientRequest);
     }
     public void makeMoveRequest(Set<Move> moves) throws Exception {

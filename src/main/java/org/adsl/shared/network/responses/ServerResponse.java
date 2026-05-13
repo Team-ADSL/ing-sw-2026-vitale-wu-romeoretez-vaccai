@@ -17,6 +17,7 @@ import java.io.Serializable;
         @JsonSubTypes.Type(value = LoginNeeded.class, name = "LOGIN_NEEDED"),
         @JsonSubTypes.Type(value = HomeUpdate.class, name = "HOME_UPDATE"),
         @JsonSubTypes.Type(value = LobbyUpdate.class, name = "LOBBY_UPDATE"),
+        @JsonSubTypes.Type(value = TotemAvailableUpdate.class, name = "TOTEM_AVAILABLE_UPDATE"),
         @JsonSubTypes.Type(value = GameUpdate.class, name = "GAME_UPDATE"),
         @JsonSubTypes.Type(value = ServerPing.class, name = "PING"),
         @JsonSubTypes.Type(value = ServerDisconnected.class, name = "DISCONNECTED"),

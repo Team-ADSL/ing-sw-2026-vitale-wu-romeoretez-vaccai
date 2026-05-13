@@ -38,6 +38,7 @@ public class HomeScreen extends GUIScreen {
         }
         welcomeLabel.setText("Welcome, " + (username != null ? username : "") + "!");
         gamesList.setItems(FXCollections.observableArrayList(this.activeGames));
+        applyTheme(this.root);
     }
 
     @FXML private void onCreate2() { create(2); }
@@ -100,7 +101,7 @@ public class HomeScreen extends GUIScreen {
         if (chatBox == null) return;
         Label entry = new Label(text);
         entry.setWrapText(true);
-        entry.setStyle("-fx-text-fill: #424242;");
+        entry.setStyle("-fx-text-fill: #d2b48c;");
         chatBox.getChildren().add(entry);
         if (chatScroll != null) {
             Platform.runLater(() -> chatScroll.setVvalue(1.0));
