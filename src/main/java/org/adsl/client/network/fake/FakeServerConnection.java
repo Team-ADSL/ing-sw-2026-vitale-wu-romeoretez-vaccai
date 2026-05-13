@@ -8,6 +8,7 @@ import org.adsl.shared.enums.Totem;
 import org.adsl.shared.model.BoardDTO;
 import org.adsl.shared.model.GameDTO;
 import org.adsl.shared.model.OfferTileDTO;
+import org.adsl.shared.model.OrderCellDTO;
 import org.adsl.shared.model.OrderTileDTO;
 import org.adsl.shared.model.PlayerDTO;
 import org.adsl.shared.network.requests.ClientConnection;
@@ -108,8 +109,8 @@ public class FakeServerConnection implements ServerConnection {
         offerTrack.add(new OfferTileDTO("offer_tile_e", null, Collections.emptyMap(), false));
         offerTrack.add(new OfferTileDTO("offer_tile_f", null, Collections.emptyMap(), false));
 
-        ArrayList<Totem> turnOrder = new ArrayList<>();
-        turnOrder.add(Totem.RED);
+        ArrayList<OrderCellDTO> turnOrder = new ArrayList<>();
+        turnOrder.add(new OrderCellDTO(Totem.RED, 0, false));
         OrderTileDTO orderTile = new OrderTileDTO("order_tile_01", turnOrder);
 
         ArrayList<Boolean> buildings = new ArrayList<>();
