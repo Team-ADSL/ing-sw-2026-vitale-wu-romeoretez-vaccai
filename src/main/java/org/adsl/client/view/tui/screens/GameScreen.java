@@ -21,6 +21,8 @@ import org.adsl.shared.utils.Move;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Main game screen implemented as a non-blocking state machine.
@@ -555,37 +557,48 @@ public class GameScreen extends TUIScreen {
             return;
 
         boolean isMyTurn = (myTotem == currentTotem);
+        String prefix = " ── ";
+        String text = String.format("YOUR TRIBE: %s  Food: %d  PP: %d",
+                me.name(), me.food(), me.pp());
+
+        // Prefix dashes — white, never highlighted
+        tg.setForegroundColor(TuiColor.WHITE);
+        tg.setBackgroundColor(TuiColor.BLACK);
+        tg.putString(0, startRow, prefix);
+
+        // Text — highlighted only on my turn
         if (isMyTurn) {
             tg.setBackgroundColor(totemColor(me.totem()));
             tg.setForegroundColor(TuiColor.BLACK);
         } else {
             tg.setForegroundColor(totemColor(me.totem()));
+            tg.setBackgroundColor(TuiColor.BLACK);
         }
+        int textCol = prefix.length();
+        int textEnd = Math.min(cols, textCol + text.length());
+        tg.putString(textCol, startRow,
+                textEnd <= cols ? text : text.substring(0, cols - textCol));
 
-        String turnText = isMyTurn ? " (Your Turn)" : "";
-        String label = String.format("%s Tribe%s", CardCatalog.totemLabel(me.totem()), turnText);
-        String header = String.format(" ── YOUR TRIBE: %s [%s]  Food: %d  PP: %d %s",
-                me.name(), label, me.food(), me.pp(),
-                "─".repeat(Math.max(0, cols - 65)));
-
-        tg.putString(0, startRow, header.substring(0, Math.min(header.length(), cols)));
+        // Trailing dashes — white
         tg.setForegroundColor(TuiColor.WHITE);
         tg.setBackgroundColor(TuiColor.BLACK);
-
-        StringBuilder sb = new StringBuilder("  ");
-        for (CardType type : CardType.values()) {
-            Set<CardDTO> cardSet = me.cards().get(type);
-            if (cardSet != null && !cardSet.isEmpty()) {
-                sb.append(CardCatalog.typeSymbol(type)).append(":").append(cardSet.size()).append("  ");
-            }
+        int trailCol = textCol + text.length();
+        int trailLen = Math.max(0, cols - trailCol - 1);
+        if (trailLen > 0) {
+            tg.putString(trailCol, startRow, " " + "─".repeat(trailLen - 1));
         }
-        tg.putString(0, startRow + 1, sb.toString());
+
+        List<SummaryChunk> chunks = new ArrayList<>();
+        appendCharacterChunks(chunks, me);
+        appendBuildingsChunks(chunks, me);
+        if (!chunks.isEmpty()) {
+            renderChunks(tg, 0, startRow + 1, chunks, me, isMyTurn, cols);
+        }
     }
 
     private void drawOtherPlayers(TuiTextGraphics tg, int startRow, int cols) {
-        tg.setForegroundColor(TuiColor.CYAN);
-        tg.putString(0, startRow - 1, " ── OTHERS " + "─".repeat(Math.max(0, cols - 10)));
         tg.setForegroundColor(TuiColor.WHITE);
+        tg.putString(0, startRow - 1, " ── OTHERS " + "─".repeat(Math.max(0, cols - 10)));
 
         Totem currentTotem = game.currentPlayerTotem();
         int row = startRow;
@@ -594,33 +607,155 @@ public class GameScreen extends TUIScreen {
                 continue;
 
             boolean isTheirTurn = (p.totem() == currentTotem);
-            if (isTheirTurn) {
-                tg.setBackgroundColor(totemColor(p.totem()));
-                tg.setForegroundColor(TuiColor.BLACK);
-            } else {
-                tg.setForegroundColor(totemColor(p.totem()));
-            }
 
-            String turnText = isTheirTurn ? " (Your Turn)" : "";
-            String label = String.format("%s Tribe%s", CardCatalog.totemLabel(p.totem()), turnText);
-
-            StringBuilder sb = new StringBuilder();
-            sb.append(String.format("  %-12s [%s] F:%-3d PP:%-4d | ",
-                    p.name(), label, p.food(), p.pp()));
-            for (CardType type : CardType.values()) {
-                Set<CardDTO> cards = p.cards().get(type);
-                if (cards != null && !cards.isEmpty()) {
-                    sb.append(CardCatalog.typeSymbol(type)).append(":").append(cards.size()).append(" ");
-                }
-            }
-            if (!isTheirTurn) {
-                tg.setForegroundColor(totemColor(p.totem()));
-            }
-            tg.putString(0, row, sb.toString().substring(0, Math.min(sb.length(), cols)));
-            tg.setForegroundColor(TuiColor.WHITE);
-            tg.setBackgroundColor(TuiColor.BLACK);
+            List<SummaryChunk> chunks = new ArrayList<>();
+            chunks.add(new SummaryChunk(
+                    String.format("%s F:%d PP:%d %s ", p.name(), p.food(), p.pp(), SEP),
+                    true));
+            appendCharacterChunks(chunks, p);
+            appendBuildingsChunks(chunks, p);
+            renderChunks(tg, 0, row, chunks, p, isTheirTurn, cols);
             row++;
         }
+    }
+
+    // ── Player card summary (full-text, compact) ───────────────────────────────
+
+    private static final Pattern PP_FROM_EFFECT  = Pattern.compile("\\[PP\\](\\d+)");
+    private static final Pattern DISC_FROM_EFFECT = Pattern.compile("\\[FOOD_COST\\]-(\\d+)");
+    private static final Pattern PP_FROM_TYPE    = Pattern.compile("(\\d+)\\[PP\\]");
+
+    private static final String SEP = "│";
+    private static final String STAR_EMOJI = "★";
+
+    /** Tagged text fragment: when {@code highlight} is true it renders in the player's totem color. */
+    private record SummaryChunk(String text, boolean highlight) {}
+
+    /** Builds character-section chunks: highlighted "N TYPE:" labels, plain detail strings. */
+    private static void appendCharacterChunks(List<SummaryChunk> out, PlayerDTO p) {
+        int h = sizeOf(p, CardType.HUNTER);
+        int g = sizeOf(p, CardType.GATHERER);
+        int a = sizeOf(p, CardType.ARTIST);
+        if (h > 0) out.add(new SummaryChunk(h + " HUNTER ", false));
+        if (g > 0) out.add(new SummaryChunk(g + " GATHERER ", false));
+        if (a > 0) out.add(new SummaryChunk(a + " ARTIST ", false));
+
+        Set<CardDTO> builders = cardsOf(p, CardType.BUILDER);
+        if (!builders.isEmpty()) {
+            int pp = 0, disc = 0;
+            for (CardDTO c : builders) {
+                pp   += firstInt(PP_FROM_EFFECT,  c.effectsLabel());
+                disc += firstInt(DISC_FROM_EFFECT, c.effectsLabel());
+            }
+            out.add(new SummaryChunk(builders.size() + " BUILDER: ", false));
+            out.add(new SummaryChunk("🌟:" + pp + ",🍖:-" + disc + " ", false));
+        }
+
+        Set<CardDTO> shamans = cardsOf(p, CardType.SHAMAN);
+        if (!shamans.isEmpty()) {
+            int stars = 0;
+            for (CardDTO c : shamans) {
+                stars += occurrences(c.effectsLabel(), "[SHAMAN_STAR]");
+            }
+            out.add(new SummaryChunk(shamans.size() + " SHAMAN: ", false));
+            out.add(new SummaryChunk(STAR_EMOJI + ":" + stars + " ", false));
+        }
+
+        Set<CardDTO> inventors = cardsOf(p, CardType.INVENTOR);
+        if (!inventors.isEmpty()) {
+            Map<String, Integer> iconCount = new LinkedHashMap<>();
+            for (CardDTO c : inventors) {
+                String emoji = CardTokens.toEmoji(c.effectsLabel() == null ? "" : c.effectsLabel().trim());
+                iconCount.merge(emoji, 1, Integer::sum);
+            }
+            out.add(new SummaryChunk(inventors.size() + " INVENTOR: ", false));
+            StringBuilder icons = new StringBuilder();
+            boolean first = true;
+            for (Map.Entry<String, Integer> e : iconCount.entrySet()) {
+                if (!first) icons.append(", ");
+                first = false;
+                icons.append(e.getKey()).append(':').append(e.getValue());
+            }
+            icons.append(' ');
+            out.add(new SummaryChunk(icons.toString(), false));
+        }
+    }
+
+    /** Buildings chunk: highlighted "│ BUILDINGS:" label, plain enumeration after. */
+    private static void appendBuildingsChunks(List<SummaryChunk> out, PlayerDTO p) {
+        Set<CardDTO> buildings = cardsOf(p, CardType.BUILDINGS);
+        if (buildings.isEmpty()) return;
+        out.add(new SummaryChunk(SEP + " BUILDINGS: ", true));
+        StringBuilder body = new StringBuilder();
+        boolean first = true;
+        for (CardDTO c : buildings) {
+            if (!first) body.append(" / ");
+            first = false;
+            int pp = firstInt(PP_FROM_TYPE, c.typeLabel());
+            body.append("pp:").append(pp);
+            String eff = CardTokens.toEffectLabel(c.effectsLabel());
+            if (eff != null && !eff.isBlank()) {
+                body.append('[').append(eff).append(']');
+            }
+        }
+        out.add(new SummaryChunk(body.toString(), false));
+    }
+
+    /** Renders chunks left-to-right starting at {@code col}; highlighted chunks use totem color. */
+    private void renderChunks(TuiTextGraphics tg, int col, int row,
+                              List<SummaryChunk> chunks, PlayerDTO p,
+                              boolean isTheirTurn, int cols) {
+        for (SummaryChunk ch : chunks) {
+            if (col >= cols) break;
+            if (ch.highlight()) {
+                if (isTheirTurn) {
+                    tg.setBackgroundColor(totemColor(p.totem()));
+                    tg.setForegroundColor(TuiColor.BLACK);
+                } else {
+                    tg.setForegroundColor(totemColor(p.totem()));
+                    tg.setBackgroundColor(TuiColor.BLACK);
+                }
+            } else {
+                tg.setForegroundColor(TuiColor.WHITE);
+                tg.setBackgroundColor(TuiColor.BLACK);
+            }
+            String text = ch.text();
+            int w = visualWidth(text);
+            if (col + w > cols) {
+                text = text.substring(0, Math.min(text.length(), cols - col));
+                w = visualWidth(text);
+            }
+            tg.putString(col, row, text);
+            col += w;
+        }
+        tg.setForegroundColor(TuiColor.WHITE);
+        tg.setBackgroundColor(TuiColor.BLACK);
+    }
+
+    private static int sizeOf(PlayerDTO p, CardType t) {
+        Set<CardDTO> s = p.cards().get(t);
+        return s == null ? 0 : s.size();
+    }
+
+    private static Set<CardDTO> cardsOf(PlayerDTO p, CardType t) {
+        Set<CardDTO> s = p.cards().get(t);
+        return s == null ? Set.of() : s;
+    }
+
+    private static int firstInt(Pattern pattern, String s) {
+        if (s == null) return 0;
+        Matcher m = pattern.matcher(s);
+        return m.find() ? Integer.parseInt(m.group(1)) : 0;
+    }
+
+    private static int occurrences(String s, String needle) {
+        if (s == null || needle.isEmpty()) return 0;
+        int count = 0, idx = 0;
+        while ((idx = s.indexOf(needle, idx)) != -1) {
+            count++;
+            idx += needle.length();
+        }
+        return count;
     }
 
     private void drawControls(TuiTextGraphics tg, TuiSize sz, String hint) {
