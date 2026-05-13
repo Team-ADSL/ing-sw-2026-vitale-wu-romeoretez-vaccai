@@ -1,13 +1,17 @@
 package org.adsl.client.view.gui.screens;
 
+import javafx.animation.FadeTransition;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.image.ImageView;
+import javafx.util.Duration;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.serverEvents.ErrorEvent;
 import org.adsl.client.serverEvents.LoginNeededEvent;
+import org.adsl.client.view.gui.ImageCatalog;
 
 import java.io.IOException;
 
@@ -22,6 +26,7 @@ public class LoginScreen extends GUIScreen {
     @FXML private Label errorLabel;
     @FXML private Button loginButton;
     @FXML private Button exitButton;
+    @FXML private ImageView logoImage;
 
     public LoginScreen(AppCoordinator coordinator) {
         super(coordinator);
@@ -32,7 +37,20 @@ public class LoginScreen extends GUIScreen {
         } catch (IOException e) {
             throw new RuntimeException("Failed to load login.fxml", e);
         }
+        if (logoImage != null) {
+            logoImage.setImage(ImageCatalog.load("/assets/general/mesos_logo_white.png"));
+        }
         applyTheme(this.root);
+        playIntroFade();
+    }
+
+    private void playIntroFade() {
+        if (root == null) return;
+        root.setOpacity(0);
+        FadeTransition ft = new FadeTransition(Duration.millis(900), root);
+        ft.setFromValue(0);
+        ft.setToValue(1);
+        ft.play();
     }
 
     @FXML
