@@ -125,14 +125,20 @@ public class TotemPickingScreen extends TUIScreen {
     // ── Input events ──────────────────────────────────────────────────────────
 
     @Override
+    public TUIScreen onEnter() {
+        ensureCursorOnAvailable(1);
+        return null;
+    }
+
+    @Override
     public TUIScreen visit(NavigateUpEvent e) {
-        if (!hasPicked) cursor = (cursor - 1 + ALL_TOTEMS.length) % ALL_TOTEMS.length;
+        if (!hasPicked) moveCursor(-1);
         return this;
     }
 
     @Override
     public TUIScreen visit(NavigateDownEvent e) {
-        if (!hasPicked) cursor = (cursor + 1) % ALL_TOTEMS.length;
+        if (!hasPicked) moveCursor(1);
         return this;
     }
 
@@ -143,8 +149,26 @@ public class TotemPickingScreen extends TUIScreen {
     public TUIScreen visit(SelectEvent e) {
         if (hasPicked) return this;
         Totem t = ALL_TOTEMS[cursor];
+        if (!availableTotems.contains(t)) return this;
         selectedTotem = (selectedTotem == t) ? null : t;
         return this;
+    }
+
+    private void moveCursor(int dir) {
+        int n = ALL_TOTEMS.length;
+        int next = (cursor + dir + n) % n;
+        for (int i = 0; i < n; i++) {
+            if (availableTotems.contains(ALL_TOTEMS[next])) {
+                cursor = next;
+                return;
+            }
+            next = (next + dir + n) % n;
+        }
+    }
+
+    private void ensureCursorOnAvailable(int dir) {
+        if (availableTotems.contains(ALL_TOTEMS[cursor])) return;
+        moveCursor(dir);
     }
 
     @Override
@@ -173,6 +197,7 @@ public class TotemPickingScreen extends TUIScreen {
             pendingPick = false;
         }
         this.availableTotems = newList;
+        if (!hasPicked) ensureCursorOnAvailable(1);
         return this;
     }
 

@@ -85,6 +85,6 @@ public final class CardTokens {
     private static String applyFoodCost(String s) {
         String result = s.replaceAll("\\[FOOD_COST\\]-(\\d+)", "+$1🍖");
         result = result.replaceAll("\\[FOOD_COST\\](\\d+)", "-$1🍖");
-        return result;
+        return result; //TODO controllo che abbia senso
     }
 }

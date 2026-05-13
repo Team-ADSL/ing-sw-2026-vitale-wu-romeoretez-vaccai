@@ -1,7 +1,7 @@
 package org.adsl.server.model.board;
 
 import org.adsl.server.model.Player;
-import org.adsl.shared.enums.Totem;
+import org.adsl.shared.model.OrderCellDTO;
 import org.adsl.shared.model.OrderTileDTO;
 
 import java.io.Serializable;
@@ -50,11 +50,13 @@ public class OrderTile implements Serializable {
     }
 
     public OrderTileDTO createDTO(){
-        ArrayList<Totem> totemList = (ArrayList<Totem>) orderQueue.stream()
-                .map(tile -> tile.getPlayer().orElse(null))
-                .map(p -> p != null ? p.getColor() : null)
-                .collect(Collectors.toList());
-         return new OrderTileDTO(id, totemList);
+        ArrayList<OrderCellDTO> cells = orderQueue.stream()
+                .map(cell -> new OrderCellDTO(
+                        cell.getPlayer().map(Player::getColor).orElse(null),
+                        cell.getBonus(),
+                        cell.isMalus()))
+                .collect(Collectors.toCollection(ArrayList::new));
+        return new OrderTileDTO(id, cells);
     }
 
     public OrderCell getCellAt(int i){
