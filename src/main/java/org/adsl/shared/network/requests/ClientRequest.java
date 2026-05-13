@@ -23,6 +23,7 @@ import java.io.Serializable;
         @JsonSubTypes.Type(value = StartGameRequest.class, name = "START_GAME"),
         @JsonSubTypes.Type(value = MoveRequest.class, name = "MOVE"),
         @JsonSubTypes.Type(value = ExitGameRequest.class, name = "EXIT_GAME"),
+        @JsonSubTypes.Type(value = TotemPickingRequest.class, name = "TOTEM_PICKING"),
 })
 public abstract class ClientRequest implements Serializable {
     public abstract <T> void accept(RequestVisitor<T> visitor, T context) throws ServerException;

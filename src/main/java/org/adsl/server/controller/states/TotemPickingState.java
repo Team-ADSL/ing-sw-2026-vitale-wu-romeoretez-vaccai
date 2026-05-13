@@ -8,16 +8,23 @@ import org.adsl.server.network.VirtualClient;
 import org.adsl.shared.enums.Totem;
 import org.adsl.shared.network.requests.TotemPickingRequest;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class TotemPickingState extends ControllerState {
 
-    private List<Totem> totemToPick = Arrays.stream(Totem.values()).toList();
+    private List<Totem> totemToPick = new ArrayList<>(Arrays.asList(Totem.values()));
     private int numPicked;
 
     public TotemPickingState(Game game, GameController context) {
         super(game, context);
+    }
+
+    @Override
+    public ControllerState onEntry() throws ServerException {
+        getGame().sendTotemAvailable(totemToPick, "[TOTEM PICKING] Waiting for players to pick a totem.");
+        return this;
     }
 
     @Override

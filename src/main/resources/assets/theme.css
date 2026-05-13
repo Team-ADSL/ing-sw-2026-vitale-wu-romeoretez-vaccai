@@ -1,0 +1,119 @@
+/* ── Labels ─────────────────────────────────────────────── */
+.label {
+    -fx-text-fill: #c8b080;
+}
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.button {
+    -fx-background-color: #8b5e3c;
+    -fx-text-fill: #f5deb3;
+    -fx-background-radius: 8;
+    -fx-padding: 8 20 8 20;
+    -fx-cursor: hand;
+    -fx-border-width: 0;
+}
+.button:hover {
+    -fx-background-color: #a5714e;
+}
+.button:pressed {
+    -fx-background-color: #6e4a2f;
+}
+.button:disabled {
+    -fx-background-color: #4a3020;
+    -fx-text-fill: #7a6a50;
+    -fx-opacity: 1;
+}
+
+/* ── TextField ──────────────────────────────────────────── */
+.text-field {
+    -fx-background-color: #3d2410;
+    -fx-text-fill: #f5deb3;
+    -fx-prompt-text-fill: #7a6040;
+    -fx-border-color: #8b5e3c;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 6 10 6 10;
+}
+.text-field:focused {
+    -fx-border-color: #c8a060;
+}
+
+/* ── ListView ───────────────────────────────────────────── */
+.list-view {
+    -fx-background-color: #3d2410;
+    -fx-border-color: #8b5e3c;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+}
+.list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #c8b080;
+    -fx-padding: 4 8 4 8;
+}
+.list-cell:filled:hover {
+    -fx-background-color: #5c3d1e;
+    -fx-cursor: hand;
+}
+.list-cell:filled:selected,
+.list-cell:filled:selected:hover {
+    -fx-background-color: #8b5e3c;
+    -fx-text-fill: #f5deb3;
+}
+
+/* ── ScrollPane ─────────────────────────────────────────── */
+.scroll-pane {
+    -fx-background-color: #3d2410;
+    -fx-border-color: #5c3d1e;
+}
+.scroll-pane > .viewport {
+    -fx-background-color: #3d2410;
+}
+.scroll-pane .scroll-bar:horizontal,
+.scroll-pane .scroll-bar:vertical {
+    -fx-background-color: #2c1a0e;
+}
+.scroll-pane .scroll-bar .thumb {
+    -fx-background-color: #8b5e3c;
+    -fx-background-radius: 4;
+}
+.scroll-pane .scroll-bar .track {
+    -fx-background-color: #3d2410;
+    -fx-background-radius: 4;
+}
+.scroll-pane .corner {
+    -fx-background-color: #2c1a0e;
+}
+
+/* ── TableView ──────────────────────────────────────────── */
+.table-view {
+    -fx-background-color: #3d2410;
+    -fx-border-color: #8b5e3c;
+    -fx-border-radius: 4;
+}
+.table-view .column-header-background {
+    -fx-background-color: #5c3d1e;
+}
+.table-view .column-header .label {
+    -fx-text-fill: #f5deb3;
+    -fx-font-weight: bold;
+}
+.table-row-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #c8b080;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+.table-row-cell:odd {
+    -fx-background-color: #331d0c;
+}
+.table-row-cell:selected {
+    -fx-background-color: #8b5e3c;
+}
+.table-cell {
+    -fx-text-fill: #c8b080;
+    -fx-border-color: transparent;
+    -fx-padding: 4 8 4 8;
+}
+.table-row-cell:selected .table-cell {
+    -fx-text-fill: #f5deb3;
+}

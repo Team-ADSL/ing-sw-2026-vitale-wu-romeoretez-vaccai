@@ -45,6 +45,7 @@ public class LobbyScreen extends GUIScreen {
             throw new RuntimeException("Failed to load lobby.fxml", e);
         }
         refresh();
+        applyTheme(this.root);
     }
 
     private void refresh() {
@@ -95,7 +96,7 @@ public class LobbyScreen extends GUIScreen {
         if (chatBox == null) return;
         Label entry = new Label(text);
         entry.setWrapText(true);
-        entry.setStyle("-fx-text-fill: #424242;");
+        entry.setStyle("-fx-text-fill: #d2b48c;");
         chatBox.getChildren().add(entry);
         if (chatScroll != null) {
             Platform.runLater(() -> chatScroll.setVvalue(1.0));

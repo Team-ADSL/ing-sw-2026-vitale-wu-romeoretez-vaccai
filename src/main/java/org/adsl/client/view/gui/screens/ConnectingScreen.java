@@ -22,5 +22,6 @@ public class ConnectingScreen extends GUIScreen {
         } catch (IOException e) {
             throw new RuntimeException("Failed to load connecting.fxml", e);
         }
+        applyTheme(this.root);
     }
 }

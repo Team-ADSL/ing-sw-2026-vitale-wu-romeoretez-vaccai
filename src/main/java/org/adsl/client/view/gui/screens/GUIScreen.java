@@ -1,8 +1,14 @@
 package org.adsl.client.view.gui.screens;
 
+import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.Pane;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.serverEvents.*;
+import org.adsl.client.view.gui.ImageCatalog;
 import org.adsl.client.view.Screen;
 import org.adsl.shared.network.responses.TotemAvailableUpdate;
 
@@ -83,5 +89,42 @@ public abstract class GUIScreen extends Screen<GUIScreen> {
     @Override
     public GUIScreen getThis(){
         return this;
+    }
+
+    // ── Dark theme helper ──────────────────────────────────────────────────────
+
+    protected static void applyTheme(Parent root) {
+        String css = GUIScreen.class.getResource("/assets/theme.css").toExternalForm();
+        if (!root.getStylesheets().contains(css)) {
+            root.getStylesheets().add(css);
+        }
+        applyChalkFonts(root);
+    }
+
+    private static void applyChalkFonts(Parent node) {
+        for (Node child : node.getChildrenUnmodifiable()) {
+            if (child instanceof Label l) {
+                l.setFont(ImageCatalog.chalkFont(extractFontSize(l.getStyle(), 15.0)));
+            } else if (child instanceof Button b) {
+                b.setFont(ImageCatalog.chalkFont(extractFontSize(b.getStyle(), 16.0)));
+            } else if (child instanceof TextField tf) {
+                tf.setFont(ImageCatalog.chalkFont(15.0));
+            }
+            if (child instanceof Pane p) {
+                applyChalkFonts(p);
+            }
+        }
+    }
+
+    private static double extractFontSize(String style, double fallback) {
+        if (style == null || !style.contains("-fx-font-size")) return fallback;
+        try {
+            int idx = style.indexOf("-fx-font-size:");
+            String sub = style.substring(idx + 14).trim();
+            String num = sub.replaceAll("[^0-9.].*", "").trim();
+            return Double.parseDouble(num);
+        } catch (Exception e) {
+            return fallback;
+        }
     }
 }
