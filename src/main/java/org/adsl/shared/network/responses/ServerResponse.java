@@ -23,6 +23,7 @@ import java.io.Serializable;
         @JsonSubTypes.Type(value = ServerDisconnected.class, name = "DISCONNECTED"),
         @JsonSubTypes.Type(value = GameEnded.class, name = "GAME_ENDED"),
         @JsonSubTypes.Type(value = ErrorResponse.class, name = "ERROR_RESPONSE"),
+        @JsonSubTypes.Type(value = EventsTriggered.class, name = "EVENTS_TRIGGERED"),
 })
 public abstract class ServerResponse implements Serializable {
     @JsonProperty("message")

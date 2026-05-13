@@ -13,4 +13,5 @@ public interface EventVisitor<S extends Screen<S>> {
     S visit(ErrorEvent event);
     S visit(DisconnectedEvent event);
     S visit(TotemAvailableEvent event);
+    S visit(EventsTriggeredEvent event);
 }

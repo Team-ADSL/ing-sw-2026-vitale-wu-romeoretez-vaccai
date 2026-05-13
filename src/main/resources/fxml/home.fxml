@@ -3,38 +3,41 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
-<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<HBox spacing="12" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-      style="-fx-background-color: #2c1a0e;">
-    <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+<StackPane fx:id="rootStack" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+           style="-fx-background-color: #2c1a0e;">
 
-    <VBox spacing="12" HBox.hgrow="ALWAYS">
-        <Label fx:id="welcomeLabel" style="-fx-font-size: 22px; -fx-text-fill: #f5deb3;"/>
-        <Label text="Create new game:" style="-fx-font-size: 15px;"/>
-        <HBox spacing="10">
-            <Button text="2 Players" onAction="#onCreate2"/>
-            <Button text="3 Players" onAction="#onCreate3"/>
-            <Button text="4 Players" onAction="#onCreate4"/>
-            <Button text="5 Players" onAction="#onCreate5"/>
-        </HBox>
-        <Label text="Join an active game:" style="-fx-font-size: 15px;"/>
-        <ListView fx:id="gamesList" maxHeight="220"/>
-        <HBox spacing="10">
-            <Button text="Join Selected" onAction="#onJoinSelected"/>
-            <Button text="Logout" onAction="#onLogout"/>
-        </HBox>
+    <VBox alignment="TOP_CENTER" spacing="14" maxWidth="640" StackPane.alignment="TOP_CENTER">
+        <padding><Insets top="40" right="24" bottom="24" left="24"/></padding>
+
+        <Label fx:id="welcomeLabel" style="-fx-font-size: 26px; -fx-text-fill: #f5deb3;"/>
+
+        <VBox styleClass="panel" spacing="10" alignment="CENTER">
+            <padding><Insets top="16" right="20" bottom="16" left="20"/></padding>
+            <Label text="Create new game" style="-fx-font-size: 15px; -fx-text-fill: #c8b080;"/>
+            <HBox spacing="10" alignment="CENTER">
+                <Button text="2 Players" onAction="#onCreate2"/>
+                <Button text="3 Players" onAction="#onCreate3"/>
+                <Button text="4 Players" onAction="#onCreate4"/>
+                <Button text="5 Players" onAction="#onCreate5"/>
+            </HBox>
+        </VBox>
+
+        <VBox styleClass="panel" spacing="10" alignment="CENTER">
+            <padding><Insets top="16" right="20" bottom="16" left="20"/></padding>
+            <Label text="Join an active game" style="-fx-font-size: 15px; -fx-text-fill: #c8b080;"/>
+            <ListView fx:id="gamesList" maxHeight="200" prefWidth="420"/>
+            <HBox spacing="10" alignment="CENTER">
+                <Button text="Join Selected" onAction="#onJoinSelected"/>
+                <Button text="Logout" onAction="#onLogout"/>
+            </HBox>
+        </VBox>
+
         <Label fx:id="errorLabel" style="-fx-text-fill: #e53935; -fx-font-size: 14px;" wrapText="true"/>
     </VBox>
 
-    <VBox spacing="6" prefWidth="300" minWidth="240">
-        <Label text="Home log" style="-fx-font-size: 14px; -fx-text-fill: #b8946c;"/>
-        <ScrollPane fx:id="chatScroll" fitToWidth="true" VBox.vgrow="ALWAYS">
-            <VBox fx:id="chatBox" spacing="3">
-                <padding><Insets top="6" right="6" bottom="6" left="6"/></padding>
-            </VBox>
-        </ScrollPane>
-    </VBox>
-</HBox>
+    <VBox fx:id="logBox" pickOnBounds="false" StackPane.alignment="BOTTOM_RIGHT"/>
+</StackPane>

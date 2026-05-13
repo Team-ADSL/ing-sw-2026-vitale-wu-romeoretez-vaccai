@@ -52,6 +52,10 @@ public abstract class GameUI {
         dispatch(new EndGameEvent(matchResults));
     }
 
+    public void onEventsTriggered(List<String> eventTitles, long durationMs) {
+        dispatch(new EventsTriggeredEvent(eventTitles, durationMs));
+    }
+
     public void onErrorReceived(String error) {
         dispatch(new ErrorEvent(error));
     }
