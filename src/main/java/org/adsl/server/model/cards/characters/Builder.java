@@ -38,6 +38,6 @@ public class Builder extends Character {
 
     @Override
     protected String getEffectsLabel() {
-        return CardToken.FOOD_COST + "-" + discount + " " + CardToken.PP + pp;
+        return "-" + discount + CardToken.FOOD + " " + pp + CardToken.PP;
     }
 }
