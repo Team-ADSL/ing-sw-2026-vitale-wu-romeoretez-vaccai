@@ -329,13 +329,22 @@ public class GameScreen extends TUIScreen {
         int offerTrackY = 8;
         String turnOrderText = "Turn Order: ";
         if (game.board().orderTile() != null) {
-            List<Totem> order = game.board().orderTile().totems();
-            if (order != null) {
+            List<OrderCellDTO> cells = game.board().orderTile().cells();
+            if (cells != null) {
                 StringBuilder sb = new StringBuilder("Turn Order: ");
-                for (int i = 0; i < order.size(); i++) {
-                    sb.append(CardCatalog.totemLabel(order.get(i)));
-                    if (i < order.size() - 1)
-                        sb.append(" → ");
+                for (int i = 0; i < cells.size(); i++) {
+                    OrderCellDTO cell = cells.get(i);
+                    if (cell.totem() != null) {
+                        sb.append(CardCatalog.totemLabel(cell.totem()));
+                    } else if (cell.isMalus()) {
+                        sb.append("-1").append(CardTokens.toEmoji(CardToken.FOOD))
+                          .append("/-2").append(CardTokens.toEmoji(CardToken.PP));
+                    } else if (cell.bonus() > 0) {
+                        sb.append("+").append(cell.bonus()).append(CardTokens.toEmoji(CardToken.FOOD));
+                    } else {
+                        sb.append("--");
+                    }
+                    if (i < cells.size() - 1) sb.append(" → ");
                 }
                 turnOrderText = sb.toString();
             }
