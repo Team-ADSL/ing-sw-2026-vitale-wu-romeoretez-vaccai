@@ -1,16 +1,16 @@
 package org.adsl.client.view.gui.screens;
 
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.serverEvents.ErrorEvent;
 import org.adsl.client.serverEvents.HomeUpdateEvent;
+import org.adsl.client.view.gui.FloatingLog;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -18,13 +18,14 @@ import java.util.List;
 
 public class HomeScreen extends GUIScreen {
 
+    @FXML private StackPane rootStack;
     @FXML private Label welcomeLabel;
     @FXML private Label errorLabel;
     @FXML private ListView<Integer> gamesList;
-    @FXML private VBox chatBox;
-    @FXML private ScrollPane chatScroll;
+    @FXML private VBox logBox;
 
     private List<Integer> activeGames;
+    private FloatingLog floatingLog;
 
     public HomeScreen(AppCoordinator coordinator, String username, List<Integer> activeGames) {
         super(coordinator, username);
@@ -39,6 +40,10 @@ public class HomeScreen extends GUIScreen {
         welcomeLabel.setText("Welcome, " + (username != null ? username : "") + "!");
         gamesList.setItems(FXCollections.observableArrayList(this.activeGames));
         applyTheme(this.root);
+
+        floatingLog = new FloatingLog("Home log");
+        logBox.getChildren().setAll(floatingLog.getFloatingNode());
+        rootStack.getChildren().add(floatingLog.getFullPanel());
     }
 
     @FXML private void onCreate2() { create(2); }
@@ -80,31 +85,18 @@ public class HomeScreen extends GUIScreen {
         }
     }
 
-    /** Stay on the screen and refresh the list rather than re-creating it. */
     @Override
     public GUIScreen visit(HomeUpdateEvent e) {
         List<Integer> incoming = e.activeGames();
         this.activeGames = incoming != null ? new ArrayList<>(incoming) : new ArrayList<>();
         gamesList.setItems(FXCollections.observableArrayList(this.activeGames));
-        if (e.message() != null && !e.message().isBlank()) appendChat(e.message());
+        if (e.message() != null && !e.message().isBlank()) floatingLog.append(e.message());
         return this;
     }
 
-    /** Server-side errors (invalid numPlayer, joining a non-existent game, ...). */
     @Override
     public GUIScreen visit(ErrorEvent e) {
         if (errorLabel != null) errorLabel.setText(e.message());
         return this;
-    }
-
-    private void appendChat(String text) {
-        if (chatBox == null) return;
-        Label entry = new Label(text);
-        entry.setWrapText(true);
-        entry.setStyle("-fx-text-fill: #d2b48c;");
-        chatBox.getChildren().add(entry);
-        if (chatScroll != null) {
-            Platform.runLater(() -> chatScroll.setVvalue(1.0));
-        }
     }
 }

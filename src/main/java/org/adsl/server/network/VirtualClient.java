@@ -112,6 +112,13 @@ public abstract class VirtualClient implements GameObserver, HomeObserver, EndGa
     }
 
     @Override
+    public void notifyEventsTriggered(List<String> eventTitles, long durationMs){
+        EventsTriggered serverResponse = new EventsTriggered(eventTitles, durationMs);
+        System.out.println("[SENDING] Events triggered:" + eventTitles + " to: " + getClientUsername());
+        this.sendResponse(serverResponse);
+    }
+
+    @Override
     public void notifyEndGame(int id, List<MatchResult> results){
         notifyEndGame(id, results, null);
     }

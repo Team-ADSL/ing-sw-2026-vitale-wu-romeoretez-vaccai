@@ -63,4 +63,9 @@ public abstract class Screen<S extends Screen<S>> implements EventVisitor<S> {
     public S visit(DisconnectedEvent e) {
         return createDisconnectedScreen(e, appCoordinator);
     }
+
+    @Override
+    public S visit(EventsTriggeredEvent e) {
+        return getThis();
+    }
 }

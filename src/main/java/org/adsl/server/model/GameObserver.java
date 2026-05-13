@@ -19,4 +19,6 @@ public interface GameObserver {
     }
 
     default void notifyError(String message) {}
+
+    default void notifyEventsTriggered(List<String> eventTitles, long durationMs) {}
 }
