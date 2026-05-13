@@ -1,26 +1,38 @@
 package org.adsl.client.view.gui.screens;
 
+import javafx.animation.FadeTransition;
+import javafx.animation.KeyFrame;
+import javafx.animation.PauseTransition;
+import javafx.animation.ScaleTransition;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.util.Duration;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.serverEvents.ErrorEvent;
+import org.adsl.client.serverEvents.EventsTriggeredEvent;
 import org.adsl.client.serverEvents.GameUpdateEvent;
 import org.adsl.client.view.gui.Chip;
+import org.adsl.client.view.gui.FloatingLog;
 import org.adsl.client.view.gui.ImageCatalog;
-import org.adsl.client.view.tui.CardCatalog;
-import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Phase;
 import org.adsl.shared.enums.Row;
 import org.adsl.shared.enums.Totem;
@@ -31,83 +43,158 @@ import org.adsl.shared.model.PlayerDTO;
 import org.adsl.shared.utils.Move;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * Game screen. Mirrors the TUI {@link org.adsl.client.view.tui.screens.GameScreen}
- * behaviour: cards are clickable, selection is highlighted in green, building
- * cards are tinted purple and event cards orange. Selection is unconstrained
- * client-side — the server validates the request (issue #37).
+ * Game screen — minimal, centered, responsive.
  *
- * <p>Phase rules (matching the TUI):
- * <ul>
- *   <li>{@code TOTEM_PLACEMENT}: clicking an offer tile sends the move
- *       immediately. Tiles already occupied are disabled.</li>
- *   <li>{@code ACTION_EXECUTION} / {@code EXTRA_MOVE}: clicking a card on
- *       top/bottom row toggles its selection. The "Confirm Selection" button
- *       sends the accumulated set.</li>
- *   <li>Other phases / not-my-turn: every card and tile is disabled.</li>
- * </ul>
+ * Cards float without containers, rounded corners; hover scales up; selected
+ * cards stay scaled with a white glow. Offer-track tiles are flush (no gap)
+ * so they compose a continuous image. Card rows scale dynamically so every
+ * row stays single-line at any window size.
  *
- * <p>After sending a move the screen enters a transient
- * {@code WAITING_SERVER} state where everything is disabled until the next
- * {@link GameUpdateEvent} or {@link ErrorEvent} arrives.
+ * The game log sits bottom-right, showing only the most recent messages with
+ * a fade-up gradient; clicking it opens a full-chat panel.
  */
 public class GameScreen extends GUIScreen {
 
-    private static final String BORDER_SELECTED = "#4caf50";
-    private static final String BORDER_BUILDING = "#8e24aa";
-    private static final String BORDER_EVENT    = "#ef6c00";
-    private static final String BORDER_NONE     = "transparent";
+    private static final double CARD_ASPECT  = 1.484;
+    private static final double CARD_MAX_W   = 130.0;
+    private static final double CARD_MIN_W   = 55.0;
+    private static final double CARD_GAP     = 10.0;
+    private static final double TILE_ASPECT  = 1.65;
+    private static final double TILE_MAX_W   = 110.0;
+    private static final double TILE_MIN_W   = 50.0;
+    private static final double HOVER_SCALE  = 1.15;
+    private static final Duration ANIM       = Duration.millis(140);
+    private static final double CHIP_WIDTH   = 40;
+    private static final double TOTEM_BADGE  = 22;
+    private static final int    LOG_VISIBLE  = 5;
 
-    private static final double CARD_WIDTH  = 110;
-    private static final double TILE_WIDTH  = 90;
-    private static final double CHIP_WIDTH  = 40;
-    private static final double TOTEM_BADGE = 22;
-
-    @FXML private Label headerLabel;
-    @FXML private Label phaseLabel;
-    @FXML private FlowPane topRow;
-    @FXML private FlowPane offerTrack;
-    @FXML private FlowPane bottomRow;
-    @FXML private Label tribeLabel;
-    @FXML private Label tribeContents;
-    @FXML private VBox othersBox;
-    @FXML private Label hintLabel;
-    @FXML private Button confirmButton;
-    @FXML private Label errorLabel;
-    @FXML private VBox chatBox;
-    @FXML private ScrollPane chatScroll;
+    @FXML private StackPane rootStack;
+    @FXML private VBox      contentBox;
+    @FXML private Label     headerLabel;
+    @FXML private Label     phaseLabel;
+    @FXML private HBox      topRow;
+    @FXML private HBox      offerTrack;
+    @FXML private HBox      bottomRow;
+    @FXML private Label     tribeLabel;
+    @FXML private Label     tribeContents;
+    @FXML private VBox      othersBox;
+    @FXML private Label     hintLabel;
+    @FXML private Button    confirmButton;
+    @FXML private Label     errorLabel;
+    @FXML private VBox      logBox;
 
     private GameDTO game;
     private final Set<Move> selectedMoves = new LinkedHashSet<>();
     private int upperCount = 0;
     private int lowerCount = 0;
     private boolean waitingServer = false;
+    private FloatingLog floatingLog;
+
+    private StackPane overlayPane;
+    private Label overlayTitle;
+    private Timeline overlayTimeline;
+    private PauseTransition overlayHider;
 
     public GameScreen(AppCoordinator coordinator, String username, GameDTO game) {
         super(coordinator, username);
         this.game = game;
+        Parent fxmlRoot;
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/game.fxml"));
             loader.setController(this);
-            this.root = loader.load();
+            fxmlRoot = loader.load();
         } catch (IOException e) {
             throw new RuntimeException("Failed to load game.fxml", e);
         }
-        applyTheme(this.root);
+        applyTheme(fxmlRoot);
+
+        this.root = (StackPane) fxmlRoot;
+        rootStack.widthProperty().addListener((obs, o, n) -> Platform.runLater(this::renderBoard));
+        rootStack.heightProperty().addListener((obs, o, n) -> Platform.runLater(this::renderBoard));
+
+        buildEventsOverlay();
+        rootStack.getChildren().add(overlayPane);
+        StackPane.setAlignment(overlayPane, Pos.CENTER);
+
+        floatingLog = new FloatingLog("Game log");
+        if (logBox != null) {
+            logBox.getChildren().setAll(floatingLog.getFloatingNode());
+            logBox.setPickOnBounds(false);
+        } else {
+            rootStack.getChildren().add(floatingLog.getFloatingNode());
+        }
+        rootStack.getChildren().add(floatingLog.getFullPanel());
+
         resolveMoveCounts();
         renderBoard();
     }
+
+    // ── Events overlay ───────────────────────────────────────────────────────
+
+    private void buildEventsOverlay() {
+        overlayPane = new StackPane();
+        overlayPane.setStyle("-fx-background-color: rgba(239, 108, 0, 0.55);");
+        overlayPane.setMouseTransparent(true);
+        overlayPane.setVisible(false);
+
+        overlayTitle = new Label("");
+        overlayTitle.setStyle("-fx-text-fill: white; -fx-font-size: 64px; -fx-font-weight: bold;"
+                + " -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.85), 8, 0.4, 0, 0);");
+        overlayTitle.setAlignment(Pos.CENTER);
+        overlayPane.getChildren().add(overlayTitle);
+        StackPane.setAlignment(overlayTitle, Pos.CENTER);
+    }
+
+    @Override
+    public GUIScreen visit(EventsTriggeredEvent e) {
+        List<String> titles = e.eventTitles();
+        long duration = Math.max(500L, e.durationMs());
+        if (titles == null || titles.isEmpty()) {
+            return this;
+        }
+        Platform.runLater(() -> showEventsOverlay(titles, duration));
+        return this;
+    }
+
+    private void showEventsOverlay(List<String> titles, long durationMs) {
+        if (overlayPane == null) return;
+        if (overlayTimeline != null) overlayTimeline.stop();
+        if (overlayHider != null) overlayHider.stop();
+
+        overlayTitle.setText(titles.get(0).toUpperCase());
+        overlayPane.setVisible(true);
+
+        long perTitleMs = Math.max(1L, durationMs / titles.size());
+        overlayTimeline = new Timeline();
+        for (int i = 0; i < titles.size(); i++) {
+            final String t = titles.get(i).toUpperCase();
+            overlayTimeline.getKeyFrames().add(new KeyFrame(
+                    Duration.millis(perTitleMs * i),
+                    ev -> overlayTitle.setText(t)));
+        }
+        overlayTimeline.play();
+
+        overlayHider = new PauseTransition(Duration.millis(durationMs));
+        overlayHider.setOnFinished(ev -> {
+            overlayPane.setVisible(false);
+            if (overlayTimeline != null) overlayTimeline.stop();
+        });
+        overlayHider.play();
+    }
+
+    // ── Server events ────────────────────────────────────────────────────────
 
     @Override
     public GUIScreen visit(GameUpdateEvent e) {
         this.game = e.game();
         waitingServer = false;
-        // Clear selection when leaving a card-pick phase, mirroring TUI setupActiveState().
         if (game.phase() != Phase.ACTION_EXECUTION && game.phase() != Phase.EXTRA_MOVE) {
             selectedMoves.clear();
         }
@@ -128,15 +215,10 @@ public class GameScreen extends GUIScreen {
     }
 
     private void appendChat(String text) {
-        if (chatBox == null) return;
-        Label entry = new Label(text);
-        entry.setWrapText(true);
-        entry.setStyle("-fx-text-fill: #d2b48c;");
-        chatBox.getChildren().add(entry);
-        if (chatScroll != null) {
-            Platform.runLater(() -> chatScroll.setVvalue(1.0));
-        }
+        if (floatingLog != null) floatingLog.append(text);
     }
+
+    // ── Input ────────────────────────────────────────────────────────────────
 
     @FXML
     private void onSendMove() {
@@ -160,9 +242,7 @@ public class GameScreen extends GUIScreen {
         }
     }
 
-    // ── Click handlers ──────────────────────────────────────────────────────
-
-    private void onCardClicked(Row row, int idx, CardDTO card) {
+    private void onCardClicked(Row row, int idx, CardDTO card, StackPane cell) {
         if (!canPickCards()) return;
         if (card == null) {
             errorLabel.setText("That slot is empty.");
@@ -192,7 +272,7 @@ public class GameScreen extends GUIScreen {
         }
     }
 
-    // ── Phase / turn helpers ────────────────────────────────────────────────
+    // ── Phase / turn helpers ─────────────────────────────────────────────────
 
     private boolean isMyTurn() {
         if (game == null || username == null) return false;
@@ -209,7 +289,6 @@ public class GameScreen extends GUIScreen {
                 && (game.phase() == Phase.ACTION_EXECUTION || game.phase() == Phase.EXTRA_MOVE);
     }
 
-    /** Required pick counts derived from the offer tile where my totem sits. */
     private void resolveMoveCounts() {
         upperCount = 0;
         lowerCount = 0;
@@ -228,7 +307,23 @@ public class GameScreen extends GUIScreen {
         }
     }
 
-    // ── Rendering ───────────────────────────────────────────────────────────
+    // ── Rendering ────────────────────────────────────────────────────────────
+
+    private double availableWidth() {
+        double w = rootStack.getWidth();
+        if (w <= 0) w = 1280;
+        // contentBox padding 24+24, plus a safety margin
+        return Math.max(200, w - 80);
+    }
+
+    private double computeCardWidth(int n, double gap, double max, double min) {
+        if (n <= 0) return max;
+        double avail = availableWidth();
+        double w = (avail - gap * Math.max(0, n - 1)) / n;
+        if (w > max) w = max;
+        if (w < min) w = min;
+        return w;
+    }
 
     private void renderBoard() {
         if (game == null) return;
@@ -236,13 +331,25 @@ public class GameScreen extends GUIScreen {
                 game.round(), game.era(), totemLabel(game.currentPlayerTotem())));
         phaseLabel.setText("Phase: " + (game.phase() != null ? game.phase().name() : "—"));
 
-        renderRow(topRow, game.board().topRow(), Row.UPPER);
-        renderRow(bottomRow, game.board().lowRow(), Row.LOWER);
-        renderOfferTrack(offerTrack, game.board().offerTrack());
+        List<CardDTO> top = game.board().topRow();
+        List<CardDTO> bot = game.board().lowRow();
+        List<OfferTileDTO> off = game.board().offerTrack();
+
+        int topN = (int) top.stream().filter(c -> c != null).count();
+        int botN = (int) bot.stream().filter(c -> c != null).count();
+        int offN = off.size();
+
+        double topW = computeCardWidth(topN, CARD_GAP, CARD_MAX_W, CARD_MIN_W);
+        double botW = computeCardWidth(botN, CARD_GAP, CARD_MAX_W, CARD_MIN_W);
+        double offW = computeCardWidth(offN, 0,         TILE_MAX_W, TILE_MIN_W);
+
+        renderRow(topRow, top, Row.UPPER, topW);
+        renderRow(bottomRow, bot, Row.LOWER, botW);
+        renderOfferTrack(offerTrack, off, offW);
 
         PlayerDTO me = findMe();
         if (me != null) {
-            tribeLabel.setText("YOUR TRIBE");
+            tribeLabel.setText("YOUR TRIBE — " + me.name());
             tribeContents.setText(summariseCards(me));
         } else {
             tribeLabel.setText("YOUR TRIBE");
@@ -250,9 +357,7 @@ public class GameScreen extends GUIScreen {
         }
 
         othersBox.getChildren().clear();
-        if (me != null) {
-            othersBox.getChildren().add(buildPlayerRow(me, true));
-        }
+        if (me != null) othersBox.getChildren().add(buildPlayerRow(me, true));
         for (PlayerDTO p : game.players()) {
             if (me != null && p.totem() == me.totem()) continue;
             othersBox.getChildren().add(buildPlayerRow(p, false));
@@ -261,10 +366,9 @@ public class GameScreen extends GUIScreen {
         renderHintAndConfirm();
     }
 
-    /** Compact row: totem badge | name | food chip | pp chip | optional cards summary. */
     private Node buildPlayerRow(PlayerDTO p, boolean self) {
         HBox row = new HBox(8);
-        row.setAlignment(Pos.CENTER_LEFT);
+        row.setAlignment(Pos.CENTER);
 
         if (p.totem() != null) {
             ImageView totem = safeImageView(() -> ImageCatalog.totem2D(p.totem()));
@@ -276,7 +380,7 @@ public class GameScreen extends GUIScreen {
         }
 
         Label name = new Label((self ? "★ " : "") + p.name());
-        name.setStyle("-fx-font-weight: bold;");
+        name.setStyle("-fx-font-weight: bold; -fx-text-fill: #f5deb3;");
         row.getChildren().add(name);
 
         row.getChildren().add(Chip.food(p.food(), CHIP_WIDTH));
@@ -284,101 +388,107 @@ public class GameScreen extends GUIScreen {
 
         if (self) {
             Label tag = new Label("(you)");
-            tag.setStyle("-fx-text-fill: #666;");
+            tag.setStyle("-fx-text-fill: #888;");
             row.getChildren().add(tag);
         }
         return row;
     }
 
-    private void renderRow(FlowPane pane, List<CardDTO> cards, Row row) {
-        pane.getChildren().clear();
+    private void renderRow(HBox container, List<CardDTO> cards, Row row, double cardW) {
+        container.getChildren().clear();
         if (cards == null) return;
         boolean clickable = canPickCards();
         int idx = 0;
         for (CardDTO c : cards) {
-            if (c != null) {
-                pane.getChildren().add(buildCardCell(c, row, idx, clickable));
-            }
+            if (c == null) { idx++; continue; }
+            container.getChildren().add(buildCardCell(c, row, idx, clickable, cardW));
             idx++;
         }
     }
 
-    private Node buildCardCell(CardDTO card, Row row, int idx, boolean clickable) {
+    private Node buildCardCell(CardDTO card, Row row, int idx, boolean clickable, double cardW) {
+        double cardH = cardW * CARD_ASPECT;
         StackPane cell = new StackPane();
+        cell.setPrefSize(cardW, cardH);
+        cell.setMinSize(cardW, cardH);
+        cell.setMaxSize(cardW, cardH);
         cell.setAlignment(Pos.CENTER);
-
-        if (card == null) {
-            cell.setPrefSize(CARD_WIDTH, CARD_WIDTH * 1.484);
-            cell.setStyle("-fx-border-color: #cccccc; -fx-border-style: dashed; -fx-border-width: 1; -fx-background-color: #f5f5f5;");
-            Label empty = new Label("empty");
-            empty.setStyle("-fx-text-fill: #999;");
-            cell.getChildren().add(empty);
-            return cell;
-        }
 
         ImageView img = safeImageView(() -> ImageCatalog.cardFront(card.id()));
         if (img != null) {
-            img.setFitWidth(CARD_WIDTH);
-            img.setPreserveRatio(true);
+            img.setFitWidth(cardW);
+            img.setFitHeight(cardH);
+            img.setPreserveRatio(false);
+            Rectangle clip = new Rectangle(cardW, cardH);
+            clip.setArcWidth(cardW * 0.12);
+            clip.setArcHeight(cardW * 0.12);
+            img.setClip(clip);
             cell.getChildren().add(img);
         } else {
             Label fallback = new Label(card.id());
             fallback.setWrapText(true);
-            cell.setPrefSize(CARD_WIDTH, CARD_WIDTH * 1.484);
+            fallback.setStyle("-fx-text-fill: #f5deb3; -fx-background-color: #3a2410;"
+                    + " -fx-background-radius: 8; -fx-padding: 6;");
             cell.getChildren().add(fallback);
         }
 
         boolean selected = selectedMoves.contains(new Move(idx, row));
-        String borderColor;
         if (selected) {
-            borderColor = BORDER_SELECTED;
-        } else {
-            CardType type = CardCatalog.typeFromId(card.id());
-            if (type == CardType.BUILDINGS) borderColor = BORDER_BUILDING;
-            else if (CardCatalog.isEvent(type)) borderColor = BORDER_EVENT;
-            else borderColor = BORDER_NONE;
+            cell.setEffect(selectedGlow());
+            cell.setScaleX(HOVER_SCALE);
+            cell.setScaleY(HOVER_SCALE);
         }
-        cell.setStyle("-fx-border-color: " + borderColor + "; -fx-border-width: 3; -fx-border-radius: 6;");
 
         if (clickable) {
             cell.setCursor(Cursor.HAND);
-            cell.setOnMouseClicked(e -> onCardClicked(row, idx, card));
+            cell.setOnMouseEntered(e -> {
+                if (!selectedMoves.contains(new Move(idx, row))) scale(cell, HOVER_SCALE);
+            });
+            cell.setOnMouseExited(e -> {
+                if (!selectedMoves.contains(new Move(idx, row))) scale(cell, 1.0);
+            });
+            cell.setOnMouseClicked(e -> onCardClicked(row, idx, card, cell));
         } else {
-            cell.setOpacity(0.55);
+            cell.setOpacity(0.65);
         }
         return cell;
     }
 
-    private void renderOfferTrack(FlowPane pane, List<OfferTileDTO> tiles) {
-        pane.getChildren().clear();
+    private void renderOfferTrack(HBox container, List<OfferTileDTO> tiles, double tileW) {
+        container.getChildren().clear();
         if (tiles == null) return;
         boolean clickable = canPlaceTotem();
         int idx = 0;
         for (OfferTileDTO t : tiles) {
-            pane.getChildren().add(buildOfferTileCell(t, idx, clickable));
+            container.getChildren().add(buildOfferTileCell(t, idx, clickable, tileW));
             idx++;
         }
     }
 
-    private Node buildOfferTileCell(OfferTileDTO tile, int idx, boolean clickable) {
+    private Node buildOfferTileCell(OfferTileDTO tile, int idx, boolean clickable, double tileW) {
+        double tileH = tileW * TILE_ASPECT;
         StackPane cell = new StackPane();
+        cell.setPrefSize(tileW, tileH);
+        cell.setMinSize(tileW, tileH);
+        cell.setMaxSize(tileW, tileH);
         cell.setAlignment(Pos.CENTER);
 
         ImageView img = safeImageView(() -> ImageCatalog.offerTile(tile.id()));
         if (img != null) {
-            img.setFitWidth(TILE_WIDTH);
-            img.setPreserveRatio(true);
+            img.setFitWidth(tileW);
+            img.setFitHeight(tileH);
+            img.setPreserveRatio(false);
             cell.getChildren().add(img);
         } else {
-            cell.setPrefSize(TILE_WIDTH, TILE_WIDTH * 1.65);
             Label fallback = new Label(tile.id());
+            fallback.setStyle("-fx-text-fill: #f5deb3;");
             cell.getChildren().add(fallback);
         }
 
         if (tile.totem() != null) {
             ImageView totem = safeImageView(() -> ImageCatalog.totem2D(tile.totem()));
             if (totem != null) {
-                totem.setFitWidth(TILE_WIDTH * 0.5);
+                totem.setFitWidth(tileW * 0.5);
                 totem.setPreserveRatio(true);
                 cell.getChildren().add(totem);
             }
@@ -389,12 +499,24 @@ public class GameScreen extends GUIScreen {
             cell.setCursor(Cursor.HAND);
             cell.setOnMouseClicked(e -> onOfferTileClicked(idx, tile));
         } else if (!clickable) {
-            cell.setOpacity(0.6);
+            cell.setOpacity(0.7);
         }
         return cell;
     }
 
-    /** Wraps Image loading so a missing resource doesn't crash the screen. */
+    private static DropShadow selectedGlow() {
+        DropShadow glow = new DropShadow(24, Color.WHITE);
+        glow.setSpread(0.45);
+        return glow;
+    }
+
+    private void scale(StackPane node, double to) {
+        ScaleTransition st = new ScaleTransition(ANIM, node);
+        st.setToX(to);
+        st.setToY(to);
+        st.play();
+    }
+
     private static ImageView safeImageView(java.util.function.Supplier<javafx.scene.image.Image> supplier) {
         try {
             return new ImageView(supplier.get());
