@@ -50,6 +50,9 @@ public class GameScreen extends TUIScreen {
     private int upperCount = 0;
     private int lowerCount = 0;
 
+    // View-row cursor: which card row A/D scrolls when not in MY_TURN_CARDS
+    private boolean viewOnTopRow = true;
+
     // Independent scroll offsets per row (A/D keys)
     private int topRowOffset = 0;
     private int lowRowOffset = 0;
@@ -156,12 +159,44 @@ public class GameScreen extends TUIScreen {
             scrollCurrentRowLeft();
         } else if (c == 'd' || c == 'D') {
             scrollCurrentRowRight();
+        } else if (c == 'q' || c == 'Q') {
+            jumpRowStart();
+        } else if (c == 'e' || c == 'E') {
+            jumpRowEnd();
         }
         return this;
     }
 
+    private void jumpRowStart() {
+        if (subState == SubState.MY_TURN_CARDS) {
+            if (onTopRow) topRowOffset = 0;
+            else lowRowOffset = 0;
+            selectionIndex = 0;
+        } else {
+            if (viewOnTopRow) topRowOffset = 0;
+            else lowRowOffset = 0;
+        }
+    }
+
+    private void jumpRowEnd() {
+        int visible = visibleCardsCount();
+        if (subState == SubState.MY_TURN_CARDS) {
+            List<CardDTO> row = onTopRow ? game.board().topRow() : game.board().lowRow();
+            int max = Math.max(0, row.size() - visible);
+            if (onTopRow) topRowOffset = max;
+            else lowRowOffset = max;
+            selectionIndex = max;
+        } else {
+            List<CardDTO> row = viewOnTopRow ? game.board().topRow() : game.board().lowRow();
+            int max = Math.max(0, row.size() - visible);
+            if (viewOnTopRow) topRowOffset = max;
+            else lowRowOffset = max;
+        }
+    }
+
     private void scrollCurrentRowLeft() {
-        if (onTopRow) {
+        boolean top = (subState == SubState.MY_TURN_CARDS) ? onTopRow : viewOnTopRow;
+        if (top) {
             topRowOffset = Math.max(0, topRowOffset - 1);
         } else {
             lowRowOffset = Math.max(0, lowRowOffset - 1);
@@ -169,8 +204,9 @@ public class GameScreen extends TUIScreen {
     }
 
     private void scrollCurrentRowRight() {
+        boolean top = (subState == SubState.MY_TURN_CARDS) ? onTopRow : viewOnTopRow;
         int visible = visibleCardsCount();
-        if (onTopRow) {
+        if (top) {
             int max = Math.max(0, game.board().topRow().size() - visible);
             topRowOffset = Math.min(max, topRowOffset + 1);
         } else {
@@ -189,7 +225,15 @@ public class GameScreen extends TUIScreen {
         if (subState == SubState.MY_TURN_TOTEM) {
             selectionIndex = Math.max(0, selectionIndex - 1);
         } else if (subState == SubState.MY_TURN_CARDS) {
+            int prev = selectionIndex;
             selectionIndex = Math.max(0, selectionIndex - 1);
+            if (selectionIndex < prev) {
+                int offset = onTopRow ? topRowOffset : lowRowOffset;
+                if (selectionIndex < offset) {
+                    if (onTopRow) topRowOffset = Math.max(0, topRowOffset - 1);
+                    else lowRowOffset = Math.max(0, lowRowOffset - 1);
+                }
+            }
         }
         return this;
     }
@@ -200,7 +244,17 @@ public class GameScreen extends TUIScreen {
             selectionIndex = Math.min(game.board().offerTrack().size() - 1, selectionIndex + 1);
         } else if (subState == SubState.MY_TURN_CARDS) {
             List<CardDTO> row = onTopRow ? game.board().topRow() : game.board().lowRow();
+            int prev = selectionIndex;
             selectionIndex = Math.min(row.size() - 1, selectionIndex + 1);
+            if (selectionIndex > prev) {
+                int visible = visibleCardsCount();
+                int offset = onTopRow ? topRowOffset : lowRowOffset;
+                if (selectionIndex >= offset + visible) {
+                    int max = Math.max(0, row.size() - visible);
+                    if (onTopRow) topRowOffset = Math.min(max, topRowOffset + 1);
+                    else lowRowOffset = Math.min(max, lowRowOffset + 1);
+                }
+            }
         }
         return this;
     }
@@ -208,8 +262,16 @@ public class GameScreen extends TUIScreen {
     @Override
     public TUIScreen visit(NavigateUpEvent e) {
         if (subState == SubState.MY_TURN_CARDS) {
-            onTopRow = true;
-            selectionIndex = Math.min(selectionIndex, game.board().topRow().size() - 1);
+            if (!onTopRow) {
+                int screenPos = selectionIndex - lowRowOffset;
+                int visible = visibleCardsCount();
+                int newIndex = topRowOffset + screenPos;
+                newIndex = Math.max(topRowOffset, Math.min(topRowOffset + visible - 1, newIndex));
+                selectionIndex = Math.min(game.board().topRow().size() - 1, Math.max(0, newIndex));
+                onTopRow = true;
+            }
+        } else {
+            viewOnTopRow = true;
         }
         return this;
     }
@@ -217,8 +279,16 @@ public class GameScreen extends TUIScreen {
     @Override
     public TUIScreen visit(NavigateDownEvent e) {
         if (subState == SubState.MY_TURN_CARDS) {
-            onTopRow = false;
-            selectionIndex = Math.min(selectionIndex, game.board().lowRow().size() - 1);
+            if (onTopRow) {
+                int screenPos = selectionIndex - topRowOffset;
+                int visible = visibleCardsCount();
+                int newIndex = lowRowOffset + screenPos;
+                newIndex = Math.max(lowRowOffset, Math.min(lowRowOffset + visible - 1, newIndex));
+                selectionIndex = Math.min(game.board().lowRow().size() - 1, Math.max(0, newIndex));
+                onTopRow = false;
+            }
+        } else {
+            viewOnTopRow = false;
         }
         return this;
     }
@@ -273,6 +343,8 @@ public class GameScreen extends TUIScreen {
                 selectedMoves.clear();
                 selectionIndex = 0;
                 onTopRow = true;
+                topRowOffset = 0;
+                lowRowOffset = 0;
                 resolveMoveCounts();
                 subState = SubState.MY_TURN_CARDS;
             } else {
@@ -329,13 +401,22 @@ public class GameScreen extends TUIScreen {
         int offerTrackY = 8;
         String turnOrderText = "Turn Order: ";
         if (game.board().orderTile() != null) {
-            List<Totem> order = game.board().orderTile().totems();
-            if (order != null) {
+            List<OrderCellDTO> cells = game.board().orderTile().cells();
+            if (cells != null) {
                 StringBuilder sb = new StringBuilder("Turn Order: ");
-                for (int i = 0; i < order.size(); i++) {
-                    sb.append(CardCatalog.totemLabel(order.get(i)));
-                    if (i < order.size() - 1)
-                        sb.append(" → ");
+                for (int i = 0; i < cells.size(); i++) {
+                    OrderCellDTO cell = cells.get(i);
+                    if (cell.totem() != null) {
+                        sb.append(CardCatalog.totemLabel(cell.totem()));
+                    } else if (cell.isMalus()) {
+                        sb.append("-1").append(CardTokens.toEmoji(CardToken.FOOD))
+                          .append("/-2").append(CardTokens.toEmoji(CardToken.PP));
+                    } else if (cell.bonus() > 0) {
+                        sb.append("+").append(cell.bonus()).append(CardTokens.toEmoji(CardToken.FOOD));
+                    } else {
+                        sb.append("--");
+                    }
+                    if (i < cells.size() - 1) sb.append(" → ");
                 }
                 turnOrderText = sb.toString();
             }
@@ -357,16 +438,20 @@ public class GameScreen extends TUIScreen {
             highlightOfferCursor(tg, selectionIndex, offerTrackY + 1);
         }
 
+        if (subState != SubState.MY_TURN_CARDS) {
+            drawRowViewCursor(tg, topRowY, botRowY);
+        }
+
         drawCurrentPlayerTribe(tg, 20, cols);
         drawOtherPlayers(tg, 24, cols);
 
         String hint = switch (subState) {
-            case MY_TURN_TOTEM -> "← → Navigate offer tiles   ENTER Place totem   L Legend";
+            case MY_TURN_TOTEM -> "← → Offer tiles   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   ENTER Place totem   L Legend";
             case MY_TURN_CARDS -> String.format(
-                    "← → Navigate   ↑ ↓ Switch rows   A/D Scroll row   SPACE Select (%d/%d)   ENTER Confirm   L Legend",
+                    "← → Navigate   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   SPACE Select (%d/%d)   ENTER Confirm   L Legend",
                     selectedMoves.size(), upperCount + lowerCount);
-            case WAITING_SERVER -> "Waiting for server...   L Legend";
-            case NOT_MY_TURN -> waitingHint() + "   A/D Scroll   L Legend";
+            case WAITING_SERVER -> "Waiting for server...   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   L Legend";
+            case NOT_MY_TURN -> waitingHint() + "   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   L Legend";
             default -> "L Legend";
         };
         drawControls(tg, sz, hint);
@@ -781,6 +866,13 @@ public class GameScreen extends TUIScreen {
         int vw = visualWidth(s);
         if (vw >= len) return s;
         return " ".repeat(len - vw) + s;
+    }
+
+    private void drawRowViewCursor(TuiTextGraphics tg, int topRowY, int botRowY) {
+        tg.setForegroundColor(TuiColor.YELLOW);
+        tg.putString(0, topRowY, viewOnTopRow ? "►" : " ");
+        tg.putString(0, botRowY, viewOnTopRow ? " " : "►");
+        tg.setForegroundColor(TuiColor.WHITE);
     }
 
     private void drawLegend(TuiTextGraphics tg, TuiSize sz) {
