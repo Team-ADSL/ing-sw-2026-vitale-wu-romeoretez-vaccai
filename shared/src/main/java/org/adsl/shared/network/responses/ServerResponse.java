@@ -1,5 +1,6 @@
 package org.adsl.shared.network.responses;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -50,8 +51,10 @@ public abstract class ServerResponse implements Serializable {
     /**
      * Heartbeat responses bypass the client-side dispatch pacer (they are not
      * user-visible and any delay would break the timeout watchdog). Defaults to
-     * {@code false}; the ping subtype overrides it.
+     * {@code false}; the ping subtype overrides it. {@link JsonIgnore} keeps
+     * this flag off the wire — it is derivable from the runtime subtype.
      */
+    @JsonIgnore
     public boolean isHeartbeat() {
         return false;
     }

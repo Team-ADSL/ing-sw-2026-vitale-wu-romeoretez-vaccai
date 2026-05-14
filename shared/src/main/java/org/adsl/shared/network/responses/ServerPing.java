@@ -1,5 +1,6 @@
 package org.adsl.shared.network.responses;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.adsl.shared.exceptions.InvalidResponseException;
 
 public class ServerPing extends ServerResponse{
@@ -9,6 +10,7 @@ public class ServerPing extends ServerResponse{
     }
 
     @Override
+    @JsonIgnore
     public boolean isHeartbeat() {
         return true;
     }
