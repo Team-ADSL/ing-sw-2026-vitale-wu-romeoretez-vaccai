@@ -72,7 +72,14 @@ public class EndGameScreen extends TUIScreen {
         }
 
         tg.setForegroundColor(TuiColor.WHITE);
-        putCentered(tg, sz.getRows() - 2, cols, "Press [B] to return to Home or ENTER to exit application.");
+        putCentered(tg, sz.getRows() - 2, cols, "Press [B] to return to Home, [M] to open the log, or ENTER to exit application.");
+
+        if (showLog) {
+            drawLogWindow(tg, sz);
+        } else {
+            drawLogPreview(tg, sz);
+        }
+
         terminal.refresh();
     }
 
@@ -83,7 +90,8 @@ public class EndGameScreen extends TUIScreen {
 
     @Override
     public TUIScreen visit(CharInputEvent e) {
-        if (Character.toLowerCase(e.getCharacter()) == 'b') {
+        char ch = Character.toLowerCase(e.getCharacter());
+        if (ch == 'b') {
             if (appCoordinator != null) {
                 try {
                     appCoordinator.createExitGameRequest();
@@ -92,6 +100,8 @@ public class EndGameScreen extends TUIScreen {
                 }
             }
             return this;
+        } else if (ch == 'm') {
+            toggleLog();
         }
         return this;
     }
