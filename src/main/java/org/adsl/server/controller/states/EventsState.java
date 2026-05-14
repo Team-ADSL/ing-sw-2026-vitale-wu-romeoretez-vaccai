@@ -16,9 +16,6 @@ import java.util.*;
 
 public class EventsState extends ControllerState {
 
-  private static final long PER_TITLE_MS = 1200L;
-  private static final long MIN_OVERLAY_MS = 2500L;
-
   public EventsState(Game game, GameController context) {
     super(game, context);
   }
@@ -26,59 +23,27 @@ public class EventsState extends ControllerState {
   @Override
   public ControllerState onEntry() {
     ArrayList<Card> cardsLower = getGame().getBoard().lowRow().getTribeCards();
-    ArrayList<Card> cardsUpper = getGame().getBoard().lowRow().getTribeCards();
+    ArrayList<Card> cardsUpper = getGame().getBoard().topRow().getTribeCards();
 
-    List<String> titles = new ArrayList<>(eventTitlesInOrder(cardsLower));
+    executeAndAnnounce(cardsLower);
     if (getGame().getRound() == 10) {
-      titles.addAll(eventTitlesInOrder(cardsUpper));
-    }
-    if (!titles.isEmpty()) {
-      long durationMs = Math.max(MIN_OVERLAY_MS, PER_TITLE_MS * titles.size());
-      getGame().sendEventsTriggered(titles, durationMs);
-    }
-
-    execute(cardsLower);
-    if(getGame().getRound() == 10){
-      execute(cardsUpper);
+      executeAndAnnounce(cardsUpper);
     }
     setNextState(calcNextState());
     getGame().sendUpdateGame();
     return getNextState();
   }
 
-  public void execute(ArrayList<Card> cards){
+  /**
+   * Resolves every event in {@code cards} in the rules order (non-Sustenance by Era,
+   * then Sustenance by Era). For each event the effect is applied first and the
+   * announcement is sent right after, so the client receives one EventsTriggered
+   * per event as soon as it has been resolved. The client paces the visual
+   * delivery via the AppCoordinator dispatch pacer.
+   */
+  private void executeAndAnnounce(ArrayList<Card> cards) {
     Set<Player> players = getGame().getPlayers();
 
-    Map<CardType, Set<Card>> events = new EnumMap<>(CardType.class);
-    events.put(CardType.HUNT, new HashSet<>());
-    events.put(CardType.SHAMANIC_RITUAL, new HashSet<>());
-    events.put(CardType.SUSTENANCE, new HashSet<>());
-    events.put(CardType.CAVE_PAINTINGS, new HashSet<>());
-    for (Card c : cards) {
-      if (c != null) {
-        c.insert(events);
-      }
-    }
-
-    List<Card> nonSustenanceEvents = events.entrySet().stream()
-            .filter(entry -> entry.getKey() != CardType.SUSTENANCE)
-            .flatMap(entry -> entry.getValue().stream())
-            .sorted(Comparator.comparingInt(Card::getEra))
-            .toList();
-
-    List<Card> sustenanceEvents = events.get(CardType.SUSTENANCE).stream()
-            .sorted(Comparator.comparingInt(Card::getEra))
-            .toList();
-
-    for (Card c : nonSustenanceEvents) {
-      c.activeEffect(players, Trigger.EVENT_EXECUTION);
-    }
-    for (Card c : sustenanceEvents) {
-      c.activeEffect(players, Trigger.EVENT_EXECUTION);
-    }
-  }
-
-  private List<String> eventTitlesInOrder(ArrayList<Card> cards){
     Map<CardType, Set<Card>> events = new EnumMap<>(CardType.class);
     events.put(CardType.HUNT, new HashSet<>());
     events.put(CardType.SHAMANIC_RITUAL, new HashSet<>());
@@ -88,16 +53,20 @@ public class EventsState extends ControllerState {
       if (c != null) c.insert(events);
     }
 
-    List<String> titles = new ArrayList<>();
+    List<Card> ordered = new ArrayList<>();
     events.entrySet().stream()
             .filter(e -> e.getKey() != CardType.SUSTENANCE)
             .flatMap(e -> e.getValue().stream())
             .sorted(Comparator.comparingInt(Card::getEra))
-            .forEach(c -> titles.add(formatTitle(c)));
+            .forEach(ordered::add);
     events.get(CardType.SUSTENANCE).stream()
             .sorted(Comparator.comparingInt(Card::getEra))
-            .forEach(c -> titles.add(formatTitle(c)));
-    return titles;
+            .forEach(ordered::add);
+
+    for (Card c : ordered) {
+      c.activeEffect(players, Trigger.EVENT_EXECUTION);
+      getGame().sendEventTriggered(formatTitle(c));
+    }
   }
 
   private String formatTitle(Card c){
