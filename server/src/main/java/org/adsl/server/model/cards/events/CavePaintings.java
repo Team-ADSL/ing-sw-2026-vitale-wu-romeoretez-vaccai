@@ -59,4 +59,9 @@ public class CavePaintings extends Event {
     protected String getEffectsLabel() {
         return ">" + minArtists + "A:+" + multiplierPP + CardToken.PP + "xA" + "|-" + lostPP + CardToken.PP + "xA";
     }
+
+    @Override
+    public String getEventTitle() {
+        return "CAVE PAINTINGS";
+    }
 }
