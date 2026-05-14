@@ -106,6 +106,12 @@ public class GameScreen extends TUIScreen {
             drawLegend(tg, sz);
         }
 
+        if (showLog) {
+            drawLogWindow(tg, sz);
+        } else {
+            drawLogPreview(tg, sz);
+        }
+
         if (overlayTitles != null && !overlayTitles.isEmpty()) {
             drawEventsOverlay(tg, sz);
         }
@@ -206,6 +212,8 @@ public class GameScreen extends TUIScreen {
         char c = e.getCharacter();
         if (c == 'l' || c == 'L') {
             showLegend = !showLegend;
+        } else if (c == 'm' || c == 'M') {
+            toggleLog();
         } else if (c == 'a' || c == 'A') {
             scrollCurrentRowLeft();
         } else if (c == 'd' || c == 'D') {
@@ -497,13 +505,13 @@ public class GameScreen extends TUIScreen {
         drawOtherPlayers(tg, 24, cols);
 
         String hint = switch (subState) {
-            case MY_TURN_TOTEM -> "← → Offer tiles   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   ENTER Place totem   L Legend";
+            case MY_TURN_TOTEM -> "← → Offer tiles   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   ENTER Place totem   L Legend   M Log";
             case MY_TURN_CARDS -> String.format(
-                    "← → Navigate   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   SPACE Select (%d/%d)   ENTER Confirm   L Legend",
+                    "← → Navigate   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   SPACE Select (%d/%d)   ENTER Confirm   L Legend   M Log",
                     selectedMoves.size(), upperCount + lowerCount);
-            case WAITING_SERVER -> "Waiting for server...   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   L Legend";
-            case NOT_MY_TURN -> waitingHint() + "   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   L Legend";
-            default -> "L Legend";
+            case WAITING_SERVER -> "Waiting for server...   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   L Legend   M Log";
+            case NOT_MY_TURN -> waitingHint() + "   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   L Legend   M Log";
+            default -> "L Legend   M Log";
         };
         drawControls(tg, sz, hint);
     }
