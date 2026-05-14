@@ -15,6 +15,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
@@ -113,6 +114,12 @@ public class GameScreen extends GUIScreen {
         this.root = (StackPane) fxmlRoot;
         rootStack.widthProperty().addListener((obs, o, n) -> Platform.runLater(this::renderBoard));
         rootStack.heightProperty().addListener((obs, o, n) -> Platform.runLater(this::renderBoard));
+        rootStack.setFocusTraversable(true);
+        rootStack.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ENTER && confirmButton != null && !confirmButton.isDisabled()) {
+                onSendMove();
+            }
+        });
 
         buildEventsOverlay();
         rootStack.getChildren().add(overlayPane);
@@ -129,6 +136,12 @@ public class GameScreen extends GUIScreen {
 
         resolveMoveCounts();
         renderBoard();
+    }
+
+    @Override
+    public GUIScreen onEnter() {
+        rootStack.requestFocus();
+        return null;
     }
 
     // ── Events overlay ───────────────────────────────────────────────────────
