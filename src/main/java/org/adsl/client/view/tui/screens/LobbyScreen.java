@@ -80,8 +80,15 @@ public class LobbyScreen extends TUIScreen {
         row += 2;
         tg.setForegroundColor(TuiColor.CYAN);
         tg.putString(4, row++, "Press [S] to start the game when you are ready (host only).");
-        tg.putString(4, row, "Press [B] to go back.");
+        tg.putString(4, row++, "Press [B] to go back.");
+        tg.putString(4, row, "Press [M] to open the game log.");
         tg.setForegroundColor(TuiColor.WHITE);
+
+        if (showLog) {
+            drawLogWindow(tg, size);
+        } else {
+            drawLogPreview(tg, size);
+        }
 
         if(error != null){
             row = size.getRows() - 2;
@@ -112,6 +119,8 @@ public class LobbyScreen extends TUIScreen {
             } catch(Exception ex){
                 error = ex.getMessage();
             }
+        } else if (ch == 'm') {
+            toggleLog();
         }
         return this;
     }
