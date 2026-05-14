@@ -97,6 +97,7 @@ public class GameScreen extends GUIScreen {
 
     private StackPane overlayPane;
     private Label overlayTitle;
+    private VBox overlayPlayerList;
 
     public GameScreen(AppCoordinator coordinator, String username, GameDTO game) {
         super(coordinator, username);
@@ -156,8 +157,14 @@ public class GameScreen extends GUIScreen {
         overlayTitle.setStyle("-fx-text-fill: white; -fx-font-size: 64px; -fx-font-weight: bold;"
                 + " -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.85), 8, 0.4, 0, 0);");
         overlayTitle.setAlignment(Pos.CENTER);
-        overlayPane.getChildren().add(overlayTitle);
-        StackPane.setAlignment(overlayTitle, Pos.CENTER);
+
+        overlayPlayerList = new VBox(6);
+        overlayPlayerList.setAlignment(Pos.CENTER);
+
+        VBox overlayContent = new VBox(24, overlayTitle, overlayPlayerList);
+        overlayContent.setAlignment(Pos.CENTER);
+        overlayPane.getChildren().add(overlayContent);
+        StackPane.setAlignment(overlayContent, Pos.CENTER);
     }
 
     @Override
@@ -168,22 +175,40 @@ public class GameScreen extends GUIScreen {
         }
         String log = e.logMessage();
         Platform.runLater(() -> {
-            showEventOverlay(title);
+            showEventOverlay(title, log);
             if (log != null && !log.isBlank()) appendChat(log);
         });
         return this;
     }
 
     /**
-     * Shows a single event title. Stays on screen until the next response
+     * Shows a single event title plus per-player delta lines parsed from the
+     * server-side log message. Stays on screen until the next response
      * (another EventsTriggered or a GameUpdate) replaces or clears it.
      * AppCoordinator's pacer ensures a minimum gap between consecutive
      * arrivals.
      */
-    private void showEventOverlay(String title) {
+    private void showEventOverlay(String title, String logMessage) {
         if (overlayPane == null) return;
         overlayTitle.setText(title.toUpperCase());
+        populateOverlayPlayerList(logMessage);
         overlayPane.setVisible(true);
+    }
+
+    private void populateOverlayPlayerList(String logMessage) {
+        overlayPlayerList.getChildren().clear();
+        if (logMessage == null || logMessage.isBlank()) return;
+        int sep = logMessage.indexOf(" — ");
+        if (sep < 0) return;
+        String body = logMessage.substring(sep + " — ".length());
+        for (String seg : body.split("\\s\\|\\s")) {
+            String text = seg.trim();
+            if (text.isEmpty()) continue;
+            Label line = new Label(text);
+            line.setStyle("-fx-text-fill: white; -fx-font-size: 26px; -fx-font-weight: 600;"
+                    + " -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.75), 4, 0.4, 0, 0);");
+            overlayPlayerList.getChildren().add(line);
+        }
     }
 
     private void hideEventOverlay() {
