@@ -68,6 +68,7 @@ public class GameScreen extends TUIScreen {
     // overlay stays visible until the next response (GameUpdate / next
     // EventsTriggered) replaces or clears it.
     private volatile String overlayTitle = null;
+    private volatile String overlayLog = null;
 
     public GameScreen(TuiTerminal terminal,
             AppCoordinator coordinator,
@@ -126,6 +127,7 @@ public class GameScreen extends TUIScreen {
     public TUIScreen visit(GameUpdateEvent e) {
         // A new game state means the events overlay (if any) is over.
         this.overlayTitle = null;
+        this.overlayLog = null;
         this.game = e.game();
         this.myTotem = findMyTotem();
 
@@ -144,6 +146,7 @@ public class GameScreen extends TUIScreen {
         if (title == null || title.isBlank()) return this;
         this.overlayTitle = title;
         String log = e.logMessage();
+        this.overlayLog = log;
         if (log != null && !log.isBlank()) {
             org.adsl.client.view.tui.TuiGameLog.INSTANCE.append(log);
         }
@@ -939,17 +942,48 @@ public class GameScreen extends TUIScreen {
         String title = "  " + current.toUpperCase() + "  ";
         int titleW = title.length();
         int titleCol = Math.max(0, (cols - titleW) / 2);
-        int titleRow = (top + bottom) / 2;
+
+        List<String> playerLines = parseOverlayPlayerLines(overlayLog);
+        int blockHeight = 3 + (playerLines.isEmpty() ? 0 : playerLines.size() + 1);
+        int blockTop = Math.max(top, (top + bottom) / 2 - blockHeight / 2);
+        int titleRow = blockTop + 1;
 
         tg.setForegroundColor(TuiColor.WHITE);
         tg.setBackgroundColor(TuiColor.BLACK);
-        tg.putString(0, titleRow - 1, " ".repeat(cols));
-        tg.putString(0, titleRow, " ".repeat(cols));
-        tg.putString(0, titleRow + 1, " ".repeat(cols));
+        for (int r = blockTop; r < blockTop + blockHeight && r <= bottom; r++) {
+            tg.putString(0, r, " ".repeat(cols));
+        }
         tg.putString(titleCol, titleRow, title);
 
+        int lineRow = titleRow + 2;
+        for (String pl : playerLines) {
+            if (lineRow > bottom) break;
+            int col = Math.max(0, (cols - pl.length()) / 2);
+            tg.putString(col, lineRow, pl);
+            lineRow++;
+        }
+
         tg.setForegroundColor(TuiColor.WHITE);
         tg.setBackgroundColor(TuiColor.BLACK);
+    }
+
+    /**
+     * Splits the server-side log message ("Title — Player1: +2 PP | Player2: no change …")
+     * into the per-player segments after the em-dash separator. Empty if the
+     * message is missing or doesn't follow the expected format — the overlay
+     * then falls back to showing only the title.
+     */
+    private static List<String> parseOverlayPlayerLines(String log) {
+        if (log == null || log.isBlank()) return Collections.emptyList();
+        int sep = log.indexOf(" — ");
+        if (sep < 0) return Collections.emptyList();
+        String body = log.substring(sep + " — ".length());
+        List<String> out = new ArrayList<>();
+        for (String seg : body.split("\\s\\|\\s")) {
+            String t = seg.trim();
+            if (!t.isEmpty()) out.add(t);
+        }
+        return out;
     }
 
     // ── Display helpers ───────────────────────────────────────────────────────
