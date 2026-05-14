@@ -108,8 +108,8 @@ public class Game implements Serializable {
     public void broadcastError(String message){
         for(GameObserver o : gameObservers) o.notifyError(message);
     }
-    public void sendEventTriggered(String eventTitle){
-        for(GameObserver o : gameObservers) o.notifyEventTriggered(eventTitle);
+    public void sendEventTriggered(String eventTitle, String logMessage){
+        for(GameObserver o : gameObservers) o.notifyEventTriggered(eventTitle, logMessage);
     }
     public void sendEndGameResults(List<MatchResult> results){
         for(EndGameObserver o : endGameObservers) o.notifyEndGame(gameId, results);

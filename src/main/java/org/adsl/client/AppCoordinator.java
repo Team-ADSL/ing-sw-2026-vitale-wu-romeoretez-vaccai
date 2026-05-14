@@ -160,7 +160,7 @@ public class AppCoordinator implements ResponseVisitor{
 
     @Override
     public void visit(EventsTriggered response) throws InvalidResponseException {
-        gameUI.onEventTriggered(response.getEventTitle());
+        gameUI.onEventTriggered(response.getEventTitle(), response.getLogMessage());
     }
 
     public void reconnect() throws Exception {

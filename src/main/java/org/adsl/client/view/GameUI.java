@@ -52,8 +52,8 @@ public abstract class GameUI {
         dispatch(new EndGameEvent(matchResults));
     }
 
-    public void onEventTriggered(String eventTitle) {
-        dispatch(new EventsTriggeredEvent(eventTitle));
+    public void onEventTriggered(String eventTitle, String logMessage) {
+        dispatch(new EventsTriggeredEvent(eventTitle, logMessage));
     }
 
     public void onErrorReceived(String error) {
