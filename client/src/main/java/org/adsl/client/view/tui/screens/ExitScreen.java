@@ -14,4 +14,9 @@ public final class ExitScreen extends TUIScreen {
 
     @Override
     public void render() {}
+
+    @Override
+    public boolean isExit() {
+        return true;
+    }
 }

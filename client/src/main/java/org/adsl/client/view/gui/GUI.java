@@ -10,7 +10,6 @@ import org.adsl.client.serverEvents.ServerEvent;
 import org.adsl.client.view.GameUI;
 import org.adsl.client.view.Screen;
 import org.adsl.client.view.gui.screens.ConnectingScreen;
-import org.adsl.client.view.gui.screens.ExitScreen;
 import org.adsl.client.view.gui.screens.GUIScreen;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -146,7 +145,7 @@ public class GUI extends GameUI {
 
     public void transitionTo(GUIScreen screen) {
         currentScreen = screen;
-        if (currentScreen instanceof ExitScreen) {
+        if (currentScreen.isExit()) {
             shutdown();
             return;
         }
@@ -159,7 +158,7 @@ public class GUI extends GameUI {
         GUIScreen redirect = screen.onEnter();
         while (redirect != null) {
             currentScreen = redirect;
-            if (currentScreen instanceof ExitScreen) {
+            if (currentScreen.isExit()) {
                 shutdown();
                 return;
             }

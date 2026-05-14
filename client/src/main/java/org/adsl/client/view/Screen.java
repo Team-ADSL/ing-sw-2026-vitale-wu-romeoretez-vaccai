@@ -13,6 +13,17 @@ public abstract class Screen<S extends Screen<S>> implements EventVisitor<S> {
         this.error = null;
     }
 
+    /**
+     * Sentinel flag for terminal screens. The TUI loop stops as soon as the
+     * current screen reports {@code true}; the GUI runs its shutdown sequence.
+     * Defaults to {@code false}; the ExitScreen variants override it. Lets the
+     * runtime detect the terminal state through polymorphism instead of a
+     * subtype check.
+     */
+    public boolean isExit() {
+        return false;
+    }
+
     public abstract S createLoginScreen(LoginNeededEvent e, AppCoordinator appCoordinator);
     public abstract S createHomeScreen(HomeUpdateEvent e, AppCoordinator appCoordinator);
     public abstract S createLobbyScreen(LobbyUpdateEvent e, AppCoordinator appCoordinator);

@@ -12,4 +12,9 @@ public final class ExitScreen extends GUIScreen {
     private ExitScreen() {
         super(null);
     }
+
+    @Override
+    public boolean isExit() {
+        return true;
+    }
 }
