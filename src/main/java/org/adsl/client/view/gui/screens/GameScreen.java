@@ -153,7 +153,11 @@ public class GameScreen extends GUIScreen {
         if (title == null || title.isBlank()) {
             return this;
         }
-        Platform.runLater(() -> showEventOverlay(title));
+        String log = e.logMessage();
+        Platform.runLater(() -> {
+            showEventOverlay(title);
+            if (log != null && !log.isBlank()) appendChat(log);
+        });
         return this;
     }
 
