@@ -1,10 +1,7 @@
 package org.adsl.client.view.gui.screens;
 
 import javafx.animation.FadeTransition;
-import javafx.animation.KeyFrame;
-import javafx.animation.PauseTransition;
 import javafx.animation.ScaleTransition;
-import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -99,8 +96,6 @@ public class GameScreen extends GUIScreen {
 
     private StackPane overlayPane;
     private Label overlayTitle;
-    private Timeline overlayTimeline;
-    private PauseTransition overlayHider;
 
     public GameScreen(AppCoordinator coordinator, String username, GameDTO game) {
         super(coordinator, username);
@@ -154,45 +149,35 @@ public class GameScreen extends GUIScreen {
 
     @Override
     public GUIScreen visit(EventsTriggeredEvent e) {
-        List<String> titles = e.eventTitles();
-        long duration = Math.max(500L, e.durationMs());
-        if (titles == null || titles.isEmpty()) {
+        String title = e.eventTitle();
+        if (title == null || title.isBlank()) {
             return this;
         }
-        Platform.runLater(() -> showEventsOverlay(titles, duration));
+        Platform.runLater(() -> showEventOverlay(title));
         return this;
     }
 
-    private void showEventsOverlay(List<String> titles, long durationMs) {
+    /**
+     * Shows a single event title. Stays on screen until the next response
+     * (another EventsTriggered or a GameUpdate) replaces or clears it.
+     * AppCoordinator's pacer ensures a minimum gap between consecutive
+     * arrivals.
+     */
+    private void showEventOverlay(String title) {
         if (overlayPane == null) return;
-        if (overlayTimeline != null) overlayTimeline.stop();
-        if (overlayHider != null) overlayHider.stop();
-
-        overlayTitle.setText(titles.get(0).toUpperCase());
+        overlayTitle.setText(title.toUpperCase());
         overlayPane.setVisible(true);
+    }
 
-        long perTitleMs = Math.max(1L, durationMs / titles.size());
-        overlayTimeline = new Timeline();
-        for (int i = 0; i < titles.size(); i++) {
-            final String t = titles.get(i).toUpperCase();
-            overlayTimeline.getKeyFrames().add(new KeyFrame(
-                    Duration.millis(perTitleMs * i),
-                    ev -> overlayTitle.setText(t)));
-        }
-        overlayTimeline.play();
-
-        overlayHider = new PauseTransition(Duration.millis(durationMs));
-        overlayHider.setOnFinished(ev -> {
-            overlayPane.setVisible(false);
-            if (overlayTimeline != null) overlayTimeline.stop();
-        });
-        overlayHider.play();
+    private void hideEventOverlay() {
+        if (overlayPane != null) overlayPane.setVisible(false);
     }
 
     // ── Server events ────────────────────────────────────────────────────────
 
     @Override
     public GUIScreen visit(GameUpdateEvent e) {
+        hideEventOverlay();
         this.game = e.game();
         waitingServer = false;
         if (game.phase() != Phase.ACTION_EXECUTION && game.phase() != Phase.EXTRA_MOVE) {
