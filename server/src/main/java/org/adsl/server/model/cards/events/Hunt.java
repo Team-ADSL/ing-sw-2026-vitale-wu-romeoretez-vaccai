@@ -51,4 +51,9 @@ public class Hunt extends Event {
     protected String getEffectsLabel() {
         return "1" + CardToken.FOOD + "+" + multiplierPP + CardToken.PP + "x" + CardToken.HUNTER;
     }
+
+    @Override
+    public String getEventTitle() {
+        return "HUNT";
+    }
 }

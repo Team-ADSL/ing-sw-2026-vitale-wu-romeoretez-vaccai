@@ -10,7 +10,6 @@ import org.adsl.client.view.tui.events.*;
 import org.adsl.client.view.tui.render.Key;
 import org.adsl.client.view.tui.render.TuiTerminal;
 import org.adsl.client.view.tui.screens.ConnectingScreen;
-import org.adsl.client.view.tui.screens.ExitScreen;
 import org.adsl.client.view.tui.screens.TUIScreen;
 
 import java.io.IOException;
@@ -67,7 +66,7 @@ public class TUI extends GameUI {
     // ── Main loop ─────────────────────────────────────────────────────────────
 
     private void loop() {
-        while (running && !(currentScreen instanceof ExitScreen)) {
+        while (running && !currentScreen.isExit()) {
             // 1. Render the current screen
             try {
                 if (currentScreen.isToRender()) {
