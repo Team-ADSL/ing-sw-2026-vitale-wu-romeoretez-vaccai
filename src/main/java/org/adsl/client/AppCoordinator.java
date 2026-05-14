@@ -8,8 +8,6 @@ import org.adsl.shared.network.requests.*;
 import org.adsl.shared.network.responses.*;
 import org.adsl.shared.utils.Move;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -17,24 +15,38 @@ import java.util.concurrent.TimeUnit;
 
 // Mediator between Network and View. Send response to UI and request to Network.
 public class AppCoordinator implements ResponseVisitor{
+
+    /**
+     * Minimum interval between two consecutive UI-bound dispatches. When the
+     * server fires many responses back-to-back (e.g. multiple events resolved
+     * in a single end-of-round) the pacer spaces them out so the user can
+     * actually read each one before the next replaces it.
+     */
+    private static final long DISPATCH_MIN_DELAY_MS = 1200L;
+
     private final GameUI gameUI;
     private final ServerConnection serverConnection;
     private ScheduledExecutorService pingScheduler;
-    private ScheduledExecutorService overlayScheduler;
+    private ScheduledExecutorService dispatchPacer;
     private volatile long lastServerPing = System.currentTimeMillis();
     private String lastIp;
     private int lastPort;
     private int lastPingRatioMs = 5000;
     private long lastServerTimeoutMs = 10000;
 
-    private final Object overlayLock = new Object();
-    private volatile boolean overlayActive = false;
-    private final List<ServerResponse> pendingResponses = new ArrayList<>();
+    private final Object pacerLock = new Object();
+    /** Wall-clock time (ms) of the next slot the pacer has reserved for a dispatch. */
+    private long nextDispatchAtMs = 0L;
 
     public AppCoordinator(GameUI gameUI, ServerConnection serverConnection) {
         this.gameUI = gameUI;
         this.serverConnection = serverConnection;
         this.pingScheduler = null;
+        this.dispatchPacer = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "response-pacer");
+            t.setDaemon(true);
+            return t;
+        });
     }
 
     public void setConnectionParams(String ip, int port) {
@@ -77,13 +89,27 @@ public class AppCoordinator implements ResponseVisitor{
 
     public void handleServerResponse(ServerResponse serverResponse){
         lastServerPing = System.currentTimeMillis();
-        synchronized (overlayLock) {
-            if (overlayActive && shouldBuffer(serverResponse)) {
-                pendingResponses.add(serverResponse);
-                return;
-            }
+        // Pings are kept out of the pacer: they are not user-visible and any
+        // delay would break the timeout watchdog above.
+        if (serverResponse instanceof ServerPing) {
+            dispatchResponse(serverResponse);
+            return;
         }
-        dispatchResponse(serverResponse);
+
+        long delayMs;
+        synchronized (pacerLock) {
+            long now = System.currentTimeMillis();
+            long scheduled = Math.max(now, nextDispatchAtMs);
+            delayMs = scheduled - now;
+            nextDispatchAtMs = scheduled + DISPATCH_MIN_DELAY_MS;
+        }
+
+        if (delayMs <= 0) {
+            dispatchResponse(serverResponse);
+        } else {
+            dispatchPacer.schedule(() -> dispatchResponse(serverResponse),
+                    delayMs, TimeUnit.MILLISECONDS);
+        }
     }
 
     private void dispatchResponse(ServerResponse serverResponse) {
@@ -92,10 +118,6 @@ public class AppCoordinator implements ResponseVisitor{
         } catch(Exception e){
             System.out.println(e.getMessage());
         }
-    }
-
-    private boolean shouldBuffer(ServerResponse r) {
-        return r instanceof GameUpdate || r instanceof GameEnded;
     }
 
     @Override
@@ -138,32 +160,7 @@ public class AppCoordinator implements ResponseVisitor{
 
     @Override
     public void visit(EventsTriggered response) throws InvalidResponseException {
-        long duration = Math.max(500L, response.getDurationMs());
-        synchronized (overlayLock) {
-            overlayActive = true;
-        }
-        gameUI.onEventsTriggered(response.getEventTitles(), duration);
-
-        if (overlayScheduler == null || overlayScheduler.isShutdown()) {
-            overlayScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
-                Thread t = new Thread(r, "events-overlay-scheduler");
-                t.setDaemon(true);
-                return t;
-            });
-        }
-        overlayScheduler.schedule(this::flushPending, duration, TimeUnit.MILLISECONDS);
-    }
-
-    private void flushPending() {
-        List<ServerResponse> drained;
-        synchronized (overlayLock) {
-            overlayActive = false;
-            drained = new ArrayList<>(pendingResponses);
-            pendingResponses.clear();
-        }
-        for (ServerResponse r : drained) {
-            dispatchResponse(r);
-        }
+        gameUI.onEventTriggered(response.getEventTitle());
     }
 
     public void reconnect() throws Exception {
@@ -213,6 +210,9 @@ public class AppCoordinator implements ResponseVisitor{
     }
     public void disconnect() throws Exception {
         stopPingScheduler();
+        if (dispatchPacer != null) {
+            dispatchPacer.shutdownNow();
+        }
         try {
             ClientRequest clientRequest = new ClientDisconnected();
             serverConnection.sendRequest(clientRequest);
