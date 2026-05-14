@@ -64,9 +64,59 @@ public class EventsState extends ControllerState {
             .forEach(ordered::add);
 
     for (Card c : ordered) {
+      Map<Player, int[]> before = snapshotFoodPp(players);
       c.activeEffect(players, Trigger.EVENT_EXECUTION);
-      getGame().sendEventTriggered(formatTitle(c));
+      String title = formatTitle(c);
+      String log = formatDeltas(title, players, before);
+      getGame().sendEventTriggered(title, log);
     }
+  }
+
+  /** {player → [food, pp]} snapshot taken right before an event resolves. */
+  private static Map<Player, int[]> snapshotFoodPp(Set<Player> players) {
+    Map<Player, int[]> out = new HashMap<>();
+    for (Player p : players) {
+      out.put(p, new int[]{ p.getFood(), p.getPp() });
+    }
+    return out;
+  }
+
+  /**
+   * Builds a one-line summary of who gained/lost what during this event. Every
+   * player is always listed so an unaffected player is visible too — players
+   * with no food/PP change render as "no change". Used as the Game Log message
+   * for the {@code EventsTriggered} response.
+   */
+  private static String formatDeltas(String title, Set<Player> players, Map<Player, int[]> before) {
+    StringBuilder sb = new StringBuilder(title);
+    sb.append(" — ");
+    boolean first = true;
+    for (Player p : players) {
+      int[] prev = before.get(p);
+      int dFood = p.getFood() - prev[0];
+      int dPp   = p.getPp()   - prev[1];
+      if (!first) sb.append(" | ");
+      first = false;
+      sb.append(p.getName()).append(": ");
+      if (dFood == 0 && dPp == 0) {
+        sb.append("no change");
+      } else {
+        boolean hasPp = false;
+        if (dPp != 0) {
+          sb.append(signed(dPp)).append(" PP");
+          hasPp = true;
+        }
+        if (dFood != 0) {
+          if (hasPp) sb.append(' ');
+          sb.append(signed(dFood)).append(" food");
+        }
+      }
+    }
+    return sb.toString();
+  }
+
+  private static String signed(int n) {
+    return (n > 0 ? "+" : "") + n;
   }
 
   private String formatTitle(Card c){
