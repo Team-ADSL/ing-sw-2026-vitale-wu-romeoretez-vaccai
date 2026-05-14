@@ -46,4 +46,13 @@ public abstract class ServerResponse implements Serializable {
     }
 
     public abstract void accept(ResponseVisitor visitor) throws InvalidResponseException;
+
+    /**
+     * Heartbeat responses bypass the client-side dispatch pacer (they are not
+     * user-visible and any delay would break the timeout watchdog). Defaults to
+     * {@code false}; the ping subtype overrides it.
+     */
+    public boolean isHeartbeat() {
+        return false;
+    }
 }

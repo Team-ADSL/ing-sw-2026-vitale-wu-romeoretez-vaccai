@@ -7,4 +7,9 @@ public class ServerPing extends ServerResponse{
     public void accept(ResponseVisitor visitor) throws InvalidResponseException {
         visitor.visit(this);
     }
+
+    @Override
+    public boolean isHeartbeat() {
+        return true;
+    }
 }

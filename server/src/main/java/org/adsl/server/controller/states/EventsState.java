@@ -4,10 +4,7 @@ import org.adsl.server.controller.GameController;
 import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Phase;
 import org.adsl.server.model.cards.Card;
-import org.adsl.server.model.cards.events.CavePaintings;
-import org.adsl.server.model.cards.events.Hunt;
-import org.adsl.server.model.cards.events.ShamanicRitual;
-import org.adsl.server.model.cards.events.Sustenance;
+import org.adsl.server.model.cards.events.Event;
 import org.adsl.shared.enums.Trigger;
 import org.adsl.server.model.Game;
 import org.adsl.server.model.Player;
@@ -53,20 +50,26 @@ public class EventsState extends ControllerState {
       if (c != null) c.insert(events);
     }
 
-    List<Card> ordered = new ArrayList<>();
+    // Only Event subtypes are inserted into the HUNT/SHAMANIC_RITUAL/SUSTENANCE/
+    // CAVE_PAINTINGS buckets (see each Event subclass's insert override), so the
+    // cast below is safe by construction. Going through Event lets formatTitle
+    // dispatch the label via polymorphism instead of branching on the subtype.
+    List<Event> ordered = new ArrayList<>();
     events.entrySet().stream()
             .filter(e -> e.getKey() != CardType.SUSTENANCE)
             .flatMap(e -> e.getValue().stream())
-            .sorted(Comparator.comparingInt(Card::getEra))
+            .map(c -> (Event) c)
+            .sorted(Comparator.comparingInt(Event::getEra))
             .forEach(ordered::add);
     events.get(CardType.SUSTENANCE).stream()
-            .sorted(Comparator.comparingInt(Card::getEra))
+            .map(c -> (Event) c)
+            .sorted(Comparator.comparingInt(Event::getEra))
             .forEach(ordered::add);
 
-    for (Card c : ordered) {
+    for (Event e : ordered) {
       Map<Player, int[]> before = snapshotFoodPp(players);
-      c.activeEffect(players, Trigger.EVENT_EXECUTION);
-      String title = formatTitle(c);
+      e.activeEffect(players, Trigger.EVENT_EXECUTION);
+      String title = formatTitle(e);
       String log = formatDeltas(title, players, before);
       getGame().sendEventTriggered(title, log);
     }
@@ -119,14 +122,8 @@ public class EventsState extends ControllerState {
     return (n > 0 ? "+" : "") + n;
   }
 
-  private String formatTitle(Card c){
-    String label;
-    if (c instanceof Hunt) label = "HUNT";
-    else if (c instanceof Sustenance) label = "SUSTENANCE";
-    else if (c instanceof ShamanicRitual) label = "SHAMANIC RITUAL";
-    else if (c instanceof CavePaintings) label = "CAVE PAINTINGS";
-    else label = c.getId().toUpperCase();
-    return label + " " + romanEra(c.getEra());
+  private String formatTitle(Event e){
+    return e.getEventTitle() + " " + romanEra(e.getEra());
   }
 
   private String romanEra(int era){

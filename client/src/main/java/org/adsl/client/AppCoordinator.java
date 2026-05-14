@@ -89,9 +89,9 @@ public class AppCoordinator implements ResponseVisitor{
 
     public void handleServerResponse(ServerResponse serverResponse){
         lastServerPing = System.currentTimeMillis();
-        // Pings are kept out of the pacer: they are not user-visible and any
-        // delay would break the timeout watchdog above.
-        if (serverResponse instanceof ServerPing) {
+        // Heartbeats (ping) are kept out of the pacer: they are not user-visible
+        // and any delay would break the timeout watchdog above.
+        if (serverResponse.isHeartbeat()) {
             dispatchResponse(serverResponse);
             return;
         }

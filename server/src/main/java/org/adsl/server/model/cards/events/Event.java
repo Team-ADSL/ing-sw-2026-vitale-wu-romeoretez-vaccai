@@ -24,6 +24,13 @@ public abstract class Event extends Card {
         return false;
     }
 
+    /**
+     * Human-readable title used by the events overlay / log (e.g. "HUNT",
+     * "SHAMANIC RITUAL"). Defined here so callers dispatch via polymorphism
+     * instead of branching on the runtime subtype.
+     */
+    public abstract String getEventTitle();
+
     public void activateBuildings(Player p, Trigger t){
         p.getCards().get(CardType.BUILDINGS).stream()
                 .map(c -> (Building)c)
