@@ -22,9 +22,6 @@ import org.adsl.shared.utils.Move;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -67,11 +64,10 @@ public class GameScreen extends TUIScreen {
     private boolean showLegend = false;
     private static final int CARD_W = 15;  // inner content width (box = CARD_W+2)
 
-    // Events overlay
-    private volatile List<String> overlayTitles = null;
-    private volatile long overlayStartMs = 0L;
-    private volatile long overlayTotalMs = 0L;
-    private ScheduledExecutorService overlayTicker = null;
+    // Events overlay — one title at a time, paced by AppCoordinator. The
+    // overlay stays visible until the next response (GameUpdate / next
+    // EventsTriggered) replaces or clears it.
+    private volatile String overlayTitle = null;
 
     public GameScreen(TuiTerminal terminal,
             AppCoordinator coordinator,
@@ -112,7 +108,7 @@ public class GameScreen extends TUIScreen {
             drawLogPreview(tg, sz);
         }
 
-        if (overlayTitles != null && !overlayTitles.isEmpty()) {
+        if (overlayTitle != null) {
             drawEventsOverlay(tg, sz);
         }
 
@@ -128,6 +124,8 @@ public class GameScreen extends TUIScreen {
 
     @Override
     public TUIScreen visit(GameUpdateEvent e) {
+        // A new game state means the events overlay (if any) is over.
+        this.overlayTitle = null;
         this.game = e.game();
         this.myTotem = findMyTotem();
 
@@ -142,37 +140,11 @@ public class GameScreen extends TUIScreen {
 
     @Override
     public TUIScreen visit(EventsTriggeredEvent e) {
-        this.overlayTitles = e.eventTitles();
-        this.overlayTotalMs = Math.max(500L, e.durationMs());
-        this.overlayStartMs = System.currentTimeMillis();
-        startOverlayTicker();
+        String title = e.eventTitle();
+        if (title == null || title.isBlank()) return this;
+        this.overlayTitle = title;
+        setToRender(true);
         return this;
-    }
-
-    private void startOverlayTicker() {
-        stopOverlayTicker();
-        overlayTicker = Executors.newSingleThreadScheduledExecutor(r -> {
-            Thread t = new Thread(r, "tui-events-overlay");
-            t.setDaemon(true);
-            return t;
-        });
-        overlayTicker.scheduleAtFixedRate(() -> {
-            long elapsed = System.currentTimeMillis() - overlayStartMs;
-            if (elapsed >= overlayTotalMs) {
-                overlayTitles = null;
-                setToRender(true);
-                stopOverlayTicker();
-            } else {
-                setToRender(true);
-            }
-        }, 0, 120, TimeUnit.MILLISECONDS);
-    }
-
-    private void stopOverlayTicker() {
-        if (overlayTicker != null) {
-            overlayTicker.shutdownNow();
-            overlayTicker = null;
-        }
     }
 
     @Override
@@ -953,17 +925,14 @@ public class GameScreen extends TUIScreen {
             tg.putString(0, r, line.toString());
         }
 
-        List<String> titles = overlayTitles;
-        if (titles == null || titles.isEmpty()) {
+        String current = overlayTitle;
+        if (current == null) {
             tg.setForegroundColor(TuiColor.WHITE);
             tg.setBackgroundColor(TuiColor.BLACK);
             return;
         }
 
-        long perTitleMs = Math.max(1L, overlayTotalMs / titles.size());
-        long elapsed = Math.max(0L, System.currentTimeMillis() - overlayStartMs);
-        int idx = (int) Math.min(titles.size() - 1, elapsed / perTitleMs);
-        String title = "  " + titles.get(idx).toUpperCase() + "  ";
+        String title = "  " + current.toUpperCase() + "  ";
         int titleW = title.length();
         int titleCol = Math.max(0, (cols - titleW) / 2);
         int titleRow = (top + bottom) / 2;
