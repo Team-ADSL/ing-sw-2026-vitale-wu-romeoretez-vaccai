@@ -143,6 +143,10 @@ public class GameScreen extends TUIScreen {
         String title = e.eventTitle();
         if (title == null || title.isBlank()) return this;
         this.overlayTitle = title;
+        String log = e.logMessage();
+        if (log != null && !log.isBlank()) {
+            org.adsl.client.view.tui.TuiGameLog.INSTANCE.append(log);
+        }
         setToRender(true);
         return this;
     }

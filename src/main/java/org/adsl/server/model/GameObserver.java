@@ -20,5 +20,5 @@ public interface GameObserver {
 
     default void notifyError(String message) {}
 
-    default void notifyEventTriggered(String eventTitle) {}
+    default void notifyEventTriggered(String eventTitle, String logMessage) {}
 }
