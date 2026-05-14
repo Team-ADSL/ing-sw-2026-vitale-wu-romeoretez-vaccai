@@ -3,7 +3,8 @@ setlocal
 
 cd /d "%~dp0\..\..\.."
 
-set JAR=target\mesos.jar
+set SERVER_JAR=server\target\mesos-server.jar
+set CLIENT_JAR=client\target\mesos-client.jar
 set SOCKET_PORT=8080
 set RMI_PORT=1099
 set SAVE_DIR=.\saved
@@ -20,16 +21,22 @@ if errorlevel 1 (
     exit /b 1
 )
 
-if not exist "%JAR%" (
+if not exist "%SERVER_JAR%" (
     echo.
-    echo JAR not found after build. Aborting.
+    echo Server JAR not found after build. Aborting.
+    pause
+    exit /b 1
+)
+if not exist "%CLIENT_JAR%" (
+    echo.
+    echo Client JAR not found after build. Aborting.
     pause
     exit /b 1
 )
 
 echo.
 echo [2/3] Starting server (socket=%SOCKET_PORT%, rmi=%RMI_PORT%)...
-start "MESOS Server" cmd /k "java -jar %JAR% --server %SOCKET_PORT% %RMI_PORT% %SAVE_DIR%"
+start "MESOS Server" cmd /k "java -jar %SERVER_JAR% %SOCKET_PORT% %RMI_PORT% %SAVE_DIR%"
 
 echo Waiting for server to start on port %SOCKET_PORT%...
 :wait_server
@@ -42,8 +49,8 @@ if errorlevel 1 (
 echo Server is up.
 echo.
 echo [3/3] Opening TUI clients...
-start "MESOS Socket Client (TUI)" cmd /k "java -jar %JAR% --client --socket --tui 127.0.0.1 %SOCKET_PORT%"
-start "MESOS RMI Client (TUI)"    cmd /k "java -jar %JAR% --client --rmi   --tui 127.0.0.1 %RMI_PORT%"
+start "MESOS Socket Client (TUI)" cmd /k "java -jar %CLIENT_JAR% --client --socket --tui 127.0.0.1 %SOCKET_PORT%"
+start "MESOS RMI Client (TUI)"    cmd /k "java -jar %CLIENT_JAR% --client --rmi   --tui 127.0.0.1 %RMI_PORT%"
 
 echo.
 echo Done.
