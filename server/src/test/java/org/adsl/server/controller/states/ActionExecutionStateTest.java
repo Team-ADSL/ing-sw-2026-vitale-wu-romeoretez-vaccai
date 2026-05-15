@@ -138,4 +138,29 @@ public class ActionExecutionStateTest {
         MoveRequest req = new MoveRequest(moves);
         assertThrows(ServerException.class, () -> state.visit(req, client));
     }
+
+    // ──────────────────────────────────────────────
+    // TEST ON ENTRY
+    // ──────────────────────────────────────────────
+
+    @Test
+    void testOnEntry_currentPlayerAlreadySet_returnsSelf() throws Exception {
+        ControllerState next = state.onEntry();
+        assertSame(state, next);
+    }
+
+    @Test
+    void testOnEntry_noCurrentPlayer_setsFromFirstOccupiedOfferTile() throws Exception {
+        game.setCurrentPlayer(null);
+        state.onEntry();
+        assertTrue(game.getCurrentPlayer().isPresent());
+        assertSame(p1, game.getCurrentPlayer().get());
+    }
+
+    @Test
+    void testOnEntry_noCurrentPlayer_returnsSelf() throws Exception {
+        game.setCurrentPlayer(null);
+        ControllerState next = state.onEntry();
+        assertSame(state, next);
+    }
 }
