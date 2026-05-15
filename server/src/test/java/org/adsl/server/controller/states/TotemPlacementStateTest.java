@@ -7,15 +7,19 @@ import org.adsl.server.model.Game;
 import org.adsl.server.model.Player;
 import org.adsl.server.model.board.*;
 import org.adsl.shared.enums.Row;
+import org.adsl.shared.exceptions.ServerException;
+import org.adsl.shared.network.requests.MoveRequest;
 import org.adsl.shared.utils.Move;
 import org.adsl.utils.fakes.FakeGameDAO;
 import org.adsl.utils.fakes.FakeGamePersistenceManager;
+import org.adsl.utils.fakes.FakeVirtualClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -109,5 +113,74 @@ public class TotemPlacementStateTest {
 
         assertTrue(offerTrack.getTileAt(1).getPlayer().isPresent());
         assertSame(p2, offerTrack.getTileAt(1).getPlayer().get());
+    }
+
+    // ──────────────────────────────────────────────
+    // TEST ON ENTRY
+    // ──────────────────────────────────────────────
+
+    @Test
+    void testOnEntry_currentPlayerAlreadySet_returnsSelf() throws ServerException {
+        game.setCurrentPlayer(p1);
+        ControllerState next = state.onEntry();
+        assertSame(state, next);
+    }
+
+    @Test
+    void testOnEntry_noCurrentPlayer_setsFirstFromOrderTile() throws ServerException {
+        orderTile.placePlayerAtNext(p1);
+        game.setCurrentPlayer(null);
+        state.onEntry();
+        assertTrue(game.getCurrentPlayer().isPresent());
+        assertSame(p1, game.getCurrentPlayer().get());
+    }
+
+    @Test
+    void testOnEntry_noCurrentPlayer_returnsSelf() throws ServerException {
+        game.setCurrentPlayer(null);
+        ControllerState next = state.onEntry();
+        assertSame(state, next);
+    }
+
+    // ──────────────────────────────────────────────
+    // TEST VISIT - ERRORS
+    // ──────────────────────────────────────────────
+
+    @Test
+    void testVisit_moreThanOneMove_throwsException() {
+        game.setCurrentPlayer(p1);
+        FakeVirtualClient client = new FakeVirtualClient();
+        client.setClientUsername("p1");
+        MoveRequest req = new MoveRequest(Set.of(
+                new Move(0, Row.OFFER), new Move(1, Row.OFFER)));
+        assertThrows(ServerException.class, () -> state.visit(req, client));
+    }
+
+    @Test
+    void testVisit_wrongRow_throwsException() {
+        game.setCurrentPlayer(p1);
+        FakeVirtualClient client = new FakeVirtualClient();
+        client.setClientUsername("p1");
+        MoveRequest req = new MoveRequest(Set.of(new Move(0, Row.UPPER)));
+        assertThrows(ServerException.class, () -> state.visit(req, client));
+    }
+
+    @Test
+    void testVisit_outOfBoundsIndex_throwsException() {
+        game.setCurrentPlayer(p1);
+        FakeVirtualClient client = new FakeVirtualClient();
+        client.setClientUsername("p1");
+        MoveRequest req = new MoveRequest(Set.of(new Move(99, Row.OFFER)));
+        assertThrows(ServerException.class, () -> state.visit(req, client));
+    }
+
+    @Test
+    void testVisit_occupiedTile_throwsException() {
+        game.setCurrentPlayer(p1);
+        offerTrack.getTileAt(0).setPlayer(p2);
+        FakeVirtualClient client = new FakeVirtualClient();
+        client.setClientUsername("p1");
+        MoveRequest req = new MoveRequest(Set.of(new Move(0, Row.OFFER)));
+        assertThrows(ServerException.class, () -> state.visit(req, client));
     }
 }

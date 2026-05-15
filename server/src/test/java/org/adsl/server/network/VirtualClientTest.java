@@ -116,4 +116,49 @@ public class VirtualClientTest {
         client.sendErrorMessage("boom");
         assertEquals(1, client.sent.size());
     }
+
+    // ──────────────────────────────────────────────
+    // isConnected / setConnected
+    // ──────────────────────────────────────────────
+
+    @Test
+    void isConnected_defaultTrue() {
+        assertTrue(client.isConnected());
+    }
+
+    @Test
+    void setConnected_false_returnsDisconnected() {
+        client.setConnected(false);
+        assertFalse(client.isConnected());
+    }
+
+    @Test
+    void setConnected_toggle_restoresConnected() {
+        client.setConnected(false);
+        client.setConnected(true);
+        assertTrue(client.isConnected());
+    }
+
+    // ──────────────────────────────────────────────
+    // gameId
+    // ──────────────────────────────────────────────
+
+    @Test
+    void getGameId_nullByDefault() {
+        assertTrue(client.getGameId().isEmpty());
+    }
+
+    @Test
+    void setGameId_thenGetGameId_returnsValue() {
+        client.setGameId(7);
+        assertTrue(client.getGameId().isPresent());
+        assertEquals(7, client.getGameId().get());
+    }
+
+    @Test
+    void setGameId_null_clearsGameId() {
+        client.setGameId(1);
+        client.setGameId(null);
+        assertTrue(client.getGameId().isEmpty());
+    }
 }

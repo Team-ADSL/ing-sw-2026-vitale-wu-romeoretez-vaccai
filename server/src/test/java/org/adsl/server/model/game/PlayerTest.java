@@ -1,6 +1,7 @@
 package org.adsl.server.model.game;
 import org.adsl.server.model.Player;
 import org.adsl.shared.enums.Totem;
+import org.adsl.shared.model.PlayerDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.util.HashMap;
@@ -95,5 +96,50 @@ public class PlayerTest {
                 () -> assertEquals(0, fresh.getPp()),
                 () -> assertNull(fresh.getColor())
         );
+    }
+
+    // ──────────────────────────────────────────────
+    // TEST SET ACTIVE
+    // ──────────────────────────────────────────────
+
+    @Test
+    void testSetActive_trueByDefault() {
+        Player fresh = new Player("Active");
+        assertTrue(fresh.isActive());
+    }
+
+    @Test
+    void testSetActive_false_setsInactive() {
+        Player fresh = new Player("Active");
+        fresh.setActive(false);
+        assertFalse(fresh.isActive());
+    }
+
+    @Test
+    void testSetActive_toggle_restoresActive() {
+        Player fresh = new Player("Active");
+        fresh.setActive(false);
+        fresh.setActive(true);
+        assertTrue(fresh.isActive());
+    }
+
+    // ──────────────────────────────────────────────
+    // TEST CREATE DTO
+    // ──────────────────────────────────────────────
+
+    @Test
+    void testCreateDTO_returnsCorrectValues() {
+        PlayerDTO dto = player.createDTO();
+        assertAll(
+                () -> assertEquals("Gianpaolo", dto.name()),
+                () -> assertEquals(3, dto.food()),
+                () -> assertEquals(0, dto.pp()),
+                () -> assertEquals(Totem.RED, dto.totem())
+        );
+    }
+
+    @Test
+    void testCreateDTO_returnsNonNull() {
+        assertNotNull(player.createDTO());
     }
 }

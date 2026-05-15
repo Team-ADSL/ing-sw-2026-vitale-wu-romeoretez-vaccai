@@ -2,9 +2,11 @@ package org.adsl.server.controller.states;
 
 import org.adsl.server.controller.GameController;
 import org.adsl.server.model.Player;
+import org.adsl.shared.exceptions.HostDisconnectedException;
 import org.adsl.shared.exceptions.ServerException;
 import org.adsl.shared.network.requests.ClientDisconnected;
 import org.adsl.shared.network.requests.EnterGameRequest;
+import org.adsl.shared.network.requests.ExitLobbyRequest;
 import org.adsl.shared.network.requests.StartGameRequest;
 
 import org.adsl.utils.builder.GameControllerBuilder;
@@ -144,5 +146,54 @@ public class LobbyStateTest {
         ControllerState nextState = state.calcNextState();
 
         assertInstanceOf(TotemPickingState.class, nextState, "The state machine must transition to InitGameState when start is valid");
+    }
+
+    // ──────────────────────────────────────────────
+    // TEST EXIT LOBBY REQUEST
+    // ──────────────────────────────────────────────
+
+    @Test
+    void testVisitExitLobbyRequest_removesPlayer() throws ServerException {
+        client.setClientUsername("Player2"); // host is Player1, must not trigger host disconnect
+        fakeGame.getPlayers().add(new Player("Player1"));
+        fakeGame.getPlayers().add(new Player("Player2"));
+        fakeGame.addedClients.add(client);
+        client.setGameId(1);
+
+        ExitLobbyRequest req = new ExitLobbyRequest();
+        state.visit(req, client);
+
+        assertEquals(1, fakeGame.getPlayers().size());
+        assertTrue(fakeGame.getPlayers().stream().anyMatch(p -> p.getName().equals("Player1")));
+    }
+
+    @Test
+    void testVisitExitLobbyRequest_notifiesRemainingPlayers() throws ServerException {
+        client.setClientUsername("Player2"); // host is Player1, must not trigger host disconnect
+        fakeGame.getPlayers().add(new Player("Player1"));
+        fakeGame.getPlayers().add(new Player("Player2"));
+        fakeGame.addedClients.add(client);
+        client.setGameId(1);
+
+        ExitLobbyRequest req = new ExitLobbyRequest();
+        state.visit(req, client);
+
+        assertTrue(fakeGame.updateLobbySent);
+    }
+
+    // ──────────────────────────────────────────────
+    // TEST HOST DISCONNECTION
+    // ──────────────────────────────────────────────
+
+    @Test
+    void testPlayerExit_hostDisconnects_throwsHostDisconnectedException() {
+        fakeGame.getPlayers().add(new Player("Player1"));
+        fakeGame.getPlayers().add(new Player("Player2"));
+        fakeGame.addedClients.add(client);
+        client.setGameId(1);
+
+        ClientDisconnected req = new ClientDisconnected();
+
+        assertThrows(HostDisconnectedException.class, () -> state.visit(req, client));
     }
 }
