@@ -55,4 +55,50 @@ public class OfferTileTest {
     void testGetNumMoves_returnsZeroWhenNoMoves() {
         assertEquals(0, tileWithoutPlayer.getNumMoves());
     }
+
+    // ──────────────────────────────────────────────
+    // TEST SET PLAYER
+    // ──────────────────────────────────────────────
+
+    @Test
+    void testSetPlayer_assignsNewPlayer() {
+        Player newPlayer = new Player("Luigi");
+        tileWithoutPlayer.setPlayer(newPlayer);
+        assertTrue(tileWithoutPlayer.getPlayer().isPresent());
+        assertSame(newPlayer, tileWithoutPlayer.getPlayer().get());
+    }
+
+    @Test
+    void testSetPlayer_null_removesPlayer() {
+        tileWithPlayer.setPlayer(null);
+        assertTrue(tileWithPlayer.getPlayer().isEmpty());
+    }
+
+    // ──────────────────────────────────────────────
+    // TEST IS GIVES FOOD
+    // ──────────────────────────────────────────────
+
+    @Test
+    void testIsGivesFood_returnsTrue() {
+        assertTrue(tileWithPlayer.isGivesFood());
+    }
+
+    @Test
+    void testIsGivesFood_returnsFalse() {
+        assertFalse(tileWithoutPlayer.isGivesFood());
+    }
+
+    // ──────────────────────────────────────────────
+    // TEST CREATE DTO
+    // ──────────────────────────────────────────────
+
+    @Test
+    void testCreateDTO_returnsNonNull() {
+        assertNotNull(tileWithPlayer.createDTO());
+    }
+
+    @Test
+    void testCreateDTO_emptyTile_returnsNonNull() {
+        assertNotNull(tileWithoutPlayer.createDTO());
+    }
 }

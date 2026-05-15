@@ -131,4 +131,42 @@ public class GameTest {
         game.changeRound();
         assertEquals(5, game.getRound());
     }
+
+    // ──────────────────────────────────────────────
+    // TEST SET BOARD / SET PHASE
+    // ──────────────────────────────────────────────
+
+    @Test
+    void testSetBoard_updatesBoard() {
+        Board newBoard = buildBoard();
+        Game g = new Game(1, 2);
+        g.setBoard(newBoard);
+        assertSame(newBoard, g.getBoard());
+    }
+
+    @Test
+    void testSetPhase_updatesPhase() {
+        game.setPhase(Phase.ACTION_EXECUTION);
+        assertEquals(Phase.ACTION_EXECUTION, game.getPhase());
+    }
+
+    @Test
+    void testSetPhase_null_setsNull() {
+        game.setPhase(null);
+        assertNull(game.getPhase());
+    }
+
+    // ──────────────────────────────────────────────
+    // TEST CREATE DTO
+    // ──────────────────────────────────────────────
+
+    @Test
+    void testCreateDTO_returnsNonNull() {
+        assertNotNull(game.createDTO());
+    }
+
+    @Test
+    void testCreateDTO_containsCorrectGameId() {
+        assertEquals(42, game.createDTO().id());
+    }
 }

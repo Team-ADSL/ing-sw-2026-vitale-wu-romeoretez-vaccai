@@ -60,4 +60,39 @@ public class EventsStateTest {
     void testCalcNextState_roundNot10_returnsEndRoundState() {
         assertInstanceOf(EndRoundState.class, eventsState.calcNextState());
     }
+
+    // ──────────────────────────────────────────────
+    // TEST ON ENTRY
+    // ──────────────────────────────────────────────
+
+    @Test
+    void testOnEntry_emptyBoard_doesNotThrow() {
+        assertDoesNotThrow(() -> eventsState.onEntry());
+    }
+
+    @Test
+    void testOnEntry_returnsNextState() {
+        ControllerState next = eventsState.onEntry();
+        assertNotNull(next);
+        assertNotSame(eventsState, next);
+    }
+
+    @Test
+    void testOnEntry_roundNot10_returnsEndRoundState() {
+        ControllerState next = eventsState.onEntry();
+        assertInstanceOf(EndRoundState.class, next);
+    }
+
+    @Test
+    void testOnEntry_round10_returnsEndGameState() {
+        Set<org.adsl.server.model.Player> players = new HashSet<>();
+        BoardConfigLoader loader = new JsonBoardConfigLoader();
+        Game g = new Game(1, 5, 10, 1, players, null,
+                game.getBoard(), org.adsl.shared.enums.Phase.EVENTS_EXECUTION);
+        GameController controller = new GameController(loader, new FakeGamePersistenceManager(), new FakeGameDAO());
+        EventsState state = new EventsState(g, controller);
+
+        ControllerState next = state.onEntry();
+        assertInstanceOf(EndGameState.class, next);
+    }
 }
