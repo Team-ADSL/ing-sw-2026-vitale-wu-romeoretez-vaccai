@@ -11,7 +11,8 @@
 <StackPane fx:id="rootStack" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
            style="-fx-background-color: #2c1a0e;">
 
-    <VBox fx:id="contentBox" alignment="TOP_CENTER" spacing="14" maxWidth="Infinity">
+    <VBox fx:id="contentBox" alignment="TOP_CENTER" spacing="14" maxWidth="Infinity"
+          StackPane.alignment="TOP_CENTER">
         <padding><Insets top="16" right="24" bottom="16" left="24"/></padding>
 
         <Label fx:id="headerLabel" style="-fx-font-size: 20px; -fx-text-fill: #f5deb3;"/>
