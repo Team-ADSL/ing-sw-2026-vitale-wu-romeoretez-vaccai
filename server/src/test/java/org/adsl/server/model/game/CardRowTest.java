@@ -63,4 +63,27 @@ public class CardRowTest {
         row.pickCardAt(0);
         assertEquals(card2, row.pickCardAt(1));
     }
+
+    // ──────────────────────────────────────────────
+    // TEST GET CARD AT
+    // ──────────────────────────────────────────────
+
+    @Test
+    void testGetCardAt_returnsCardWithoutRemoving() {
+        row.add(card1);
+        assertSame(card1, row.getCardAt(0));
+        assertSame(card1, row.getCardAt(0));
+    }
+
+    @Test
+    void testGetCardAt_returnsNullForEmptySlot() {
+        assertNull(row.getCardAt(0));
+    }
+
+    @Test
+    void testGetCardAt_doesNotRemoveCard() {
+        row.add(card1);
+        row.getCardAt(0);
+        assertSame(card1, row.getCardAt(0));
+    }
 }

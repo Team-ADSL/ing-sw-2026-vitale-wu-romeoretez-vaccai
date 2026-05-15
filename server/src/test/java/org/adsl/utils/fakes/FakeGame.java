@@ -2,6 +2,7 @@ package org.adsl.utils.fakes;
 
 import org.adsl.server.model.Game;
 import org.adsl.server.network.VirtualClient;
+import org.adsl.shared.enums.Totem;
 import org.adsl.shared.model.MatchResult;
 
 import java.util.ArrayList;
@@ -11,7 +12,9 @@ public class FakeGame extends Game {
     public boolean updateLobbySent = false;
     public boolean updateGameSent = false;
     public boolean endGameResultsSent = false;
+    public boolean sendTotemAvailableSent = false;
     public List<MatchResult> capturedResults = null;
+    public List<Totem> lastTotemAvailable = null;
     public final List<VirtualClient> addedClients = new ArrayList<>();
     public final List<VirtualClient> removedClients = new ArrayList<>();
 
@@ -31,6 +34,12 @@ public class FakeGame extends Game {
     @Override
     public void removeVirtualClient(VirtualClient virtualClient) {
         this.removedClients.add(virtualClient);
+    }
+
+    @Override
+    public void sendTotemAvailable(List<Totem> totemAvailable, String message) {
+        this.sendTotemAvailableSent = true;
+        this.lastTotemAvailable = new ArrayList<>(totemAvailable);
     }
 
     @Override

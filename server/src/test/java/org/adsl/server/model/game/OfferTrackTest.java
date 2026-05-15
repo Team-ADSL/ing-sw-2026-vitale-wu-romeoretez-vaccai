@@ -83,4 +83,28 @@ public class OfferTrackTest {
         Player newPlayer = new Player("Gianpiero", 2, 0, Totem.BLUE, new java.util.HashMap<>());
         assertThrows(IndexOutOfBoundsException.class, () -> offerTrack.placeInOfferTile(newPlayer, 5));
     }
+
+    // ──────────────────────────────────────────────
+    // TEST REMOVE PLAYER
+    // ──────────────────────────────────────────────
+
+    @Test
+    void testRemovePlayer_removesFromOccupiedTile() {
+        Player gianpaolo = tile1.getPlayer().get();
+        offerTrack.removePlayer(gianpaolo);
+        assertTrue(offerTrack.getTileAt(0).getPlayer().isEmpty());
+    }
+
+    @Test
+    void testRemovePlayer_doesNotAffectOtherTiles() {
+        Player gianpaolo = tile1.getPlayer().get();
+        offerTrack.removePlayer(gianpaolo);
+        assertTrue(offerTrack.getTileAt(1).getPlayer().isEmpty());
+    }
+
+    @Test
+    void testRemovePlayer_playerNotInTrack_doesNotThrow() {
+        Player stranger = new Player("Stranger");
+        assertDoesNotThrow(() -> offerTrack.removePlayer(stranger));
+    }
 }

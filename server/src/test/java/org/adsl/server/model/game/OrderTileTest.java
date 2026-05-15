@@ -95,4 +95,53 @@ public class OrderTileTest {
     void testGetCellAt_throwsOnInvalidIndex() {
         assertThrows(IndexOutOfBoundsException.class, () -> orderTile.getCellAt(5));
     }
+
+    // ──────────────────────────────────────────────
+    // TEST REMOVE PLAYER
+    // ──────────────────────────────────────────────
+
+    @Test
+    void testRemovePlayer_removesFromOccupiedCell() {
+        orderTile.placePlayerAtNext(gianpaolo);
+        orderTile.removePlayer(gianpaolo);
+        assertTrue(orderTile.getPlayerAt(0).isEmpty());
+    }
+
+    @Test
+    void testRemovePlayer_playerNotPresent_doesNotThrow() {
+        assertDoesNotThrow(() -> orderTile.removePlayer(new Player("Ghost")));
+    }
+
+    // ──────────────────────────────────────────────
+    // TEST PLACE PLAYERS RANDOM
+    // ──────────────────────────────────────────────
+
+    @Test
+    void testPlacePlayersRandom_allPlayersPlaced() {
+        java.util.Set<Player> players = new java.util.HashSet<>();
+        players.add(gianpaolo);
+        players.add(gianpiero);
+        orderTile.placePlayersRandom(players);
+
+        long occupied = 0;
+        for (int i = 0; i < orderTile.size(); i++) {
+            if (orderTile.getPlayerAt(i).isPresent()) occupied++;
+        }
+        assertEquals(2, occupied);
+    }
+
+    @Test
+    void testPlacePlayersRandom_containsExpectedPlayers() {
+        java.util.Set<Player> players = new java.util.HashSet<>();
+        players.add(gianpaolo);
+        players.add(gianpiero);
+        orderTile.placePlayersRandom(players);
+
+        java.util.Set<Player> placed = new java.util.HashSet<>();
+        for (int i = 0; i < 2; i++) {
+            orderTile.getPlayerAt(i).ifPresent(placed::add);
+        }
+        assertTrue(placed.contains(gianpaolo));
+        assertTrue(placed.contains(gianpiero));
+    }
 }
