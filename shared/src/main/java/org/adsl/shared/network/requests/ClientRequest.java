@@ -25,6 +25,22 @@ import java.io.Serializable;
         @JsonSubTypes.Type(value = ExitGameRequest.class, name = "EXIT_GAME"),
         @JsonSubTypes.Type(value = TotemPickingRequest.class, name = "TOTEM_PICKING"),
 })
+/**
+ * Abstract base for all requests sent from client to server over the network.
+ * Serialised to JSON via Jackson using the {@code "type"} discriminator field.
+ * The visitor pattern ({@link #accept}) dispatches each subtype to the correct
+ * handler in {@link RequestVisitor} without instanceof checks.
+ */
 public abstract class ClientRequest implements Serializable {
+
+    /**
+     * Dispatches this request to the appropriate {@code visit} method on
+     * {@code visitor}, passing {@code context} as the second argument.
+     *
+     * @param <T>     the context type (e.g. {@code VirtualClient} on the server)
+     * @param visitor the visitor to dispatch to
+     * @param context the context object accompanying the request
+     * @throws ServerException if the visitor rejects the request
+     */
     public abstract <T> void accept(RequestVisitor<T> visitor, T context) throws ServerException;
 }

@@ -10,6 +10,15 @@ import org.adsl.server.model.board.Deck;
 import java.util.ArrayList;
 import java.util.Set;
 
+/**
+ * Automatic state that executes end-of-round board maintenance.
+ * <p>
+ * Moves cards from the upper row to the lower row, refills the upper row from
+ * the deck, and handles era transitions (swapping building rows when the deck
+ * crosses an era boundary). Always transitions to {@link TotemPlacementState}
+ * when done.
+ * </p>
+ */
 public class EndRoundState extends ControllerState {
 
     public EndRoundState(Game game, GameController context) {

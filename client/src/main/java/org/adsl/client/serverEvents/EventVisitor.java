@@ -4,6 +4,13 @@ import org.adsl.client.view.Screen;
 import org.adsl.client.view.tui.events.InputEventVisitor;
 import org.adsl.shared.network.responses.TotemAvailableUpdate;
 
+/**
+ * Visitor interface for dispatching {@code ServerEvent} subtypes to the
+ * correct view handler without instanceof checks. Implemented by both
+ * {@code TUIScreen} and {@code GUIScreen} base classes.
+ *
+ * @param <S> the concrete screen type returned after handling the event
+ */
 public interface EventVisitor<S extends Screen<S>> {
     S visit(LoginNeededEvent event);
     S visit(HomeUpdateEvent event);

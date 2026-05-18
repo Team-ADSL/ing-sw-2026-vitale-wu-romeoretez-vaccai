@@ -8,6 +8,11 @@ import org.adsl.shared.model.CardToken;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Character card identified by an {@link Icon}. At end-game each player scores
+ * {@code numInventors × distinctIcons} PP, so collecting Inventors with different
+ * icons is always better than duplicates (resolved in {@code EndGameState}).
+ */
 public class Inventor extends Character {
 
     private final Icon icon;

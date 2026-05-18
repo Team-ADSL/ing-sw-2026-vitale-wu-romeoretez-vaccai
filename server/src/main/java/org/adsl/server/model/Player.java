@@ -13,6 +13,19 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Represents a player in a game session.
+ * <p>
+ * Stores the player's resource counters (food, prestige points), their chosen
+ * totem colour, their hand of cards keyed by {@link CardType}, and transient
+ * runtime state ({@code lastPick}, {@code isActive}, {@code buildingBonus}).
+ * </p>
+ * <p>
+ * Transient fields are not serialised; {@code buildingBonus} is rebuilt in
+ * {@code readObject} after deserialisation. The full-parameter constructor is
+ * used only by deserialisers; new players should use the single-name constructor.
+ * </p>
+ */
 public class Player implements Serializable {
     private final String name;
     private int food;

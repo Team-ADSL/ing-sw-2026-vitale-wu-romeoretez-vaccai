@@ -7,6 +7,11 @@ import org.adsl.shared.model.CardToken;
 
 import java.util.Set;
 
+/**
+ * Building that grants the owner an extra card draw from the upper row at the
+ * end of the round ({@code Trigger.END_ROUND}), handled by {@code ExtraMoveState}.
+ * The bonus is stored in {@code BuildingBonus.setExtraMove()}.
+ */
 public class ExtraMove extends Building {
 
     public ExtraMove(String id, int endGamePP, int cost, Trigger trigger,

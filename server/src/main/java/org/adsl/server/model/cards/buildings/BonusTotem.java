@@ -6,6 +6,12 @@ import org.adsl.shared.model.CardToken;
 
 import java.util.Set;
 
+/**
+ * Building that grants +1 bonus food when the owner places their totem on the
+ * order tile at the end of their action ({@link Trigger#END_TURN}).
+ * The bonus is stored in {@code BuildingBonus.setBonusFoodTile()} and applied
+ * in {@code ActionExecutionState}.
+ */
 public class BonusTotem extends Building {
 
     public BonusTotem(String id, int endGamePP, int cost, int era, Integer numPlayers) {

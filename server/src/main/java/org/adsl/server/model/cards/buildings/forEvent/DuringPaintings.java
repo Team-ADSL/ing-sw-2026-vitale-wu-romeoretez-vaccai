@@ -7,6 +7,12 @@ import org.adsl.shared.model.CardToken;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Building that grants +1 food per {@code Artist} card owned by the player
+ * during the {@code CavePaintings} event. The bonus is stored in
+ * {@code BuildingBonus.setArtistFood()} and applied in
+ * {@code CavePaintings.activeEffect()}.
+ */
 public class DuringPaintings extends DuringEvent {
     public DuringPaintings(String id, int endGamePP, int cost, int era, Integer numPlayers) {
         super(id, endGamePP, cost, era, numPlayers);

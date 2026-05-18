@@ -10,6 +10,19 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Abstract base for event cards (Hunt, ShamanicRitual, Sustenance, CavePaintings).
+ * <p>
+ * Events cannot be drawn by players ({@link #canBeDrawn} always returns
+ * {@code false}) and are instead resolved by {@code EventsState} when they are
+ * visible on the lower (or upper, on round 10) card row.
+ * </p>
+ * <p>
+ * Before applying the event's own effect, {@link #activateBuildings} is called
+ * for each player so that any {@code DuringEvent} buildings can set their flags
+ * in {@code BuildingBonus} before those flags are consumed.
+ * </p>
+ */
 public abstract class Event extends Card {
 
     private final boolean isFinal;

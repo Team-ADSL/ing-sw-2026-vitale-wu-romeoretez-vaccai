@@ -10,6 +10,15 @@ import org.adsl.shared.model.CardToken;
 
 import java.util.*;
 
+/**
+ * Event card: players compare their total shaman-star count (sum of
+ * {@link Shaman#getStarNum()} plus any {@link BuildingBonus#getExtraStars()}
+ * bonus). The player(s) with the most stars gain {@code gainedPP} PP; the
+ * player(s) with the fewest lose {@code lostPP} PP (unless immune via
+ * {@code DuringRitual}). If all players are tied no PP changes occur.
+ * A player who is alone at the top and owns a {@code DuringRitual}
+ * {@code RITUAL_DOUBLE_PP} building doubles their gain.
+ */
 public class ShamanicRitual extends Event {
 
     private final int lostPP;

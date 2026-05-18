@@ -12,6 +12,20 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * RMI server-side endpoint. Exported as a {@link UnicastRemoteObject} and bound
+ * in the RMI registry under the name {@code "GameServer"}.
+ * <p>
+ * Each incoming RMI call ({@link #connect}, {@link #sendRequest},
+ * {@link #disconnect}) is dispatched on a shared cached thread pool so that
+ * RMI worker threads are not blocked by game logic.
+ * </p>
+ * <p>
+ * <b>Ordering note:</b> RMI requests from the same client are submitted to the
+ * shared pool sequentially (one submit per call), which preserves arrival order
+ * for a single client stub. Cross-client ordering is not guaranteed.
+ * </p>
+ */
 public class RemoteServerServiceImpl extends UnicastRemoteObject implements RemoteServerService {
     private ServerController serverController;
     private final Map<RemoteClientStub, RMIClientHandler> clients;

@@ -11,6 +11,14 @@ import org.adsl.shared.network.responses.ServerResponse;
 import java.io.*;
 import java.net.Socket;
 
+/**
+ * {@code ServerConnection} implementation that communicates with the server
+ * via a TCP socket using newline-delimited JSON (same wire format as the
+ * server-side {@code SocketClientHandler}). A dedicated daemon listener
+ * thread reads lines from the socket and hands them to {@code AppCoordinator}
+ * via {@code JsonMessageHandler}. On connection loss it synthesises a
+ * {@code ServerDisconnected} response to notify the UI.
+ */
 public class SocketClientConnection implements ServerConnection {
     private Socket socket;
     private PrintWriter out;

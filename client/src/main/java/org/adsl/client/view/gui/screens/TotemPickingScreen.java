@@ -23,6 +23,11 @@ import org.adsl.shared.enums.Totem;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * GUI screen for the totem-picking phase. Displays totem images in a row;
+ * greyed-out totems are already taken. The player clicks to select and confirms
+ * with the button or ENTER key. Updates on {@code TotemAvailableEvent}.
+ */
 public class TotemPickingScreen extends GUIScreen {
 
     private static final Totem[] ALL_TOTEMS = Totem.values();

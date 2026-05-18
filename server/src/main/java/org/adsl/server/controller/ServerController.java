@@ -29,6 +29,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Top-level server controller. Manages all active games and all connected clients.
+ * <p>
+ * Implements {@link RequestVisitor} to handle lobby-level requests (login, logout,
+ * game creation/join). Game-specific requests are forwarded to the appropriate
+ * {@link GameController}. A periodic timeout checker pings clients every
+ * {@code pingRatioMs} ms and disconnects those silent for more than
+ * {@code clientTimeoutMs} ms.
+ * </p>
+ */
 public class ServerController implements RequestVisitor<VirtualClient>, EndGameObserver {
     private final Map<Integer, GameController> games;
     private final Map<String, VirtualClient> userConnected;
@@ -58,6 +68,14 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         this.socketServer = socketServer;
     }
 
+    /**
+     * Starts the background timeout checker on a single-threaded scheduler.
+     * Clients that have not pinged within {@code clientTimeoutMs} ms are
+     * forcefully disconnected.
+     *
+     * @param pingRatioMs    polling interval in milliseconds
+     * @param clientTimeoutMs inactivity threshold in milliseconds
+     */
     public void startTimeoutChecker(int pingRatioMs, long clientTimeoutMs) {
         timeoutScheduler = Executors.newSingleThreadScheduledExecutor();
         timeoutScheduler.scheduleAtFixedRate(() -> {
@@ -280,6 +298,13 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         home.update();
     }
 
+    /**
+     * Evicts all clients still in the lobby of the given game when the host
+     * disconnects. Each evicted client is moved back to the home screen.
+     *
+     * @param gameId the game whose host has disconnected
+     * @throws ServerException if forwarding the exit request to the game fails
+     */
     public void handleHostDisconnection(int gameId) throws ServerException{
         List<VirtualClient> clientToDisconnect = userConnected.values().stream()
                 .filter(c -> c.getGameId().orElse(-1) == gameId)
@@ -336,6 +361,11 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         }
     }
 
+    /**
+     * Loads persisted game states from disk and re-registers them as
+     * {@link RecoverState} instances, waiting for players to reconnect.
+     * Called once at server startup.
+     */
     public void recoverGames(){
         try{
             List<Game> gamesLoaded = gamePersistenceManager.recoverGames();
@@ -356,6 +386,10 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         }
     }
 
+    /**
+     * Gracefully shuts down the server: stops the timeout checker, unbinds
+     * RMI registry entries, unexports RMI objects, and stops the socket server.
+     */
     public void shutdown(){
         stopTimeoutChecker();
         shutdownRMI();

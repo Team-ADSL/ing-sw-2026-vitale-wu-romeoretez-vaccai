@@ -8,6 +8,15 @@ import org.adsl.shared.network.responses.ServerResponse;
 
 import java.rmi.RemoteException;
 
+/**
+ * {@link VirtualClient} implementation for RMI-connected clients.
+ * <p>
+ * Pushes responses via the {@link RemoteClientStub} callback reference held by
+ * this handler. On {@link RemoteException} (client unreachable) it triggers
+ * {@link #handleDisconnection()} to clean up server state. Unregistration from
+ * {@link RemoteServerServiceImpl} is performed by {@link #closeConnection()}.
+ * </p>
+ */
 public class RMIClientHandler extends VirtualClient {
     private final RemoteClientStub clientStub;
     private final RemoteServerServiceImpl serverService;

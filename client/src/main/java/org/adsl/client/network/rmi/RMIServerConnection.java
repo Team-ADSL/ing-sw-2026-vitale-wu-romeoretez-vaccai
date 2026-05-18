@@ -9,6 +9,12 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
+/**
+ * {@code ServerConnection} implementation that communicates with the server
+ * via Java RMI. Looks up the {@code "GameServer"} stub from the RMI registry,
+ * exports a {@code RemoteClientStubImpl} as the callback object, and forwards
+ * all client requests through {@code RemoteServerService.sendRequest()}.
+ */
 public class RMIServerConnection implements ServerConnection {
     private RemoteServerService serverStub;
     private RemoteClientStubImpl clientStub;

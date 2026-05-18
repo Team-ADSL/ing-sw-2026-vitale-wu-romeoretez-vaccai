@@ -15,6 +15,12 @@ import org.adsl.client.view.gui.FloatingLog;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * GUI lobby screen. Shows the players who have joined, the required player
+ * count, and a start button (visible only to the host). Updates in-place on
+ * {@code LobbyUpdateEvent}; transitions to the game screen on the first
+ * {@code GameUpdateEvent}.
+ */
 public class LobbyScreen extends GUIScreen {
 
     @FXML private StackPane rootStack;

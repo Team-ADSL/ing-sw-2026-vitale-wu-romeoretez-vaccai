@@ -10,6 +10,24 @@ import org.adsl.server.model.Game;
 
 import java.util.Optional;
 
+/**
+ * Base class for all game-phase states in the {@link GameController} state machine.
+ * <p>
+ * Each concrete state handles the subset of {@link RequestVisitor} methods that
+ * are valid in its phase; all others throw {@link ServerException} by default.
+ * </p>
+ * <ul>
+ *   <li><b>Manual states</b> – wait for a player request before transitioning
+ *       (e.g. {@link LobbyState}, {@link TotemPlacementState}).</li>
+ *   <li><b>Automatic states</b> – transition immediately on {@link #onEntry}
+ *       (e.g. {@link InitGameState}, {@link EndRoundState}).</li>
+ * </ul>
+ * <p>
+ * After each request, {@link GameController} calls {@link #getNextState()} and
+ * keeps calling {@link #onEntry()} on new states until a manual state returns
+ * {@code this}.
+ * </p>
+ */
 public abstract class ControllerState implements RequestVisitor<VirtualClient> {
     private final Game game;
     private final GameController context;
@@ -23,15 +41,37 @@ public abstract class ControllerState implements RequestVisitor<VirtualClient> {
         this.nextState = this;
     }
 
+    /**
+     * Called when the state machine enters this state. Automatic states perform
+     * their logic here and return the next state; manual states simply return
+     * {@code this} and wait for incoming requests.
+     *
+     * @return the next state to transition to, or {@code this} to stay
+     * @throws ServerException if entry-time logic fails
+     */
     public ControllerState onEntry() throws ServerException {
         return this;
     }
 
+    /**
+     * Computes which state should follow the current one after the last request
+     * was processed. Overridden by concrete states that have transition logic.
+     *
+     * @return the next {@link ControllerState}, or {@code this} if no transition
+     */
     public ControllerState calcNextState(){
         return this;
     }
 
-    // Called only in non-automatic states
+    /**
+     * Validates that the requesting client is the current player and returns
+     * their {@link Player} object. Only meaningful in manual (non-automatic) states.
+     *
+     * @param virtualClient the client sending the request
+     * @return the {@link Player} whose turn it is
+     * @throws ServerException if the client has no username, is not in this game,
+     *                         or is not the current player
+     */
     public Player controlIfPlayerTurn(VirtualClient virtualClient) throws ServerException {
         if(virtualClient.getClientUsername().isEmpty()){
             throw new ServerException("Virtual client has no username associated.");
