@@ -37,7 +37,7 @@ public class AppCoordinator implements ResponseVisitor{
      * in a single end-of-round) the pacer spaces them out so the user can
      * actually read each one before the next replaces it.
      */
-    private static final long DISPATCH_MIN_DELAY_MS = 1200L;
+    private static final long DISPATCH_MIN_DELAY_MS = 500L;
 
     private final GameUI gameUI;
     private final ServerConnection serverConnection;

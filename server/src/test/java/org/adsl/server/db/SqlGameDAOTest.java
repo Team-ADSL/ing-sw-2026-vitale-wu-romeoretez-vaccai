@@ -27,6 +27,12 @@ public class SqlGameDAOTest {
     void beginTransaction() throws SQLException {
         conn = DatabaseConfig.getConnection();
         conn.setAutoCommit(false);
+        // Wipe tables within the transaction so stale committed data doesn't pollute assertions.
+        // The delete is rolled back by @AfterEach, leaving production data intact.
+        try (var stmt = conn.createStatement()) {
+            stmt.execute("DELETE FROM results");
+            stmt.execute("DELETE FROM matches");
+        }
         Connection proxy = (Connection) Proxy.newProxyInstance(
             Connection.class.getClassLoader(),
             new Class[]{Connection.class},
