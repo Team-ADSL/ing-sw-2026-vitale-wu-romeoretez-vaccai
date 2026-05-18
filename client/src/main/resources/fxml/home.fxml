@@ -8,16 +8,18 @@
 <?import javafx.scene.layout.VBox?>
 
 <StackPane fx:id="rootStack" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-           style="-fx-background-color: #2c1a0e;">
+           style="-fx-background-color: transparent;">
 
-    <VBox alignment="TOP_CENTER" spacing="14" maxWidth="640" StackPane.alignment="TOP_CENTER">
+    <!-- Main content: fills full window height, panels centered horizontally -->
+    <VBox alignment="TOP_CENTER" spacing="14">
         <padding><Insets top="40" right="24" bottom="24" left="24"/></padding>
 
-        <Label fx:id="welcomeLabel" style="-fx-font-size: 26px; -fx-text-fill: #f5deb3;"/>
+        <Label fx:id="welcomeLabel" style="-fx-font-size: 26px; -fx-text-fill: #FDF3D3;"/>
 
-        <VBox styleClass="panel" spacing="10" alignment="CENTER">
+        <!-- Create game panel — fixed height -->
+        <VBox styleClass="panel" spacing="10" alignment="CENTER" maxWidth="700" fillWidth="false">
             <padding><Insets top="16" right="20" bottom="16" left="20"/></padding>
-            <Label text="Create new game" style="-fx-font-size: 15px; -fx-text-fill: #c8b080;"/>
+            <Label text="Create new game" style="-fx-font-size: 15px; -fx-text-fill: #F2B035;"/>
             <HBox spacing="10" alignment="CENTER">
                 <Button text="2 Players" onAction="#onCreate2"/>
                 <Button text="3 Players" onAction="#onCreate3"/>
@@ -26,17 +28,18 @@
             </HBox>
         </VBox>
 
-        <VBox styleClass="panel" spacing="10" alignment="CENTER">
+        <!-- Join game panel -->
+        <VBox styleClass="panel" spacing="10" alignment="CENTER" maxWidth="700" fillWidth="false">
             <padding><Insets top="16" right="20" bottom="16" left="20"/></padding>
-            <Label text="Join an active game" style="-fx-font-size: 15px; -fx-text-fill: #c8b080;"/>
-            <ListView fx:id="gamesList" maxHeight="200" prefWidth="420"/>
+            <Label text="Join an active game" style="-fx-font-size: 15px; -fx-text-fill: #F2B035;"/>
+            <ListView fx:id="gamesList" prefWidth="460" prefHeight="180"/>
             <HBox spacing="10" alignment="CENTER">
                 <Button text="Join Selected" onAction="#onJoinSelected"/>
                 <Button text="Logout" onAction="#onLogout"/>
             </HBox>
         </VBox>
 
-        <Label fx:id="errorLabel" style="-fx-text-fill: #e53935; -fx-font-size: 14px;" wrapText="true"/>
+        <Label fx:id="errorLabel" style="-fx-text-fill: #D92938; -fx-font-size: 14px;" wrapText="true"/>
     </VBox>
 
     <VBox fx:id="logBox" pickOnBounds="false" StackPane.alignment="BOTTOM_RIGHT"/>

@@ -9,9 +9,10 @@ import javafx.scene.effect.ColorAdjust;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
 import org.adsl.client.AppCoordinator;
@@ -40,7 +41,7 @@ public class TotemPickingScreen extends GUIScreen {
     private boolean pendingPick = false;
     private boolean hasPicked   = false;
 
-    private HBox   totemRow;
+    private FlowPane totemRow;
     private Label  statusLabel;
     private Label  errorLabel;
     private Button confirmButton;
@@ -61,27 +62,25 @@ public class TotemPickingScreen extends GUIScreen {
 
     // ── UI construction ────────────────────────────────────────────────────────
 
-    private VBox buildUI() {
+    private StackPane buildUI() {
         VBox outer = new VBox(28);
         outer.setAlignment(Pos.CENTER);
         outer.setPadding(new Insets(50));
-        outer.setStyle("-fx-background-color: #2c1a0e;");
-        outer.setFocusTraversable(true);
-        outer.setOnKeyPressed(e -> { if (e.getCode() == KeyCode.ENTER) onConfirm(); });
+        outer.setStyle("-fx-background-color: transparent;");
 
         Label title = new Label("M E S O S  —  Choose Your Totem");
-        title.setFont(ImageCatalog.chalkFont(34));
-        title.setStyle("-fx-text-fill: #f5deb3;");
+        title.setFont(ImageCatalog.chalkFont(42));
+        title.setStyle("-fx-text-fill: #FDF3D3;");
 
         Label playerLabel = new Label("Player: " + username);
-        playerLabel.setFont(ImageCatalog.chalkFont(19));
-        playerLabel.setStyle("-fx-text-fill: #b8946c;");
+        playerLabel.setFont(ImageCatalog.chalkFont(24));
+        playerLabel.setStyle("-fx-text-fill: #F2B035;");
 
         statusLabel = new Label("Select a totem, then press CONFIRM or ENTER");
-        statusLabel.setFont(ImageCatalog.chalkFont(17));
-        statusLabel.setStyle("-fx-text-fill: #c8b080;");
+        statusLabel.setFont(ImageCatalog.chalkFont(19));
+        statusLabel.setStyle("-fx-text-fill: #FDF3D3;");
 
-        totemRow = new HBox(40);
+        totemRow = new FlowPane(24, 24);
         totemRow.setAlignment(Pos.CENTER);
         populateTotemRow();
 
@@ -89,16 +88,30 @@ public class TotemPickingScreen extends GUIScreen {
         confirmButton.setFont(ImageCatalog.chalkFont(19));
         applyConfirmStyle(false);
         confirmButton.setOnAction(e -> onConfirm());
-        confirmButton.setOnMouseEntered(e -> { if (!confirmButton.isDisabled()) applyConfirmHover(); });
-        confirmButton.setOnMouseExited(e ->  { if (!confirmButton.isDisabled()) applyConfirmStyle(false); });
+        confirmButton.setOnMouseEntered(_ -> { if (!confirmButton.isDisabled()) applyConfirmHover(); });
+        confirmButton.setOnMouseExited(_ ->  { if (!confirmButton.isDisabled()) applyConfirmStyle(false); });
 
         errorLabel = new Label("");
         errorLabel.setFont(ImageCatalog.chalkFont(15));
-        errorLabel.setStyle("-fx-text-fill: #e53935;");
+        errorLabel.setStyle("-fx-text-fill: #D92938;");
         errorLabel.setWrapText(true);
 
         outer.getChildren().addAll(title, playerLabel, statusLabel, totemRow, confirmButton, errorLabel);
-        return outer;
+
+        StackPane rootPane = new StackPane(outer);
+        rootPane.setFocusTraversable(true);
+        rootPane.setOnKeyPressed(e -> { if (e.getCode() == KeyCode.ENTER) onConfirm(); });
+        applyTheme(rootPane);
+
+        // Dark overlay matching .panel opacity — sits between bg image and content.
+        Rectangle overlay = new Rectangle();
+        overlay.setFill(Color.rgb(0, 0, 0, 0.28));
+        overlay.widthProperty().bind(rootPane.widthProperty());
+        overlay.heightProperty().bind(rootPane.heightProperty());
+        StackPane.setAlignment(overlay, Pos.TOP_LEFT);
+        rootPane.getChildren().add(1, overlay);
+
+        return rootPane;
     }
 
     private void populateTotemRow() {
@@ -137,9 +150,9 @@ public class TotemPickingScreen extends GUIScreen {
 
         if (!hasPicked && available) {
             container.setStyle("-fx-cursor: hand;");
-            container.setOnMouseEntered(e -> { if (!isSelected(t)) scale(container, HOVER_SCALE); });
-            container.setOnMouseExited(e ->  { if (!isSelected(t)) scale(container, 1.0); });
-            container.setOnMouseClicked(e -> onTotemClicked(t));
+            container.setOnMouseEntered(_ -> { if (!isSelected(t)) scale(container, HOVER_SCALE); });
+            container.setOnMouseExited(_ ->  { if (!isSelected(t)) scale(container, 1.0); });
+            container.setOnMouseClicked(_ -> onTotemClicked(t));
         }
 
         return container;
@@ -149,7 +162,7 @@ public class TotemPickingScreen extends GUIScreen {
                                boolean available, boolean selected, boolean ourPick, Totem t) {
         if (ourPick || (selected && available)) {
             iv.setEffect(null);
-            name.setStyle("-fx-text-fill: #ffffff;");
+            name.setStyle("-fx-text-fill: #FDF3D3;");
             DropShadow glow = new DropShadow(28, glowColor(t));
             glow.setSpread(0.35);
             container.setEffect(glow);
@@ -162,7 +175,7 @@ public class TotemPickingScreen extends GUIScreen {
             container.setEffect(null);
         } else {
             iv.setEffect(null);
-            name.setStyle("-fx-text-fill: #c8b080;");
+            name.setStyle("-fx-text-fill: #FDF3D3;");
             container.setEffect(null);
         }
     }
@@ -187,7 +200,7 @@ public class TotemPickingScreen extends GUIScreen {
             pendingPick = true;
             confirmButton.setDisable(true);
             statusLabel.setText("Waiting for server confirmation...");
-            statusLabel.setStyle("-fx-text-fill: #f5a623;");
+            statusLabel.setStyle("-fx-text-fill: #F2B035;");
             errorLabel.setText("");
         } catch (Exception ex) {
             errorLabel.setText("Request failed: " + ex.getMessage());
@@ -217,7 +230,7 @@ public class TotemPickingScreen extends GUIScreen {
         pendingPick = false;
         errorLabel.setText(e.message());
         statusLabel.setText("Select a totem, then press CONFIRM or ENTER");
-        statusLabel.setStyle("-fx-text-fill: #c8b080;");
+        statusLabel.setStyle("-fx-text-fill: #FDF3D3;");
         confirmButton.setDisable(false);
         applyConfirmStyle(false);
         populateTotemRow();
@@ -228,7 +241,7 @@ public class TotemPickingScreen extends GUIScreen {
 
     private void showPickedState() {
         statusLabel.setText("Waiting for other players to choose...");
-        statusLabel.setStyle("-fx-text-fill: #87ceeb;");
+        statusLabel.setStyle("-fx-text-fill: #F2B035;");
         confirmButton.setVisible(false);
         populateTotemRow();
     }
@@ -243,10 +256,11 @@ public class TotemPickingScreen extends GUIScreen {
     }
 
     private void applyConfirmStyle(boolean hover) {
-        String bg = hover ? "#a5714e" : "#8b5e3c";
+        String bg = hover ? "#F25835" : "#F2B035";
         confirmButton.setStyle(
-            "-fx-background-color: " + bg + "; -fx-text-fill: #f5deb3; " +
-            "-fx-background-radius: 8; -fx-padding: 12 44 12 44; -fx-cursor: hand;"
+            "-fx-background-color: " + bg + "; -fx-text-fill: #1a0808; " +
+            "-fx-background-radius: 12; -fx-padding: 12 44 12 44; -fx-cursor: hand; " +
+            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45), 6, 0.25, 0, 2);"
         );
     }
 
