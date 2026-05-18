@@ -4,7 +4,9 @@ import org.adsl.server.persistence.SqlGameDAO;
 import org.adsl.shared.model.MatchResult;
 import org.junit.jupiter.api.*;
 
-import java.sql.*;
+import java.lang.reflect.Proxy;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -12,22 +14,37 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class SqlGameDAOTest {
 
-    private static SqlGameDAO dao;
+    private Connection conn;
+    private SqlGameDAO dao;
 
     @BeforeAll
     static void setupDatabase() {
         assumeTrue(System.getenv("DB_PASSWORD") != null, "DB_PASSWORD not set — skipping DB tests");
         DatabaseManager.initDatabase();
-        dao = new SqlGameDAO(DatabaseConfig::getConnection);
+    }
+
+    @BeforeEach
+    void beginTransaction() throws SQLException {
+        conn = DatabaseConfig.getConnection();
+        conn.setAutoCommit(false);
+        Connection proxy = (Connection) Proxy.newProxyInstance(
+            Connection.class.getClassLoader(),
+            new Class[]{Connection.class},
+            (p, method, args) -> {
+                String name = method.getName();
+                if ("close".equals(name) || "setAutoCommit".equals(name) || "commit".equals(name))
+                    return null;
+                return method.invoke(conn, args);
+            }
+        );
+        dao = new SqlGameDAO(() -> proxy);
     }
 
     @AfterEach
-    void cleanUp() throws SQLException {
-        try (Connection conn = DatabaseConfig.getConnection();
-             Statement stmt = conn.createStatement()) {
-            stmt.executeUpdate("DELETE FROM results");
-            stmt.executeUpdate("DELETE FROM matches");
-            stmt.executeUpdate("DELETE FROM players");
+    void rollbackTransaction() throws SQLException {
+        if (conn != null) {
+            conn.rollback();
+            conn.close();
         }
     }
 
