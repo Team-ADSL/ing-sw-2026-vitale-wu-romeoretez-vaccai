@@ -172,16 +172,22 @@ public abstract class GUIScreen extends Screen<GUIScreen> {
     }
 
     private static void setFont(Label node){
-        node.setFont(ImageCatalog.chalkFont(extractFontSize(node.getStyle(), 15.0)));
+        node.setFont(fontFor(node, extractFontSize(node.getStyle(), 15.0)));
     }
     private static void setFont(Button node){
-        node.setFont(ImageCatalog.chalkFont(extractFontSize(node.getStyle(), 16.0)));
+        node.setFont(fontFor(node, extractFontSize(node.getStyle(), 16.0)));
     }
     private static void setFont(TextField node){
-        node.setFont(ImageCatalog.chalkFont(extractFontSize(node.getStyle(), 15.0)));
+        node.setFont(fontFor(node, extractFontSize(node.getStyle(), 15.0)));
     }
     private static void setFont(Pane node){
         applyChalkFonts(node);
+    }
+
+    private static javafx.scene.text.Font fontFor(Node node, double size) {
+        return node.getStyleClass().contains("tech-text")
+                ? ImageCatalog.robotoFont(size)
+                : ImageCatalog.chalkFont(size);
     }
 
     private static double extractFontSize(String style, double fallback) {

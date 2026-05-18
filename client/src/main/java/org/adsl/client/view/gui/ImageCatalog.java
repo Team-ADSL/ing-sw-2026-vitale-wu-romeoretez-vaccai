@@ -18,18 +18,29 @@ public final class ImageCatalog {
 
     private static final Map<String, Image> CACHE = new HashMap<>();
     private static Font CHRISTMAS_CHALK;
+    private static Font ROBOTO;
 
     private ImageCatalog() {}
 
     public static void loadFonts() {
-        if (CHRISTMAS_CHALK != null) return;
-        CHRISTMAS_CHALK = Font.loadFont(
-                ImageCatalog.class.getResourceAsStream("/assets/ChristmasChalk.ttf"), 24);
+        if (CHRISTMAS_CHALK == null) {
+            CHRISTMAS_CHALK = Font.loadFont(
+                    ImageCatalog.class.getResourceAsStream("/assets/fonts/ChristmasChalk.ttf"), 24);
+        }
+        if (ROBOTO == null) {
+            ROBOTO = Font.loadFont(
+                    ImageCatalog.class.getResourceAsStream("/assets/fonts/Roboto/static/Roboto-Regular.ttf"), 14);
+        }
     }
 
     public static Font chalkFont(double size) {
         if (CHRISTMAS_CHALK == null) loadFonts();
         return Font.font(CHRISTMAS_CHALK.getFamily(), size);
+    }
+
+    public static Font robotoFont(double size) {
+        if (ROBOTO == null) loadFonts();
+        return Font.font(ROBOTO.getFamily(), size);
     }
 
     public static Image load(String path) {

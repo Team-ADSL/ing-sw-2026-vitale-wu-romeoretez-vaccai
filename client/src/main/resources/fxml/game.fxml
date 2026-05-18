@@ -30,7 +30,7 @@
         <VBox fx:id="othersBox" alignment="CENTER" spacing="3"/>
 
         <HBox spacing="14" alignment="CENTER">
-            <Label fx:id="hintLabel" style="-fx-font-size: 14px;" wrapText="true"/>
+            <Label fx:id="hintLabel" style="-fx-font-size: 14px;" wrapText="true" styleClass="tech-text"/>
             <Button fx:id="confirmButton" text="Confirm Selection" onAction="#onSendMove"/>
         </HBox>
 
