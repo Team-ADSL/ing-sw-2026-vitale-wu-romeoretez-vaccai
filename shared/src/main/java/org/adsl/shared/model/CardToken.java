@@ -1,5 +1,11 @@
 package org.adsl.shared.model;
 
+/**
+ * String constants used to compose the {@code typeLabel} and {@code effectsLabel}
+ * fields of {@code CardDTO}. The client TUI/GUI renders these tokens as icons
+ * or formatted text. Using constants here instead of raw strings keeps the
+ * server model and client rendering in sync.
+ */
 public final class CardToken {
     private CardToken() {}
 

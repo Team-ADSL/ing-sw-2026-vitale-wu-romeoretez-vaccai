@@ -8,6 +8,13 @@ import org.adsl.shared.model.CardToken;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Building that reduces the food cost during the {@code Sustenance} event by
+ * an amount equal to the number of cards the owner has of a specific character
+ * type ({@code typeMultiplier}). The discount is accumulated in
+ * {@code BuildingBonus.setSustenanceDiscount()} and applied in
+ * {@code Sustenance.activeEffect()}.
+ */
 public class DuringSustenance extends DuringEvent {
     private final CardType typeMultiplier;
 

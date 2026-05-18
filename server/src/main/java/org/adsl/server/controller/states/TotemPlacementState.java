@@ -16,6 +16,16 @@ import org.adsl.server.model.board.OrderTile;
 import java.util.Set;
 
 
+/**
+ * Manual state in which players, in turn-order, place their totem on an offer
+ * tile to choose their action for the round.
+ * <p>
+ * Players are served in the order they appear on the {@link OrderTile}. Each
+ * must submit a {@link MoveRequest} targeting a free {@link OfferTile} slot.
+ * Once all players have placed their totems the state transitions to
+ * {@link ActionExecutionState}.
+ * </p>
+ */
 public class TotemPlacementState extends ControllerState {
 
     public TotemPlacementState(Game game, GameController context) {

@@ -7,6 +7,11 @@ import org.adsl.shared.model.CardToken;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Character card that reduces the food cost per character during the
+ * {@code Sustenance} event. Each Gatherer provides a fixed {@code discount}
+ * (in food) applied by {@code Sustenance.activeEffect()}.
+ */
 public class Gatherer extends Character {
 
     private final int discount;

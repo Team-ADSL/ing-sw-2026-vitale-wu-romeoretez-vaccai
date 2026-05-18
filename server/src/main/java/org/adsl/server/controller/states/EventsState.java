@@ -11,6 +11,16 @@ import org.adsl.server.model.Player;
 
 import java.util.*;
 
+/**
+ * Automatic state that resolves all event cards visible on the board.
+ * <p>
+ * Events in the lower row are always resolved. On the final round (10) the
+ * upper-row events are resolved as well. Within each row events are processed
+ * in rules order: non-Sustenance events by era first, then Sustenance events
+ * by era. After resolution the state transitions to {@link EndRoundState}
+ * (rounds 1–9) or {@link EndGameState} (round 10).
+ * </p>
+ */
 public class EventsState extends ControllerState {
 
   public EventsState(Game game, GameController context) {

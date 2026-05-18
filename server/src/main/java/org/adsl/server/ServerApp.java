@@ -24,12 +24,18 @@ import java.util.concurrent.Executors;
  * {@code App} class so the server jar no longer drags in client code.
  *
  * Usage:
- *   java -jar mesos-server.jar <socket-port> <rmi-port> <recover-directory>
+ *   java -jar mesos-server.jar {@code <socket-port> <rmi-port> <recover-directory>}
  */
 public final class ServerApp {
 
     private ServerApp() {}
 
+    /**
+     * Application entry point. Parses and validates the three required arguments
+     * then delegates to {@link #startServer}.
+     *
+     * @param args {@code <socket-port> <rmi-port> <recover-directory>}
+     */
     public static void main(String[] args) {
         if (args.length != 3) {
             printUsageAndExit("Expected 3 arguments.");

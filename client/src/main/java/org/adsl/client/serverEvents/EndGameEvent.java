@@ -5,6 +5,13 @@ import org.adsl.shared.model.MatchResult;
 
 import java.util.List;
 
+/**
+ * Server event fired when the game ends. Carries the final leaderboard;
+ * {@code results} is {@code null} if the game ended before it started
+ * (all lobby players left).
+ *
+ * @param results final leaderboard entries, or {@code null}
+ */
 public record EndGameEvent(List<MatchResult> results) implements ServerEvent {
 
     @Override

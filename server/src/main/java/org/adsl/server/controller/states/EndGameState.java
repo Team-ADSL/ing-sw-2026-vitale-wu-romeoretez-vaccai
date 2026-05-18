@@ -16,6 +16,16 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Automatic state that resolves end-of-game scoring and persists results.
+ * <p>
+ * On entry it applies all end-game building effects, tallies builder PP,
+ * inventor icon bonuses, and artist pairs for each player, then saves the
+ * match to the database and broadcasts the leaderboard to all clients.
+ * Returns {@code null} to signal that the game is over and the controller
+ * should be discarded.
+ * </p>
+ */
 public class EndGameState extends ControllerState {
     public EndGameState(Game game, GameController context) {
         super(game, context);

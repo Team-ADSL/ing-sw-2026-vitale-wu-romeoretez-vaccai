@@ -10,6 +10,12 @@ import org.adsl.shared.model.CardToken;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Event card: players with at least {@code minArtists} {@code Artist} cards gain
+ * {@code multiplierPP} PP per Artist; players below the threshold lose
+ * {@code lostPP} PP. Players with a {@code DuringPaintings} building additionally
+ * gain 1 food per Artist.
+ */
 public class CavePaintings extends Event {
 
     private final int minArtists;

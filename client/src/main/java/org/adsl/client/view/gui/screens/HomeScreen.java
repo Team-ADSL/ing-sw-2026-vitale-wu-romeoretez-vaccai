@@ -16,6 +16,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * GUI home screen. Displays the list of open games and lets the player create
+ * a new game (2–5 players) or join an existing one. Updates in-place when
+ * {@code HomeUpdateEvent} arrives. A floating log overlay shows server messages.
+ */
 public class HomeScreen extends GUIScreen {
 
     @FXML private StackPane rootStack;

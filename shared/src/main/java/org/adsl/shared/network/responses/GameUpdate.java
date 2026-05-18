@@ -6,6 +6,10 @@ import org.adsl.shared.exceptions.InvalidResponseException;
 import org.adsl.shared.model.GameDTO;
 
 
+/**
+ * Response sent after every game-state change. Carries a full {@code GameDTO}
+ * snapshot; the client replaces its entire model from this object.
+ */
 public class GameUpdate extends ServerResponse{
     private final GameDTO game;
 

@@ -9,6 +9,12 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * A single slot on the offer track. Players place their totem here during
+ * {@code TotemPlacementState} to declare which card rows they will draw from
+ * and how many cards they may draw. A tile can grant food instead of cards
+ * ({@code givesFood}), in which case the action is resolved automatically.
+ */
 public class OfferTile implements Serializable {
     private final String id;
     private Player player;

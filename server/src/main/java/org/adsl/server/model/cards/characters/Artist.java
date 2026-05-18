@@ -7,6 +7,11 @@ import org.adsl.shared.model.CardToken;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Character card. Artists score 5 PP per pair at end-game (resolved in
+ * {@code EndGameState}). They also interact with the {@code CavePaintings} event
+ * and the {@code DuringPaintings} building.
+ */
 public class Artist extends Character {
 
     public Artist (String id, int era, Integer numPlayers) {

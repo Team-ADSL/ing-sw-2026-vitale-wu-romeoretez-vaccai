@@ -5,8 +5,20 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+/**
+ * Initialises the MySQL database schema on server startup.
+ * Creates the {@code game_leaderboard} database and the {@code players},
+ * {@code matches}, and {@code results} tables if they do not already exist.
+ */
 public class DatabaseManager {
 
+    /**
+     * Creates the database and all required tables using {@code CREATE IF NOT EXISTS}
+     * statements. Throws {@link RuntimeException} wrapping the underlying
+     * {@link SQLException} if the schema cannot be set up.
+     *
+     * @throws RuntimeException if {@code DB_PASSWORD} is not set or the DDL fails
+     */
     public static void initDatabase() {
         if (DatabaseConfig.PASSWORD == null) {
             throw new RuntimeException(new SQLException(

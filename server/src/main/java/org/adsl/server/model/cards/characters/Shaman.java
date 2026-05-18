@@ -7,6 +7,11 @@ import org.adsl.shared.model.CardToken;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Character card that contributes {@code starNum} shaman stars during the
+ * {@code ShamanicRitual} event. The player with the most total stars wins PP;
+ * the player with the fewest loses PP (unless protected by a building).
+ */
 public class Shaman extends Character {
 
     private final int starNum;

@@ -8,6 +8,12 @@ import org.adsl.shared.model.CardToken;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Building that grants a bonus during the {@code Hunt} event: the owner gains
+ * +1 food and +1 PP per {@code Hunter} card they own (on top of the standard
+ * Hunt reward). The bonus is stored in {@code BuildingBonus.setHuntEventBonus()}
+ * and applied in {@code Hunt.activeEffect()}.
+ */
 public class DuringHunt extends DuringEvent {
     public DuringHunt(String id, int endGamePP, int cost, int era, Integer numPlayers) {
         super(id, endGamePP, cost, era, numPlayers);

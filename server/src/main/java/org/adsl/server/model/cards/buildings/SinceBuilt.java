@@ -9,6 +9,17 @@ import org.adsl.shared.model.CardToken;
 
 import java.util.*;
 
+/**
+ * Building that reacts each time the owner draws a card ({@link Trigger#DRAWING}).
+ * Tracks all character cards drawn since the building was acquired and triggers
+ * a food bonus when a condition is met:
+ * <ul>
+ *   <li>{@code FOOD_COMPLETE_SET} – grants 5 food the moment the owner has at
+ *       least one card of every character type; the set is then reset.</li>
+ *   <li>{@code COUPLE_INVENTOR} – grants 3 food when the owner has drawn a
+ *       second {@code Inventor}.</li>
+ * </ul>
+ */
 public class SinceBuilt extends Building {
     private final BuildingEffect buildingEffect;
     private Map<CardType, Set<Card>> characterInUse;

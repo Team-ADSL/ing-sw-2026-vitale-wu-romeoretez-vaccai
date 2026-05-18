@@ -7,6 +7,10 @@ import org.adsl.shared.enums.Totem;
 
 import java.util.List;
 
+/**
+ * Response sent during the totem-picking phase after each player picks a
+ * totem, broadcasting the updated list of totems still available for selection.
+ */
 public class TotemAvailableUpdate extends ServerResponse{
     private final List<Totem> totemAvailable;
 

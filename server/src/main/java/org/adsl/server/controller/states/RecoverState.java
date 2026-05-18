@@ -8,6 +8,15 @@ import org.adsl.server.network.VirtualClient;
 import org.adsl.shared.exceptions.ServerException;
 import org.adsl.shared.network.requests.EnterGameRequest;
 
+/**
+ * Manual state that waits for all players to reconnect after a server restart.
+ * <p>
+ * Players whose {@code isActive} flag is {@code false} (set during recovery)
+ * must send an {@link EnterGameRequest} to re-join. Once all expected players
+ * are active again the state uses {@link StateFactory} to reconstruct the
+ * correct game-phase state and resume play.
+ * </p>
+ */
 public class RecoverState extends ControllerState {
     public RecoverState(Game game, GameController context) {
         super(game, context);

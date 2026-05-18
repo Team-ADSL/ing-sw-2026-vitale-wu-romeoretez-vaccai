@@ -8,6 +8,16 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.concurrent.ExecutorService;
 
+/**
+ * TCP server that listens for incoming client connections on the configured
+ * port and creates a {@link SocketClientHandler} for each accepted socket.
+ * <p>
+ * Runs on a dedicated thread; each handler is submitted to the shared
+ * {@link java.util.concurrent.ExecutorService}. Shutdown closes the
+ * {@link ServerSocket}, causing the blocking {@code accept()} call to throw
+ * a {@link java.net.SocketException} and exit the loop cleanly.
+ * </p>
+ */
 public class SocketServer implements Runnable {
     private ServerController serverController;
     private final ExecutorService threadPool;

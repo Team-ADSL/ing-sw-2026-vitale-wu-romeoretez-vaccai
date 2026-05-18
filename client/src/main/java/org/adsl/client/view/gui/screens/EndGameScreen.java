@@ -13,6 +13,10 @@ import org.adsl.shared.model.MatchResult;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * GUI end-game screen. Displays the final leaderboard in a sortable table.
+ * A "Return to home" button exits the current game view.
+ */
 public class EndGameScreen extends GUIScreen {
 
     @FXML private TableView<MatchResult> resultsTable;
