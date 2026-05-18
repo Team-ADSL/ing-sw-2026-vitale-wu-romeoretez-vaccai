@@ -1,16 +1,23 @@
 package org.adsl.client.view.gui.screens;
 
+import javafx.beans.binding.Bindings;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.shape.Rectangle;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.serverEvents.*;
 import org.adsl.client.view.gui.ImageCatalog;
 import org.adsl.client.view.Screen;
-import org.adsl.shared.network.responses.TotemAvailableUpdate;
+
+import java.util.Objects;
 
 /**
  * Base class for every GUI screen. Mirrors {@link org.adsl.client.view.tui.screens.TUIScreen}
@@ -94,9 +101,60 @@ public abstract class GUIScreen extends Screen<GUIScreen> {
     // ── Dark theme helper ──────────────────────────────────────────────────────
 
     protected static void applyTheme(Parent root) {
-        String css = GUIScreen.class.getResource("/assets/theme.css").toExternalForm();
+        applyTheme(root, true);
+    }
+
+    private static Image BG_IMAGE = null;
+
+    protected static void applyTheme(Parent root, boolean withBackground) {
+        String css = Objects.requireNonNull(
+                GUIScreen.class.getResource("/assets/theme.css")).toExternalForm();
         if (!root.getStylesheets().contains(css)) {
             root.getStylesheets().add(css);
+        }
+        if (withBackground && root instanceof StackPane sp) {
+            if (BG_IMAGE == null) {
+                BG_IMAGE = new Image(Objects.requireNonNull(
+                    GUIScreen.class.getResourceAsStream("/assets/general/initial_game_background.png")));
+            }
+            final double imgW = BG_IMAGE.getWidth();
+            final double imgH = BG_IMAGE.getHeight();
+
+            ImageView bg = new ImageView(BG_IMAGE);
+            bg.setSmooth(true);
+            bg.setPreserveRatio(false);
+
+            // Anchor bg at TOP_LEFT so layoutX=0; translateX/Y are the sole positioning.
+            StackPane.setAlignment(bg, Pos.TOP_LEFT);
+
+            bg.fitWidthProperty().bind(Bindings.createDoubleBinding(() -> {
+                double scale = Math.max(sp.getWidth() / imgW, sp.getHeight() / imgH);
+                return imgW * scale;
+            }, sp.widthProperty(), sp.heightProperty()));
+
+            bg.fitHeightProperty().bind(Bindings.createDoubleBinding(() -> {
+                double scale = Math.max(sp.getWidth() / imgW, sp.getHeight() / imgH);
+                return imgH * scale;
+            }, sp.widthProperty(), sp.heightProperty()));
+
+            // Center horizontally and vertically.
+            bg.translateXProperty().bind(Bindings.createDoubleBinding(() -> {
+                double scale = Math.max(sp.getWidth() / imgW, sp.getHeight() / imgH);
+                return (sp.getWidth() - imgW * scale) / 2.0;
+            }, sp.widthProperty(), sp.heightProperty()));
+
+            bg.translateYProperty().bind(Bindings.createDoubleBinding(() -> {
+                double scale = Math.max(sp.getWidth() / imgW, sp.getHeight() / imgH);
+                return (sp.getHeight() - imgH * scale) / 2.0;
+            }, sp.widthProperty(), sp.heightProperty()));
+
+            // Clip overflow so the scaled image doesn't bleed outside the pane.
+            Rectangle clip = new Rectangle();
+            clip.widthProperty().bind(sp.widthProperty());
+            clip.heightProperty().bind(sp.heightProperty());
+            sp.setClip(clip);
+
+            sp.getChildren().addFirst(bg);
         }
         applyChalkFonts(root);
     }

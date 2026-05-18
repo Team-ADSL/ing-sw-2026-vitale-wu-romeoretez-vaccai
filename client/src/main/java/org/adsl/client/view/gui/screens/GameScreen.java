@@ -1,24 +1,19 @@
 package org.adsl.client.view.gui.screens;
 
-import javafx.animation.FadeTransition;
 import javafx.animation.ScaleTransition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -71,7 +66,6 @@ public class GameScreen extends GUIScreen {
     private static final Duration ANIM       = Duration.millis(140);
     private static final double CHIP_WIDTH   = 40;
     private static final double TOTEM_BADGE  = 22;
-    private static final int    LOG_VISIBLE  = 5;
 
     @FXML private StackPane rootStack;
     @FXML private VBox      contentBox;
@@ -93,7 +87,7 @@ public class GameScreen extends GUIScreen {
     private int upperCount = 0;
     private int lowerCount = 0;
     private boolean waitingServer = false;
-    private FloatingLog floatingLog;
+    private final FloatingLog floatingLog;
 
     private StackPane overlayPane;
     private Label overlayTitle;
@@ -110,11 +104,11 @@ public class GameScreen extends GUIScreen {
         } catch (IOException e) {
             throw new RuntimeException("Failed to load game.fxml", e);
         }
-        applyTheme(fxmlRoot);
+        applyTheme(fxmlRoot, false);
 
-        this.root = (StackPane) fxmlRoot;
-        rootStack.widthProperty().addListener((obs, o, n) -> Platform.runLater(this::renderBoard));
-        rootStack.heightProperty().addListener((obs, o, n) -> Platform.runLater(this::renderBoard));
+        this.root = fxmlRoot;
+        rootStack.widthProperty().addListener((_, _, _) -> Platform.runLater(this::renderBoard));
+        rootStack.heightProperty().addListener((_, _, _) -> Platform.runLater(this::renderBoard));
         rootStack.setFocusTraversable(true);
         rootStack.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.ENTER && confirmButton != null && !confirmButton.isDisabled()) {
@@ -269,7 +263,7 @@ public class GameScreen extends GUIScreen {
         }
     }
 
-    private void onCardClicked(Row row, int idx, CardDTO card, StackPane cell) {
+    private void onCardClicked(Row row, int idx, CardDTO card, StackPane _) {
         if (!canPickCards()) return;
         if (card == null) {
             errorLabel.setText("That slot is empty.");
@@ -362,8 +356,8 @@ public class GameScreen extends GUIScreen {
         List<CardDTO> bot = game.board().lowRow();
         List<OfferTileDTO> off = game.board().offerTrack();
 
-        int topN = (int) top.stream().filter(c -> c != null).count();
-        int botN = (int) bot.stream().filter(c -> c != null).count();
+        int topN = (int) top.stream().filter(java.util.Objects::nonNull).count();
+        int botN = (int) bot.stream().filter(java.util.Objects::nonNull).count();
         int offN = off.size();
 
         double topW = computeCardWidth(topN, CARD_GAP, CARD_MAX_W, CARD_MIN_W);
@@ -468,13 +462,13 @@ public class GameScreen extends GUIScreen {
 
         if (clickable) {
             cell.setCursor(Cursor.HAND);
-            cell.setOnMouseEntered(e -> {
+            cell.setOnMouseEntered(_ -> {
                 if (!selectedMoves.contains(new Move(idx, row))) scale(cell, HOVER_SCALE);
             });
-            cell.setOnMouseExited(e -> {
+            cell.setOnMouseExited(_ -> {
                 if (!selectedMoves.contains(new Move(idx, row))) scale(cell, 1.0);
             });
-            cell.setOnMouseClicked(e -> onCardClicked(row, idx, card, cell));
+            cell.setOnMouseClicked(_ -> onCardClicked(row, idx, card, cell));
         } else {
             cell.setOpacity(0.65);
         }
@@ -524,7 +518,7 @@ public class GameScreen extends GUIScreen {
         boolean occupied = tile.totem() != null;
         if (clickable && !occupied) {
             cell.setCursor(Cursor.HAND);
-            cell.setOnMouseClicked(e -> onOfferTileClicked(idx, tile));
+            cell.setOnMouseClicked(_ -> onOfferTileClicked(idx, tile));
         } else if (!clickable) {
             cell.setOpacity(0.7);
         }
@@ -620,7 +614,7 @@ public class GameScreen extends GUIScreen {
         if (p.cards() == null) return "";
         p.cards().forEach((type, set) -> {
             if (set != null && !set.isEmpty()) {
-                if (sb.length() > 0) sb.append("  ");
+                if (!sb.isEmpty()) sb.append("  ");
                 sb.append(type.name()).append(":").append(set.size());
             }
         });

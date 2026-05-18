@@ -4,11 +4,11 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<StackPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
-           style="-fx-background-color: #2c1a0e;">
+<StackPane xmlns="http://javafx.com/javafx"
+           style="-fx-background-color: transparent;">
     <VBox alignment="CENTER" spacing="18" maxWidth="440" maxHeight="-Infinity" styleClass="panel">
         <padding><Insets top="32" right="40" bottom="32" left="40"/></padding>
-        <Label text="M E S O S" style="-fx-font-size: 38px; -fx-text-fill: #f5deb3;"/>
-        <Label text="Connecting to server..." style="-fx-font-size: 16px; -fx-text-fill: #b8946c;"/>
+        <Label text="M E S O S" style="-fx-font-size: 38px; -fx-text-fill: #FDF3D3;"/>
+        <Label text="Connecting to server..." style="-fx-font-size: 16px; -fx-text-fill: #F2B035;"/>
     </VBox>
 </StackPane>
