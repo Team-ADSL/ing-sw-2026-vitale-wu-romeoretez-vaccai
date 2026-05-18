@@ -66,6 +66,7 @@ public final class FloatingLog {
         HBox header = new HBox();
         header.setAlignment(Pos.CENTER_LEFT);
         Label titleLabel = new Label(title);
+        titleLabel.setFont(ImageCatalog.robotoFont(14));
         titleLabel.setStyle("-fx-text-fill: #c8b080; -fx-font-size: 14px; -fx-font-weight: bold;");
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -110,6 +111,7 @@ public final class FloatingLog {
             Label entry = new Label(text);
             entry.setWrapText(true);
             entry.setMaxWidth(MAX_W - 20);
+            entry.setFont(ImageCatalog.robotoFont(12));
             entry.setStyle("-fx-text-fill: #f5deb3; -fx-font-size: 12px;"
                     + " -fx-background-color: rgba(0,0,0,0.40); -fx-padding: 3 10 3 10;"
                     + " -fx-background-radius: 8;");
@@ -130,6 +132,7 @@ public final class FloatingLog {
         for (String s : history) {
             Label l = new Label(s);
             l.setWrapText(true);
+            l.setFont(ImageCatalog.robotoFont(13));
             l.setStyle("-fx-text-fill: #f5deb3; -fx-font-size: 13px;");
             fullMessages.getChildren().add(l);
         }
