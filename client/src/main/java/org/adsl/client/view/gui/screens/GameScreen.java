@@ -263,7 +263,7 @@ public class GameScreen extends GUIScreen {
         }
     }
 
-    private void onCardClicked(Row row, int idx, CardDTO card, StackPane _) {
+    private void onCardClicked(Row row, int idx, CardDTO card, StackPane pane) {
         if (!canPickCards()) return;
         if (card == null) {
             errorLabel.setText("That slot is empty.");

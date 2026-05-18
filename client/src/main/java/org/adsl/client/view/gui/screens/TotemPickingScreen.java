@@ -92,8 +92,8 @@ public class TotemPickingScreen extends GUIScreen {
         confirmButton.setOnMouseExited(_ ->  { if (!confirmButton.isDisabled()) applyConfirmStyle(false); });
 
         errorLabel = new Label("");
-        errorLabel.setFont(ImageCatalog.chalkFont(15));
-        errorLabel.setStyle("-fx-text-fill: #D92938;");
+        errorLabel.setFont(ImageCatalog.chalkFont(18));
+        errorLabel.setStyle("-fx-text-fill: #F2B035; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.9), 5, 0.5, 0, 0);");
         errorLabel.setWrapText(true);
 
         outer.getChildren().addAll(title, playerLabel, statusLabel, totemRow, confirmButton, errorLabel);

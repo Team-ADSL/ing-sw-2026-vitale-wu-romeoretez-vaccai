@@ -27,7 +27,7 @@
             </HBox>
         </VBox>
 
-        <Label fx:id="errorLabel" style="-fx-text-fill: #D92938; -fx-font-size: 14px;" wrapText="true"/>
+        <Label fx:id="errorLabel" style="-fx-text-fill: #F2B035; -fx-font-size: 17px; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.9), 5, 0.5, 0, 0);" wrapText="true"/>
     </VBox>
 
     <VBox fx:id="logBox" pickOnBounds="false" StackPane.alignment="BOTTOM_RIGHT"/>

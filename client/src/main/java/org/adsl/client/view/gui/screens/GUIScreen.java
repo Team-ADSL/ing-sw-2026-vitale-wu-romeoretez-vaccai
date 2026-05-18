@@ -12,6 +12,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.serverEvents.*;
 import org.adsl.client.view.gui.ImageCatalog;
@@ -172,13 +173,27 @@ public abstract class GUIScreen extends Screen<GUIScreen> {
     }
 
     private static void setFont(Label node){
-        node.setFont(fontFor(node, extractFontSize(node.getStyle(), 15.0)));
+        Font f = fontFor(node, extractFontSize(node.getStyle(), 15.0));
+        node.setFont(f);
+        pinFontFamily(node, f.getFamily());
     }
     private static void setFont(Button node){
-        node.setFont(fontFor(node, extractFontSize(node.getStyle(), 16.0)));
+        Font f = fontFor(node, extractFontSize(node.getStyle(), 16.0));
+        node.setFont(f);
+        pinFontFamily(node, f.getFamily());
     }
     private static void setFont(TextField node){
-        node.setFont(fontFor(node, extractFontSize(node.getStyle(), 15.0)));
+        Font f = fontFor(node, extractFontSize(node.getStyle(), 15.0));
+        node.setFont(f);
+        pinFontFamily(node, f.getFamily());
+    }
+
+    /** Pins font-family into the inline style so CSS layout pass cannot override setFont(). */
+    private static void pinFontFamily(Node node, String family) {
+        String s = node.getStyle() != null ? node.getStyle() : "";
+        if (!s.contains("-fx-font-family")) {
+            node.setStyle(s + "; -fx-font-family: '" + family + "';");
+        }
     }
     private static void setFont(Pane node){
         applyChalkFonts(node);
