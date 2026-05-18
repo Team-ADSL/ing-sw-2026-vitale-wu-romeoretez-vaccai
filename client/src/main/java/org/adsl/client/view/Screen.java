@@ -4,6 +4,19 @@ import org.adsl.client.AppCoordinator;
 import org.adsl.client.serverEvents.*;
 import org.adsl.shared.network.responses.TotemAvailableUpdate;
 
+/**
+ * Transport-independent base for a single game screen. Implements
+ * {@link EventVisitor} so incoming server events are directly dispatched via
+ * the visitor pattern: returning {@code this} keeps the current screen,
+ * returning a new instance triggers a transition.
+ * <p>
+ * Concrete screen hierarchies ({@code TUIScreen}, {@code GUIScreen}) extend
+ * this class and implement the factory methods to instantiate the correct
+ * concrete screen for each event type.
+ * </p>
+ *
+ * @param <S> the concrete screen type (self-bounded to enable fluent return types)
+ */
 public abstract class Screen<S extends Screen<S>> implements EventVisitor<S> {
     protected final AppCoordinator appCoordinator;
     protected String error;

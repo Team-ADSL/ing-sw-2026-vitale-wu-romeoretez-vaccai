@@ -10,6 +10,11 @@ import org.adsl.shared.model.CardToken;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Event card: each player must pay 1 food per character card they own, reduced
+ * by 3 food per {@code Gatherer} and by any {@code DuringSustenance} discount.
+ * For each character that cannot be fed the player loses {@code lostPP} PP instead.
+ */
 public class Sustenance extends Event {
 
     private final int lostPP;

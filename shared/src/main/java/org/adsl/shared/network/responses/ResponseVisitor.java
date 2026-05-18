@@ -2,6 +2,11 @@ package org.adsl.shared.network.responses;
 
 import org.adsl.shared.exceptions.InvalidResponseException;
 
+/**
+ * Visitor interface for dispatching {@link ServerResponse} subtypes on the
+ * client side without instanceof checks. Implemented by {@code AppCoordinator}
+ * to route each incoming response to the appropriate screen or handler.
+ */
 public interface ResponseVisitor {
     void visit(ServerPing response) throws InvalidResponseException;
     void visit(LoginNeeded response) throws InvalidResponseException;

@@ -10,6 +10,11 @@ import org.adsl.shared.model.CardToken;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Event card: each player gains 1 food and {@code multiplierPP} PP per
+ * {@code Hunter} card they own. If the player owns a {@code DuringHunt}
+ * building they gain an additional 1 food and 1 PP per Hunter.
+ */
 public class Hunt extends Event {
 
     private final int multiplierPP;

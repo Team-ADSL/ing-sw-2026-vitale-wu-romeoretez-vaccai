@@ -8,6 +8,18 @@ import org.adsl.shared.model.CardToken;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Building that modifies the {@code ShamanicRitual} event for its owner.
+ * The specific modifier is controlled by {@link BuildingEffect}:
+ * <ul>
+ *   <li>{@code RITUAL_IMMUNITY} – the owner does not lose PP even if they have
+ *       the fewest shaman stars.</li>
+ *   <li>{@code RITUAL_STARS_BONUS} – grants +3 virtual shaman stars during the
+ *       ritual.</li>
+ *   <li>{@code RITUAL_DOUBLE_PP} – doubles the PP gained by the winner of the
+ *       ritual (only if the owner is alone at the top).</li>
+ * </ul>
+ */
 public class DuringRitual extends DuringEvent {
     private final BuildingEffect buildingEffect;
 

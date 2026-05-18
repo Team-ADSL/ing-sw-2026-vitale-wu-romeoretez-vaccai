@@ -12,6 +12,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Manual state in which each player picks their totem colour before the game
+ * board is initialised.
+ * <p>
+ * Broadcasts the list of still-available totems after each pick. Once every
+ * player has chosen a totem the state transitions to {@link InitGameState}.
+ * </p>
+ */
 public class TotemPickingState extends ControllerState {
 
     private List<Totem> totemToPick = new ArrayList<>(Arrays.asList(Totem.values()));

@@ -7,6 +7,15 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * MySQL implementation of {@link GameDAO}.
+ * <p>
+ * Uses a {@link ConnectionProvider} to obtain connections so that the data
+ * source can be swapped in tests. {@link #saveMatch} runs inside a transaction
+ * and rolls back automatically on failure. {@link #getLeaderboard} computes
+ * a dense rank client-side (cumulative scores per player, ordered descending).
+ * </p>
+ */
 public class SqlGameDAO implements GameDAO{
     private ConnectionProvider connectionProvider;
 

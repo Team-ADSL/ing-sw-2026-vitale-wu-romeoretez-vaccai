@@ -9,6 +9,16 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * {@link GamePersistenceManager} that serialises {@link Game} objects to
+ * {@code .ser} files in a configurable directory.
+ * <p>
+ * Each call to {@link #updateGame} overwrites the file for that game ID
+ * ({@code game_<id>.ser}). {@link #recoverGames} reads all {@code .ser} files
+ * in the directory on startup. {@link #removeGame} deletes the file when the
+ * game ends.
+ * </p>
+ */
 public class SerialGamePersistenceManager implements GamePersistenceManager{
 
     private final String saveDirectory;

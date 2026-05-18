@@ -9,6 +9,18 @@ import org.adsl.shared.model.CardToken;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Building whose effect fires once at the end of the game ({@link Trigger#END_GAME}).
+ * The specific effect is determined by {@link BuildingEffect}:
+ * <ul>
+ *   <li>{@code END_BUILDER_MULTIPLIER} – doubles end-game PP from all buildings.</li>
+ *   <li>{@code PP_COMPLETE_SET} – grants 6 PP per card in the player's smallest
+ *       card-type group.</li>
+ *   <li>{@code END_CHARACTER_MULTIPLIER} – grants 1 PP per card of a specific
+ *       character type.</li>
+ *   <li>{@code END_PP_BONUS} – grants a flat 25 PP.</li>
+ * </ul>
+ */
 public class EndGame extends Building {
     private final BuildingEffect buildingEffect;
     private final CardType characterTypeMultiplier;

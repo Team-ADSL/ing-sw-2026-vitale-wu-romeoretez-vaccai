@@ -21,6 +21,18 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Manual state in which the current player picks cards from the board rows.
+ * <p>
+ * On entry the state identifies the first player on the offer track who has not
+ * yet acted and sets them as the current player. On each {@link MoveRequest} it
+ * validates the draw counts against the chosen offer tile's allowed moves, picks
+ * the cards, places the player's totem on the order tile, and applies any
+ * end-of-turn building bonuses. If all players have acted the state transitions
+ * to {@link ExtraMoveState}. Offer tiles that grant food are resolved automatically
+ * without waiting for a client request.
+ * </p>
+ */
 public class ActionExecutionState extends ControllerState {
 
   public ActionExecutionState(Game game, GameController context) {

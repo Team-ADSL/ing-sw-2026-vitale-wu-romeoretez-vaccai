@@ -7,6 +7,11 @@ import org.adsl.shared.model.CardToken;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Character card that reduces the food cost of buildings by {@code discount} and
+ * contributes {@code pp} prestige points at end-game (resolved in
+ * {@code EndGameState}). Multiple builders stack their discounts.
+ */
 public class Builder extends Character {
 
     private final int discount;

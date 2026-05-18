@@ -8,6 +8,16 @@ import org.adsl.server.network.VirtualClient;
 import org.adsl.shared.exceptions.ServerException;
 import org.adsl.shared.network.requests.*;
 
+/**
+ * Manual state that manages the pre-game lobby.
+ * <p>
+ * Accepts {@code EnterGameRequest} until the lobby is full, rejects duplicates,
+ * and transitions to {@code TotemPickingState} when the host sends
+ * {@code StartGameRequest} with all seats filled. If the host disconnects all
+ * remaining players are evicted and a {@code HostDisconnectedException} is
+ * propagated to {@code ServerController} to clean up the game entry.
+ * </p>
+ */
 public class LobbyState extends ControllerState {
     private boolean readyToStart;
     private final String host;

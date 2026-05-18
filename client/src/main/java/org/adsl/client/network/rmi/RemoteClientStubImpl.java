@@ -10,6 +10,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 
+/**
+ * Client-side RMI callback object exported as a {@code UnicastRemoteObject}.
+ * The server holds a reference to this stub and calls {@link #sendResponse}
+ * to push responses asynchronously. Delivery is dispatched on a dedicated
+ * single-threaded executor (daemon thread) to keep the RMI thread free and
+ * to serialise responses for the {@code AppCoordinator}.
+ */
 public class RemoteClientStubImpl extends UnicastRemoteObject implements RemoteClientStub {
     private final transient AppCoordinator coordinator;
     private final ExecutorService threadPool;

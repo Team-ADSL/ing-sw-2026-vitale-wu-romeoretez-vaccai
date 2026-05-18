@@ -19,6 +19,16 @@ import org.adsl.shared.enums.Row;
 import java.io.InputStream;
 import java.util.*;
 
+/**
+ * {@link BoardConfigLoader} implementation that reads game configuration from
+ * JSON resource files bundled in the classpath ({@code /cards/}, {@code /offer_tiles.json},
+ * {@code /order_tiles.json}, {@code /game_settings.json}).
+ * <p>
+ * Card and building objects are instantiated via the static parser maps
+ * ({@link #CARD_PARSERS}, {@link #BUILDING_PARSERS}), keyed on the {@code "type"}
+ * field in each JSON node.
+ * </p>
+ */
 public class JsonBoardConfigLoader implements BoardConfigLoader {
 
     @FunctionalInterface
@@ -117,7 +127,7 @@ public class JsonBoardConfigLoader implements BoardConfigLoader {
 
     /**
      * Returns the OfferTrack for the given number of players.
-     * Includes all tiles with numPlayers <= the given value.
+     * Includes all tiles with numPlayers {@code <=} the given value.
      */
     @Override
     public OfferTrack getOfferTrack(int numPlayers) {
@@ -192,6 +202,14 @@ public class JsonBoardConfigLoader implements BoardConfigLoader {
         }
     }
 
+    /**
+     * Returns gameplay settings for the given player count, loaded from
+     * {@code /game_settings.json}.
+     *
+     * @param numPlayers number of players (2–5)
+     * @return {@link GameSettings} for that player count
+     * @throws RuntimeException if the resource file is missing or no entry matches
+     */
     @Override
     public GameSettings getSettings(int numPlayers){
         try (InputStream is = getClass().getResourceAsStream("/game_settings.json")) {

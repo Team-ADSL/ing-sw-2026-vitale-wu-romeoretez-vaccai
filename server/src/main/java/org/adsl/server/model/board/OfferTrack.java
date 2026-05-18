@@ -9,6 +9,13 @@ import java.util.ArrayList;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * The offer track: an ordered list of {@link OfferTile}s that defines both
+ * the available actions and the order in which players execute them.
+ * Players place their totem on a tile during {@code TotemPlacementState};
+ * {@code ActionExecutionState} reads the track left-to-right to determine
+ * whose turn it is.
+ */
 public class OfferTrack implements Serializable {
     private final ArrayList<OfferTile> offerQueue;
 

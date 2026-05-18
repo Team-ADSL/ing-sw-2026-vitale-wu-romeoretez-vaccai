@@ -8,6 +8,15 @@ import org.adsl.server.network.VirtualClient;
 import org.adsl.server.persistence.GamePersistenceManager;
 import org.adsl.shared.network.requests.ClientRequest;
 
+/**
+ * Per-game controller that owns the {@link ControllerState} state machine.
+ * <p>
+ * All client requests for a single game are routed here by {@link ServerController}.
+ * Each call to {@link #handleClientRequest} dispatches the request to the current
+ * state via the visitor pattern, then drives automatic state transitions until
+ * a manual (waiting) state is reached.
+ * </p>
+ */
 public class GameController {
     private ControllerState state;
     private final BoardConfigLoader boardConfigLoader;
@@ -22,6 +31,18 @@ public class GameController {
         this.state = null;
     }
 
+    /**
+     * Dispatches {@code req} to the current state and drives automatic state
+     * transitions until a manual (waiting) state is reached.
+     * <p>
+     * Synchronized to serialise concurrent requests for the same game.
+     * </p>
+     *
+     * @param req           the request to handle
+     * @param virtualClient the client who sent the request
+     * @throws ServerException if the current state rejects the request or a
+     *                         state-transition loop is detected
+     */
     public synchronized void handleClientRequest(ClientRequest req, VirtualClient virtualClient) throws ServerException {
         req.accept(state, virtualClient);
         changeState(state.getNextState());

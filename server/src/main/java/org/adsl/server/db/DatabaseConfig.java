@@ -4,6 +4,14 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+/**
+ * Static JDBC configuration for the MySQL leaderboard database.
+ * <p>
+ * The database password is read from the {@code DB_PASSWORD} environment
+ * variable at class-load time. Connecting without that variable set causes
+ * an immediate {@link SQLException}.
+ * </p>
+ */
 public class DatabaseConfig {
     private static final String HOST     = "localhost";
     private static final String PORT     = "3306";

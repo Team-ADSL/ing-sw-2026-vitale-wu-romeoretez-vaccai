@@ -17,6 +17,17 @@ import org.adsl.server.model.board.CardRow;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * State that handles the optional extra card draw granted by {@code ExtraMove}
+ * buildings at end of round.
+ * <p>
+ * On entry it evaluates all players' end-of-round building effects. If exactly
+ * one player has an {@code ExtraMove} bonus that player becomes the current
+ * player and may pick one card from the upper row (or pass with an empty move
+ * set). If no player has the bonus the state transitions immediately to
+ * {@link EventsState}.
+ * </p>
+ */
 public class ExtraMoveState extends ControllerState {
   public ExtraMoveState(Game game, GameController context) {
     super(game, context);
