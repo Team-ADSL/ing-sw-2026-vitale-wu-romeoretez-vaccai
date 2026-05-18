@@ -24,17 +24,17 @@
 
         <VBox fx:id="tribeBox" alignment="CENTER" spacing="4">
             <Label fx:id="tribeLabel"    style="-fx-font-size: 15px; -fx-text-fill: #c8b080;"/>
-            <Label fx:id="tribeContents" style="-fx-font-size: 13px;" wrapText="true"/>
+            <Label fx:id="tribeContents" style="-fx-font-size: 13px;" wrapText="true" styleClass="tech-text"/>
         </VBox>
 
         <VBox fx:id="othersBox" alignment="CENTER" spacing="3"/>
 
         <HBox spacing="14" alignment="CENTER">
-            <Label fx:id="hintLabel" style="-fx-font-size: 14px;" wrapText="true"/>
+            <Label fx:id="hintLabel" style="-fx-font-size: 14px;" wrapText="true" styleClass="tech-text"/>
             <Button fx:id="confirmButton" text="Confirm Selection" onAction="#onSendMove"/>
         </HBox>
 
-        <Label fx:id="errorLabel" style="-fx-text-fill: #e53935; -fx-font-size: 13px;" wrapText="true"/>
+        <Label fx:id="errorLabel" style="-fx-text-fill: #e53935; -fx-font-size: 13px;" wrapText="true" styleClass="tech-text"/>
     </VBox>
 
     <VBox fx:id="logBox" mouseTransparent="false" pickOnBounds="false"
