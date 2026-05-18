@@ -14,6 +14,24 @@ import org.adsl.shared.network.responses.*;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Transport-agnostic representation of a connected client on the server side.
+ * <p>
+ * Implements {@link GameObserver}, {@link HomeObserver}, and
+ * {@link EndGameObserver} to receive push notifications from the model and
+ * convert them into {@link ServerResponse} objects that are forwarded to the
+ * actual network layer via {@link #sendResponse(ServerResponse)}.
+ * </p>
+ * <p>
+ * Concrete subclasses ({@code SocketClientHandler}, {@code RMIClientHandler})
+ * implement {@link #sendResponse} and {@link #closeConnection} for their
+ * respective transport.
+ * </p>
+ * <p>
+ * The {@code lastPing} timestamp is volatile and updated on every ping to allow
+ * the timeout checker in {@link ServerController} to detect stale connections.
+ * </p>
+ */
 public abstract class VirtualClient implements GameObserver, HomeObserver, EndGameObserver {
     private final ServerController serverController;
     private String clientUsername;
@@ -142,7 +160,17 @@ public abstract class VirtualClient implements GameObserver, HomeObserver, EndGa
         this.sendResponse(serverResponse);
     }
 
+    /**
+     * Sends a response to the client over the transport-specific channel.
+     * Must not block the calling thread for more than a brief timeout.
+     *
+     * @param response the response to deliver
+     */
     public abstract void sendResponse(ServerResponse response);
+
+    /**
+     * Closes the underlying transport connection and releases associated resources.
+     */
     public abstract void closeConnection();
 
     public Optional<String> getClientUsername() {

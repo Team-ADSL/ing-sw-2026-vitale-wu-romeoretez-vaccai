@@ -26,6 +26,13 @@ import java.io.Serializable;
         @JsonSubTypes.Type(value = ErrorResponse.class, name = "ERROR_RESPONSE"),
         @JsonSubTypes.Type(value = EventsTriggered.class, name = "EVENTS_TRIGGERED"),
 })
+/**
+ * Abstract base for all responses sent from server to client over the network.
+ * Serialised to JSON via Jackson using the {@code "type"} discriminator field.
+ * An optional {@code message} field carries a log-line string shown in the
+ * client game log. The visitor pattern ({@link #accept}) dispatches each
+ * subtype to the correct UI handler in {@link ResponseVisitor}.
+ */
 public abstract class ServerResponse implements Serializable {
     @JsonProperty("message")
     private String message;

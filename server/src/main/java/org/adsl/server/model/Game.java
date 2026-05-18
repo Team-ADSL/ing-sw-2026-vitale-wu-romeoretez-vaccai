@@ -14,6 +14,20 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Core game model. Holds all mutable state for a single match: players, board,
+ * current round/era, current player, and phase.
+ * <p>
+ * Notifies registered {@link GameObserver}s on every state change and
+ * {@link EndGameObserver}s when the game ends. Observer lists are transient
+ * and rebuilt after deserialisation via {@link #setupTransientAttributes()}.
+ * </p>
+ * <p>
+ * Two constructors are provided: one for new games, one for games recovered
+ * from serialised state (the recovered constructor sets {@code isInitialized}
+ * to {@code true} to skip board setup in {@code InitGameState}).
+ * </p>
+ */
 public class Game implements Serializable {
     private final int gameId;
     private final Set<Player> players;
@@ -118,6 +132,10 @@ public class Game implements Serializable {
         for(EndGameObserver o : endGameObservers) o.notifyEndGame(gameId, results, message);
     }
 
+    /**
+     * Reinitialises transient fields after deserialisation. Must be called on
+     * every recovered {@link Game} before it is registered with a controller.
+     */
     public void setupTransientAttributes(){
         isInitialized = true;
         gameObservers = new ArrayList<>();

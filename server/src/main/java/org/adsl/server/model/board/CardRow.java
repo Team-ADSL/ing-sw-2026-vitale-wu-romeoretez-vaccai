@@ -9,6 +9,14 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * A fixed-size row of cards on the game board, split into two logical regions:
+ * <ul>
+ *   <li>Indices {@code 0 .. numTribeCards-1} — tribe cards (characters and events).</li>
+ *   <li>Indices {@code numTribeCards .. size-1} — building cards.</li>
+ * </ul>
+ * Null slots represent empty positions.
+ */
 public class CardRow implements Serializable {
     private final ArrayList<Card> cards;
     private final int numTribeCards;
@@ -28,6 +36,12 @@ public class CardRow implements Serializable {
         return cards.size();
     }
 
+    /**
+     * Removes and returns the card at {@code index}, leaving a {@code null} slot.
+     *
+     * @param index zero-based position in the row
+     * @return the card that was at that position (may be {@code null})
+     */
     public Card pickCardAt(int index){
         Card toReturn = cards.get(index);
         cards.set(index, null);

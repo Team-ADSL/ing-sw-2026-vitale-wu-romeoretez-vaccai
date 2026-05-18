@@ -10,6 +10,18 @@ import org.adsl.shared.network.responses.ServerResponse;
 import java.io.*;
 import java.net.Socket;
 
+/**
+ * {@link VirtualClient} implementation for socket-connected clients.
+ * <p>
+ * Runs on its own thread (submitted to the server thread pool). Reads
+ * newline-delimited JSON from the socket input stream via
+ * {@link JsonMessageHandler}, deserialises each line into a
+ * {@link ClientRequest}, and dispatches it through {@link #processRequest}.
+ * Responses are serialised back to JSON and written to the output stream.
+ * The thread exits when the connection is closed or an {@link IOException}
+ * occurs, triggering {@link #handleDisconnection()}.
+ * </p>
+ */
 public class SocketClientHandler extends VirtualClient implements Runnable {
     private final Socket socket;
     private BufferedReader in;

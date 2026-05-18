@@ -13,7 +13,22 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-// Mediator between Network and View. Send response to UI and request to Network.
+/**
+ * Mediator between the network layer and the view layer.
+ * <p>
+ * Implements {@code ResponseVisitor} to receive {@code ServerResponse} objects
+ * from the network thread, convert them to view-layer events, and forward them
+ * to the active {@code GameUI}. Also serialises {@code ClientRequest} objects
+ * sent by the UI back to the server via the {@code ServerConnection}.
+ * </p>
+ * <p>
+ * A built-in dispatch pacer spaces UI-bound responses at least
+ * {@code DISPATCH_MIN_DELAY_MS} apart so event overlays are readable.
+ * Heartbeat (ping) responses bypass the pacer. A background ping scheduler
+ * sends keep-alive requests at a fixed rate and triggers disconnection when
+ * the server stops responding.
+ * </p>
+ */
 public class AppCoordinator implements ResponseVisitor{
 
     /**

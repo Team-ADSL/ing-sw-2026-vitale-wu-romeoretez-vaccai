@@ -13,6 +13,12 @@ import org.adsl.shared.enums.Totem;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * TUI screen for the totem-picking phase. Displays all available totems in a
+ * grid; the player navigates with arrow keys and confirms with ENTER. Each
+ * pick sends a {@code TotemPickingRequest} and the screen updates when
+ * {@code TotemAvailableEvent} arrives showing the remaining choices.
+ */
 public class TotemPickingScreen extends TUIScreen {
 
     private static final Totem[] ALL_TOTEMS = Totem.values();

@@ -9,6 +9,12 @@ import org.adsl.shared.model.CardToken;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Character card. If {@code extraFood} is {@code true}, the owner immediately
+ * gains food equal to the total number of Hunters they own each time a Hunter
+ * is drawn ({@link Trigger#DRAWING}). Hunters also multiply food and PP gained
+ * during the {@code Hunt} event.
+ */
 public class Hunter extends Character {
 
     private final boolean extraFood;

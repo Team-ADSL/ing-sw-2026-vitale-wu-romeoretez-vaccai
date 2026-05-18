@@ -6,6 +6,11 @@ import org.adsl.server.network.HomeObserver;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Server-side "home screen" model that tracks the list of currently open games
+ * and notifies connected {@link HomeObserver}s (i.e. clients in the lobby)
+ * whenever the game list changes.
+ */
 public class Home {
     private final List<Integer> games;
     private final List<HomeObserver> observers;

@@ -9,6 +9,18 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+/**
+ * The turn-order track for a game session. Holds an ordered list of
+ * {@link OrderCell}s; each cell records which player occupies it and the
+ * bonus/malus that applies when a player's totem is placed there after
+ * executing their action.
+ * <p>
+ * At the start of each round players are read from this track in order to
+ * determine who places their totem first in {@code TotemPlacementState}.
+ * After each action the acting player's totem moves from the offer track back
+ * to the next free cell on this tile.
+ * </p>
+ */
 public class OrderTile implements Serializable {
     private final String id;
     private final ArrayList<OrderCell> orderQueue;
@@ -29,6 +41,13 @@ public class OrderTile implements Serializable {
                 .forEach(i -> orderQueue.get(i).setPlayer(shuffledPlayers.get(i)));
     }
 
+    /**
+     * Places {@code p} in the first empty cell (left to right) and returns its
+     * index, which is used to read the bonus/malus for that cell.
+     *
+     * @param p the player to place
+     * @return the index of the cell where the player was placed
+     */
     public int placePlayerAtNext(Player p){
         int i = 0;
         while(i < orderQueue.size() && orderQueue.get(i).getPlayer().isPresent()){

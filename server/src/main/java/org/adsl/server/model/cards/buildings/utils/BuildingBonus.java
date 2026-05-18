@@ -1,5 +1,19 @@
 package org.adsl.server.model.cards.buildings.utils;
 
+/**
+ * Transient per-player accumulator for building effects that must be resolved
+ * after they are set (e.g. end-of-turn bonuses, event modifiers).
+ * <p>
+ * Each field is activated by a specific building during its trigger phase and
+ * consumed by the relevant game-state or event logic. After consumption the
+ * entire bonus object is reset via {@link #reset()} so it starts clean for the
+ * next turn or event.
+ * </p>
+ * <p>
+ * This class is not serialised ({@code transient} in {@code Player}) and is
+ * rebuilt by {@code Player.readObject} after deserialisation.
+ * </p>
+ */
 public class BuildingBonus {
     private int extraStars;
     private int shamanMulitiplierPP;

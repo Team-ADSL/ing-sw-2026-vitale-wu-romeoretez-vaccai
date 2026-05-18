@@ -17,6 +17,20 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Automatic state that initialises the game board at the start of the first
+ * round, executed once per game after all players have picked their totems.
+ * <p>
+ * Builds the {@link Board} from the loaded configuration, creates the three
+ * era building decks, fills both card rows, places players on the order tile in
+ * random order, and registers the persistence manager as a game observer before
+ * transitioning to {@link TotemPlacementState}.
+ * </p>
+ * <p>
+ * If the game is already marked as initialised (recovered from persistence) the
+ * board setup is skipped and the state transitions immediately.
+ * </p>
+ */
 public class InitGameState extends ControllerState {
 
     public InitGameState(Game game, GameController context) {

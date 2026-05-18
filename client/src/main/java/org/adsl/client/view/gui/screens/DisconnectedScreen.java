@@ -7,6 +7,10 @@ import org.adsl.client.AppCoordinator;
 
 import java.io.IOException;
 
+/**
+ * GUI screen shown when the connection to the server is lost. Displays the
+ * disconnection message and provides a button to attempt reconnection.
+ */
 public class DisconnectedScreen extends GUIScreen {
 
     @FXML private Label messageLabel;

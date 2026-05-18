@@ -9,6 +9,17 @@ import org.adsl.shared.model.MatchResult;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Abstract base for UI implementations (TUI and GUI). Converts incoming
+ * {@code ServerResponse} callbacks (called by {@code AppCoordinator}) into
+ * {@code ServerEvent} objects and dispatches them to the active screen via
+ * {@link #dispatch(ServerEvent)}.
+ * <p>
+ * Concrete subclasses ({@code TUI}, {@code GUI}) implement {@link #dispatch},
+ * {@link #start()}, and {@link #shutdown()} for their respective rendering
+ * technology.
+ * </p>
+ */
 public abstract class GameUI {
     private AppCoordinator appCoordinator;
 

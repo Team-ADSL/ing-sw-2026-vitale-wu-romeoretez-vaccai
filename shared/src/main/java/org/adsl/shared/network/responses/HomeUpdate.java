@@ -7,6 +7,10 @@ import org.adsl.shared.exceptions.InvalidResponseException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Response sent to clients on the home screen when the list of open games
+ * changes. Contains the current list of active game IDs.
+ */
 public class HomeUpdate extends ServerResponse {
     private final List<Integer> activeGames;
 

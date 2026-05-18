@@ -10,6 +10,15 @@ import org.adsl.shared.model.CardToken;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Abstract base for all building cards.
+ * <p>
+ * Buildings are purchased by spending food (reduced by {@link Builder} discounts)
+ * and grant end-game PP plus a subclass-specific in-game effect activated by
+ * a {@code Trigger}. Buildings cannot be drawn by a {@code null} player and
+ * always check food + builder discount against their cost.
+ * </p>
+ */
 public abstract class Building extends Card {
     private final int endGamePP;
     private final int cost;

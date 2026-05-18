@@ -7,6 +7,11 @@ import org.adsl.shared.model.MatchResult;
 
 import java.util.List;
 
+/**
+ * Response broadcast to all players when a game ends. Carries the final
+ * leaderboard; if {@code results} is {@code null} the game ended before it
+ * started (all lobby players left).
+ */
 public class GameEnded extends ServerResponse {
     private final List<MatchResult> results;
 
