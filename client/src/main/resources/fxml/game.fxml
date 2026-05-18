@@ -15,15 +15,15 @@
           StackPane.alignment="TOP_CENTER">
         <padding><Insets top="16" right="24" bottom="16" left="24"/></padding>
 
-        <Label fx:id="headerLabel" style="-fx-font-size: 20px; -fx-text-fill: #f5deb3;"/>
-        <Label fx:id="phaseLabel"  style="-fx-font-size: 14px; -fx-text-fill: #b8946c;"/>
+        <Label fx:id="headerLabel" style="-fx-font-size: 20px; -fx-text-fill: #FDF3D3;"/>
+        <Label fx:id="phaseLabel"  style="-fx-font-size: 14px; -fx-text-fill: #F2B035;"/>
 
         <HBox fx:id="topRow"     alignment="CENTER" spacing="10"/>
         <HBox fx:id="offerTrack" alignment="CENTER" spacing="0"/>
         <HBox fx:id="bottomRow"  alignment="CENTER" spacing="10"/>
 
         <VBox fx:id="tribeBox" alignment="CENTER" spacing="4">
-            <Label fx:id="tribeLabel"    style="-fx-font-size: 15px; -fx-text-fill: #c8b080;"/>
+            <Label fx:id="tribeLabel"    style="-fx-font-size: 15px; -fx-text-fill: #F2B035;"/>
             <Label fx:id="tribeContents" style="-fx-font-size: 13px;" wrapText="true"/>
         </VBox>
 
@@ -34,7 +34,7 @@
             <Button fx:id="confirmButton" text="Confirm Selection" onAction="#onSendMove"/>
         </HBox>
 
-        <Label fx:id="errorLabel" style="-fx-text-fill: #e53935; -fx-font-size: 13px;" wrapText="true"/>
+        <Label fx:id="errorLabel" style="-fx-text-fill: #D92938; -fx-font-size: 13px;" wrapText="true"/>
     </VBox>
 
     <VBox fx:id="logBox" mouseTransparent="false" pickOnBounds="false"
