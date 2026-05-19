@@ -16,9 +16,9 @@
         <padding><Insets top="40" right="48" bottom="32" left="48"/></padding>
 
         <Label text="M E S O S  —  Game Over"
-               style="-fx-font-size: 30px; -fx-text-fill: #FDF3D3;"/>
+               style="-fx-font-size: 30px; -fx-text-fill: #FDF3D3; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.9), 5, 0.5, 0, 0);"/>
         <Label text="Final Standings"
-               style="-fx-font-size: 16px; -fx-text-fill: #F2B035;"/>
+               style="-fx-font-size: 16px; -fx-text-fill: #F2B035; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.9), 5, 0.5, 0, 0);"/>
 
         <!-- Table grows to fill available space, respects window width -->
         <TableView fx:id="resultsTable" VBox.vgrow="ALWAYS"

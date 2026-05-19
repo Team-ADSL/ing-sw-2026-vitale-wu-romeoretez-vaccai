@@ -1,6 +1,7 @@
 package org.adsl.server.network;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Observer notified when the list of open games in the server lobby changes.
@@ -25,5 +26,13 @@ public interface HomeObserver {
      */
     default void updateHome(List<Integer> activeGames, String message) {
         updateHome(activeGames);
+    }
+
+    default void updateHome(List<Integer> activeGames, Map<Integer, List<String>> gamePlayers, Map<Integer, Integer> gameCapacity) {
+        updateHome(activeGames);
+    }
+
+    default void updateHome(List<Integer> activeGames, Map<Integer, List<String>> gamePlayers, Map<Integer, Integer> gameCapacity, String message) {
+        updateHome(activeGames, message);
     }
 }

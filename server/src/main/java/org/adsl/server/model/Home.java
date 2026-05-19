@@ -5,6 +5,7 @@ import org.adsl.server.network.HomeObserver;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Server-side "home screen" model that tracks the list of currently open games
@@ -35,6 +36,16 @@ public class Home {
     public void update(String message) {
         List<Integer> snapshot = new ArrayList<>(games);
         for(HomeObserver o : observers) o.updateHome(snapshot, message);
+    }
+
+    public void update(Map<Integer, List<String>> gamePlayers, Map<Integer, Integer> gameCapacity) {
+        List<Integer> snapshot = new ArrayList<>(games);
+        for (HomeObserver o : observers) o.updateHome(snapshot, gamePlayers, gameCapacity);
+    }
+
+    public void update(Map<Integer, List<String>> gamePlayers, Map<Integer, Integer> gameCapacity, String message) {
+        List<Integer> snapshot = new ArrayList<>(games);
+        for (HomeObserver o : observers) o.updateHome(snapshot, gamePlayers, gameCapacity, message);
     }
     public void addObserver(HomeObserver observer) {
         this.observers.add(observer);

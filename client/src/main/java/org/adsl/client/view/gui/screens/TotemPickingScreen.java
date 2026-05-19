@@ -69,16 +69,16 @@ public class TotemPickingScreen extends GUIScreen {
         outer.setStyle("-fx-background-color: transparent;");
 
         Label title = new Label("M E S O S  —  Choose Your Totem");
-        title.setFont(ImageCatalog.chalkFont(42));
-        title.setStyle("-fx-text-fill: #FDF3D3;");
+        title.setFont(ImageCatalog.chalkFont(64));
+        title.setStyle("-fx-text-fill: #FDF3D3; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.9), 7, 0.5, 0, 0);");
 
         Label playerLabel = new Label("Player: " + username);
-        playerLabel.setFont(ImageCatalog.chalkFont(24));
-        playerLabel.setStyle("-fx-text-fill: #F2B035;");
+        playerLabel.setFont(ImageCatalog.chalkFont(34));
+        playerLabel.setStyle("-fx-text-fill: #F2B035; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.9), 5, 0.5, 0, 0);");
 
         statusLabel = new Label("Select a totem, then press CONFIRM or ENTER");
-        statusLabel.setFont(ImageCatalog.chalkFont(19));
-        statusLabel.setStyle("-fx-text-fill: #FDF3D3;");
+        statusLabel.setFont(ImageCatalog.chalkFont(24));
+        statusLabel.setStyle("-fx-text-fill: #FDF3D3; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.9), 5, 0.5, 0, 0);");
 
         totemRow = new FlowPane(24, 24);
         totemRow.setAlignment(Pos.CENTER);
