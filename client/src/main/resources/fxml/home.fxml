@@ -21,7 +21,7 @@
             <padding><Insets top="16" right="20" bottom="16" left="20"/></padding>
             <Label text="Create new game" style="-fx-font-size: 15px; -fx-text-fill: #F2B035;"/>
             <HBox spacing="10" alignment="CENTER">
-                <Button text="2 Players" onAction="#onCreate2"/>
+                <Button fx:id="create2Button" text="2 Players" onAction="#onCreate2"/>
                 <Button text="3 Players" onAction="#onCreate3"/>
                 <Button text="4 Players" onAction="#onCreate4"/>
                 <Button text="5 Players" onAction="#onCreate5"/>

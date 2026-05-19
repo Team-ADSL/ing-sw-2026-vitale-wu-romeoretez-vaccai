@@ -39,6 +39,7 @@ public class HomeScreen extends GUIScreen {
     @FXML private Label welcomeLabel;
     @FXML private Label errorLabel;
     @FXML private ListView<Integer> gamesList;
+    @FXML private Button create2Button;
     @FXML private Button joinButton;
     @FXML private Button logoutButton;
     @FXML private VBox logBox;
@@ -174,7 +175,10 @@ public class HomeScreen extends GUIScreen {
                 int sel = gamesList.getSelectionModel().getSelectedIndex();
                 if (sel <= 0) {
                     gamesList.getSelectionModel().clearSelection();
-                    if (joinButton != null) joinButton.getScene().getRoot().requestFocus();
+                    if (create2Button != null) {
+                        create2Button.requestFocus();
+                        e.consume();
+                    }
                 }
             }
         });
