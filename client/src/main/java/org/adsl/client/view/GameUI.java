@@ -5,6 +5,7 @@ import org.adsl.client.serverEvents.*;
 import org.adsl.shared.enums.Totem;
 import org.adsl.shared.model.GameDTO;
 import org.adsl.shared.model.DBRecord;
+import org.adsl.shared.model.MatchResult;
 
 import java.util.Collections;
 import java.util.List;
@@ -59,8 +60,8 @@ public abstract class GameUI {
         dispatch(new GameUpdateEvent(game, message));
     }
 
-    public void onEndGame(List<DBRecord> DBRecords) {
-        dispatch(new EndGameEvent(DBRecords));
+    public void onEndGame(List<MatchResult> results, List<DBRecord> records, String message) {
+        dispatch(new EndGameEvent(results, records, message));
     }
 
     public void onEventTriggered(String eventTitle, String logMessage) {
