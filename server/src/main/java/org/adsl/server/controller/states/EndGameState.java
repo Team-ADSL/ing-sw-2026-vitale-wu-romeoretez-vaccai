@@ -72,9 +72,14 @@ public class EndGameState extends ControllerState {
 
         try{
             gameDAO.saveMatch(getGame().getGameId(), players.size(), nicknames, scores);
-            String log = "[END GAME] Game " + getGame().getGameId() + " results saved successfully.";
-            System.out.println(log);
             List<MatchResult> matchResults = gameDAO.getLeaderboard(players.size());
+            String log;
+            if(matchResults.isEmpty()){
+                log = "Database inactive.";
+            } else {
+                log = "[END GAME] Game " + getGame().getGameId() + " results saved successfully.";
+            }
+            System.out.println(log);
             getGame().sendEndGameResults(matchResults, log);
         } catch(SQLException e){
             System.err.println("ERROR: [END GAME] Failed to save results for game " + getGame().getGameId() + ": " + e.getMessage());

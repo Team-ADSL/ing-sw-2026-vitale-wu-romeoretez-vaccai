@@ -387,6 +387,16 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
     }
 
     /**
+     * @return maxValue from the recovered games
+     */
+    public int getMaxGameId(){
+        return games.keySet().stream()
+                .mapToInt(id -> id)
+                .max()
+                .orElse(0);
+    }
+
+    /**
      * Gracefully shuts down the server: stops the timeout checker, unbinds
      * RMI registry entries, unexports RMI objects, and stops the socket server.
      */

@@ -55,4 +55,9 @@ public interface GameDAO {
      * @throws SQLException if the query fails
      */
     List<MatchResult> getLeaderboard(int playerCount) throws SQLException;
+
+    /**
+     * @param i max index of the games recovered
+     */
+    void setInitialCounter(int i);
 }
