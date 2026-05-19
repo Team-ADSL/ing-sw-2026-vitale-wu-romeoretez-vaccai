@@ -1,7 +1,7 @@
 package org.adsl.server.db;
 
 import org.adsl.server.persistence.SqlGameDAO;
-import org.adsl.shared.model.MatchResult;
+import org.adsl.shared.model.DBRecord;
 import org.junit.jupiter.api.*;
 
 import java.lang.reflect.Proxy;
@@ -89,7 +89,7 @@ public class SqlGameDAOTest {
         int id = dao.createMatch();
         dao.saveMatch(id, 2, List.of("Alice", "Bob"), List.of(100, 80));
 
-        List<MatchResult> leaderboard = dao.getLeaderboard(2);
+        List<DBRecord> leaderboard = dao.getLeaderboard(2);
         assertEquals(2, leaderboard.size());
     }
 
@@ -98,7 +98,7 @@ public class SqlGameDAOTest {
         int id = dao.createMatch();
         dao.saveMatch(id, 2, List.of("Alice", "Bob"), List.of(80, 100));
 
-        List<MatchResult> leaderboard = dao.getLeaderboard(2);
+        List<DBRecord> leaderboard = dao.getLeaderboard(2);
         assertEquals("Bob", leaderboard.get(0).nickname());
         assertEquals("Alice", leaderboard.get(1).nickname());
     }
@@ -108,7 +108,7 @@ public class SqlGameDAOTest {
         int id = dao.createMatch();
         dao.saveMatch(id, 2, List.of("Alice", "Bob"), List.of(80, 100));
 
-        List<MatchResult> leaderboard = dao.getLeaderboard(2);
+        List<DBRecord> leaderboard = dao.getLeaderboard(2);
         assertEquals(1, leaderboard.get(0).rank());
         assertEquals(2, leaderboard.get(1).rank());
     }
@@ -118,13 +118,13 @@ public class SqlGameDAOTest {
         int id = dao.createMatch();
         dao.saveMatch(id, 2, List.of("Alice", "Bob"), List.of(100, 100));
 
-        List<MatchResult> leaderboard = dao.getLeaderboard(2);
+        List<DBRecord> leaderboard = dao.getLeaderboard(2);
         assertEquals(leaderboard.get(0).rank(), leaderboard.get(1).rank());
     }
 
     @Test
     void testGetLeaderboard_emptyForUnknownPlayerCount() throws SQLException {
-        List<MatchResult> leaderboard = dao.getLeaderboard(99);
+        List<DBRecord> leaderboard = dao.getLeaderboard(99);
         assertTrue(leaderboard.isEmpty());
     }
 
@@ -135,7 +135,7 @@ public class SqlGameDAOTest {
         int id2 = dao.createMatch();
         dao.saveMatch(id2, 2, List.of("Alice", "Bob"), List.of(50, 120));
 
-        List<MatchResult> leaderboard = dao.getLeaderboard(2);
+        List<DBRecord> leaderboard = dao.getLeaderboard(2);
         assertEquals("Bob", leaderboard.get(0).nickname());
         assertEquals(200, leaderboard.get(0).score());
         assertEquals("Alice", leaderboard.get(1).nickname());
@@ -149,8 +149,8 @@ public class SqlGameDAOTest {
         int id3p = dao.createMatch();
         dao.saveMatch(id3p, 3, List.of("Carol", "Dave", "Eve"), List.of(50, 60, 70));
 
-        List<MatchResult> leaderboard2 = dao.getLeaderboard(2);
-        List<MatchResult> leaderboard3 = dao.getLeaderboard(3);
+        List<DBRecord> leaderboard2 = dao.getLeaderboard(2);
+        List<DBRecord> leaderboard3 = dao.getLeaderboard(3);
 
         assertEquals(2, leaderboard2.size());
         assertEquals(3, leaderboard3.size());
@@ -167,7 +167,7 @@ public class SqlGameDAOTest {
         int id = dao.createMatch();
         dao.saveMatch(id, 3, List.of("Alice", "Bob", "Carol"), List.of(100, 100, 80));
 
-        List<MatchResult> leaderboard = dao.getLeaderboard(3);
+        List<DBRecord> leaderboard = dao.getLeaderboard(3);
         assertEquals(1, leaderboard.get(0).rank());
         assertEquals(1, leaderboard.get(1).rank());
         assertEquals(3, leaderboard.get(2).rank());

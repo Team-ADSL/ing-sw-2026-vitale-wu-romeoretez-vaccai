@@ -1,5 +1,6 @@
 package org.adsl.server.model;
 
+import org.adsl.shared.model.DBRecord;
 import org.adsl.shared.model.MatchResult;
 
 import java.util.List;
@@ -17,17 +18,17 @@ public interface EndGameObserver {
      * @param id      the game identifier
      * @param results leaderboard results, or {@code null} if the game never started
      */
-    void notifyEndGame(int id, List<MatchResult> results);
+    void notifyEndGame(int id, List<MatchResult> results,List<DBRecord> records);
 
     /**
      * Called when game {@code id} has finished with an optional log message.
-     * Default implementation delegates to {@link #notifyEndGame(int, List)}.
+     * Default implementation delegates to {@link #notifyEndGame(int, List, List)}.
      *
      * @param id      the game identifier
      * @param results leaderboard results, or {@code null} if the game never started
      * @param message optional message to display in the game log
      */
-    default void notifyEndGame(int id, List<MatchResult> results, String message) {
-        notifyEndGame(id, results);
+    default void notifyEndGame(int id, List<MatchResult> results, List<DBRecord> records, String message) {
+        notifyEndGame(id, results, records);
     }
 }

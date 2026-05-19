@@ -7,8 +7,7 @@ import org.adsl.server.model.Game;
 import org.adsl.server.persistence.GameDAO;
 import org.adsl.server.persistence.GamePersistenceManager;
 import org.adsl.shared.enums.Totem;
-import org.adsl.shared.model.GameDTO;
-import org.adsl.shared.model.MatchResult;
+import org.adsl.shared.model.DBRecord;
 import org.adsl.shared.network.requests.ClientConnection;
 import org.adsl.shared.network.requests.ClientRequest;
 import org.adsl.shared.network.responses.ServerResponse;
@@ -35,7 +34,7 @@ public class VirtualClientTest {
         @Override public int createMatch() { return 0; }
         @Override public void deleteMatch(int id) {}
         @Override public void saveMatch(int id, int c, List<String> n, List<Integer> s) {}
-        @Override public List<MatchResult> getLeaderboard(int c) { return List.of(); }
+        @Override public List<DBRecord> getLeaderboard(int c) { return List.of(); }
         @Override public void setInitialCounter(int i) {}
     };
 

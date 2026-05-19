@@ -1,6 +1,6 @@
 package org.adsl.server.persistence;
 
-import org.adsl.shared.model.MatchResult;
+import org.adsl.shared.model.DBRecord;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -51,10 +51,10 @@ public interface GameDAO {
      * ranked by cumulative score descending.
      *
      * @param playerCount filter for matches with this exact number of players
-     * @return ordered list of {@link MatchResult}s with dense rank
+     * @return ordered list of {@link DBRecord}s with dense rank
      * @throws SQLException if the query fails
      */
-    List<MatchResult> getLeaderboard(int playerCount) throws SQLException;
+    List<DBRecord> getLeaderboard(int playerCount) throws SQLException;
 
     /**
      * @param i max index of the games recovered

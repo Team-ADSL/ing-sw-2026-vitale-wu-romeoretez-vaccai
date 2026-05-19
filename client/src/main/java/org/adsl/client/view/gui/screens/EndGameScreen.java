@@ -8,7 +8,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import org.adsl.client.AppCoordinator;
-import org.adsl.shared.model.MatchResult;
+import org.adsl.shared.model.DBRecord;
 
 import java.io.IOException;
 import java.util.List;
@@ -19,13 +19,13 @@ import java.util.List;
  */
 public class EndGameScreen extends GUIScreen {
 
-    @FXML private TableView<MatchResult> resultsTable;
-    @FXML private TableColumn<MatchResult, Integer> rankCol;
-    @FXML private TableColumn<MatchResult, String> nicknameCol;
-    @FXML private TableColumn<MatchResult, Integer> scoreCol;
+    @FXML private TableView<DBRecord> resultsTable;
+    @FXML private TableColumn<DBRecord, Integer> rankCol;
+    @FXML private TableColumn<DBRecord, String> nicknameCol;
+    @FXML private TableColumn<DBRecord, Integer> scoreCol;
     @FXML private Label errorLabel;
 
-    public EndGameScreen(AppCoordinator coordinator, String username, List<MatchResult> results) {
+    public EndGameScreen(AppCoordinator coordinator, String username, List<DBRecord> results) {
         super(coordinator, username);
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/endgame.fxml"));
