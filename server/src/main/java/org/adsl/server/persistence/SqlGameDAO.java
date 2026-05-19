@@ -161,4 +161,7 @@ public class SqlGameDAO implements GameDAO{
         }
         return leaderboard;
     }
+
+    @Override
+    public void setInitialCounter(int i) {}
 }

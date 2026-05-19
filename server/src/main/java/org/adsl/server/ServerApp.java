@@ -9,13 +9,11 @@ import org.adsl.server.db.DatabaseManager;
 import org.adsl.server.model.Home;
 import org.adsl.server.network.rmi.RemoteServerServiceImpl;
 import org.adsl.server.network.socket.SocketServer;
-import org.adsl.server.persistence.GameDAO;
-import org.adsl.server.persistence.GamePersistenceManager;
-import org.adsl.server.persistence.SerialGamePersistenceManager;
-import org.adsl.server.persistence.SqlGameDAO;
+import org.adsl.server.persistence.*;
 
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.sql.SQLException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -36,7 +34,7 @@ public final class ServerApp {
      *
      * @param args {@code <socket-port> <rmi-port> <recover-directory>}
      */
-    public static void main(String[] args) {
+    static void main(String[] args) {
         if (args.length != 3) {
             printUsageAndExit("Expected 3 arguments.");
         }
@@ -65,7 +63,14 @@ public final class ServerApp {
     private static void startServer(int socketPort, int rmiPort, String recoverDirectory) {
         System.out.println("Starting server...");
         try {
-            DatabaseManager.initDatabase();
+            GameDAO gameDAO;
+            try {
+                DatabaseManager.initDatabase();
+                ConnectionProvider connectionProvider = DatabaseConfig::getConnection;
+                gameDAO = new SqlGameDAO(connectionProvider);
+            } catch(RuntimeException e){
+                gameDAO = new NoGameDAO();
+            }
 
             ExecutorService threadPool = Executors.newCachedThreadPool();
             SocketServer socketServer = new SocketServer(threadPool, socketPort);
@@ -78,14 +83,14 @@ public final class ServerApp {
             registry.rebind("GameServer", rmiServer);
             System.out.println("- RMI Server listening on port " + rmiPort + " with name 'GameServer'");
 
-            ConnectionProvider connectionProvider = DatabaseConfig::getConnection;
-            GameDAO gameDAO = new SqlGameDAO(connectionProvider);
             BoardConfigLoader boardConfigLoader = new JsonBoardConfigLoader();
             GamePersistenceManager gamePersistenceManager = new SerialGamePersistenceManager(recoverDirectory);
             Home home = new Home();
+
             ServerController serverController = new ServerController(
                     home, gameDAO, boardConfigLoader, gamePersistenceManager, registry, rmiServer, socketServer);
             serverController.recoverGames();
+            gameDAO.setInitialCounter(serverController.getMaxGameId());
             serverController.startTimeoutChecker(5000, 20000);
 
             socketServer.setServerController(serverController);

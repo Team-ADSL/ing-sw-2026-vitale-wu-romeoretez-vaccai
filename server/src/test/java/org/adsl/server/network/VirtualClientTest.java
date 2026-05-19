@@ -36,6 +36,7 @@ public class VirtualClientTest {
         @Override public void deleteMatch(int id) {}
         @Override public void saveMatch(int id, int c, List<String> n, List<Integer> s) {}
         @Override public List<MatchResult> getLeaderboard(int c) { return List.of(); }
+        @Override public void setInitialCounter(int i) {}
     };
 
     /** Concrete VirtualClient for testing — records last response sent. */
