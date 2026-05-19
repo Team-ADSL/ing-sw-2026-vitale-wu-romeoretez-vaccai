@@ -80,7 +80,7 @@ public class EndGameState extends ControllerState {
             List<DBRecord> records = gameDAO.getLeaderboard(players.size());
             String log;
             if(records.isEmpty()){
-                log = "Database inactive.";
+                log = "Game launched without database — overall leaderboard unavailable, this match will not be recorded.";
             } else {
                 log = "[END GAME] Game " + getGame().getGameId() + " results saved successfully.";
             }

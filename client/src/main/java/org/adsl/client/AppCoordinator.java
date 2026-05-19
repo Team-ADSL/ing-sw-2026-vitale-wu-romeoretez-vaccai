@@ -162,7 +162,7 @@ public class AppCoordinator implements ResponseVisitor{
     }
     @Override
     public void visit(GameEnded response) throws InvalidResponseException {
-        gameUI.onEndGame(response.getRecords());
+        gameUI.onEndGame(response.getResults(), response.getRecords(), response.getMessage());
     }
     @Override
     public void visit(ErrorResponse response) throws InvalidResponseException {
