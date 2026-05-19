@@ -1,7 +1,12 @@
 package org.adsl.client.view.gui;
 
 import javafx.application.Platform;
+import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.serverEvents.Event;
@@ -32,11 +37,14 @@ public class GUI extends GameUI {
     private static final String WINDOW_TITLE = "MESOS";
     private static final double WINDOW_W = 1280;
     private static final double WINDOW_H = 800;
+    private static final double MIN_W = 800;
+    private static final double MIN_H = 540;
 
     private AppCoordinator coordinator;
     private Stage stage;
     private GUIScreen currentScreen;
     private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
+    private boolean keyboardNavMode = false;
 
     @Override
     public void setAppCoordinator(AppCoordinator coordinator) {
@@ -55,13 +63,18 @@ public class GUI extends GameUI {
             ImageCatalog.loadFonts();
             stage = new Stage();
             stage.setTitle(WINDOW_TITLE);
+            stage.getIcons().add(ImageCatalog.load("/assets/general/app_icon.png"));
             stage.setWidth(WINDOW_W);
             stage.setHeight(WINDOW_H);
+            stage.setMinWidth(MIN_W);
+            stage.setMinHeight(MIN_H);
             stage.setResizable(true);
             stage.setOnCloseRequest(ev -> shutdown());
 
             currentScreen = new ConnectingScreen(coordinator);
-            stage.setScene(new Scene(currentScreen.getRoot(), WINDOW_W, WINDOW_H));
+            Scene scene = new Scene(currentScreen.getRoot(), WINDOW_W, WINDOW_H);
+            installFocusVisibleBehavior(scene);
+            stage.setScene(scene);
             runOnEnterChain(currentScreen);
             stage.show();
 
@@ -120,6 +133,33 @@ public class GUI extends GameUI {
         }, "gui-force-exit");
         killer.setDaemon(true);
         killer.start();
+    }
+
+    // ── Focus-visible (keyboard-only focus ring) ─────────────────────────────
+
+    /**
+     * Shows the focus ring on buttons only when navigation is keyboard-driven
+     * (Tab, arrows). Mouse clicks never trigger the ring.
+     */
+    private void installFocusVisibleBehavior(Scene scene) {
+        scene.addEventFilter(MouseEvent.MOUSE_PRESSED, _ -> {
+            keyboardNavMode = false;
+            Node focused = scene.getFocusOwner();
+            if (focused instanceof Button b) b.getStyleClass().remove("keyboard-focused");
+        });
+        scene.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
+            KeyCode code = e.getCode();
+            if (code == KeyCode.TAB || code == KeyCode.UP || code == KeyCode.DOWN
+                    || code == KeyCode.LEFT || code == KeyCode.RIGHT) {
+                keyboardNavMode = true;
+            }
+        });
+        scene.focusOwnerProperty().addListener((_, old, newOwner) -> {
+            if (old instanceof Button b) b.getStyleClass().remove("keyboard-focused");
+            if (newOwner instanceof Button b && keyboardNavMode) {
+                if (!b.getStyleClass().contains("keyboard-focused")) b.getStyleClass().add("keyboard-focused");
+            }
+        });
     }
 
     // ── GameUI callbacks (network thread) ────────────────────────────────────

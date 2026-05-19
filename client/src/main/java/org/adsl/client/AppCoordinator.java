@@ -37,7 +37,7 @@ public class AppCoordinator implements ResponseVisitor{
      * in a single end-of-round) the pacer spaces them out so the user can
      * actually read each one before the next replaces it.
      */
-    private static final long DISPATCH_MIN_DELAY_MS = 500L;
+    private static final long DISPATCH_MIN_DELAY_MS = 1200L;
 
     private final GameUI gameUI;
     private final ServerConnection serverConnection;
@@ -145,7 +145,7 @@ public class AppCoordinator implements ResponseVisitor{
     }
     @Override
     public void visit(HomeUpdate response) throws InvalidResponseException {
-        gameUI.onHomeUpdate(response.getActiveGames(), response.getMessage());
+        gameUI.onHomeUpdate(response.getActiveGames(), response.getGamePlayers(), response.getGameCapacity(), response.getMessage());
     }
     @Override
     public void visit(LobbyUpdate response) throws InvalidResponseException {

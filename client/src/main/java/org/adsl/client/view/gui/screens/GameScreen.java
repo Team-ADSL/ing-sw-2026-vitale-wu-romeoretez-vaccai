@@ -10,6 +10,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -67,8 +68,9 @@ public class GameScreen extends GUIScreen {
     private static final double CHIP_WIDTH   = 40;
     private static final double TOTEM_BADGE  = 22;
 
-    @FXML private StackPane rootStack;
-    @FXML private VBox      contentBox;
+    @FXML private StackPane  rootStack;
+    @FXML private ScrollPane contentScroll;
+    @FXML private VBox       contentBox;
     @FXML private Label     headerLabel;
     @FXML private Label     phaseLabel;
     @FXML private HBox      topRow;
@@ -109,6 +111,9 @@ public class GameScreen extends GUIScreen {
         this.root = fxmlRoot;
         rootStack.widthProperty().addListener((_, _, _) -> Platform.runLater(this::renderBoard));
         rootStack.heightProperty().addListener((_, _, _) -> Platform.runLater(this::renderBoard));
+        if (contentScroll != null) {
+            contentScroll.viewportBoundsProperty().addListener((_, _, _) -> Platform.runLater(this::renderBoard));
+        }
         rootStack.setFocusTraversable(true);
         rootStack.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.ENTER && confirmButton != null && !confirmButton.isDisabled()) {
@@ -331,7 +336,11 @@ public class GameScreen extends GUIScreen {
     // ── Rendering ────────────────────────────────────────────────────────────
 
     private double availableWidth() {
-        double w = rootStack.getWidth();
+        double w = 0;
+        if (contentScroll != null && contentScroll.getViewportBounds() != null) {
+            w = contentScroll.getViewportBounds().getWidth();
+        }
+        if (w <= 0) w = rootStack.getWidth();
         if (w <= 0) w = 1280;
         // contentBox padding 24+24, plus a safety margin
         return Math.max(200, w - 80);
