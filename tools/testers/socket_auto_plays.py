@@ -120,7 +120,7 @@ def main():
     send_data(sock2, "p2", {"type": "LOGIN", "username": args.p2})
 
     # Give the server time to process the game entry
-    timeWait = 2
+    timeWait = 0.3
     time.sleep(timeWait)
 
     # Flush the queues of any accumulated Login/EnterGame response messages
