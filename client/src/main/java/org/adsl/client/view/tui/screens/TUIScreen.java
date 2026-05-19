@@ -95,7 +95,7 @@ public abstract class TUIScreen extends Screen<TUIScreen> implements InputEventV
 
     @Override
     public TUIScreen createEndGameScreen(EndGameEvent e, AppCoordinator appCoordinator){
-        return new EndGameScreen(terminal, appCoordinator, username, e.results());
+        return new EndGameScreen(terminal, appCoordinator, username, e.results(), e.records(), e.message());
     }
 
     @Override
