@@ -75,4 +75,5 @@ public class GameController {
     public GameDAO getGameDAO() {
         return gameDAO;
     }
+    public ControllerState getState() { return state; }
 }

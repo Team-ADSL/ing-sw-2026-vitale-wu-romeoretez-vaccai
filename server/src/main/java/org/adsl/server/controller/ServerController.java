@@ -149,10 +149,23 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         }
 
         virtualClient.setClientUsername(username);
-        home.addObserver(virtualClient);
         String log = "[LOGIN] User connected: " + username;
         System.out.println(log);
-        home.update(log);
+
+        int gameWithPlayer = games.values().stream()
+                .map(gc -> gc.getState().getGame())
+                .filter(g -> g.getPlayers().stream().anyMatch(p -> p.getName().equals(username)))
+                .map(Game::getGameId)
+                .findFirst()
+                .orElse(0);
+
+        if(gameWithPlayer != 0){
+            sendToGameController(gameWithPlayer, new EnterGameRequest(gameWithPlayer), virtualClient);
+
+        } else {
+            home.addObserver(virtualClient);
+            home.update();
+        }
     }
 
     @Override
