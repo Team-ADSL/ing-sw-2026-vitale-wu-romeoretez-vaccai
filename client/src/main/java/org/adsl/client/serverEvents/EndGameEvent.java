@@ -1,7 +1,7 @@
 package org.adsl.client.serverEvents;
 
 import org.adsl.client.view.Screen;
-import org.adsl.shared.model.MatchResult;
+import org.adsl.shared.model.DBRecord;
 
 import java.util.List;
 
@@ -12,7 +12,7 @@ import java.util.List;
  *
  * @param results final leaderboard entries, or {@code null}
  */
-public record EndGameEvent(List<MatchResult> results) implements ServerEvent {
+public record EndGameEvent(List<DBRecord> results) implements ServerEvent {
 
     @Override
     public <S extends Screen<S>> S accept(EventVisitor<S> visitor) {

@@ -247,7 +247,7 @@ public class ServerControllerTest {
                 .withGameDAO(fakeGameDAO).build();
         int targetGameId = 101;
 
-        serverController.notifyEndGame(targetGameId, null);
+        serverController.notifyEndGame(targetGameId, null, null);
 
         assertTrue(fakePersistence.removedGames.contains(targetGameId));
         assertTrue(fakeGameDAO.deletedMatches.contains(targetGameId));

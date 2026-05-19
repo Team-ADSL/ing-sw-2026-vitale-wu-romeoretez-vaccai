@@ -13,6 +13,7 @@ import org.adsl.server.model.Home;
 import org.adsl.server.network.VirtualClient;
 import org.adsl.server.persistence.GamePersistenceManager;
 import org.adsl.shared.exceptions.ServerException;
+import org.adsl.shared.model.DBRecord;
 import org.adsl.shared.model.MatchResult;
 import org.adsl.shared.network.remote.RemoteServerService;
 import org.adsl.shared.network.requests.RequestVisitor;
@@ -339,7 +340,7 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
     }
 
     @Override
-    public void notifyEndGame(int gameId, List<MatchResult> matchResults) {
+    public void notifyEndGame(int gameId, List<MatchResult> results,  List<DBRecord> records) {
         games.remove(gameId);
 
         home.removeGame(gameId);
@@ -350,7 +351,7 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         }
 
         // If game terminates before starting we clean the database
-        if(matchResults == null){
+        if(results == null){
             try {
                 gameDAO.deleteMatch(gameId);
             } catch(Exception e){

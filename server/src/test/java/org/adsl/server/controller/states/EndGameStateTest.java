@@ -6,12 +6,10 @@ import org.adsl.server.model.Player;
 import org.adsl.server.model.cards.characters.Artist;
 import org.adsl.server.model.cards.characters.Builder;
 import org.adsl.server.model.cards.characters.Inventor;
-import org.adsl.server.persistence.GameDAO;
 import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Icon;
-import org.adsl.shared.model.MatchResult;
+import org.adsl.shared.model.DBRecord;
 
-import java.time.LocalDateTime;
 import org.adsl.utils.builder.GameControllerBuilder;
 import org.adsl.utils.fakes.FakeGame;
 import org.adsl.utils.fakes.FakeGameDAO;
@@ -58,8 +56,8 @@ public class EndGameStateTest {
     void testOnEntry_success_leaderboardResultsForwardedToGame() throws ServerException {
         FakeGameDAO daoWithResults = new FakeGameDAO() {
             @Override
-            public List<MatchResult> getLeaderboard(int playerCount) {
-                return List.of(new MatchResult(1, "Alice", 100));
+            public List<DBRecord> getLeaderboard(int playerCount) {
+                return List.of(new DBRecord(1, "Alice", 100));
             }
         };
         GameController controller = new GameControllerBuilder().build();
@@ -67,7 +65,7 @@ public class EndGameStateTest {
 
         state.onEntry();
 
-        assertNotNull(fakeGame.capturedResults, "Leaderboard results must be forwarded to the game");
+        assertNotNull(fakeGame.capturedRecords, "Leaderboard results must be forwarded to the game");
     }
 
     // ──────────────────────────────────────────────

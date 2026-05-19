@@ -1,7 +1,7 @@
 package org.adsl.server.persistence;
 
 import org.adsl.server.db.ConnectionProvider;
-import org.adsl.shared.model.MatchResult;
+import org.adsl.shared.model.DBRecord;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -115,7 +115,7 @@ public class SqlGameDAO implements GameDAO{
         }
     }
 
-    public List<MatchResult> getLeaderboard(int playerCount) throws SQLException {
+    public List<DBRecord> getLeaderboard(int playerCount) throws SQLException {
         String sql = """
             SELECT
                 p.nickname,
@@ -128,7 +128,7 @@ public class SqlGameDAO implements GameDAO{
             ORDER BY total_score DESC
             """;
 
-        List<MatchResult> leaderboard = new ArrayList<>();
+        List<DBRecord> leaderboard = new ArrayList<>();
         try (Connection conn = connectionProvider.getConnection();
         PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -149,7 +149,7 @@ public class SqlGameDAO implements GameDAO{
                     currentRank = currentRow;
                 }
 
-                leaderboard.add(new MatchResult(
+                leaderboard.add(new DBRecord(
                         currentRank,
                         rs.getString("nickname"),
                         score

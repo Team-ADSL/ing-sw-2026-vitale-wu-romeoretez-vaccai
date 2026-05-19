@@ -4,10 +4,7 @@ import org.adsl.server.network.VirtualClient;
 import org.adsl.server.model.board.Board;
 import org.adsl.shared.enums.Phase;
 import org.adsl.shared.enums.Totem;
-import org.adsl.shared.model.BoardDTO;
-import org.adsl.shared.model.GameDTO;
-import org.adsl.shared.model.MatchResult;
-import org.adsl.shared.model.PlayerDTO;
+import org.adsl.shared.model.*;
 
 
 import java.io.Serializable;
@@ -125,11 +122,11 @@ public class Game implements Serializable {
     public void sendEventTriggered(String eventTitle, String logMessage){
         for(GameObserver o : gameObservers) o.notifyEventTriggered(eventTitle, logMessage);
     }
-    public void sendEndGameResults(List<MatchResult> results){
-        for(EndGameObserver o : endGameObservers) o.notifyEndGame(gameId, results);
+    public void sendEndGameResults(List<MatchResult> results, List<DBRecord> records){
+        for(EndGameObserver o : endGameObservers) o.notifyEndGame(gameId, results, records);
     }
-    public void sendEndGameResults(List<MatchResult> results, String message){
-        for(EndGameObserver o : endGameObservers) o.notifyEndGame(gameId, results, message);
+    public void sendEndGameResults(List<MatchResult> results, List<DBRecord> records, String message){
+        for(EndGameObserver o : endGameObservers) o.notifyEndGame(gameId, results, records, message);
     }
 
     /**

@@ -1,6 +1,6 @@
 package org.adsl.server.persistence;
 
-import org.adsl.shared.model.MatchResult;
+import org.adsl.shared.model.DBRecord;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -20,7 +20,7 @@ public class NoGameDAO implements GameDAO {
     public void saveMatch(int gameId, int playerCount, List<String> nicknames, List<Integer> scores) throws SQLException {}
 
     @Override
-    public List<MatchResult> getLeaderboard(int playerCount) throws SQLException {
+    public List<DBRecord> getLeaderboard(int playerCount) throws SQLException {
         return List.of();
     }
 

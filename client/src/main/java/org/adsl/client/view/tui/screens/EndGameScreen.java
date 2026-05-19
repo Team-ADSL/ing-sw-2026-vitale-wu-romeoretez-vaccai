@@ -7,7 +7,7 @@ import org.adsl.client.view.tui.render.TuiColor;
 import org.adsl.client.view.tui.render.TuiSize;
 import org.adsl.client.view.tui.render.TuiTerminal;
 import org.adsl.client.view.tui.render.TuiTextGraphics;
-import org.adsl.shared.model.MatchResult;
+import org.adsl.shared.model.DBRecord;
 
 import java.io.IOException;
 import java.util.List;
@@ -18,9 +18,9 @@ import java.util.List;
  */
 public class EndGameScreen extends TUIScreen {
 
-    private final List<MatchResult> results;
+    private final List<DBRecord> results;
 
-    public EndGameScreen(TuiTerminal terminal, AppCoordinator coordinator, String username, List<MatchResult> results) {
+    public EndGameScreen(TuiTerminal terminal, AppCoordinator coordinator, String username, List<DBRecord> results) {
         super(terminal, coordinator, username);
         this.results = results;
     }
@@ -52,7 +52,7 @@ public class EndGameScreen extends TUIScreen {
 
         String[] medals = {"🥇", "🥈", "🥉"};
         for (int i = 0; i < results.size(); i++) {
-            MatchResult r = results.get(i);
+            DBRecord r = results.get(i);
             String medal = (i < medals.length) ? medals[i] : "   ";
             String line = String.format("  %s  %-20s  %d PP", medal, r.nickname(), r.score());
             tg.setForegroundColor(i == 0 ? TuiColor.YELLOW : TuiColor.WHITE);

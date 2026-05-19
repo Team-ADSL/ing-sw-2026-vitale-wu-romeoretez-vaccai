@@ -10,6 +10,7 @@ import org.adsl.server.model.cards.characters.Builder;
 import org.adsl.server.model.cards.characters.Inventor;
 import org.adsl.server.model.Game;
 import org.adsl.server.model.Player;
+import org.adsl.shared.model.DBRecord;
 import org.adsl.shared.model.MatchResult;
 
 import java.sql.SQLException;
@@ -70,17 +71,21 @@ public class EndGameState extends ControllerState {
                 .map(Player::getPp)
                 .toList();
 
+        List<MatchResult> results = players.stream()
+                .map(p -> new MatchResult(p.getName(), p.getPp(), p.getFood()))
+                .toList();
+
         try{
             gameDAO.saveMatch(getGame().getGameId(), players.size(), nicknames, scores);
-            List<MatchResult> matchResults = gameDAO.getLeaderboard(players.size());
+            List<DBRecord> records = gameDAO.getLeaderboard(players.size());
             String log;
-            if(matchResults.isEmpty()){
+            if(records.isEmpty()){
                 log = "Database inactive.";
             } else {
                 log = "[END GAME] Game " + getGame().getGameId() + " results saved successfully.";
             }
             System.out.println(log);
-            getGame().sendEndGameResults(matchResults, log);
+            getGame().sendEndGameResults(results, records, log);
         } catch(SQLException e){
             System.err.println("ERROR: [END GAME] Failed to save results for game " + getGame().getGameId() + ": " + e.getMessage());
             throw new ServerException("Error during saving match results.");
