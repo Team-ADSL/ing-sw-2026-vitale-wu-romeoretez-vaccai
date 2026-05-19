@@ -120,11 +120,12 @@ def main():
     send_data(sock2, "p2", {"type": "LOGIN", "username": args.p2})
 
     # Give the server time to process the game entry
-    time.sleep(1)
+    timeWait = 2
+    time.sleep(timeWait)
 
     # Flush the queues of any accumulated Login/EnterGame response messages
-    while not queue_p1.empty(): queue_p1.get(timeout=3)
-    while not queue_p2.empty(): queue_p2.get(timeout=3)
+    while not queue_p1.empty(): queue_p1.get()
+    while not queue_p2.empty(): queue_p2.get()
 
     # 4. Game Loop
     current_round = 0
@@ -138,10 +139,10 @@ def main():
         send_data(sock2, "p2", {"type": "MOVE", "moves": [{"rowIndex": 1, "row": "OFFER"}]})
         wait_for_move_response("p2", queue_p2)
 
-        time.sleep(1)
+        time.sleep(timeWait)
 
-        while not queue_p1.empty(): queue_p1.get(timeout=3)
-        while not queue_p2.empty(): queue_p2.get(timeout=3)
+        while not queue_p1.empty(): queue_p1.get()
+        while not queue_p2.empty(): queue_p2.get()
 
         # --- Player 1: LOWER loop ---
         i_p1 = 0
@@ -157,8 +158,11 @@ def main():
                 time.sleep(0.5)
 
         # --- Player 2: UPPER loop ---
-        while not queue_p1.empty(): queue_p1.get(timeout=3)
-        while not queue_p2.empty(): queue_p2.get(timeout=3)
+        time.sleep(timeWait)
+
+        while not queue_p1.empty(): queue_p1.get()
+        while not queue_p2.empty(): queue_p2.get()
+
         i_p2 = 0
         while True:
             move_payload = {"type": "MOVE", "moves": [{"rowIndex": i_p2, "row": "UPPER"}]}
@@ -171,8 +175,10 @@ def main():
                 i_p2 += 1
                 time.sleep(0.5)
 
-        while not queue_p1.empty(): queue_p1.get(timeout=3)
-        while not queue_p2.empty(): queue_p2.get(timeout=3)
+        time.sleep(timeWait)
+
+        while not queue_p1.empty(): queue_p1.get()
+        while not queue_p2.empty(): queue_p2.get()
 
         print(f">>> Round {current_round} completed successfully.")
         current_round += 1
