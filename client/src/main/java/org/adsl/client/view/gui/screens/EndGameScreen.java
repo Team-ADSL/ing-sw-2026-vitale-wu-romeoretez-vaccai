@@ -7,25 +7,41 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.layout.VBox;
 import org.adsl.client.AppCoordinator;
 import org.adsl.shared.model.DBRecord;
+import org.adsl.shared.model.MatchResult;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
- * GUI end-game screen. Displays the final leaderboard in a sortable table.
- * A "Return to home" button exits the current game view.
+ * GUI end-game screen. Splits the view into a single-match standings table
+ * (left) and the cumulative DB leaderboard (right). When the server reports
+ * an empty DB leaderboard (NoGameDAO fallback) the right pane shows a red
+ * alert instead.
  */
 public class EndGameScreen extends GUIScreen {
 
-    @FXML private TableView<DBRecord> resultsTable;
-    @FXML private TableColumn<DBRecord, Integer> rankCol;
-    @FXML private TableColumn<DBRecord, String> nicknameCol;
-    @FXML private TableColumn<DBRecord, Integer> scoreCol;
+    @FXML private TableView<RankedMatchRow> matchTable;
+    @FXML private TableColumn<RankedMatchRow, Integer> matchRankCol;
+    @FXML private TableColumn<RankedMatchRow, String>  matchPlayerCol;
+    @FXML private TableColumn<RankedMatchRow, Integer> matchPpCol;
+    @FXML private TableColumn<RankedMatchRow, Integer> matchFoodCol;
+
+    @FXML private TableView<DBRecord> recordsTable;
+    @FXML private TableColumn<DBRecord, Integer> dbRankCol;
+    @FXML private TableColumn<DBRecord, String>  dbPlayerCol;
+    @FXML private TableColumn<DBRecord, Integer> dbScoreCol;
+
+    @FXML private VBox  leaderboardBox;
+    @FXML private Label noDbAlert;
     @FXML private Label errorLabel;
 
-    public EndGameScreen(AppCoordinator coordinator, String username, List<DBRecord> results) {
+    public EndGameScreen(AppCoordinator coordinator, String username,
+                         List<MatchResult> results, List<DBRecord> records, String message) {
         super(coordinator, username);
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/endgame.fxml"));
@@ -34,13 +50,54 @@ public class EndGameScreen extends GUIScreen {
         } catch (IOException e) {
             throw new RuntimeException("Failed to load endgame.fxml", e);
         }
-        rankCol.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().rank()));
-        nicknameCol.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().nickname()));
-        scoreCol.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().score()));
-        if (results != null) {
-            resultsTable.setItems(FXCollections.observableArrayList(results));
-        }
+        wireMatchTable(results);
+        wireRecordsTable(records, message);
         applyTheme(this.root);
+    }
+
+    private void wireMatchTable(List<MatchResult> results) {
+        matchRankCol.setCellValueFactory(c   -> new ReadOnlyObjectWrapper<>(c.getValue().rank()));
+        matchPlayerCol.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().nickname()));
+        matchPpCol.setCellValueFactory(c     -> new ReadOnlyObjectWrapper<>(c.getValue().pp()));
+        matchFoodCol.setCellValueFactory(c   -> new ReadOnlyObjectWrapper<>(c.getValue().food()));
+
+        if (results == null) return;
+        List<MatchResult> sorted = results.stream()
+                .sorted(Comparator.comparingInt(MatchResult::pp).reversed()
+                        .thenComparing(Comparator.comparingInt(MatchResult::food).reversed()))
+                .toList();
+        List<RankedMatchRow> rows = new ArrayList<>();
+        int rank = 0;
+        int prevPp = Integer.MIN_VALUE;
+        int prevFood = Integer.MIN_VALUE;
+        for (int i = 0; i < sorted.size(); i++) {
+            MatchResult r = sorted.get(i);
+            if (r.pp() != prevPp || r.food() != prevFood) {
+                rank = i + 1;
+                prevPp = r.pp();
+                prevFood = r.food();
+            }
+            rows.add(new RankedMatchRow(rank, r.nickname(), r.pp(), r.food()));
+        }
+        matchTable.setItems(FXCollections.observableArrayList(rows));
+    }
+
+    private void wireRecordsTable(List<DBRecord> records, String message) {
+        dbRankCol.setCellValueFactory(c   -> new ReadOnlyObjectWrapper<>(c.getValue().rank()));
+        dbPlayerCol.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().nickname()));
+        dbScoreCol.setCellValueFactory(c  -> new ReadOnlyObjectWrapper<>(c.getValue().score()));
+
+        boolean dbAvailable = records != null && !records.isEmpty();
+        leaderboardBox.setVisible(dbAvailable);
+        leaderboardBox.setManaged(dbAvailable);
+        noDbAlert.setVisible(!dbAvailable);
+        noDbAlert.setManaged(!dbAvailable);
+
+        if (dbAvailable) {
+            recordsTable.setItems(FXCollections.observableArrayList(records));
+        } else if (message != null && !message.isBlank()) {
+            noDbAlert.setText(message);
+        }
     }
 
     @FXML
@@ -59,4 +116,7 @@ public class EndGameScreen extends GUIScreen {
         } catch (Exception ignored) {}
         javafx.application.Platform.exit();
     }
+
+    /** Adapter that adds a client-side rank to {@link MatchResult} for the table. */
+    public record RankedMatchRow(int rank, String nickname, int pp, int food) {}
 }
