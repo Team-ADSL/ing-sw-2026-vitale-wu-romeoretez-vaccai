@@ -111,10 +111,7 @@ public class EndGameScreen extends GUIScreen {
 
     @FXML
     private void onExit() {
-        try {
-            appCoordinator.disconnect();
-        } catch (Exception ignored) {}
-        javafx.application.Platform.exit();
+        appCoordinator.requestShutdown();
     }
 
     /** Adapter that adds a client-side rank to {@link MatchResult} for the table. */
