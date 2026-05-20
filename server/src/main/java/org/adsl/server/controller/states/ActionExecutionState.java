@@ -87,10 +87,14 @@ public class ActionExecutionState extends ControllerState {
 
     if (numUpDraw > maxAllowedUpper || numUpDraw < minUpperAllowed ||
             numLowDraw > maxAllowedLower || numLowDraw < minLowerAllowed ) {
+      String upperRule = minUpperAllowed == maxAllowedUpper
+              ? String.valueOf(maxAllowedUpper)
+              : minUpperAllowed + "-" + maxAllowedUpper;
+      String lowerRule = minLowerAllowed == maxAllowedLower
+              ? String.valueOf(maxAllowedLower)
+              : minLowerAllowed + "-" + maxAllowedLower;
       throw new ServerException(
-          "Wrong moves: you can draw max "
-              + maxAllowedUpper + " card(s), min " + minUpperAllowed + " from the upper row and max "
-              + maxAllowedLower + " card(s), min " + minLowerAllowed + " from the lower row.");
+          "Wrong card(s) picks: upper " + upperRule + ", lower " + lowerRule + ".");
     }
 
     for (Move move : moves) {

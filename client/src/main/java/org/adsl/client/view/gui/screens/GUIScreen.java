@@ -158,6 +158,39 @@ public abstract class GUIScreen extends Screen<GUIScreen> {
             sp.getChildren().addFirst(bg);
         }
         applyChalkFonts(root);
+        installButtonHover(root);
+    }
+
+    /**
+     * Hover feedback for every Button under {@code root}: scale up to
+     * {@link #BUTTON_HOVER_SCALE} on enter, back to 1.0 on exit. Mirrors how
+     * card cells animate in {@link GameScreen}. setScaleX/Y only affects
+     * boundsInParent, not layoutBounds, so the parent's layout pass and the
+     * dynamic-resize listeners on rootStack are unaffected.
+     */
+    private static final double BUTTON_HOVER_SCALE = 1.15;
+
+    private static void installButtonHover(Parent node) {
+        for (Node child : node.getChildrenUnmodifiable()) {
+            switch (child) {
+                case Button b -> wireButtonHover(b);
+                case Parent p -> installButtonHover(p);
+                default -> { /* leaf, no hover */ }
+            }
+        }
+    }
+
+    private static void wireButtonHover(Button b) {
+        b.setOnMouseEntered(_ -> {
+            if (!b.isDisabled()) {
+                b.setScaleX(BUTTON_HOVER_SCALE);
+                b.setScaleY(BUTTON_HOVER_SCALE);
+            }
+        });
+        b.setOnMouseExited(_ -> {
+            b.setScaleX(1.0);
+            b.setScaleY(1.0);
+        });
     }
 
     private static void applyChalkFonts(Parent node) {
