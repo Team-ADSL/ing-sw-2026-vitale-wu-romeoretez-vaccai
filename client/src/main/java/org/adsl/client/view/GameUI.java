@@ -9,6 +9,7 @@ import org.adsl.shared.model.MatchResult;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Abstract base for UI implementations (TUI and GUI). Converts incoming
@@ -29,11 +30,19 @@ public abstract class GameUI {
     }
 
     public void onHomeUpdate(List<Integer> activeGames) {
-        onHomeUpdate(activeGames, null);
+        onHomeUpdate(activeGames, null, null, null);
     }
 
     public void onHomeUpdate(List<Integer> activeGames, String message) {
-        dispatch(new HomeUpdateEvent(activeGames != null ? activeGames : Collections.emptyList(),
+        onHomeUpdate(activeGames, null, null, message);
+    }
+
+    public void onHomeUpdate(List<Integer> activeGames, Map<Integer, List<String>> gamePlayers,
+                              Map<Integer, Integer> gameCapacity, String message) {
+        dispatch(new HomeUpdateEvent(
+                activeGames != null ? activeGames : Collections.emptyList(),
+                gamePlayers != null ? gamePlayers : Collections.emptyMap(),
+                gameCapacity != null ? gameCapacity : Collections.emptyMap(),
                 message));
     }
 

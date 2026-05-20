@@ -65,7 +65,7 @@ public abstract class GUIScreen extends Screen<GUIScreen> {
 
     @Override
     public GUIScreen createHomeScreen(HomeUpdateEvent e, AppCoordinator appCoordinator){
-        return new HomeScreen(appCoordinator, username, e.activeGames());
+        return new HomeScreen(appCoordinator, username, e.activeGames(), e.gamePlayers(), e.gameCapacity());
     }
 
     @Override

@@ -40,8 +40,6 @@ public class LoginScreen extends GUIScreen {
         if (logoImage != null) {
             logoImage.setImage(ImageCatalog.load("/assets/general/mesos_logo_white.png"));
         }
-        errorLabel.managedProperty().bind(errorLabel.textProperty().isNotEmpty());
-        errorLabel.visibleProperty().bind(errorLabel.textProperty().isNotEmpty());
         applyTheme(this.root);
         playIntroFade();
     }

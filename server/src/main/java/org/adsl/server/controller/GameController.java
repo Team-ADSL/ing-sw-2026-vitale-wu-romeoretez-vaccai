@@ -3,10 +3,13 @@ package org.adsl.server.controller;
 import org.adsl.server.config.BoardConfigLoader;
 import org.adsl.server.controller.states.ControllerState;
 import org.adsl.shared.exceptions.ServerException;
+import org.adsl.server.model.Player;
 import org.adsl.server.persistence.GameDAO;
 import org.adsl.server.network.VirtualClient;
 import org.adsl.server.persistence.GamePersistenceManager;
 import org.adsl.shared.network.requests.ClientRequest;
+
+import java.util.List;
 
 /**
  * Per-game controller that owns the {@link ControllerState} state machine.
@@ -74,6 +77,17 @@ public class GameController {
     }
     public GameDAO getGameDAO() {
         return gameDAO;
+    }
+
+    public List<String> getLobbyPlayers() {
+        if (state == null) return List.of();
+        return state.getGame().getPlayers().stream()
+                .map(Player::getName).toList();
+    }
+
+    public int getCapacity() {
+        if (state == null) return 0;
+        return state.getGame().getNumPlayer();
     }
     public ControllerState getState() { return state; }
 }

@@ -13,6 +13,7 @@ import org.adsl.shared.network.requests.ClientRequest;
 import org.adsl.shared.network.responses.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -85,6 +86,19 @@ public abstract class VirtualClient implements GameObserver, HomeObserver, EndGa
     @Override
     public void updateHome(List<Integer> activeGames, String message){
         HomeUpdate serverResponse = new HomeUpdate(activeGames);
+        if (message != null) serverResponse.setMessage(message);
+        System.out.println("[SENDING] Home update:" + serverResponse + " to: " + getClientUsername());
+        this.sendResponse(serverResponse);
+    }
+
+    @Override
+    public void updateHome(List<Integer> activeGames, Map<Integer, List<String>> gamePlayers, Map<Integer, Integer> gameCapacity) {
+        updateHome(activeGames, gamePlayers, gameCapacity, null);
+    }
+
+    @Override
+    public void updateHome(List<Integer> activeGames, Map<Integer, List<String>> gamePlayers, Map<Integer, Integer> gameCapacity, String message) {
+        HomeUpdate serverResponse = new HomeUpdate(activeGames, gamePlayers, gameCapacity);
         if (message != null) serverResponse.setMessage(message);
         System.out.println("[SENDING] Home update:" + serverResponse + " to: " + getClientUsername());
         this.sendResponse(serverResponse);
