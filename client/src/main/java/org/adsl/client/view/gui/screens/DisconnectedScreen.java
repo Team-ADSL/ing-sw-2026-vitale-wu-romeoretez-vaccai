@@ -40,9 +40,6 @@ public class DisconnectedScreen extends GUIScreen {
 
     @FXML
     private void onExit() {
-        try {
-            appCoordinator.disconnect();
-        } catch (Exception ignored) {}
-        javafx.application.Platform.exit();
+        appCoordinator.requestShutdown();
     }
 }
