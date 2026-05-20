@@ -151,6 +151,7 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         virtualClient.setClientUsername(username);
         String log = "[LOGIN] User connected: " + username;
         System.out.println(log);
+        home.update(buildGamePlayersMap(), buildGameCapacityMap(), log);
 
         int gameWithPlayer = games.values().stream()
                 .map(gc -> gc.getState().getGame())
@@ -210,7 +211,7 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
             home.addGame(newId);
             String log = "[CREATE] Game created by " + virtualClient.getClientUsername();
             System.out.println(log);
-            home.update(log);
+            home.update(buildGamePlayersMap(), buildGameCapacityMap(), log);
         } catch(ServerException e) {
             throw e;
         } catch (Exception e){
@@ -309,7 +310,7 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
             handleHostDisconnection(gameId);
         }
         home.addObserver(virtualClient);
-        home.update();
+        home.update(buildGamePlayersMap(), buildGameCapacityMap());
     }
 
     /**
@@ -340,7 +341,7 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         
         home.addObserver(virtualClient);
         virtualClient.setGameId(null);
-        home.update();
+        home.update(buildGamePlayersMap(), buildGameCapacityMap());
     }
 
     public void sendToGameController(int gameId, ClientRequest req, VirtualClient virtualClient) throws ServerException {
@@ -393,11 +394,28 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
                 ControllerState state = new RecoverState(g, gc);
                 gc.setState(state);
             });
-            home.update();
+            home.update(buildGamePlayersMap(), buildGameCapacityMap());
         } catch(Exception e){
             System.out.println("ERROR: [RECOVER] Some problem while reading " +
                     "game saved.\n" + e.getMessage());
         }
+    }
+
+    private Map<Integer, List<String>> buildGamePlayersMap() {
+        Map<Integer, List<String>> map = new HashMap<>();
+        for (Map.Entry<Integer, GameController> entry : games.entrySet()) {
+            map.put(entry.getKey(), entry.getValue().getLobbyPlayers());
+        }
+        return map;
+    }
+
+    private Map<Integer, Integer> buildGameCapacityMap() {
+        Map<Integer, Integer> map = new HashMap<>();
+        for (Map.Entry<Integer, GameController> entry : games.entrySet()) {
+            int cap = entry.getValue().getCapacity();
+            if (cap > 0) map.put(entry.getKey(), cap);
+        }
+        return map;
     }
 
     /**

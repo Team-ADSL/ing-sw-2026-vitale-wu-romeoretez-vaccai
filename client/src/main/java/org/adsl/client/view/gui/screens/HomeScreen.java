@@ -3,22 +3,34 @@ package org.adsl.client.view.gui.screens;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.Tooltip;
+import javafx.scene.input.KeyCode;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.serverEvents.ErrorEvent;
 import org.adsl.client.serverEvents.HomeUpdateEvent;
 import org.adsl.client.view.gui.FloatingLog;
+import org.adsl.client.view.gui.ImageCatalog;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
- * GUI home screen. Displays the list of open games and lets the player create
- * a new game (2–5 players) or join an existing one. Updates in-place when
+ * GUI home screen. Displays the list of open games as rich cards (showing
+ * player slots, names, and capacity) and lets the player create a new game
+ * (2–5 players) or join an existing one. Updates in-place when
  * {@code HomeUpdateEvent} arrives. A floating log overlay shows server messages.
  */
 public class HomeScreen extends GUIScreen {
@@ -27,14 +39,26 @@ public class HomeScreen extends GUIScreen {
     @FXML private Label welcomeLabel;
     @FXML private Label errorLabel;
     @FXML private ListView<Integer> gamesList;
+    @FXML private Button create2Button;
+    @FXML private Button joinButton;
+    @FXML private Button logoutButton;
     @FXML private VBox logBox;
 
     private List<Integer> activeGames;
+    private Map<Integer, List<String>> gamePlayers;
+    private Map<Integer, Integer> gameCapacity;
     private FloatingLog floatingLog;
 
     public HomeScreen(AppCoordinator coordinator, String username, List<Integer> activeGames) {
+        this(coordinator, username, activeGames, Collections.emptyMap(), Collections.emptyMap());
+    }
+
+    public HomeScreen(AppCoordinator coordinator, String username, List<Integer> activeGames,
+                      Map<Integer, List<String>> gamePlayers, Map<Integer, Integer> gameCapacity) {
         super(coordinator, username);
         this.activeGames = activeGames != null ? new ArrayList<>(activeGames) : new ArrayList<>();
+        this.gamePlayers = gamePlayers != null ? gamePlayers : Collections.emptyMap();
+        this.gameCapacity = gameCapacity != null ? gameCapacity : Collections.emptyMap();
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/home.fxml"));
             loader.setController(this);
@@ -43,12 +67,121 @@ public class HomeScreen extends GUIScreen {
             throw new RuntimeException("Failed to load home.fxml", e);
         }
         welcomeLabel.setText("Welcome, " + (username != null ? username : "") + "!");
-        gamesList.setItems(FXCollections.observableArrayList(this.activeGames));
+        setupGamesList();
+        installListKeyboardNav();
         applyTheme(this.root);
 
         floatingLog = new FloatingLog("Home log");
         logBox.getChildren().setAll(floatingLog.getFloatingNode());
         rootStack.getChildren().add(floatingLog.getFullPanel());
+    }
+
+    private void setupGamesList() {
+        gamesList.setCellFactory(_ -> new ListCell<>() {
+            @Override
+            protected void updateItem(Integer id, boolean empty) {
+                super.updateItem(id, empty);
+                if (empty || id == null) {
+                    setText(null);
+                    setGraphic(null);
+                    return;
+                }
+                setGraphic(buildGameCard(id));
+                setText(null);
+            }
+        });
+        gamesList.setItems(FXCollections.observableArrayList(activeGames));
+    }
+
+    private javafx.scene.Node buildGameCard(int gameId) {
+        List<String> players = gamePlayers.getOrDefault(gameId, Collections.emptyList());
+        int capacity = gameCapacity.getOrDefault(gameId, 0);
+        int free = Math.max(0, capacity - players.size());
+
+        // background color varies with capacity: 2p=maroon, 3p=teal, 4p=indigo, 5p=forest
+        String[] bgColors = {
+            "rgba(140,22,54,0.38)",
+            "rgba(22,100,100,0.38)",
+            "rgba(60,40,120,0.38)",
+            "rgba(30,90,50,0.38)"
+        };
+        String bg = bgColors[Math.max(0, Math.min(capacity - 2, bgColors.length - 1))];
+
+        HBox card = new HBox(10);
+        card.setAlignment(Pos.CENTER_LEFT);
+        card.setPadding(new Insets(8, 12, 8, 12));
+        card.setStyle("-fx-background-color: " + bg + "; -fx-background-radius: 10; " +
+                "-fx-border-color: rgba(242,176,53,0.22); -fx-border-radius: 10; -fx-border-width: 1;");
+
+        // Game title
+        Label title = new Label("#" + gameId);
+        title.setFont(ImageCatalog.chalkFont(16));
+        title.setStyle("-fx-text-fill: #F2B035; -fx-font-size: 16px;");
+        title.setMinWidth(50);
+
+        // Player slot dots
+        HBox slots = new HBox(4);
+        slots.setAlignment(Pos.CENTER_LEFT);
+        for (int i = 0; i < players.size(); i++) {
+            Label p = new Label("●"); // filled circle
+            p.setStyle("-fx-text-fill: #FDF3D3; -fx-font-size: 14px;");
+            p.setFont(ImageCatalog.chalkFont(14));
+            Tooltip.install(p, new Tooltip(players.get(i)));
+            slots.getChildren().add(p);
+        }
+        for (int i = 0; i < free; i++) {
+            Label p = new Label("○"); // empty circle
+            p.setStyle("-fx-text-fill: rgba(253,243,211,0.35); -fx-font-size: 14px;");
+            p.setFont(ImageCatalog.chalkFont(14));
+            slots.getChildren().add(p);
+        }
+
+        // Player names summary
+        String summary = players.isEmpty() ? "empty" : String.join(", ", players);
+        Label names = new Label(summary);
+        names.setFont(ImageCatalog.chalkFont(13));
+        names.setStyle("-fx-text-fill: rgba(253,243,211,0.70); -fx-font-size: 13px;");
+        names.setMaxWidth(200);
+        names.setEllipsisString("…");
+
+        // Capacity tag
+        Label cap = new Label(players.size() + "/" + (capacity > 0 ? capacity : "?"));
+        cap.setFont(ImageCatalog.chalkFont(13));
+        cap.setStyle("-fx-text-fill: #F2B035; -fx-font-size: 13px;");
+
+        HBox spacer = new HBox();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        card.getChildren().addAll(title, slots, names, spacer, cap);
+        return card;
+    }
+
+    private void installListKeyboardNav() {
+        gamesList.setOnKeyPressed(e -> {
+            KeyCode code = e.getCode();
+            if (code == KeyCode.ENTER) {
+                onJoinSelected();
+                e.consume();
+                return;
+            }
+            if (code == KeyCode.DOWN) {
+                int sel = gamesList.getSelectionModel().getSelectedIndex();
+                int last = gamesList.getItems().size() - 1;
+                if (sel >= last && joinButton != null) {
+                    joinButton.requestFocus();
+                    e.consume();
+                }
+            } else if (code == KeyCode.UP) {
+                int sel = gamesList.getSelectionModel().getSelectedIndex();
+                if (sel <= 0) {
+                    gamesList.getSelectionModel().clearSelection();
+                    if (create2Button != null) {
+                        create2Button.requestFocus();
+                        e.consume();
+                    }
+                }
+            }
+        });
     }
 
     @FXML private void onCreate2() { create(2); }
@@ -92,9 +225,10 @@ public class HomeScreen extends GUIScreen {
 
     @Override
     public GUIScreen visit(HomeUpdateEvent e) {
-        List<Integer> incoming = e.activeGames();
-        this.activeGames = incoming != null ? new ArrayList<>(incoming) : new ArrayList<>();
-        gamesList.setItems(FXCollections.observableArrayList(this.activeGames));
+        this.activeGames = e.activeGames() != null ? new ArrayList<>(e.activeGames()) : new ArrayList<>();
+        this.gamePlayers = e.gamePlayers() != null ? e.gamePlayers() : Collections.emptyMap();
+        this.gameCapacity = e.gameCapacity() != null ? e.gameCapacity() : Collections.emptyMap();
+        gamesList.setItems(FXCollections.observableArrayList(activeGames));
         if (e.message() != null && !e.message().isBlank()) floatingLog.append(e.message());
         return this;
     }

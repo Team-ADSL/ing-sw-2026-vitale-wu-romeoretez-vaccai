@@ -24,20 +24,57 @@
     -fx-cursor: hand;
     -fx-border-width: 0;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45), 6, 0.25, 0, 2);
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
 }
 .button:hover {
     -fx-background-color: #F25835;
     -fx-text-fill: #FDF3D3;
+    -fx-scale-x: 1.10;
+    -fx-scale-y: 1.10;
 }
 .button:pressed {
     -fx-background-color: #8C1636;
     -fx-text-fill: #FDF3D3;
+    -fx-scale-x: 0.96;
+    -fx-scale-y: 0.96;
+}
+.button:focused {
+    -fx-background-color: #F2B035;
+    -fx-text-fill: #1a0808;
+    -fx-scale-x: 1.0;
+    -fx-scale-y: 1.0;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+.button:focused:hover {
+    -fx-background-color: #F25835;
+    -fx-text-fill: #FDF3D3;
+    -fx-scale-x: 1.10;
+    -fx-scale-y: 1.10;
+}
+/* Focus ring only when navigating via keyboard (class added programmatically) */
+.button.keyboard-focused {
+    -fx-border-color: #FDF3D3;
+    -fx-border-width: 2;
+    -fx-border-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(253,243,211,0.55), 8, 0.30, 0, 0);
+}
+.button.keyboard-focused:hover {
+    -fx-background-color: #F25835;
+    -fx-text-fill: #FDF3D3;
+    -fx-scale-x: 1.10;
+    -fx-scale-y: 1.10;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
 }
 .button:disabled {
     -fx-background-color: rgba(242, 176, 53, 0.22);
     -fx-text-fill: rgba(253, 243, 211, 0.38);
     -fx-opacity: 1;
     -fx-effect: null;
+    -fx-scale-x: 1.0;
+    -fx-scale-y: 1.0;
 }
 
 /* ── TextField ──────────────────────────────────────────── */
@@ -63,6 +100,10 @@
     -fx-background-radius: 12;
     -fx-padding: 4;
 }
+.list-view:focused {
+    -fx-border-color: rgba(242, 176, 53, 0.55);
+    -fx-background-insets: 0;
+}
 .list-view .viewport {
     -fx-background-color: transparent;
 }
@@ -80,6 +121,32 @@
 .list-cell:filled:selected:hover {
     -fx-background-color: rgba(242, 176, 53, 0.38);
     -fx-text-fill: #FDF3D3;
+}
+
+/* ── ListView scrollbar (dark, matches theme) ───────────── */
+.list-view .scroll-bar:horizontal,
+.list-view .scroll-bar:vertical {
+    -fx-background-color: rgba(0, 0, 0, 0.35);
+    -fx-background-radius: 6;
+}
+.list-view .scroll-bar .thumb {
+    -fx-background-color: rgba(242, 176, 53, 0.55);
+    -fx-background-radius: 6;
+}
+.list-view .scroll-bar .track {
+    -fx-background-color: rgba(0, 0, 0, 0.45);
+    -fx-background-radius: 6;
+}
+.list-view .scroll-bar .increment-button,
+.list-view .scroll-bar .decrement-button,
+.list-view .scroll-bar .increment-arrow,
+.list-view .scroll-bar .decrement-arrow {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-shape: null;
+}
+.list-view .corner {
+    -fx-background-color: transparent;
 }
 
 /* ── ScrollPane ─────────────────────────────────────────── */

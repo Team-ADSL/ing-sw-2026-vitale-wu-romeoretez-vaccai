@@ -333,8 +333,19 @@ public class GameScreen extends GUIScreen {
     private double availableWidth() {
         double w = rootStack.getWidth();
         if (w <= 0) w = 1280;
-        // contentBox padding 24+24, plus a safety margin
         return Math.max(200, w - 80);
+    }
+
+    private void applyContentScale() {
+        double availH = rootStack.getHeight();
+        if (availH <= 0 || contentBox == null) return;
+        double prefH = contentBox.prefHeight(availableWidth() + 80);
+        if (prefH <= 0) return;
+        double scale = Math.min(1.0, availH / prefH);
+        contentBox.setScaleX(scale);
+        contentBox.setScaleY(scale);
+        // Compensate for scale-from-center so top edge stays pinned to top of pane.
+        contentBox.setTranslateY(-prefH / 2.0 * (1.0 - scale));
     }
 
     private double computeCardWidth(int n, double gap, double max, double min) {
@@ -385,6 +396,7 @@ public class GameScreen extends GUIScreen {
         }
 
         renderHintAndConfirm();
+        Platform.runLater(this::applyContentScale);
     }
 
     private Node buildPlayerRow(PlayerDTO p, boolean self) {
