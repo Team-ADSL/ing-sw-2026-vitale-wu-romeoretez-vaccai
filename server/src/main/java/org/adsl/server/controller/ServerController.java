@@ -85,6 +85,18 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
                 if (now - client.getLastPing() > clientTimeoutMs) {
                     System.out.println("[NETWORK] Client timeout: " + client.getClientUsername());
                     client.handleDisconnection();
+                } else if (client.isConnected()) {
+                    // Active liveness probe. RMI has no server-side listener
+                    // thread; without an unsolicited push, a dead RMI client
+                    // is only detected when clientTimeoutMs elapses. Pushing
+                    // a ServerPing forces clientStub.sendResponse() to throw
+                    // RemoteException synchronously when the client is gone,
+                    // and the catch in RMIClientHandler.sendResponse then
+                    // calls handleDisconnection() — matching the immediacy
+                    // of the socket listener thread. On Socket the push is
+                    // a no-op (PrintWriter swallows I/O); the listener
+                    // remains authoritative for socket-side drops.
+                    client.sendPing();
                 }
             }
         }, 0, pingRatioMs, TimeUnit.MILLISECONDS);

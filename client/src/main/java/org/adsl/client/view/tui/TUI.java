@@ -56,6 +56,7 @@ public class TUI extends GameUI {
 
     @Override
     public void shutdown() {
+        System.out.println("[TUI] Shutdown initiated.");
         running = false;
         if (terminal != null) {
             terminal.close();
