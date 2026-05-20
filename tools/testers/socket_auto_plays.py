@@ -81,10 +81,9 @@ def wait_for_move_response(player_name, q):
             sys.exit(1)
 
 def main():
-    example_usage = "python3 socket_auto_plays.py -g 123 -p1 Alice -p2 Bob -r 5"
+    example_usage = "python3 socket_auto_plays.py -p1 Alice -p2 Bob -r 5"
     parser = CustomArgumentParser(example_usage, description="Auto-player for 2-player game.")
     
-    parser.add_argument("-g", dest="gameId", type=int, required=True, help="Game ID to join")
     parser.add_argument("-p1", type=str, required=True, help="Name of Player 1")
     parser.add_argument("-p2", type=str, required=True, help="Name of Player 2")
     parser.add_argument("-r", dest="round_to_reach", type=int, required=True, help="Number of rounds to advance from the current round")
@@ -95,7 +94,7 @@ def main():
     args = parser.parse_args()
 
     print("=" * 50)
-    print(f"Starting automation - Game ID: {args.gameId} | Round target: {args.round_to_reach}")
+    print(f"Starting automation - Round target: {args.round_to_reach}")
     print("=" * 50)
 
     # 1. Connection
@@ -118,13 +117,11 @@ def main():
 
     # 3. Initial Phase: Login and Enter Game
     send_data(sock1, "p1", {"type": "LOGIN", "username": args.p1})
-    send_data(sock1, "p1", {"type": "ENTER_GAME", "gameId": args.gameId})
-
     send_data(sock2, "p2", {"type": "LOGIN", "username": args.p2})
-    send_data(sock2, "p2", {"type": "ENTER_GAME", "gameId": args.gameId})
 
     # Give the server time to process the game entry
-    time.sleep(1)
+    timeWait = 0.3
+    time.sleep(timeWait)
 
     # Flush the queues of any accumulated Login/EnterGame response messages
     while not queue_p1.empty(): queue_p1.get()
@@ -142,7 +139,7 @@ def main():
         send_data(sock2, "p2", {"type": "MOVE", "moves": [{"rowIndex": 1, "row": "OFFER"}]})
         wait_for_move_response("p2", queue_p2)
 
-        time.sleep(1)
+        time.sleep(timeWait)
 
         while not queue_p1.empty(): queue_p1.get()
         while not queue_p2.empty(): queue_p2.get()
@@ -161,8 +158,11 @@ def main():
                 time.sleep(0.5)
 
         # --- Player 2: UPPER loop ---
+        time.sleep(timeWait)
+
         while not queue_p1.empty(): queue_p1.get()
         while not queue_p2.empty(): queue_p2.get()
+
         i_p2 = 0
         while True:
             move_payload = {"type": "MOVE", "moves": [{"rowIndex": i_p2, "row": "UPPER"}]}
@@ -174,6 +174,8 @@ def main():
             else:
                 i_p2 += 1
                 time.sleep(0.5)
+
+        time.sleep(timeWait)
 
         while not queue_p1.empty(): queue_p1.get()
         while not queue_p2.empty(): queue_p2.get()

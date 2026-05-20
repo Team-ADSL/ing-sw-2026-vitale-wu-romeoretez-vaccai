@@ -3,6 +3,7 @@ package org.adsl.utils.fakes;
 import org.adsl.server.model.Game;
 import org.adsl.server.network.VirtualClient;
 import org.adsl.shared.enums.Totem;
+import org.adsl.shared.model.DBRecord;
 import org.adsl.shared.model.MatchResult;
 
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ public class FakeGame extends Game {
     public boolean updateGameSent = false;
     public boolean endGameResultsSent = false;
     public boolean sendTotemAvailableSent = false;
+    public List<DBRecord> capturedRecords = null;
     public List<MatchResult> capturedResults = null;
     public List<Totem> lastTotemAvailable = null;
     public final List<VirtualClient> addedClients = new ArrayList<>();
@@ -63,14 +65,16 @@ public class FakeGame extends Game {
     }
 
     @Override
-    public void sendEndGameResults(List<MatchResult> results) {
+    public void sendEndGameResults(List<MatchResult> results, List<DBRecord> records) {
         this.endGameResultsSent = true;
+        this.capturedRecords = records;
         this.capturedResults = results;
     }
 
     @Override
-    public void sendEndGameResults(List<MatchResult> results, String message) {
+    public void sendEndGameResults(List<MatchResult> results, List<DBRecord> records, String message) {
         this.endGameResultsSent = true;
+        this.capturedRecords = records;
         this.capturedResults = results;
     }
 }

@@ -13,6 +13,7 @@ import org.adsl.server.model.Home;
 import org.adsl.server.network.VirtualClient;
 import org.adsl.server.persistence.GamePersistenceManager;
 import org.adsl.shared.exceptions.ServerException;
+import org.adsl.shared.model.DBRecord;
 import org.adsl.shared.model.MatchResult;
 import org.adsl.shared.network.remote.RemoteServerService;
 import org.adsl.shared.network.requests.RequestVisitor;
@@ -148,10 +149,24 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         }
 
         virtualClient.setClientUsername(username);
-        home.addObserver(virtualClient);
         String log = "[LOGIN] User connected: " + username;
         System.out.println(log);
         home.update(buildGamePlayersMap(), buildGameCapacityMap(), log);
+
+        int gameWithPlayer = games.values().stream()
+                .map(gc -> gc.getState().getGame())
+                .filter(g -> g.getPlayers().stream().anyMatch(p -> p.getName().equals(username)))
+                .map(Game::getGameId)
+                .findFirst()
+                .orElse(0);
+
+        if(gameWithPlayer != 0){
+            sendToGameController(gameWithPlayer, new EnterGameRequest(gameWithPlayer), virtualClient);
+
+        } else {
+            home.addObserver(virtualClient);
+            home.update();
+        }
     }
 
     @Override
@@ -339,7 +354,7 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
     }
 
     @Override
-    public void notifyEndGame(int gameId, List<MatchResult> matchResults) {
+    public void notifyEndGame(int gameId, List<MatchResult> results,  List<DBRecord> records) {
         games.remove(gameId);
 
         home.removeGame(gameId);
@@ -350,7 +365,7 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         }
 
         // If game terminates before starting we clean the database
-        if(matchResults == null){
+        if(results == null){
             try {
                 gameDAO.deleteMatch(gameId);
             } catch(Exception e){
@@ -401,6 +416,16 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
             if (cap > 0) map.put(entry.getKey(), cap);
         }
         return map;
+    }
+
+    /**
+     * @return maxValue from the recovered games
+     */
+    public int getMaxGameId(){
+        return games.keySet().stream()
+                .mapToInt(id -> id)
+                .max()
+                .orElse(0);
     }
 
     /**
