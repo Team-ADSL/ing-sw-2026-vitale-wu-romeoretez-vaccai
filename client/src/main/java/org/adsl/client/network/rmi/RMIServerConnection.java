@@ -19,6 +19,7 @@ public class RMIServerConnection implements ServerConnection {
     private RemoteServerService serverStub;
     private RemoteClientStubImpl clientStub;
     private AppCoordinator appCoordinator;
+    private boolean disconnected = false;
 
     @Override
     public void connect(String ip, int port) throws Exception {
@@ -34,7 +35,12 @@ public class RMIServerConnection implements ServerConnection {
     }
 
     @Override
-    public void disconnect() throws Exception {
+    public synchronized void disconnect() throws Exception {
+        // Idempotent: shutdown paths (GUI X-button cleanup + JVM shutdown hook)
+        // can both reach here; second call would hit an already-unexported stub
+        // and emit a misleading "object not exported" log.
+        if (disconnected) return;
+        disconnected = true;
         try {
             if (serverStub != null && clientStub != null) {
                 serverStub.disconnect(clientStub);
