@@ -27,31 +27,26 @@
     -fx-focus-color: transparent;
     -fx-faint-focus-color: transparent;
 }
+/* Scale on hover is handled programmatically in GUIScreen.installButtonHover
+   so it never triggers the dynamic-resize listeners on rootStack. CSS pseudo-
+   class cascades on -fx-scale-x/y were producing inconsistent end states. */
 .button:hover {
     -fx-background-color: #F25835;
     -fx-text-fill: #FDF3D3;
-    -fx-scale-x: 1.10;
-    -fx-scale-y: 1.10;
 }
 .button:pressed {
     -fx-background-color: #8C1636;
     -fx-text-fill: #FDF3D3;
-    -fx-scale-x: 0.96;
-    -fx-scale-y: 0.96;
 }
 .button:focused {
     -fx-background-color: #F2B035;
     -fx-text-fill: #1a0808;
-    -fx-scale-x: 1.0;
-    -fx-scale-y: 1.0;
     -fx-border-color: transparent;
     -fx-border-width: 0;
 }
 .button:focused:hover {
     -fx-background-color: #F25835;
     -fx-text-fill: #FDF3D3;
-    -fx-scale-x: 1.10;
-    -fx-scale-y: 1.10;
 }
 /* Focus ring only when navigating via keyboard (class added programmatically) */
 .button.keyboard-focused {
@@ -63,8 +58,6 @@
 .button.keyboard-focused:hover {
     -fx-background-color: #F25835;
     -fx-text-fill: #FDF3D3;
-    -fx-scale-x: 1.10;
-    -fx-scale-y: 1.10;
     -fx-border-color: transparent;
     -fx-border-width: 0;
 }
@@ -73,8 +66,6 @@
     -fx-text-fill: rgba(253, 243, 211, 0.38);
     -fx-opacity: 1;
     -fx-effect: null;
-    -fx-scale-x: 1.0;
-    -fx-scale-y: 1.0;
 }
 
 /* ── TextField ──────────────────────────────────────────── */

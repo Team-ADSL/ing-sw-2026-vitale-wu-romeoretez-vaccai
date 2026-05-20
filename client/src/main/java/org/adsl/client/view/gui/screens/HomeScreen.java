@@ -6,6 +6,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -40,6 +41,9 @@ public class HomeScreen extends GUIScreen {
     @FXML private Label errorLabel;
     @FXML private ListView<Integer> gamesList;
     @FXML private Button create2Button;
+    @FXML private Button create3Button;
+    @FXML private Button create4Button;
+    @FXML private Button create5Button;
     @FXML private Button joinButton;
     @FXML private Button logoutButton;
     @FXML private VBox logBox;
@@ -69,6 +73,7 @@ public class HomeScreen extends GUIScreen {
         welcomeLabel.setText("Welcome, " + (username != null ? username : "") + "!");
         setupGamesList();
         installListKeyboardNav();
+        decorateCreateButtons();
         applyTheme(this.root);
 
         floatingLog = new FloatingLog("Home log");
@@ -182,6 +187,29 @@ public class HomeScreen extends GUIScreen {
                 }
             }
         });
+    }
+
+    /**
+     * Renders the create buttons as "N 👤" — text stays in chalk via the
+     * usual applyChalkFonts pass, and the person emoji lives in a separate
+     * Label graphic that intentionally has no setFont so JavaFX falls back
+     * to the system emoji font (chalk has no glyph for U+1F464).
+     * applyChalkFonts does not recurse into Button children, so the graphic
+     * keeps its default font.
+     */
+    private void decorateCreateButtons() {
+        attachPersonIcon(create2Button);
+        attachPersonIcon(create3Button);
+        attachPersonIcon(create4Button);
+        attachPersonIcon(create5Button);
+    }
+
+    private static void attachPersonIcon(Button b) {
+        Label icon = new Label("👤"); // 👤
+        icon.setStyle("-fx-text-fill: inherit;");
+        b.setGraphic(icon);
+        b.setContentDisplay(ContentDisplay.RIGHT);
+        b.setGraphicTextGap(3);
     }
 
     @FXML private void onCreate2() { create(2); }
