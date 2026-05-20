@@ -41,6 +41,7 @@ public class SocketClientConnection implements ServerConnection {
     }
 
     private void listenToServer() {
+        boolean serverGone = false;
         try {
             String jsonLine;
             while (isRunning && !socket.isClosed() && (jsonLine = in.readLine()) != null) {
@@ -55,13 +56,20 @@ public class SocketClientConnection implements ServerConnection {
                     System.err.println("[CLIENT SOCKET] Unsupported message type from server: " + e.getMessage());
                 }
             }
+            // Loop ended without exception: readLine returned null (graceful
+            // FIN from server). If we didn't initiate the close, treat as
+            // unexpected disconnection. Without this the UI would only
+            // notice after the ping timeout, losing parity with RMI.
+            serverGone = isRunning;
         } catch (Exception e) {
-            if (isRunning && appCoordinator != null) {
+            if (isRunning) {
                 System.err.println("[CLIENT SOCKET] Connection lost or interrupted: " + e.getMessage());
-                ServerResponse disconnection = new ServerDisconnected();
-                appCoordinator.handleServerResponse(disconnection);
+                serverGone = true;
             }
         } finally {
+            if (serverGone && appCoordinator != null) {
+                appCoordinator.handleServerResponse(new ServerDisconnected());
+            }
             try {
                 terminateResources();
             } catch(Exception e) {

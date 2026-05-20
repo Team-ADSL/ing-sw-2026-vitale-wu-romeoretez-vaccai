@@ -94,7 +94,15 @@ public class AppCoordinator implements ResponseVisitor{
                 serverConnection.sendRequest(new ClientPing());
 
             } catch (Exception e) {
+                // RMI throws here as soon as the server is unreachable
+                // (ConnectException / RemoteException). Treat the first
+                // failure as disconnection so the UI reacts immediately
+                // instead of waiting for serverTimeoutMs to elapse.
+                // Socket never reaches this branch — its PrintWriter
+                // swallows IOException; the listener thread is what
+                // detects socket-side drops.
                 System.err.println("Error during ping sending: " + e.getMessage());
+                gameUI.onServerDisconnected();
             }
         }, pingRatioMs, pingRatioMs, TimeUnit.MILLISECONDS);
     }
@@ -103,6 +111,17 @@ public class AppCoordinator implements ResponseVisitor{
         if (pingScheduler != null) {
             pingScheduler.shutdownNow();
         }
+    }
+
+    /**
+     * Single entry point screens can use to terminate the application.
+     * Delegates to the active UI's {@code shutdown()} so the GUI X-button
+     * crash-avoidance path (consume + cleanup thread + halt) is reused —
+     * direct {@code Platform.exit()} from a screen reopens the same
+     * AppKit/Glass race on macOS.
+     */
+    public void requestShutdown() {
+        gameUI.shutdown();
     }
 
     public void handleServerResponse(ServerResponse serverResponse){
