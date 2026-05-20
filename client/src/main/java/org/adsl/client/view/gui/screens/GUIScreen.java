@@ -86,7 +86,7 @@ public abstract class GUIScreen extends Screen<GUIScreen> {
 
     @Override
     public GUIScreen createEndGameScreen(EndGameEvent e, AppCoordinator appCoordinator){
-        return new EndGameScreen(appCoordinator, username, e.results());
+        return new EndGameScreen(appCoordinator, username, e.results(), e.records(), e.message());
     }
 
     @Override

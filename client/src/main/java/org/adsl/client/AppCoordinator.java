@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Mediator between the network layer and the view layer.
@@ -52,6 +53,8 @@ public class AppCoordinator implements ResponseVisitor{
     private final Object pacerLock = new Object();
     /** Wall-clock time (ms) of the next slot the pacer has reserved for a dispatch. */
     private long nextDispatchAtMs = 0L;
+
+    private final AtomicBoolean disconnected = new AtomicBoolean(false);
 
     public AppCoordinator(GameUI gameUI, ServerConnection serverConnection) {
         this.gameUI = gameUI;
@@ -162,7 +165,7 @@ public class AppCoordinator implements ResponseVisitor{
     }
     @Override
     public void visit(GameEnded response) throws InvalidResponseException {
-        gameUI.onEndGame(response.getResults());
+        gameUI.onEndGame(response.getResults(), response.getRecords(), response.getMessage());
     }
     @Override
     public void visit(ErrorResponse response) throws InvalidResponseException {
@@ -224,6 +227,10 @@ public class AppCoordinator implements ResponseVisitor{
         serverConnection.sendRequest(clientRequest);
     }
     public void disconnect() throws Exception {
+        // Idempotent: X-button path (GUI.shutdown cleanup thread) and JVM
+        // shutdown hook (ClientApp) can both reach this; second call is a no-op
+        // instead of double-disconnecting on already-torn-down transport.
+        if (!disconnected.compareAndSet(false, true)) return;
         stopPingScheduler();
         if (dispatchPacer != null) {
             dispatchPacer.shutdownNow();

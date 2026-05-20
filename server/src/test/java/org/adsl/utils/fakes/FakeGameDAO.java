@@ -1,7 +1,7 @@
 package org.adsl.utils.fakes;
 
 import org.adsl.server.persistence.GameDAO;
-import org.adsl.shared.model.MatchResult;
+import org.adsl.shared.model.DBRecord;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -21,5 +21,6 @@ public class FakeGameDAO implements GameDAO {
 
     @Override public void deleteMatch(int id) { deletedMatches.add(id); }
     @Override public void saveMatch(int gameId, int playerCount, List<String> nicknames, List<Integer> scores) throws SQLException {}
-    @Override public List<MatchResult> getLeaderboard(int playerCount) throws SQLException { return List.of(); }
+    @Override public List<DBRecord> getLeaderboard(int playerCount) throws SQLException { return List.of(); }
+    @Override public void setInitialCounter(int i) {}
 }

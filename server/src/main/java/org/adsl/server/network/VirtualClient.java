@@ -5,6 +5,7 @@ import org.adsl.server.model.EndGameObserver;
 import org.adsl.server.model.Game;
 import org.adsl.server.model.GameObserver;
 import org.adsl.shared.enums.Totem;
+import org.adsl.shared.model.DBRecord;
 import org.adsl.shared.model.MatchResult;
 import org.adsl.shared.network.requests.ClientConnection;
 import org.adsl.shared.network.requests.ClientDisconnected;
@@ -151,13 +152,13 @@ public abstract class VirtualClient implements GameObserver, HomeObserver, EndGa
     }
 
     @Override
-    public void notifyEndGame(int id, List<MatchResult> results){
-        notifyEndGame(id, results, null);
+    public void notifyEndGame(int id, List<MatchResult> results, List<DBRecord> records){
+        notifyEndGame(id, results, records, null);
     }
 
     @Override
-    public void notifyEndGame(int id, List<MatchResult> results, String message){
-        GameEnded serverResponse = new GameEnded(results);
+    public void notifyEndGame(int id, List<MatchResult> results, List<DBRecord> records, String message){
+        GameEnded serverResponse = new GameEnded(records, results);
         if (message != null) serverResponse.setMessage(message);
         System.out.println("[SENDING] EndGame update:" + serverResponse + " to: " + getClientUsername());
         this.sendResponse(serverResponse);

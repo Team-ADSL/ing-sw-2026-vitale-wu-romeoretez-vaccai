@@ -360,7 +360,7 @@ public class GameScreen extends GUIScreen {
     private void renderBoard() {
         if (game == null) return;
         headerLabel.setText(String.format("MESOS — Round %d/10  ·  Era %d  ·  Current: %s",
-                game.round(), game.era(), totemLabel(game.currentPlayerTotem())));
+                game.round(), game.era(), nameFor(game.currentPlayerTotem())));
         phaseLabel.setText("Phase: " + (game.phase() != null ? game.phase().name() : "—"));
 
         List<CardDTO> top = game.board().topRow();
@@ -615,10 +615,6 @@ public class GameScreen extends GUIScreen {
             if (username.equals(p.name())) return p;
         }
         return null;
-    }
-
-    private static String totemLabel(Totem t) {
-        return t == null ? "—" : t.name();
     }
 
     private static String summariseCards(PlayerDTO p) {

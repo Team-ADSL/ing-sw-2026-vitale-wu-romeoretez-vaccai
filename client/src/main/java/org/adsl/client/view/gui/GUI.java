@@ -61,6 +61,14 @@ public class GUI extends GameUI {
         // is the standard way to dispatch onto it.
         Platform.startup(() -> {
             ImageCatalog.loadFonts();
+            // Take exit handling away from FX: on macOS the X-button triggers
+            // a native [NSWindow _close] cascade that fires resignKeyWindow
+            // notifications into Glass's observer AFTER FX has already
+            // detached the main thread's JNI env, crashing libglass with
+            // SIGSEGV. We consume the close event below (sidesteps the
+            // cascade) and halt the process ourselves from the cleanup
+            // thread, so implicit-exit is no longer in play.
+            Platform.setImplicitExit(false);
             stage = new Stage();
             stage.setTitle(WINDOW_TITLE);
             stage.getIcons().add(ImageCatalog.load("/assets/general/app_icon.png"));
@@ -69,7 +77,10 @@ public class GUI extends GameUI {
             stage.setMinWidth(MIN_W);
             stage.setMinHeight(MIN_H);
             stage.setResizable(true);
-            stage.setOnCloseRequest(ev -> shutdown());
+            stage.setOnCloseRequest(ev -> {
+                ev.consume();
+                shutdown();
+            });
 
             currentScreen = new ConnectingScreen(coordinator);
             Scene scene = new Scene(currentScreen.getRoot(), WINDOW_W, WINDOW_H);
@@ -91,44 +102,32 @@ public class GUI extends GameUI {
         // Idempotent: setOnCloseRequest may fire alongside the JVM shutdown
         // hook in App.java, both ending up here.
         if (!shuttingDown.compareAndSet(false, true)) return;
+        System.out.println("[GUI] Shutdown initiated.");
 
         // Cleanup off the calling thread. coordinator.disconnect() does a
         // synchronous out.println() on the socket; if the write blocks (server
         // hung, half-closed socket, full send buffer) we must NOT freeze the
         // caller — on macOS the close-spinner depends on the process actually
         // terminating, and freezing the JavaFX thread keeps it spinning.
+        //
+        // We do NOT close the stage or call Platform.exit() from here: either
+        // would re-enter the native window-close cascade we sidestepped via
+        // ev.consume() in setOnCloseRequest, racing AppKit's resignKeyWindow
+        // notification against FX's JNI detach. Halt directly once the
+        // network is wound down.
         Thread cleanup = new Thread(() -> {
             if (coordinator != null) {
                 try { coordinator.disconnect(); } catch (Exception ignored) {}
             }
-            // Hide the window if it's still showing — covers the Ctrl+C and
-            // programmatic-exit paths. For the macOS X-button path JavaFX is
-            // already hiding the window so isShowing() is false and this is a
-            // no-op.
-            //
-            // We deliberately do NOT call Platform.exit() here: when invoked
-            // from within JavaFX's window-close nested event loop (X-button
-            // path), it triggers a NullPointerException inside
-            // QuantumToolkit.exitAllNestedEventLoops (eventLoopMap is null).
-            // The default implicit-exit (last window closed) handles graceful
-            // FX shutdown; the killer thread below is the hard safety net.
-            try {
-                Platform.runLater(() -> {
-                    if (stage != null && stage.isShowing()) stage.close();
-                });
-            } catch (IllegalStateException ignored) {
-                // FX runtime already torn down — nothing to do.
-            }
+            Runtime.getRuntime().halt(0);
         }, "gui-shutdown");
         cleanup.setDaemon(true);
         cleanup.start();
 
-        // Safety net: guarantee the JVM terminates within a bounded window
-        // regardless of stuck I/O, JavaFX internals, or AWT threads that
-        // outlive Platform.exit(). Runtime.halt bypasses shutdown hooks
-        // (which themselves could block on the same socket write).
+        // Safety net: if the cleanup thread blocks on stuck I/O the process
+        // would never exit. Halt unconditionally after 3s.
         Thread killer = new Thread(() -> {
-            try { Thread.sleep(1000); } catch (InterruptedException ignored) {}
+            try { Thread.sleep(3000); } catch (InterruptedException ignored) {}
             Runtime.getRuntime().halt(0);
         }, "gui-force-exit");
         killer.setDaemon(true);

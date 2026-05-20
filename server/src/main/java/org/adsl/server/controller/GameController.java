@@ -89,4 +89,5 @@ public class GameController {
         if (state == null) return 0;
         return state.getGame().getNumPlayer();
     }
+    public ControllerState getState() { return state; }
 }
