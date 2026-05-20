@@ -5,6 +5,7 @@ import org.adsl.server.network.HomeObserver;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class FakeHome extends Home {
     public boolean updateCalled = false;
@@ -17,6 +18,16 @@ public class FakeHome extends Home {
 
     @Override
     public void update(String message) {
+        this.updateCalled = true;
+    }
+
+    @Override
+    public void update(Map<Integer, List<String>> gamePlayers, Map<Integer, Integer> gameCapacity) {
+        this.updateCalled = true;
+    }
+
+    @Override
+    public void update(Map<Integer, List<String>> gamePlayers, Map<Integer, Integer> gameCapacity, String message) {
         this.updateCalled = true;
     }
 

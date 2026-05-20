@@ -177,7 +177,12 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
 
         } else {
             home.addObserver(virtualClient);
-            home.update();
+            // Send the full snapshot (players + capacity) so the freshly added
+            // observer doesn't see "empty 0/?" for games whose participants
+            // are all currently disconnected — the players are still in the
+            // game model with active=false, but the no-arg overload would
+            // omit them.
+            home.update(buildGamePlayersMap(), buildGameCapacityMap());
         }
     }
 
