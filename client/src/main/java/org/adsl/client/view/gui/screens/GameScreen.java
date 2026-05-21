@@ -11,9 +11,14 @@ import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.effect.DropShadow;
+import javafx.scene.effect.ColorAdjust;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -25,6 +30,7 @@ import org.adsl.client.serverEvents.EventsTriggeredEvent;
 import org.adsl.client.serverEvents.GameUpdateEvent;
 import org.adsl.client.view.gui.Chip;
 import org.adsl.client.view.gui.FloatingLog;
+import org.adsl.client.view.tui.CardCatalog;
 import org.adsl.client.view.gui.ImageCatalog;
 import org.adsl.shared.enums.Phase;
 import org.adsl.shared.enums.Row;
@@ -36,7 +42,7 @@ import org.adsl.shared.model.PlayerDTO;
 import org.adsl.shared.utils.Move;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -55,13 +61,22 @@ import java.util.Set;
  */
 public class GameScreen extends GUIScreen {
 
+    private static final double BG_VP_LEFT   = 485;
+    private static final double BG_VP_TOP    = 80;
+    private static final double BG_VP_W      = 2260 - 485;   // 1775
+    private static final double BG_VP_H      = 1470 - 80;    // 1390
+
+    // Card-row footprints in v4.png pixel space (both rows normalised to the
+    // same width/height; only the Y differs).
+    private static final double ROW_X     = 940;
+    private static final double ROW_W     = 860;   // 1800 − 940
+    private static final double ROW_H     = 170;   // fits within both rects, clear of offer y≈692
+    private static final double TOP_ROW_Y = 500;
+    private static final double LOW_ROW_Y = 870;
+
     private static final double CARD_ASPECT  = 1.484;
     private static final double CARD_MAX_W   = 130.0;
-    private static final double CARD_MIN_W   = 55.0;
     private static final double CARD_GAP     = 10.0;
-    private static final double TILE_ASPECT  = 1.65;
-    private static final double TILE_MAX_W   = 110.0;
-    private static final double TILE_MIN_W   = 50.0;
     private static final double HOVER_SCALE  = 1.15;
     private static final Duration ANIM       = Duration.millis(140);
     private static final double CHIP_WIDTH   = 40;
@@ -92,6 +107,10 @@ public class GameScreen extends GUIScreen {
     private StackPane overlayPane;
     private Label overlayTitle;
     private VBox overlayPlayerList;
+    private ImageView bgView;
+    private Pane tribesLayer;
+    private Pane offerLayer;
+    private Pane cardsLayer;
 
     public GameScreen(AppCoordinator coordinator, String username, GameDTO game) {
         super(coordinator, username);
@@ -107,6 +126,10 @@ public class GameScreen extends GUIScreen {
         applyTheme(fxmlRoot, false);
 
         this.root = fxmlRoot;
+        setupBackground();
+        setupTribesLayer();
+        setupOfferLayer();
+        setupCardsLayer();
         rootStack.widthProperty().addListener((_, _, _) -> Platform.runLater(this::renderBoard));
         rootStack.heightProperty().addListener((_, _, _) -> Platform.runLater(this::renderBoard));
         rootStack.setFocusTraversable(true);
@@ -137,6 +160,288 @@ public class GameScreen extends GUIScreen {
     public GUIScreen onEnter() {
         rootStack.requestFocus();
         return null;
+    }
+
+    // ── Background + aerial overlays ─────────────────────────────────────────
+
+    /**
+     * Click-rectangle in v4.png pixel space, in DTO-list order (i.e. matching
+     * {@code game.board().offerTrack()} indices for the active player count).
+     */
+    private record TileRect(double x, double y, double w, double h) {
+        double cx() { return x + w / 2; }
+        double cy() { return y + h / 2; }
+    }
+
+    private static final TileRect[] RECTS_2P = {
+            new TileRect(1485, 698, 106, 147),
+            new TileRect(1368, 696, 115, 157),
+            new TileRect(1260, 694, 105, 165),
+            new TileRect(1158, 692, 100, 155),
+    };
+    private static final TileRect[] RECTS_3P = {
+            new TileRect(1537, 701, 107, 140),
+            new TileRect(1423, 700, 109, 142),
+            new TileRect(1310, 699, 109, 141),
+            new TileRect(1207, 697, 100, 139),
+            new TileRect(1102, 697, 102, 141),
+    };
+    private static final TileRect[] RECTS_4P = {
+            new TileRect(1576, 704, 126, 132),
+            new TileRect(1474, 702,  95, 134),
+            new TileRect(1368, 700,  98, 136),
+            new TileRect(1248, 699, 114, 134),
+            new TileRect(1145, 697,  97, 145),
+            new TileRect(1033, 695, 107, 141),
+    };
+    private static final TileRect[] RECTS_5P = {
+            new TileRect(1634, 706, 120, 122),
+            new TileRect(1530, 705,  98, 127),
+            new TileRect(1423, 705,  96, 124),
+            new TileRect(1309, 706,  99, 125),
+            new TileRect(1206, 703,  94, 128),
+            new TileRect(1086, 701, 111, 129),
+            new TileRect( 987, 700,  91, 126),
+    };
+
+    private static TileRect[] rectsFor(int numPlayers) {
+        return switch (numPlayers) {
+            case 2 -> RECTS_2P;
+            case 3 -> RECTS_3P;
+            case 4 -> RECTS_4P;
+            case 5 -> RECTS_5P;
+            default -> null;
+        };
+    }
+
+    private void setupBackground() {
+        try {
+            bgView = new ImageView(ImageCatalog.aerialBackground());
+            bgView.setPreserveRatio(false);
+            bgView.setSmooth(true);
+            bgView.setMouseTransparent(true);
+            rootStack.setStyle("");
+            rootStack.getChildren().add(0, bgView);
+        } catch (Exception e) {
+            System.err.println("[GUI] background load failed: " + e.getMessage());
+        }
+    }
+
+    private void setupTribesLayer() {
+        tribesLayer = new Pane();
+        tribesLayer.setPickOnBounds(false);
+        rootStack.getChildren().add(1, tribesLayer);
+    }
+
+    private void setupOfferLayer() {
+        offerLayer = new Pane();
+        offerLayer.setPickOnBounds(false);
+        rootStack.getChildren().add(2, offerLayer);
+    }
+
+    /**
+     * Pulls topRow/bottomRow out of the FXML contentBox VBox so they can be
+     * positioned absolutely over the aerial background. Inserts a Region spacer
+     * in contentBox so the remaining items (tribe info, hint, confirm, error)
+     * hug the bottom of the screen instead of collapsing into the header.
+     */
+    private void setupCardsLayer() {
+        cardsLayer = new Pane();
+        cardsLayer.setPickOnBounds(false);
+        // Cards must sit ABOVE the contentBox labels so they're visible and clickable.
+        rootStack.getChildren().add(cardsLayer);
+
+        contentBox.setPickOnBounds(false);
+        contentBox.getChildren().remove(topRow);
+        contentBox.getChildren().remove(bottomRow);
+        contentBox.getChildren().remove(offerTrack);
+
+        Region spacer = new Region();
+        VBox.setVgrow(spacer, Priority.ALWAYS);
+        int afterPhase = contentBox.getChildren().indexOf(phaseLabel) + 1;
+        contentBox.getChildren().add(afterPhase, spacer);
+
+        topRow.setPickOnBounds(false);
+        bottomRow.setPickOnBounds(false);
+        cardsLayer.getChildren().addAll(topRow, bottomRow);
+    }
+
+    private void positionCardRows(AerialTransform t) {
+        if (topRow == null || bottomRow == null) return;
+        double rowX = t.sx(ROW_X);
+        double rowW = t.ss(ROW_W);
+        double rowH = t.ss(ROW_H);
+        double topY = t.sy(TOP_ROW_Y);
+        double botY = t.sy(LOW_ROW_Y);
+
+        topRow.setLayoutX(rowX);
+        topRow.setLayoutY(topY);
+        topRow.setMinSize(rowW, rowH);
+        topRow.setPrefSize(rowW, rowH);
+        topRow.setMaxSize(rowW, rowH);
+
+        bottomRow.setLayoutX(rowX);
+        bottomRow.setLayoutY(botY);
+        bottomRow.setMinSize(rowW, rowH);
+        bottomRow.setPrefSize(rowW, rowH);
+        bottomRow.setMaxSize(rowW, rowH);
+    }
+
+    /** Card width that fits N cards in the given box, height-aware. Never overflows. */
+    private double computeCardWidthInBox(int n, double availW, double availH, double gap) {
+        if (n <= 0 || availW <= 0 || availH <= 0) return CARD_MAX_W;
+        double byWidth  = (availW - gap * Math.max(0, n - 1)) / n;
+        double byHeight = availH / CARD_ASPECT;
+        return Math.max(1, Math.min(byWidth, byHeight));
+    }
+
+    /** Computed once per resize from the bg image: scale + top-left on screen. */
+    private record AerialTransform(double scale, double leftX, double topY, double imgW, double imgH) {
+        double sx(double v4x) { return leftX + v4x * scale; }
+        double sy(double v4y) { return topY  + v4y * scale; }
+        double ss(double v4) { return v4 * scale; }
+    }
+
+    private AerialTransform aerialTransform() {
+        if (bgView == null || bgView.getImage() == null) return null;
+        double screenW = rootStack.getWidth();
+        double screenH = rootStack.getHeight();
+        if (screenW <= 0 || screenH <= 0) return null;
+        Image img = bgView.getImage();
+        double scale = Math.min(screenW / BG_VP_W, screenH / BG_VP_H);
+        double imgW = img.getWidth() * scale;
+        double imgH = img.getHeight() * scale;
+        double leftX = screenW / 2 - (BG_VP_LEFT + BG_VP_W / 2) * scale;
+        double topY  = screenH / 2 - (BG_VP_TOP  + BG_VP_H / 2) * scale;
+        return new AerialTransform(scale, leftX, topY, imgW, imgH);
+    }
+
+    private void updateOverlays() {
+        AerialTransform t = aerialTransform();
+        if (t == null) return;
+
+        // Background uses StackPane centering, so we set translate relative to center.
+        bgView.setFitWidth(t.imgW());
+        bgView.setFitHeight(t.imgH());
+        bgView.setTranslateX(t.imgW() / 2 - (BG_VP_LEFT + BG_VP_W / 2) * t.scale());
+        bgView.setTranslateY(t.imgH() / 2 - (BG_VP_TOP  + BG_VP_H / 2) * t.scale());
+
+        renderTribesLayer(t);
+        renderOfferLayer(t);
+        positionCardRows(t);
+    }
+
+    private void renderTribesLayer(AerialTransform t) {
+        if (tribesLayer == null) return;
+        tribesLayer.getChildren().clear();
+        if (game == null) return;
+
+        Set<Totem> active = EnumSet.noneOf(Totem.class);
+        for (PlayerDTO p : game.players()) if (p.totem() != null) active.add(p.totem());
+
+        for (Totem totem : Totem.values()) {
+            boolean isActive = active.contains(totem);
+            try {
+                Image overlay = isActive
+                        ? ImageCatalog.tribeOverlay(totem)
+                        : ImageCatalog.nofireOverlay(totem);
+                ImageView iv = new ImageView(overlay);
+                iv.setPreserveRatio(false);
+                iv.setSmooth(true);
+                iv.setFitWidth(t.imgW());
+                iv.setFitHeight(t.imgH());
+                iv.setLayoutX(t.leftX());
+                iv.setLayoutY(t.topY());
+
+                if (isActive) {
+                    iv.setPickOnBounds(false); // only opaque tribe-tent pixels are clickable
+                    iv.setCursor(Cursor.HAND);
+                    DropShadow halo = new DropShadow(28, Color.WHITE);
+                    halo.setSpread(0.6);
+                    iv.setOnMouseEntered(_ -> iv.setEffect(halo));
+                    iv.setOnMouseExited(_ -> iv.setEffect(null));
+                    iv.setOnMouseClicked(_ -> onTribeClicked(totem));
+                } else {
+                    iv.setMouseTransparent(true);
+                }
+                tribesLayer.getChildren().add(iv);
+            } catch (Exception ex) {
+                System.err.println("[GUI] tribe overlay load failed for " + totem + ": " + ex.getMessage());
+            }
+        }
+    }
+
+    private void renderOfferLayer(AerialTransform t) {
+        if (offerLayer == null) return;
+        offerLayer.getChildren().clear();
+        if (game == null || game.board() == null) return;
+
+        List<OfferTileDTO> tiles = game.board().offerTrack();
+        if (tiles == null || tiles.isEmpty()) return;
+
+        int numPlayers = game.players() != null ? game.players().size() : 0;
+        TileRect[] rects = rectsFor(numPlayers);
+        if (rects == null || rects.length != tiles.size()) {
+            System.err.println("[GUI] offer-rect count " + (rects == null ? "null" : rects.length)
+                    + " != tiles " + tiles.size() + " for " + numPlayers + " players");
+            return;
+        }
+
+        // Pre-positioned whole-row image (same scale & origin as bg).
+        try {
+            ImageView rowView = new ImageView(ImageCatalog.offerTileRow(numPlayers));
+            rowView.setPreserveRatio(false);
+            rowView.setSmooth(true);
+            rowView.setFitWidth(t.imgW());
+            rowView.setFitHeight(t.imgH());
+            rowView.setLayoutX(t.leftX());
+            rowView.setLayoutY(t.topY());
+            rowView.setMouseTransparent(true);
+            offerLayer.getChildren().add(rowView);
+        } catch (Exception ex) {
+            System.err.println("[GUI] offer-row image load failed: " + ex.getMessage());
+        }
+
+        boolean canPlace = canPlaceTotem();
+        for (int i = 0; i < tiles.size(); i++) {
+            OfferTileDTO tile = tiles.get(i);
+            TileRect r = rects[i];
+
+            // Transparent click rectangle.
+            Rectangle hit = new Rectangle(t.ss(r.w()), t.ss(r.h()));
+            hit.setFill(Color.TRANSPARENT);
+            hit.setLayoutX(t.sx(r.x()));
+            hit.setLayoutY(t.sy(r.y()));
+            boolean occupied = tile.totem() != null;
+            if (canPlace && !occupied) {
+                hit.setCursor(Cursor.HAND);
+                final int idx = i;
+                hit.setOnMouseClicked(_ -> onOfferTileClicked(idx, tile));
+            }
+            offerLayer.getChildren().add(hit);
+
+            // 3D totem on placed tile, centered in the rectangle.
+            if (occupied) {
+                try {
+                    ImageView totem = new ImageView(ImageCatalog.totem3D(tile.totem()));
+                    totem.setPreserveRatio(true);
+                    totem.setSmooth(true);
+                    double size = t.ss(Math.min(r.w(), r.h())) * 1.1;
+                    totem.setFitHeight(size);
+                    totem.setLayoutX(t.sx(r.cx()) - size / 2);
+                    totem.setLayoutY(t.sy(r.cy()) - size / 2);
+                    totem.setMouseTransparent(true);
+                    offerLayer.getChildren().add(totem);
+                } catch (Exception ex) {
+                    System.err.println("[GUI] 3D totem load failed: " + ex.getMessage());
+                }
+            }
+        }
+    }
+
+    private void onTribeClicked(Totem totem) {
+        System.out.println("[GUI] tribe clicked: " + totem);
+        // TODO: open the tribe's deck panel
     }
 
     // ── Events overlay ───────────────────────────────────────────────────────
@@ -269,9 +574,19 @@ public class GameScreen extends GUIScreen {
             errorLabel.setText("That slot is empty.");
             return;
         }
+        if (CardCatalog.isEvent(CardCatalog.typeFromId(card.id()))) return;
+        int maxForRow = (row == Row.UPPER) ? upperCount : lowerCount;
+        if (maxForRow == 0) return;
         Move m = new Move(idx, row);
-        if (!selectedMoves.add(m)) {
+        if (selectedMoves.contains(m)) {
             selectedMoves.remove(m);
+        } else {
+            long selectedInRow = selectedMoves.stream().filter(mv -> mv.row() == row).count();
+            if (selectedInRow >= maxForRow) {
+                Move toRemove = selectedMoves.stream().filter(mv -> mv.row() == row).findFirst().orElse(null);
+                if (toRemove != null) selectedMoves.remove(toRemove);
+            }
+            selectedMoves.add(m);
         }
         errorLabel.setText("");
         renderBoard();
@@ -346,16 +661,9 @@ public class GameScreen extends GUIScreen {
         contentBox.setScaleY(scale);
         // Compensate for scale-from-center so top edge stays pinned to top of pane.
         contentBox.setTranslateY(-prefH / 2.0 * (1.0 - scale));
+        updateOverlays();
     }
 
-    private double computeCardWidth(int n, double gap, double max, double min) {
-        if (n <= 0) return max;
-        double avail = availableWidth();
-        double w = (avail - gap * Math.max(0, n - 1)) / n;
-        if (w > max) w = max;
-        if (w < min) w = min;
-        return w;
-    }
 
     private void renderBoard() {
         if (game == null) return;
@@ -365,19 +673,20 @@ public class GameScreen extends GUIScreen {
 
         List<CardDTO> top = game.board().topRow();
         List<CardDTO> bot = game.board().lowRow();
-        List<OfferTileDTO> off = game.board().offerTrack();
 
         int topN = (int) top.stream().filter(java.util.Objects::nonNull).count();
         int botN = (int) bot.stream().filter(java.util.Objects::nonNull).count();
-        int offN = off.size();
 
-        double topW = computeCardWidth(topN, CARD_GAP, CARD_MAX_W, CARD_MIN_W);
-        double botW = computeCardWidth(botN, CARD_GAP, CARD_MAX_W, CARD_MIN_W);
-        double offW = computeCardWidth(offN, 0,         TILE_MAX_W, TILE_MIN_W);
+        // Card size scales with the actual row footprint in screen space so all
+        // cards always fit in the v4-defined ROW_W × ROW_H box.
+        AerialTransform t = aerialTransform();
+        double rowW = t != null ? t.ss(ROW_W) : 800;
+        double rowH = t != null ? t.ss(ROW_H) : 150;
+        double topW = computeCardWidthInBox(topN, rowW, rowH, CARD_GAP);
+        double botW = computeCardWidthInBox(botN, rowW, rowH, CARD_GAP);
 
         renderRow(topRow, top, Row.UPPER, topW);
         renderRow(bottomRow, bot, Row.LOWER, botW);
-        renderOfferTrack(offerTrack, off, offW);
 
         PlayerDTO me = findMe();
         if (me != null) {
@@ -430,16 +739,25 @@ public class GameScreen extends GUIScreen {
     private void renderRow(HBox container, List<CardDTO> cards, Row row, double cardW) {
         container.getChildren().clear();
         if (cards == null) return;
-        boolean clickable = canPickCards();
+        boolean canPick = canPickCards();
+        int maxForRow = (row == Row.UPPER) ? upperCount : lowerCount;
+        long selectedInRow = selectedMoves.stream().filter(mv -> mv.row() == row).count();
+        boolean rowFull = maxForRow > 0 && selectedInRow >= maxForRow;
+
         int idx = 0;
         for (CardDTO c : cards) {
             if (c == null) { idx++; continue; }
-            container.getChildren().add(buildCardCell(c, row, idx, clickable, cardW));
+            boolean isEvent = CardCatalog.isEvent(CardCatalog.typeFromId(c.id()));
+            boolean rowDisabled = maxForRow == 0;
+            boolean selected = selectedMoves.contains(new Move(idx, row));
+            boolean cardClickable = canPick && !isEvent && !rowDisabled;
+            boolean dimmed = !canPick || rowDisabled || (rowFull && !selected);
+            container.getChildren().add(buildCardCell(c, row, idx, cardClickable, dimmed, cardW));
             idx++;
         }
     }
 
-    private Node buildCardCell(CardDTO card, Row row, int idx, boolean clickable, double cardW) {
+    private Node buildCardCell(CardDTO card, Row row, int idx, boolean clickable, boolean dimmed, double cardW) {
         double cardH = cardW * CARD_ASPECT;
         StackPane cell = new StackPane();
         cell.setPrefSize(cardW, cardH);
@@ -470,69 +788,23 @@ public class GameScreen extends GUIScreen {
             cell.setEffect(selectedGlow());
             cell.setScaleX(HOVER_SCALE);
             cell.setScaleY(HOVER_SCALE);
+        } else if (dimmed) {
+            ColorAdjust darken = new ColorAdjust();
+            darken.setBrightness(-0.45);
+            cell.setEffect(darken);
         }
 
         if (clickable) {
             cell.setCursor(Cursor.HAND);
-            cell.setOnMouseEntered(_ -> {
-                if (!selectedMoves.contains(new Move(idx, row))) scale(cell, HOVER_SCALE);
-            });
-            cell.setOnMouseExited(_ -> {
-                if (!selectedMoves.contains(new Move(idx, row))) scale(cell, 1.0);
-            });
-            cell.setOnMouseClicked(_ -> onCardClicked(row, idx, card, cell));
-        } else {
-            cell.setOpacity(0.65);
-        }
-        return cell;
-    }
-
-    private void renderOfferTrack(HBox container, List<OfferTileDTO> tiles, double tileW) {
-        container.getChildren().clear();
-        if (tiles == null) return;
-        boolean clickable = canPlaceTotem();
-        int idx = 0;
-        for (OfferTileDTO t : tiles) {
-            container.getChildren().add(buildOfferTileCell(t, idx, clickable, tileW));
-            idx++;
-        }
-    }
-
-    private Node buildOfferTileCell(OfferTileDTO tile, int idx, boolean clickable, double tileW) {
-        double tileH = tileW * TILE_ASPECT;
-        StackPane cell = new StackPane();
-        cell.setPrefSize(tileW, tileH);
-        cell.setMinSize(tileW, tileH);
-        cell.setMaxSize(tileW, tileH);
-        cell.setAlignment(Pos.CENTER);
-
-        ImageView img = safeImageView(() -> ImageCatalog.offerTile(tile.id()));
-        if (img != null) {
-            img.setFitWidth(tileW);
-            img.setFitHeight(tileH);
-            img.setPreserveRatio(false);
-            cell.getChildren().add(img);
-        } else {
-            Label fallback = new Label(tile.id());
-            fallback.setStyle("-fx-text-fill: #f5deb3;");
-            cell.getChildren().add(fallback);
-        }
-
-        if (tile.totem() != null) {
-            ImageView totem = safeImageView(() -> ImageCatalog.totem2D(tile.totem()));
-            if (totem != null) {
-                totem.setFitWidth(tileW * 0.5);
-                totem.setPreserveRatio(true);
-                cell.getChildren().add(totem);
+            if (!dimmed) {
+                cell.setOnMouseEntered(_ -> {
+                    if (!selectedMoves.contains(new Move(idx, row))) scale(cell, HOVER_SCALE);
+                });
+                cell.setOnMouseExited(_ -> {
+                    if (!selectedMoves.contains(new Move(idx, row))) scale(cell, 1.0);
+                });
             }
-        }
-
-        boolean occupied = tile.totem() != null;
-        if (clickable && !occupied) {
-            cell.setCursor(Cursor.HAND);
-            cell.setOnMouseClicked(_ -> onOfferTileClicked(idx, tile));
-        } else if (!clickable) {
-            cell.setOpacity(0.7);
+            cell.setOnMouseClicked(_ -> onCardClicked(row, idx, card, cell));
         }
         return cell;
     }

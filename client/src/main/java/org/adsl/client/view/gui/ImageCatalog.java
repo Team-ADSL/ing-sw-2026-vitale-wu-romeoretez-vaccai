@@ -102,6 +102,33 @@ public final class ImageCatalog {
         return load("/assets/totems/2d_totem_" + totem.name().toLowerCase() + ".png");
     }
 
+    /** 3D totem sprite for a given color. File: {@code 3d_totem_<color>.png}. */
+    public static Image totem3D(Totem totem) {
+        return load("/assets/totems/3d_totem_" + totem.name().toLowerCase() + ".png");
+    }
+
+    // ── Aerial-view backgrounds and overlays ────────────────────────────────
+
+    /** Main game-screen background. */
+    public static Image aerialBackground() {
+        return load("/assets/aerial_views/v4/v4.png");
+    }
+
+    /** Pre-positioned offer-tile row for the given player count (2..5). */
+    public static Image offerTileRow(int numPlayers) {
+        return load("/assets/aerial_views/v4/offer_tiles/whole_row/" + numPlayers + "p.png");
+    }
+
+    /** Tribe-tent overlay for a totem (aligned with the aerial background). */
+    public static Image tribeOverlay(Totem totem) {
+        return load("/assets/aerial_views/v4/uncut_elements/" + totem.name().toLowerCase() + "_tribe.png");
+    }
+
+    /** No-fire overlay that extinguishes the village fire for an inactive totem. */
+    public static Image nofireOverlay(Totem totem) {
+        return load("/assets/aerial_views/v4/uncut_elements/" + totem.name().toLowerCase() + "_nofire.png");
+    }
+
     // ── Offer tiles ─────────────────────────────────────────────────────────
 
     /** Offer tile sprite. ID matches the JSON entry (e.g. "offer_tile_a"). */
