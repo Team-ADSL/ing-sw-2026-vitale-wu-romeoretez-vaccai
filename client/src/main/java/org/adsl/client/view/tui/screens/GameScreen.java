@@ -45,6 +45,10 @@ public class GameScreen extends TUIScreen {
     private GameDTO game;
     private Totem myTotem;
     private SubState subState;
+    // Substate active right before a move was sent. While WAITING_SERVER the
+    // board is rendered as if still in this state so the cursor stays put
+    // instead of flashing to the top-left view cursor during the round-trip.
+    private SubState preWaitState = SubState.NOT_MY_TURN;
 
     // Card selection state
     private int selectionIndex = 0;
@@ -62,6 +66,13 @@ public class GameScreen extends TUIScreen {
 
     // Legend overlay
     private boolean showLegend = false;
+
+    // Deck inspector overlay (C key): shows one player's full deck as card boxes
+    // in the bottom area. ↑/↓ switch player, A/D scroll, Q/E jump to ends.
+    private boolean showDecks = false;
+    private int deckPlayerIndex = 0;
+    private int deckOffset = 0;
+
     private static final int CARD_W = 15;  // inner content width (box = CARD_W+2)
 
     // Events overlay — one title at a time, paced by AppCoordinator. The
@@ -91,7 +102,7 @@ public class GameScreen extends TUIScreen {
         TuiTextGraphics tg = terminal.newTextGraphics();
         TuiSize sz = terminal.getTerminalSize();
 
-        switch (subState) {
+        switch (visualState()) {
             case MY_TURN_TOTEM -> renderBoard(tg, sz, selectionIndex, Collections.emptySet());
             case MY_TURN_CARDS -> renderBoard(tg, sz, -1, selectedMoves);
             case NOT_MY_TURN,
@@ -158,7 +169,19 @@ public class GameScreen extends TUIScreen {
     public TUIScreen visit(ErrorEvent e) {
         super.visit(e);
         if (subState == SubState.WAITING_SERVER) {
-            setupActiveState();
+            Totem current = game.currentPlayerTotem();
+            if (myTotem != null && myTotem.equals(current)) {
+                Phase phase = game.phase();
+                if (phase == Phase.TOTEM_PLACEMENT) {
+                    subState = SubState.MY_TURN_TOTEM;
+                } else if (phase == Phase.ACTION_EXECUTION || phase == Phase.EXTRA_MOVE) {
+                    subState = SubState.MY_TURN_CARDS;
+                } else {
+                    subState = SubState.NOT_MY_TURN;
+                }
+            } else {
+                subState = SubState.NOT_MY_TURN;
+            }
         }
         return this;
     }
@@ -193,14 +216,16 @@ public class GameScreen extends TUIScreen {
             showLegend = !showLegend;
         } else if (c == 'm' || c == 'M') {
             toggleLog();
+        } else if (c == 'c' || c == 'C') {
+            toggleDecks();
         } else if (c == 'a' || c == 'A') {
-            scrollCurrentRowLeft();
+            if (showDecks) deckScrollLeft(); else scrollCurrentRowLeft();
         } else if (c == 'd' || c == 'D') {
-            scrollCurrentRowRight();
+            if (showDecks) deckScrollRight(); else scrollCurrentRowRight();
         } else if (c == 'q' || c == 'Q') {
-            jumpRowStart();
+            if (showDecks) deckJumpStart(); else jumpRowStart();
         } else if (c == 'e' || c == 'E') {
-            jumpRowEnd();
+            if (showDecks) deckJumpEnd(); else jumpRowEnd();
         }
         return this;
     }
@@ -220,13 +245,14 @@ public class GameScreen extends TUIScreen {
         int visible = visibleCardsCount();
         if (subState == SubState.MY_TURN_CARDS) {
             List<CardDTO> row = onTopRow ? game.board().topRow() : game.board().lowRow();
-            int max = Math.max(0, row.size() - visible);
+            int content = contentLength(row);
+            int max = Math.max(0, content - visible);
             if (onTopRow) topRowOffset = max;
             else lowRowOffset = max;
-            selectionIndex = max;
+            selectionIndex = Math.max(0, content - 1);
         } else {
             List<CardDTO> row = viewOnTopRow ? game.board().topRow() : game.board().lowRow();
-            int max = Math.max(0, row.size() - visible);
+            int max = Math.max(0, contentLength(row) - visible);
             if (viewOnTopRow) topRowOffset = max;
             else lowRowOffset = max;
         }
@@ -245,10 +271,10 @@ public class GameScreen extends TUIScreen {
         boolean top = (subState == SubState.MY_TURN_CARDS) ? onTopRow : viewOnTopRow;
         int visible = visibleCardsCount();
         if (top) {
-            int max = Math.max(0, game.board().topRow().size() - visible);
+            int max = Math.max(0, contentLength(game.board().topRow()) - visible);
             topRowOffset = Math.min(max, topRowOffset + 1);
         } else {
-            int max = Math.max(0, game.board().lowRow().size() - visible);
+            int max = Math.max(0, contentLength(game.board().lowRow()) - visible);
             lowRowOffset = Math.min(max, lowRowOffset + 1);
         }
     }
@@ -258,8 +284,138 @@ public class GameScreen extends TUIScreen {
         return Math.max(1, (cols - 3) / (CARD_W + 3));
     }
 
+    /**
+     * Number of slots up to and including the last non-null card. Scrolling and
+     * jumping clamp to this so the cursor never wanders into the trailing
+     * empty (picked-out / building) slots that carry no real card.
+     */
+    private int contentLength(List<CardDTO> row) {
+        int last = -1;
+        for (int i = 0; i < row.size(); i++) {
+            if (row.get(i) != null) last = i;
+        }
+        return last + 1;
+    }
+
+    // ── Deck inspector ────────────────────────────────────────────────────────
+
+    private void toggleDecks() {
+        showDecks = !showDecks;
+        if (showDecks) {
+            deckPlayerIndex = 0;
+            deckOffset = 0;
+        }
+    }
+
+    private void deckPlayerPrev() {
+        if (deckPlayerIndex > 0) {
+            deckPlayerIndex--;
+            deckOffset = 0;
+        }
+    }
+
+    private void deckPlayerNext() {
+        if (deckPlayerIndex < playerList().size() - 1) {
+            deckPlayerIndex++;
+            deckOffset = 0;
+        }
+    }
+
+    /** Players in a stable totem order so the deck index always maps to the same player. */
+    private List<PlayerDTO> playerList() {
+        List<PlayerDTO> list = new ArrayList<>(game.players());
+        list.sort(Comparator.comparingInt(
+                p -> p.totem() == null ? Integer.MAX_VALUE : p.totem().ordinal()));
+        return list;
+    }
+
+    private void deckScrollLeft() {
+        deckOffset = Math.max(0, deckOffset - 1);
+    }
+
+    private void deckScrollRight() {
+        int max = Math.max(0, currentDeck().size() - visibleCardsCount());
+        deckOffset = Math.min(max, deckOffset + 1);
+    }
+
+    private void deckJumpStart() {
+        deckOffset = 0;
+    }
+
+    private void deckJumpEnd() {
+        deckOffset = Math.max(0, currentDeck().size() - visibleCardsCount());
+    }
+
+    /** Flat, type-ordered list of the currently inspected player's cards. */
+    private List<CardDTO> currentDeck() {
+        List<PlayerDTO> players = playerList();
+        if (players.isEmpty()) return Collections.emptyList();
+        int idx = Math.min(deckPlayerIndex, players.size() - 1);
+        return deckCards(players.get(idx));
+    }
+
+    private List<CardDTO> deckCards(PlayerDTO p) {
+        List<CardDTO> out = new ArrayList<>();
+        Map<CardType, Set<CardDTO>> cards = p.cards();
+        if (cards == null) return out;
+        for (CardType t : CardType.values()) {
+            Set<CardDTO> set = cards.get(t);
+            if (set != null) out.addAll(set);
+        }
+        return out;
+    }
+
+    /**
+     * Bottom-area panel showing one player's full collection as card boxes,
+     * reusing {@link #drawCardRow}. The player is chosen with ↑/↓ and the row
+     * scrolls with A/D (Q/E jump to ends), mirroring the board-row controls.
+     */
+    private void drawDecksPanel(TuiTextGraphics tg, TuiSize sz, int startRow) {
+        int cols = sz.getColumns();
+        List<PlayerDTO> players = playerList();
+        if (players.isEmpty()) return;
+        if (deckPlayerIndex >= players.size()) deckPlayerIndex = players.size() - 1;
+        PlayerDTO p = players.get(deckPlayerIndex);
+
+        boolean isMe = (p.totem() == myTotem);
+        String who = p.name() + (isMe ? " (you)" : "")
+                + " [" + CardCatalog.totemLabel(p.totem()) + "]"
+                + "  " + (deckPlayerIndex + 1) + "/" + players.size();
+        drawSectionLabel(tg, startRow, cols, "DECK: " + who,
+                "↑↓ player · A/D scroll · Q/E ends · C close");
+
+        List<CardDTO> deck = currentDeck();
+        if (deck.isEmpty()) {
+            tg.setForegroundColor(TuiColor.DARK_GRAY);
+            tg.putString(2, startRow + 2, "(no cards yet)");
+            tg.setForegroundColor(TuiColor.WHITE);
+            return;
+        }
+
+        int visible = visibleCardsCount();
+        int max = Math.max(0, deck.size() - visible);
+        if (deckOffset > max) deckOffset = max;
+
+        drawCardRow(tg, deck, startRow + 1, Collections.emptySet(), Row.UPPER, cols, deckOffset);
+
+        // Active-row marker on the left, plus edge hints when more cards exist.
+        tg.setForegroundColor(TuiColor.YELLOW);
+        tg.putString(0, startRow + 2, "►");
+        if (deckOffset > 0) {
+            tg.putString(1, startRow + 2, "«");
+        }
+        if (deckOffset < max) {
+            tg.putString(cols - 1, startRow + 2, "»");
+        }
+        tg.setForegroundColor(TuiColor.WHITE);
+    }
+
     @Override
     public TUIScreen visit(NavigateLeftEvent e) {
+        if (showDecks) {
+            deckScrollLeft();
+            return this;
+        }
         if (subState == SubState.MY_TURN_TOTEM) {
             selectionIndex = Math.max(0, selectionIndex - 1);
         } else if (subState == SubState.MY_TURN_CARDS) {
@@ -278,17 +434,22 @@ public class GameScreen extends TUIScreen {
 
     @Override
     public TUIScreen visit(NavigateRightEvent e) {
+        if (showDecks) {
+            deckScrollRight();
+            return this;
+        }
         if (subState == SubState.MY_TURN_TOTEM) {
             selectionIndex = Math.min(game.board().offerTrack().size() - 1, selectionIndex + 1);
         } else if (subState == SubState.MY_TURN_CARDS) {
             List<CardDTO> row = onTopRow ? game.board().topRow() : game.board().lowRow();
+            int content = contentLength(row);
             int prev = selectionIndex;
-            selectionIndex = Math.min(row.size() - 1, selectionIndex + 1);
+            selectionIndex = Math.min(Math.max(0, content - 1), selectionIndex + 1);
             if (selectionIndex > prev) {
                 int visible = visibleCardsCount();
                 int offset = onTopRow ? topRowOffset : lowRowOffset;
                 if (selectionIndex >= offset + visible) {
-                    int max = Math.max(0, row.size() - visible);
+                    int max = Math.max(0, content - visible);
                     if (onTopRow) topRowOffset = Math.min(max, topRowOffset + 1);
                     else lowRowOffset = Math.min(max, lowRowOffset + 1);
                 }
@@ -299,6 +460,10 @@ public class GameScreen extends TUIScreen {
 
     @Override
     public TUIScreen visit(NavigateUpEvent e) {
+        if (showDecks) {
+            deckPlayerPrev();
+            return this;
+        }
         if (subState == SubState.MY_TURN_CARDS) {
             if (!onTopRow) {
                 int screenPos = selectionIndex - lowRowOffset;
@@ -316,6 +481,10 @@ public class GameScreen extends TUIScreen {
 
     @Override
     public TUIScreen visit(NavigateDownEvent e) {
+        if (showDecks) {
+            deckPlayerNext();
+            return this;
+        }
         if (subState == SubState.MY_TURN_CARDS) {
             if (onTopRow) {
                 int screenPos = selectionIndex - topRowOffset;
@@ -362,10 +531,19 @@ public class GameScreen extends TUIScreen {
     private void sendMove(Set<Move> moves) {
         try {
             appCoordinator.makeMoveRequest(moves);
+            preWaitState = subState;
             subState = SubState.WAITING_SERVER;
         } catch (Exception e) {
             error = "Move failed: " + e.getMessage();
         }
+    }
+
+    /**
+     * State used for cursor rendering. While WAITING_SERVER we mirror the
+     * pre-send state so the cursor does not visibly jump during the round-trip.
+     */
+    private SubState visualState() {
+        return subState == SubState.WAITING_SERVER ? preWaitState : subState;
     }
 
     // ── State setup ───────────────────────────────────────────────────────────
@@ -466,32 +644,42 @@ public class GameScreen extends TUIScreen {
         drawSectionLabel(tg, botRowY, cols, "BOTTOM ROW");
         drawCardRow(tg, game.board().lowRow(), botRowY + 1, highlights, Row.LOWER, cols, lowRowOffset);
 
-        if (subState == SubState.MY_TURN_CARDS) {
+        SubState vs = visualState();
+        if (vs == SubState.MY_TURN_CARDS) {
             int cursorRow = onTopRow ? topRowY + 1 : botRowY + 1;
             int cursorOffset = onTopRow ? topRowOffset : lowRowOffset;
             highlightCursor(tg, selectionIndex, cursorRow, cursorOffset, cols);
         }
 
-        if (subState == SubState.MY_TURN_TOTEM) {
+        if (vs == SubState.MY_TURN_TOTEM) {
             highlightOfferCursor(tg, selectionIndex, offerTrackY + 1);
         }
 
-        if (subState != SubState.MY_TURN_CARDS) {
+        if (vs != SubState.MY_TURN_CARDS) {
             drawRowViewCursor(tg, topRowY, botRowY);
         }
 
-        drawCurrentPlayerTribe(tg, 20, cols);
-        drawOtherPlayers(tg, 24, cols);
+        if (showDecks) {
+            drawDecksPanel(tg, sz, 19);
+        } else {
+            drawCurrentPlayerTribe(tg, 20, cols);
+            drawOtherPlayers(tg, 24, cols);
+        }
 
-        String hint = switch (subState) {
-            case MY_TURN_TOTEM -> "← → Offer tiles   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   ENTER Place totem   L Legend   M Log";
-            case MY_TURN_CARDS -> String.format(
-                    "← → Navigate   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   SPACE Select (%d/%d)   ENTER Confirm   L Legend   M Log",
-                    selectedMoves.size(), upperCount + lowerCount);
-            case WAITING_SERVER -> "Waiting for server...   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   L Legend   M Log";
-            case NOT_MY_TURN -> waitingHint() + "   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   L Legend   M Log";
-            default -> "L Legend   M Log";
-        };
+        String hint;
+        if (showDecks) {
+            hint = "↑ ↓ Player   A/D Scroll   Q/E Jump ends   C Close decks   L Legend   M Log";
+        } else {
+            hint = switch (subState) {
+                case MY_TURN_TOTEM -> "← → Offer tiles   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   ENTER Place totem   C Decks   L Legend   M Log";
+                case MY_TURN_CARDS -> String.format(
+                        "← → Navigate   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   SPACE Select (%d/%d)   ENTER Confirm   C Decks   L Legend   M Log",
+                        selectedMoves.size(), upperCount + lowerCount);
+                case WAITING_SERVER -> "Waiting for server...   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   C Decks   L Legend   M Log";
+                case NOT_MY_TURN -> waitingHint() + "   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   C Decks   L Legend   M Log";
+                default -> "C Decks   L Legend   M Log";
+            };
+        }
         drawControls(tg, sz, hint);
     }
 
