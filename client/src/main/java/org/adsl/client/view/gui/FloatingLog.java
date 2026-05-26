@@ -27,7 +27,7 @@ import java.util.List;
 public final class FloatingLog {
 
     private static final int VISIBLE = 5;
-    private static final double MAX_W = 360;
+    private static final double MAX_W = 320;
 
     private final List<String> history = new ArrayList<>();
     private final VBox floating;
@@ -111,8 +111,8 @@ public final class FloatingLog {
             Label entry = new Label(text);
             entry.setWrapText(true);
             entry.setMaxWidth(MAX_W - 20);
-            entry.setFont(ImageCatalog.robotoFont(12));
-            entry.setStyle("-fx-text-fill: #f5deb3; -fx-font-size: 12px;"
+            entry.setFont(ImageCatalog.robotoFont(9));
+            entry.setStyle("-fx-text-fill: #f5deb3; -fx-font-size: 9px;"
                     + " -fx-background-color: rgba(0,0,0,0.40); -fx-padding: 3 10 3 10;"
                     + " -fx-background-radius: 8;");
             entry.setOpacity(opacity);
