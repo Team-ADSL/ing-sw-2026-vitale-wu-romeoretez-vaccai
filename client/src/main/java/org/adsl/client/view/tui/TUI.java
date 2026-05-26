@@ -2,10 +2,8 @@ package org.adsl.client.view.tui;
 
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.serverEvents.DisconnectedEvent;
-import org.adsl.client.serverEvents.Event;
 import org.adsl.client.serverEvents.ServerEvent;
 import org.adsl.client.view.GameUI;
-import org.adsl.client.view.Screen;
 import org.adsl.client.view.tui.events.*;
 import org.adsl.client.view.tui.render.Key;
 import org.adsl.client.view.tui.render.TuiTerminal;
@@ -18,7 +16,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 /**
  * Text User Interface driven by an event queue and a state/visitor pattern.
  *
- * Both server callbacks and key presses produce {@link Event} objects.
  * Server callbacks (network thread) enqueue events into a thread-safe queue.
  * Key presses are translated by {@link #toInputEvent(Key)} and dispatched
  * immediately in the main loop. In both cases the current {@link TUIScreen}

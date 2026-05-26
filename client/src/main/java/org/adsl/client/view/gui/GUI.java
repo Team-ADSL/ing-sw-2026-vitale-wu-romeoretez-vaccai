@@ -9,11 +9,9 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import org.adsl.client.AppCoordinator;
-import org.adsl.client.serverEvents.Event;
 import org.adsl.client.serverEvents.EventVisitor;
 import org.adsl.client.serverEvents.ServerEvent;
 import org.adsl.client.view.GameUI;
-import org.adsl.client.view.Screen;
 import org.adsl.client.view.gui.screens.ConnectingScreen;
 import org.adsl.client.view.gui.screens.GUIScreen;
 
