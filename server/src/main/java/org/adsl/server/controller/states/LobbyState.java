@@ -1,6 +1,7 @@
 package org.adsl.server.controller.states;
 
 import org.adsl.server.controller.GameController;
+import org.adsl.shared.enums.Phase;
 import org.adsl.shared.exceptions.HostDisconnectedException;
 import org.adsl.server.model.Game;
 import org.adsl.server.model.Player;
@@ -109,6 +110,8 @@ public class LobbyState extends ControllerState {
     public ControllerState calcNextState() {
         if(readyToStart){
             System.out.println("[LOBBY] Starting game...");
+            getGame().addObserver(getContext().getPersistenceManager());
+            getGame().setPhase(Phase.TOTEM_PICKING);
             return new TotemPickingState(getGame(), getContext());
         } else {
             return this;

@@ -36,6 +36,7 @@ public class ExtraMoveState extends ControllerState {
   @Override
   public ControllerState onEntry() {
     setNextState(calcNextState());
+    getGame().sendUpdateGame();
     return getNextState();
   }
 

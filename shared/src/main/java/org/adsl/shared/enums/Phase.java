@@ -7,6 +7,7 @@ package org.adsl.shared.enums;
  * after a server restart.
  */
 public enum Phase {
+    TOTEM_PICKING,
     TOTEM_PLACEMENT,
     ACTION_EXECUTION,
     EXTRA_MOVE,

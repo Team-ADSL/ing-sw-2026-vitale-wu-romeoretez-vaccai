@@ -38,6 +38,7 @@ public class TotemPickingStateTest {
 
         controller = new GameControllerBuilder().build();
         state = new TotemPickingState(game, controller);
+        state.onEntry();
     }
 
     // ──────────────────────────────────────────────

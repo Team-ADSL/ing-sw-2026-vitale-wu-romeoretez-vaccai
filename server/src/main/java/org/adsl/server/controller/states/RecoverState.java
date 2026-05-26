@@ -58,7 +58,6 @@ public class RecoverState extends ControllerState {
                 .filter(Player::isActive)
                 .count();
         if(activePlayers == getGame().getNumPlayer()){
-            getGame().sendUpdateGame();
             getGame().addObserver(getContext().getPersistenceManager());
             System.out.println("[LOBBY] Starting game...");
             return StateFactory.recover(getGame(), getContext());

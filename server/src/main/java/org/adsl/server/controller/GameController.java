@@ -43,7 +43,7 @@ public class GameController {
      *
      * @param req           the request to handle
      * @param virtualClient the client who sent the request
-     * @throws ServerException if the current state rejects the request or a
+     * @throws ServerException if the current state rejects the request, host exit or a
      *                         state-transition loop is detected
      */
     public synchronized void handleClientRequest(ClientRequest req, VirtualClient virtualClient) throws ServerException {

@@ -112,6 +112,5 @@ public class RecoverStateTest {
 
         assertInstanceOf(TotemPlacementState.class, next,
                 "When all players are active, must transition to the state matching the saved phase");
-        assertTrue(fakeGame.updateGameSent, "Game update must be sent when all players are active");
     }
 }
