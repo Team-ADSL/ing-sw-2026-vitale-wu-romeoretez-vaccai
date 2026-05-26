@@ -74,7 +74,7 @@ public abstract class TUIScreen extends Screen<TUIScreen> implements InputEventV
 
     @Override
     public TUIScreen createHomeScreen(HomeUpdateEvent e, AppCoordinator appCoordinator){
-        return new HomeScreen(terminal, appCoordinator, username, e.activeGames());
+        return new HomeScreen(terminal, appCoordinator, username, e.activeGames(), e.gamePlayers(), e.gameCapacity());
     }
 
     @Override
