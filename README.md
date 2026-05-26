@@ -237,16 +237,35 @@ Each script builds the project (unless `_nobuild`), opens a new `cmd` window for
 
 ## Python Testers
 
-Located in the `testers/` directory. Requires no extra dependencies beyond the Python standard library.
+The testers live in `tools/testers/`. They need only the Python standard
+library — no extra dependencies.
+
+> **Where to run from — no `cd` needed.**
+> Stay in the **repository root** (the folder that contains `pom.xml` and the
+> `tools/` directory) and type the full path to the script directly:
+> `tools/testers/socket_auto_plays.py`.
+> You do **not** have to `cd` into `tools/testers` first. Python automatically
+> adds the script's own folder to its import path, so the sibling helper module
+> `socket_client_utils.py` is found no matter which directory you launched from.
+>
+> Use `python` on Windows and `python3` on macOS / Linux.
 
 ### socket_auto_plays.py — Automated Round Skip
 
 Automates two players over Socket to fast-forward a game by a given number of rounds from the current one. Useful for testing mid/late-game states without playing manually.
 
-**Usage:**
+**Usage** (from the repo root, writing the path directly):
+
+macOS / Linux:
 
 ```bash
-python3 testers/socket_auto_plays.py -g <game-id> -p1 <player1-name> -p2 <player2-name> -r <rounds>
+python3 tools/testers/socket_auto_plays.py -g <game-id> -p1 <player1-name> -p2 <player2-name> -r <rounds>
+```
+
+Windows:
+
+```
+python tools\testers\socket_auto_plays.py -g <game-id> -p1 <player1-name> -p2 <player2-name> -r <rounds>
 ```
 
 | Flag | Required | Description                                        |
@@ -258,10 +277,16 @@ python3 testers/socket_auto_plays.py -g <game-id> -p1 <player1-name> -p2 <player
 | `-H` | no       | Server IP (default: `127.0.0.1`)                   |
 | `-P` | no       | Server port (default: `8080`)                      |
 
-**Example:**
+**Example** (from repo root):
 
 ```bash
-python3 testers/socket_auto_plays.py -g 1 -p1 Alice -p2 Bob -r 5
+python3 tools/testers/socket_auto_plays.py -g 1 -p1 Alice -p2 Bob -r 5
+```
+
+On Windows:
+
+```
+python tools\testers\socket_auto_plays.py -g 1 -p1 Alice -p2 Bob -r 5
 ```
 
 This logs in as Alice and Bob, joins game `1`, and automatically plays 5 rounds from the current one.
@@ -269,7 +294,7 @@ This logs in as Alice and Bob, joins game `1`, and automatically plays 5 rounds 
 **Remote server example:**
 
 ```bash
-python3 testers/socket_auto_plays.py -g 1 -p1 Alice -p2 Bob -r 5 -H 192.168.1.10 -P 8080
+python3 tools/testers/socket_auto_plays.py -g 1 -p1 Alice -p2 Bob -r 5 -H 192.168.1.10 -P 8080
 ```
 
 > Make sure the server is running and the game with the given ID exists before launching the script.
@@ -294,5 +319,5 @@ java -jar client/target/mesos-client.jar --client  --rmi     --tui  <ip> <port>
 java -jar client/target/mesos-client.jar --client  --rmi     --gui  <ip> <port>
 ```
 ```
-python3 testers/socket_auto_plays.py -g <id> -p1 <name> -p2 <name> -r <round> [-H <ip>] [-P <port>]
+python3 tools/testers/socket_auto_plays.py -g <id> -p1 <name> -p2 <name> -r <round> [-H <ip>] [-P <port>]
 ```
