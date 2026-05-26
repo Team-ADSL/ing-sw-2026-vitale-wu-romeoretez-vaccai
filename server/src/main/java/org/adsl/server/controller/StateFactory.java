@@ -22,6 +22,7 @@ public class StateFactory {
     private static final Map<Phase, BiFunction<Game, GameController, ControllerState>> mapper = new HashMap<>();
 
     static{
+        mapper.put(TOTEM_PICKING, TotemPickingState::new);
         mapper.put(TOTEM_PLACEMENT, TotemPlacementState::new);
         mapper.put(ACTION_EXECUTION, ActionExecutionState::new);
         mapper.put(EXTRA_MOVE, ExtraMoveState::new);

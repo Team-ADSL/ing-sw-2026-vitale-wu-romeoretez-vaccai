@@ -1,6 +1,7 @@
 package org.adsl.server.controller.states;
 
 import org.adsl.server.controller.GameController;
+import org.adsl.shared.enums.Phase;
 import org.adsl.shared.exceptions.ServerException;
 import org.adsl.server.model.Game;
 import org.adsl.server.model.Player;
@@ -8,21 +9,21 @@ import org.adsl.server.network.VirtualClient;
 import org.adsl.shared.enums.Totem;
 import org.adsl.shared.network.requests.TotemPickingRequest;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Manual state in which each player picks their totem colour before the game
  * board is initialised.
  * <p>
  * Broadcasts the list of still-available totems after each pick. Once every
- * player has chosen a totem the state transitions to {@link InitGameState}.
+ * player has chosen a totem the state and registers the persistence manager
+ * as a game observer before it compute the transition to {@link InitGameState}.
  * </p>
  */
 public class TotemPickingState extends ControllerState {
 
-    private List<Totem> totemToPick = new ArrayList<>(Arrays.asList(Totem.values()));
+    private List<Totem> totemToPick;
     private int numPicked;
 
     public TotemPickingState(Game game, GameController context) {
@@ -31,8 +32,19 @@ public class TotemPickingState extends ControllerState {
 
     @Override
     public ControllerState onEntry() throws ServerException {
+        Set<Totem> totemInUse = getGame().getPlayers().stream()
+                .map(Player::getColor)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        numPicked = totemInUse.size();
+        totemToPick = Arrays.stream(Totem.values())
+                .filter(totem -> !totemInUse.contains(totem))
+                .collect(Collectors.toList());
         getGame().sendTotemAvailable(totemToPick, "[TOTEM PICKING] Waiting for players to pick a totem.");
-        return this;
+        getContext().getPersistenceManager().updateGame(getGame());
+        setNextState(calcNextState());
+        return getNextState();
     }
 
     @Override
@@ -62,10 +74,14 @@ public class TotemPickingState extends ControllerState {
         System.out.println(log);
         getGame().sendTotemAvailable(totemToPick, log);
         setNextState(calcNextState());
+        getContext().getPersistenceManager().updateGame(getGame());
     }
 
     @Override
     public ControllerState calcNextState(){
+        if (isToStop()) {
+            return new RecoverState(getGame(), getContext());
+        }
         if(numPicked == getGame().getNumPlayer()){
             return new InitGameState(getGame(), getContext());
         } else {

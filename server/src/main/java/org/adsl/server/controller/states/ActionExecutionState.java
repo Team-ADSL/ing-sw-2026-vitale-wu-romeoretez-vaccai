@@ -50,9 +50,9 @@ public class ActionExecutionState extends ControllerState {
       if (orderIndex < offerTrack.size()) {
         getGame().setCurrentPlayer(offerTrack.getTileAt(orderIndex).getPlayer().orElse(null));
         setNextState(calcNextState());
-        getGame().sendUpdateGame();
       }
     }
+    getGame().sendUpdateGame();
     return this;
   }
 

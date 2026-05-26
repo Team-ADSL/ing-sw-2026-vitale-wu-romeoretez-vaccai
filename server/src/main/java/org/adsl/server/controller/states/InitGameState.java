@@ -23,8 +23,7 @@ import java.util.stream.Stream;
  * <p>
  * Builds the {@link Board} from the loaded configuration, creates the three
  * era building decks, fills both card rows, places players on the order tile in
- * random order, and registers the persistence manager as a game observer before
- * transitioning to {@link TotemPlacementState}.
+ * random order before transition to {@link TotemPlacementState}.
  * </p>
  * <p>
  * If the game is already marked as initialised (recovered from persistence) the
@@ -63,22 +62,13 @@ public class InitGameState extends ControllerState {
         makeBuildingDecks(loader.getBuildings(), numPlayers, gameSettings);
         fillLowRow(gameSettings.numLowTribeCard());
         fillTopRow(gameSettings.numTopTribeCard());
-
-//        List<Totem> shuffledTotems = new ArrayList<>(Arrays.asList(Totem.values()));
-//        Collections.shuffle(shuffledTotems);
-//        Iterator<Totem> totemIterator = shuffledTotems.iterator();
-//        getGame().getPlayers().forEach(p -> {
-//            if (totemIterator.hasNext()) {
-//                p.setColor(totemIterator.next());
-//            }
-//        });
         board.orderTile().placePlayersRandom(getGame().getPlayers());
 
         getGame().setInitialized(true);
-        getGame().addObserver(getContext().getPersistenceManager());
         setNextState(calcNextState());
-        System.out.println("[INIT] Game config loaded.");
-        getGame().sendUpdateGame();
+        String log = "[INIT] Game config loaded.";
+        System.out.println(log);
+        getGame().sendUpdateGame(log);
         return getNextState();
     }
 

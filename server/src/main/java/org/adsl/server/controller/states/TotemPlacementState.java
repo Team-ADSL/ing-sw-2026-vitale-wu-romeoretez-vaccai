@@ -42,9 +42,9 @@ public class TotemPlacementState extends ControllerState {
             }
             if (orderIndex < orderTile.size()) {
                 getGame().setCurrentPlayer(orderTile.getPlayerAt(orderIndex).orElse(null));
-                getGame().sendUpdateGame();
             }
         }
+        getGame().sendUpdateGame();
         return this;
     }
 

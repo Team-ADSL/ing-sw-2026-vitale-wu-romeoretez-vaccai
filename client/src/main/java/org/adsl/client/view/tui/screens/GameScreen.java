@@ -1034,6 +1034,7 @@ public class GameScreen extends TUIScreen {
             case EVENTS_EXECUTION -> "EVENTS";
             case END_ROUND -> "END OF ROUND";
             case END_GAME -> "GAME OVER";
+            case TOTEM_PICKING -> "TOTEM PICKING";
         };
     }
 
