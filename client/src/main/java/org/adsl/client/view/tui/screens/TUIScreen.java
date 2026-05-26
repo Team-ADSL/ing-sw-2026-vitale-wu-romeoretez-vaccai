@@ -22,7 +22,7 @@ import java.util.List;
  * <p>
  * Each concrete screen represents one phase of interaction in the TUI state
  * machine. Server responses and key presses are both delivered as
- * {@link Event} objects and dispatched through the visitor methods inherited
+ * {@link ServerEvent} or {@link InputEvent} object and dispatched through the visitor methods inherited
  * from {@link EventVisitor}: returning {@code this} keeps the current screen,
  * returning a new {@link TUIScreen} instance triggers a transition.
  */
