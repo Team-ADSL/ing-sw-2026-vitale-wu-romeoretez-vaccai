@@ -163,7 +163,6 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         virtualClient.setClientUsername(username);
         String log = "[LOGIN] User connected: " + username;
         System.out.println(log);
-        home.update(buildGamePlayersMap(), buildGameCapacityMap(), log);
 
         int gameWithPlayer = games.values().stream()
                 .map(gc -> gc.getState().getGame())
@@ -245,6 +244,7 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
         if(reqGame != null){
             reqGame.handleClientRequest(req, virtualClient);
             home.removeObserver(virtualClient);
+            home.update(buildGamePlayersMap(), buildGameCapacityMap());
         } else {
             throw new ServerException("[ENTER GAME REQUEST] The requested game does not exists.");
         }
@@ -259,6 +259,7 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
             handleHostDisconnection(gameId);
         }
         virtualClient.closeConnection();
+        home.update(buildGamePlayersMap(), buildGameCapacityMap());
     }
 
     public void logout(ClientRequest req, VirtualClient virtualClient) throws ServerException{
