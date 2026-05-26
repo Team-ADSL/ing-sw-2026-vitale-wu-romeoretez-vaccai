@@ -2,46 +2,63 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.geometry.Pos?>
 
 <StackPane fx:id="rootStack" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
            style="-fx-background-color: #2c1a0e;">
 
-    <VBox fx:id="contentBox" alignment="TOP_CENTER" spacing="14" maxWidth="Infinity"
-          StackPane.alignment="TOP_CENTER">
-        <padding><Insets top="16" right="24" bottom="16" left="24"/></padding>
+    <BorderPane fx:id="rootPane">
 
-        <Label fx:id="headerLabel" style="-fx-font-size: 20px; -fx-text-fill: #FDF3D3;"/>
-        <Label fx:id="phaseLabel"  style="-fx-font-size: 14px; -fx-text-fill: #F2B035;"/>
+        <top>
+            <HBox fx:id="topPlayersBox" alignment="CENTER" spacing="20">
+                <padding><Insets top="14" right="20" bottom="6" left="20"/></padding>
+            </HBox>
+        </top>
 
-        <HBox fx:id="topRow"     alignment="CENTER" spacing="10"/>
-        <HBox fx:id="offerTrack" alignment="CENTER" spacing="0"/>
-        <HBox fx:id="bottomRow"  alignment="CENTER" spacing="10"/>
+        <left>
+            <VBox fx:id="leftPlayersBox" alignment="CENTER" spacing="16">
+                <padding><Insets top="8" right="6" bottom="8" left="14"/></padding>
+            </VBox>
+        </left>
 
-        <VBox fx:id="tribeBox" alignment="CENTER" spacing="4">
-            <Label fx:id="tribeLabel"    style="-fx-font-size: 15px; -fx-text-fill: #F2B035;"/>
-            <Label fx:id="tribeContents" style="-fx-font-size: 13px;" wrapText="true"/>
-        </VBox>
+        <right>
+            <VBox fx:id="rightPlayersBox" alignment="CENTER" spacing="16">
+                <padding><Insets top="8" right="14" bottom="8" left="6"/></padding>
+            </VBox>
+        </right>
 
-        <VBox fx:id="othersBox" alignment="CENTER" spacing="3"/>
+        <center>
+            <VBox fx:id="centerBox" alignment="CENTER" spacing="8">
+                <padding><Insets top="6" right="8" bottom="6" left="8"/></padding>
+                <Label fx:id="headerLabel" style="-fx-font-size: 13px; -fx-text-fill: #FDF3D3;"/>
+                <Label fx:id="phaseLabel"  style="-fx-font-size: 10px; -fx-text-fill: #F2B035;"/>
+                <HBox fx:id="topRow"     alignment="CENTER" spacing="8"/>
+                <HBox fx:id="offerTrack" alignment="CENTER" spacing="0"/>
+                <HBox fx:id="bottomRow"  alignment="CENTER" spacing="8"/>
+                <HBox spacing="14" alignment="CENTER">
+                    <Label fx:id="hintLabel" style="-fx-font-size: 13px;" wrapText="true" styleClass="tech-text"/>
+                    <Button fx:id="confirmButton" text="Confirm Selection" onAction="#onSendMove"
+                            style="-fx-font-size: 11px; -fx-padding: 3 12 3 12; -fx-background-radius: 8;"/>
+                </HBox>
+                <Label fx:id="errorLabel" maxWidth="900" minHeight="44" prefHeight="44"
+                       alignment="CENTER" contentDisplay="CENTER" textAlignment="CENTER"
+                       style="-fx-text-fill: #F2B035; -fx-font-size: 10px; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.9), 5, 0.5, 0, 0); -fx-text-alignment: center;" wrapText="true"/>
+            </VBox>
+        </center>
 
-        <HBox spacing="14" alignment="CENTER">
-            <Label fx:id="hintLabel" style="-fx-font-size: 14px;" wrapText="true" styleClass="tech-text"/>
-            <Button fx:id="confirmButton" text="Confirm Selection" onAction="#onSendMove"/>
-        </HBox>
-
-        <Label fx:id="errorLabel" maxWidth="900" minHeight="48" prefHeight="48"
-               alignment="CENTER" contentDisplay="CENTER" textAlignment="CENTER"
-               style="-fx-text-fill: #F2B035; -fx-font-size: 17px; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.9), 5, 0.5, 0, 0); -fx-text-alignment: center;" wrapText="true"/>
-    </VBox>
+        <bottom>
+            <HBox fx:id="selfPanelBox" alignment="CENTER" spacing="10">
+                <padding><Insets top="8" right="14" bottom="12" left="10"/></padding>
+            </HBox>
+        </bottom>
+    </BorderPane>
 
     <VBox fx:id="logBox" mouseTransparent="false" pickOnBounds="false"
-          alignment="BOTTOM_RIGHT" maxWidth="360" maxHeight="220"
+          alignment="BOTTOM_RIGHT" maxWidth="320" maxHeight="220"
           StackPane.alignment="BOTTOM_RIGHT" spacing="2">
-        <padding><Insets top="6" right="20" bottom="20" left="6"/></padding>
+        <padding><Insets top="6" right="0" bottom="0" left="6"/></padding>
     </VBox>
 </StackPane>
