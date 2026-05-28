@@ -27,8 +27,6 @@ public class BonusTotem extends Building {
         }
     }
 
-
-
     @Override
     protected String getEffectsLabel() {
         return CardToken.TOTEM + "+" + CardToken.FOOD;

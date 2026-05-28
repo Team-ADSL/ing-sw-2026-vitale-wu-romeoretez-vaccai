@@ -127,6 +127,8 @@ public class ActionExecutionState extends ControllerState {
       Card selectedCard = selectedRow.pickCardAt(move.rowIndex());
       pickedNames.add(selectedCard.getClass().getSimpleName());
       selectedCard.insert(p.getCards());
+      p.setLastPick(selectedCard);
+      p.getCards().get(CardType.BUILDINGS).forEach(b -> b.activeEffect(Set.of(p), Trigger.DRAWING));
     }
     OfferTrack offerTrack = getGame().getBoard().offerTrack();
     offerTrack.removePlayer(p);
