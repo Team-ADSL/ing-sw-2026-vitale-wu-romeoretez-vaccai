@@ -1,15 +1,16 @@
 package org.adsl.client.view.gui;
 
 import javafx.application.Platform;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
-import javafx.scene.control.Button;
+import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.layout.HBox;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
@@ -17,28 +18,34 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Bottom-right fading log used across screens. Shows last N messages with
- * opacity gradient (older = more transparent). Click opens a full-history
- * panel with a close button.
+ * Bottom-right log used across screens. Collapsed it shows the last N messages
+ * with an opacity gradient (older = more transparent). Clicking expands it
+ * in place: the gradient is removed and every message is shown using the same
+ * card style, stacked one above the other in the same spot. The list scrolls
+ * only when it would overflow the available vertical space. Closing happens via
+ * the ✕ chip or by clicking outside the log area.
  *
- * Wire it by adding {@link #getFloatingNode()} and {@link #getFullPanel()} as
- * children of a {@link StackPane} root, both aligned to BOTTOM_RIGHT.
+ * Wire it by adding {@link #getFloatingNode()} as a child of the log container.
+ * {@link #getFullPanel()} is kept for backward compatibility and is a no-op.
  */
 public final class FloatingLog {
 
     private static final int VISIBLE = 5;
     private static final double MAX_W = 320;
+    private static final double VERTICAL_MARGIN = 120;
 
     private final List<String> history = new ArrayList<>();
     private final VBox floating;
     private final StackPane fullPanel;
-    private final VBox fullMessages;
-    private final ScrollPane fullScroll;
-    private final String title;
+    private final VBox expandedBody;
+    private final VBox expandedMessages;
+    private final ScrollPane expandedScroll;
+
+    private boolean expanded = false;
+    private EventHandler<MouseEvent> outsideClickFilter;
+    private Scene filterScene;
 
     public FloatingLog(String title) {
-        this.title = title;
-
         floating = new VBox(2);
         floating.setAlignment(Pos.BOTTOM_RIGHT);
         floating.setMaxWidth(MAX_W);
@@ -48,44 +55,43 @@ public final class FloatingLog {
         floating.setCursor(Cursor.HAND);
         floating.setPadding(new Insets(6, 20, 20, 6));
         StackPane.setAlignment(floating, Pos.BOTTOM_RIGHT);
-        floating.setOnMouseClicked(e -> openFull());
+        floating.setOnMouseClicked(e -> {
+            if (!expanded) expand();
+        });
 
+        // Backward-compat no-op node (no longer shown).
         fullPanel = new StackPane();
-        fullPanel.setPickOnBounds(false);
         fullPanel.setVisible(false);
-        StackPane.setAlignment(fullPanel, Pos.BOTTOM_RIGHT);
-        StackPane.setMargin(fullPanel, new Insets(0, 20, 20, 0));
+        fullPanel.setMouseTransparent(true);
 
-        VBox panelBody = new VBox(6);
-        panelBody.setStyle("-fx-background-color: rgba(20, 12, 6, 0.95); -fx-background-radius: 12;"
-                + " -fx-border-color: #8b5e3c; -fx-border-width: 1; -fx-border-radius: 12;");
-        panelBody.setPrefSize(420, 480);
-        panelBody.setMaxSize(420, 480);
-        panelBody.setPadding(new Insets(10));
+        // Expanded in-place body: scrollable stack of message cards + close chip.
+        expandedMessages = new VBox(2);
+        expandedMessages.setAlignment(Pos.BOTTOM_RIGHT);
 
-        HBox header = new HBox();
-        header.setAlignment(Pos.CENTER_LEFT);
-        Label titleLabel = new Label(title);
-        titleLabel.setFont(ImageCatalog.robotoFont(14));
-        titleLabel.setStyle("-fx-text-fill: #c8b080; -fx-font-size: 14px; -fx-font-weight: bold;");
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-        Button close = new Button("✕");
-        close.setStyle("-fx-background-color: transparent; -fx-text-fill: #f5deb3;"
-                + " -fx-font-size: 14px; -fx-cursor: hand; -fx-padding: 2 8 2 8;");
-        close.setOnAction(e -> fullPanel.setVisible(false));
-        header.getChildren().addAll(titleLabel, spacer, close);
+        expandedScroll = new ScrollPane(expandedMessages);
+        expandedScroll.setFitToWidth(true);
+        expandedScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        expandedScroll.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
+        expandedScroll.setMaxWidth(MAX_W);
 
-        fullScroll = new ScrollPane();
-        fullScroll.setFitToWidth(true);
-        fullScroll.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
-        VBox.setVgrow(fullScroll, Priority.ALWAYS);
-        fullMessages = new VBox(4);
-        fullMessages.setPadding(new Insets(4));
-        fullScroll.setContent(fullMessages);
+        Label closeChip = new Label("✕");
+        closeChip.setFont(ImageCatalog.robotoFont(9));
+        closeChip.setStyle("-fx-text-fill: #f5deb3; -fx-font-size: 9px;"
+                + " -fx-background-color: rgba(0,0,0,0.55); -fx-padding: 3 10 3 10;"
+                + " -fx-background-radius: 8; -fx-cursor: hand;");
+        closeChip.setOnMouseClicked(e -> {
+            e.consume();
+            collapse();
+        });
+        VBox closeRow = new VBox(closeChip);
+        closeRow.setAlignment(Pos.BOTTOM_RIGHT);
 
-        panelBody.getChildren().addAll(header, fullScroll);
-        fullPanel.getChildren().add(panelBody);
+        expandedBody = new VBox(4, expandedScroll, closeRow);
+        expandedBody.setAlignment(Pos.BOTTOM_RIGHT);
+        expandedBody.setMaxWidth(MAX_W);
+        VBox.setVgrow(expandedScroll, Priority.ALWAYS);
+
+        refresh();
     }
 
     public VBox getFloatingNode() { return floating; }
@@ -94,8 +100,63 @@ public final class FloatingLog {
     public void append(String text) {
         if (text == null || text.isBlank()) return;
         history.add(text);
+        if (expanded) {
+            refillExpanded();
+            Platform.runLater(() -> expandedScroll.setVvalue(1.0));
+        } else {
+            refresh();
+        }
+    }
+
+    private void expand() {
+        expanded = true;
+        floating.setCursor(Cursor.DEFAULT);
+        floating.setMaxHeight(Double.MAX_VALUE);
+        floating.getChildren().setAll(expandedBody);
+        refillExpanded();
+        applyScrollCap();
+        installOutsideClickFilter();
+        Platform.runLater(() -> expandedScroll.setVvalue(1.0));
+    }
+
+    private void collapse() {
+        expanded = false;
+        floating.setCursor(Cursor.HAND);
+        floating.setMaxHeight(220);
+        removeOutsideClickFilter();
         refresh();
-        if (fullPanel.isVisible()) refillFull();
+    }
+
+    /** Cap scroll viewport to available vertical space so the bar appears only on overflow. */
+    private void applyScrollCap() {
+        Scene scene = floating.getScene();
+        double available = (scene != null ? scene.getHeight() : 600) - VERTICAL_MARGIN;
+        expandedScroll.setMaxHeight(Math.max(120, available));
+    }
+
+    private void installOutsideClickFilter() {
+        Scene scene = floating.getScene();
+        if (scene == null) return;
+        outsideClickFilter = e -> {
+            if (!expanded) return;
+            Node n = e.getPickResult().getIntersectedNode();
+            while (n != null) {
+                if (n == floating) return;
+                n = n.getParent();
+            }
+            collapse();
+        };
+        filterScene = scene;
+        scene.addEventFilter(MouseEvent.MOUSE_PRESSED, outsideClickFilter);
+        scene.heightProperty().addListener((o, a, b) -> { if (expanded) applyScrollCap(); });
+    }
+
+    private void removeOutsideClickFilter() {
+        if (filterScene != null && outsideClickFilter != null) {
+            filterScene.removeEventFilter(MouseEvent.MOUSE_PRESSED, outsideClickFilter);
+        }
+        outsideClickFilter = null;
+        filterScene = null;
     }
 
     private void refresh() {
@@ -105,36 +166,28 @@ public final class FloatingLog {
         List<String> recent = history.subList(from, n);
         int count = recent.size();
         for (int i = 0; i < count; i++) {
-            String text = recent.get(i);
             double frac = (i + 1) / (double) count;
             double opacity = 0.15 + frac * 0.85;
-            Label entry = new Label(text);
-            entry.setWrapText(true);
-            entry.setMaxWidth(MAX_W - 20);
-            entry.setFont(ImageCatalog.robotoFont(9));
-            entry.setStyle("-fx-text-fill: #f5deb3; -fx-font-size: 9px;"
-                    + " -fx-background-color: rgba(0,0,0,0.40); -fx-padding: 3 10 3 10;"
-                    + " -fx-background-radius: 8;");
-            entry.setOpacity(opacity);
-            floating.getChildren().add(entry);
+            floating.getChildren().add(card(recent.get(i), opacity));
         }
     }
 
-    private void openFull() {
-        if (fullPanel.isVisible()) return;
-        refillFull();
-        fullPanel.setVisible(true);
-        Platform.runLater(() -> fullScroll.setVvalue(1.0));
-    }
-
-    private void refillFull() {
-        fullMessages.getChildren().clear();
+    private void refillExpanded() {
+        expandedMessages.getChildren().clear();
         for (String s : history) {
-            Label l = new Label(s);
-            l.setWrapText(true);
-            l.setFont(ImageCatalog.robotoFont(13));
-            l.setStyle("-fx-text-fill: #f5deb3; -fx-font-size: 13px;");
-            fullMessages.getChildren().add(l);
+            expandedMessages.getChildren().add(card(s, 1.0));
         }
+    }
+
+    private Label card(String text, double opacity) {
+        Label entry = new Label(text);
+        entry.setWrapText(true);
+        entry.setMaxWidth(MAX_W - 20);
+        entry.setFont(ImageCatalog.robotoFont(9));
+        entry.setStyle("-fx-text-fill: #f5deb3; -fx-font-size: 9px;"
+                + " -fx-background-color: rgba(0,0,0,0.40); -fx-padding: 3 10 3 10;"
+                + " -fx-background-radius: 8;");
+        entry.setOpacity(opacity);
+        return entry;
     }
 }
