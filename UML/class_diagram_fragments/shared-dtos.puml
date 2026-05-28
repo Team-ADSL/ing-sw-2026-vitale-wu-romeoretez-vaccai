@@ -1,0 +1,135 @@
+@startuml shared-dtos
+title Shared — DTOs (org.adsl.shared.model)
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+hide empty members
+
+package "shared.model" {
+
+  class GameDTO <<record, Serializable>> {
+    +id: int
+    +numPlayer: int
+    +round: int
+    +era: int
+    +players: Set<PlayerDTO>
+    +board: BoardDTO
+    +phase: Phase
+    +currentPlayerTotem: Totem
+  }
+
+  class BoardDTO <<record, Serializable>> {
+    +lowRow: ArrayList<CardDTO>
+    +topRow: ArrayList<CardDTO>
+    +offerTrack: ArrayList<OfferTileDTO>
+    +orderTile: OrderTileDTO
+    +remainingBuildings: ArrayList<Boolean>
+    +isDeckEmpty: boolean
+  }
+
+  class PlayerDTO <<record, Serializable>> {
+    +name: String
+    +food: int
+    +pp: int
+    +totem: Totem
+    +cards: Map<CardType, Set<CardDTO>>
+  }
+
+  class CardDTO <<record, Serializable>> {
+    +id: String
+    +typeLabel: String
+    +effectsLabel: String
+    +costLabel: String
+  }
+
+  class OfferTileDTO <<record, Serializable>> {
+    +id: String
+    +totem: Totem
+    +moves: Map<Row, Integer>
+    +givesFood: boolean
+  }
+
+  class OrderTileDTO <<record, Serializable>> {
+    +id: String
+    +cells: ArrayList<OrderCellDTO>
+  }
+
+  class OrderCellDTO <<record, Serializable>> {
+    +totem: Totem
+    +bonus: int
+    +isMalus: boolean
+  }
+
+  class CardToken <<utility>> {
+    {static} +BUILDING: String
+    {static} +HUNTER: String
+    {static} +GATHERER: String
+    {static} +BUILDER: String
+    {static} +SHAMAN: String
+    {static} +ARTIST: String
+    {static} +INVENTOR: String
+    {static} +HUNT: String
+    {static} +SUSTENANCE: String
+    {static} +RITUAL: String
+    {static} +PAINTINGS: String
+    {static} +PP: String
+    {static} +SHAMAN_STAR: String
+    {static} +FOOD_COST: String
+    {static} +FOOD: String
+    {static} +MEAT: String
+    {static} +SET: String
+    {static} +ENDGAME: String
+    {static} +EXTRA_MOVE: String
+    {static} +TOTEM: String
+    {static} +SHIELD: String
+    {static} +ICON_BOAT: String
+    {static} +ICON_SPEAR: String
+    {static} +ICON_HOOK: String
+    {static} +ICON_NECKLACE: String
+    {static} +ICON_BOWL: String
+    {static} +ICON_ROPE: String
+    {static} +ICON_FLUTE: String
+    {static} +ICON_LEATHER: String
+    {static} +ICON_BREAD: String
+    -CardToken()
+  }
+
+  class DBRecord <<record, Serializable>> {
+    +rank: int
+    +nickname: String
+    +score: int
+  }
+
+  class MatchResult <<record, Serializable>> {
+    +nickname: String
+    +pp: int
+    +food: int
+  }
+}
+
+GameDTO *-- "many" PlayerDTO
+GameDTO *-- "1" BoardDTO
+BoardDTO *-- "*" CardDTO : "rows"
+BoardDTO *-- "*" OfferTileDTO
+BoardDTO *-- "1" OrderTileDTO
+OrderTileDTO *-- "*" OrderCellDTO
+PlayerDTO *-- "*" CardDTO
+CardDTO ..> CardToken : "labels composed of"
+
+note right of CardDTO
+  typeLabel/effectsLabel are pre-rendered
+  strings made of CardToken constants.
+  TUI/GUI map tokens → icons/glyphs.
+end note
+
+note right of DBRecord
+  Returned by GameDAO.getLeaderboard();
+  shipped in GameEnded.records.
+end note
+
+note right of MatchResult
+  Snapshot of a single match outcome;
+  shipped in GameEnded.results.
+end note
+
+@enduml

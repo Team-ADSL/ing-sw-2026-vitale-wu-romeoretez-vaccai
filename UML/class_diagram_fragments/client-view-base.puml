@@ -1,0 +1,72 @@
+@startuml client-view-base
+title Client — View base: GameUI & Screen (org.adsl.client.view)
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+hide empty members
+
+package "client.view" {
+
+  abstract class GameUI {
+    -appCoordinator: AppCoordinator
+    +showUsernameField(): void
+    +onHomeUpdate(activeGames: List<Integer>): void
+    +onHomeUpdate(activeGames: List<Integer>, message: String): void
+    +onHomeUpdate(activeGames, gamePlayers, gameCapacity, message): void
+    +onLobbyUpdate(gameId: int, players: List<String>, numPlayersAllowed: int): void
+    +onLobbyUpdate(gameId, players, numPlayersAllowed, message): void
+    +onTotemAvailableUpdate(totemList: List<Totem>, message: String): void
+    +onGameUpdate(game: GameDTO): void
+    +onGameUpdate(game: GameDTO, message: String): void
+    +onEndGame(results: List<MatchResult>, records: List<DBRecord>, message: String): void
+    +onEventTriggered(eventTitle: String, logMessage: String): void
+    +onErrorReceived(error: String): void
+    +onServerDisconnected(): void
+    {abstract} +dispatch(event: ServerEvent): void
+    {abstract} +start(): void
+    {abstract} +shutdown(): void
+    +getAppCoordinator(): AppCoordinator
+    +setAppCoordinator(appCoordinator: AppCoordinator): void
+  }
+
+  abstract class "Screen<S extends Screen<S>>" as Screen {
+    #appCoordinator: AppCoordinator
+    #error: String
+    +Screen(appCoordinator: AppCoordinator)
+    +isExit(): boolean
+    {abstract} +createLoginScreen(e: LoginNeededEvent, ac: AppCoordinator): S
+    {abstract} +createHomeScreen(e: HomeUpdateEvent, ac: AppCoordinator): S
+    {abstract} +createLobbyScreen(e: LobbyUpdateEvent, ac: AppCoordinator): S
+    {abstract} +createTotemPickingScreen(e: TotemAvailableEvent, ac: AppCoordinator): S
+    {abstract} +createGameScreen(e: GameUpdateEvent, ac: AppCoordinator): S
+    {abstract} +createEndGameScreen(e: EndGameEvent, ac: AppCoordinator): S
+    {abstract} +createDisconnectedScreen(e: DisconnectedEvent, ac: AppCoordinator): S
+    +visit(e: LoginNeededEvent): S
+    +visit(e: HomeUpdateEvent): S
+    +visit(e: LobbyUpdateEvent): S
+    +visit(e: TotemAvailableEvent): S
+    +visit(e: GameUpdateEvent): S
+    +visit(e: EndGameEvent): S
+    +visit(e: ErrorEvent): S
+    {abstract} +getThis(): S
+    +visit(e: DisconnectedEvent): S
+    +visit(e: EventsTriggeredEvent): S
+  }
+  note right of Screen
+    Self-bounded generic so factory methods
+    return the concrete screen subtype.
+    ErrorEvent / EventsTriggeredEvent default
+    to returning getThis() (stay).
+  end note
+}
+
+Screen ..|> "client.serverEvents.EventVisitor"
+GameUI --> "1" "client.AppCoordinator"
+
+note bottom of GameUI
+  GameUI methods are called by AppCoordinator
+  on each ServerResponse; they wrap the payload
+  into a ServerEvent and call dispatch().
+end note
+
+@enduml

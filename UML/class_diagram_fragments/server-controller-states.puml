@@ -1,0 +1,253 @@
+@startuml server-controller-states
+title Server — Controller & State Machine (org.adsl.server.controller)
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+hide empty members
+
+package "server.controller" {
+
+  class ServerController {
+    -games: Map<Integer, GameController>
+    -userConnected: Map<String, VirtualClient>
+    -home: Home
+    -gameDAO: GameDAO
+    -boardConfigLoader: BoardConfigLoader
+    -gamePersistenceManager: GamePersistenceManager
+    -timeoutScheduler: ScheduledExecutorService
+    -registry: Registry
+    -rmiServer: RemoteServerService
+    -socketServer: SocketServer
+    +ServerController(home, gameDAO, boardConfigLoader, gamePersistenceManager, registry, rmiServer, socketServer)
+    +startTimeoutChecker(pingRatioMs: int, clientTimeoutMs: long): void
+    +stopTimeoutChecker(): void
+    +handleClientRequest(req: ClientRequest, vc: VirtualClient): void
+    +pingRoutine(vc: VirtualClient): void
+    +visit(req: ClientPing, vc: VirtualClient): void
+    +visit(req: ClientConnection, vc: VirtualClient): void
+    +visit(req: LoginRequest, vc: VirtualClient): void
+    +visit(req: LogoutRequest, vc: VirtualClient): void
+    +visit(req: CreateGameRequest, vc: VirtualClient): void
+    +visit(req: EnterGameRequest, vc: VirtualClient): void
+    +visit(req: ClientDisconnected, vc: VirtualClient): void
+    +visit(req: StartGameRequest, vc: VirtualClient): void
+    +visit(req: MoveRequest, vc: VirtualClient): void
+    +visit(req: TotemPickingRequest, vc: VirtualClient): void
+    +visit(req: ExitLobbyRequest, vc: VirtualClient): void
+    +visit(req: ExitGameRequest, vc: VirtualClient): void
+    +controlIfLogged(vc: VirtualClient): void
+    +logout(req: ClientRequest, vc: VirtualClient): void
+    +handleHostDisconnection(gameId: int): void
+    +sendToGameController(gameId: int, req: ClientRequest, vc: VirtualClient): void
+    +notifyEndGame(gameId: int, results: List<MatchResult>, records: List<DBRecord>): void
+    +recoverGames(): void
+    -buildGamePlayersMap(): Map<Integer, List<String>>
+    -buildGameCapacityMap(): Map<Integer, Integer>
+    +getMaxGameId(): int
+    +shutdown(): void
+    +shutdownRMI(): void
+  }
+  note right of ServerController
+    Lobby-level RequestVisitor + EndGameObserver.
+    Owns active games and connected clients.
+    Periodic timeout checker (RMI uses synchronous
+    ServerPing push to detect dead callbacks).
+  end note
+
+  class GameController {
+    -state: ControllerState
+    -boardConfigLoader: BoardConfigLoader
+    -persistenceManager: GamePersistenceManager
+    -gameDAO: GameDAO
+    +GameController(boardConfigLoader, persistenceManager, gameDAO)
+    +handleClientRequest(req: ClientRequest, vc: VirtualClient): void {synchronized}
+    -changeState(newState: ControllerState): void
+    +setState(state: ControllerState): void
+    +getBoardConfigLoader(): BoardConfigLoader
+    +getPersistenceManager(): GamePersistenceManager
+    +getGameDAO(): GameDAO
+    +getLobbyPlayers(): List<String>
+    +getCapacity(): int
+    +getState(): ControllerState
+  }
+  note right of GameController
+    Drives automatic state transitions via
+    onEntry() chain. MAX_TRANSITIONS=50
+    guards against infinite loops.
+  end note
+
+  class StateFactory <<utility>> {
+    {static} -mapper: Map<Phase, BiFunction<Game, GameController, ControllerState>>
+    {static} +recover(game: Game, context: GameController): ControllerState
+  }
+  note right of StateFactory
+    Used by RecoverState to rebuild the right
+    state from a persisted game's Phase.
+  end note
+}
+
+package "server.controller.states" {
+
+  abstract class ControllerState <<RequestVisitor<VirtualClient>>> {
+    -game: Game
+    -context: GameController
+    -nextState: ControllerState
+    -toStop: boolean
+    +ControllerState(game: Game, context: GameController)
+    +onEntry(): ControllerState
+    +calcNextState(): ControllerState
+    +controlIfPlayerTurn(vc: VirtualClient): Player
+    +visit(req: ClientPing, vc: VirtualClient): void
+    +visit(req: ClientConnection, vc: VirtualClient): void {default: throw}
+    +visit(req: LoginRequest, vc: VirtualClient): void {default: throw}
+    +visit(req: LogoutRequest, vc: VirtualClient): void {default: throw}
+    +visit(req: ExitLobbyRequest, vc: VirtualClient): void {default: throw}
+    +visit(req: CreateGameRequest, vc: VirtualClient): void {default: throw}
+    +visit(req: EnterGameRequest, vc: VirtualClient): void {default: throw}
+    +visit(req: StartGameRequest, vc: VirtualClient): void {default: throw}
+    +visit(req: TotemPickingRequest, vc: VirtualClient): void {default: throw}
+    +visit(req: MoveRequest, vc: VirtualClient): void {default: throw}
+    +visit(req: ExitGameRequest, vc: VirtualClient): void {default: throw}
+    +visit(req: ClientDisconnected, vc: VirtualClient): void {default: deactivate + stop}
+    +getGame(): Game
+    +getContext(): GameController
+    +isToStop(): boolean
+    +setToStop(toStop: boolean): void
+    +getNextState(): ControllerState
+    +setNextState(nextState: ControllerState): void
+  }
+
+  class LobbyState {
+    -readyToStart: boolean
+    -host: String
+    +LobbyState(game: Game, context: GameController, host: String)
+    +visit(req: EnterGameRequest, vc: VirtualClient): void
+    +visit(req: ExitLobbyRequest, vc: VirtualClient): void
+    +visit(req: ClientDisconnected, vc: VirtualClient): void
+    +playerExit(vc: VirtualClient): void
+    +visit(req: StartGameRequest, vc: VirtualClient): void
+    +calcNextState(): ControllerState
+  }
+  note right of LobbyState
+    Host disconnect throws HostDisconnectedException
+    → ServerController evicts all players.
+  end note
+
+  class InitGameState <<automatic>> {
+    +InitGameState(game: Game, context: GameController)
+    +onEntry(): ControllerState
+    +calcNextState(): ControllerState
+    +maxBuildings(gameSettings: GameSettings): int
+    +fillLowRow(targetSize: int): void
+    +fillTopRow(targetSize: int): void
+    +makeBuildingDecks(buildings: Set<Building>, numPlayers: int, gameSettings: GameSettings): void
+  }
+
+  class TotemPickingState {
+    -totemToPick: List<Totem>
+    -numPicked: int
+    +TotemPickingState(game: Game, context: GameController)
+    +onEntry(): ControllerState
+    +visit(req: TotemPickingRequest, vc: VirtualClient): void
+    +calcNextState(): ControllerState
+  }
+
+  class TotemPlacementState {
+    +TotemPlacementState(game: Game, context: GameController)
+    +onEntry(): ControllerState
+    +visit(req: MoveRequest, vc: VirtualClient): void
+    +execute(move: Move, p: Player): void
+    +calcNextState(): ControllerState
+  }
+
+  class ActionExecutionState {
+    +ActionExecutionState(game: Game, context: GameController)
+    +onEntry(): ControllerState
+    +visit(req: MoveRequest, vc: VirtualClient): void
+    -execute(moves: Set<Move>, p: Player): void
+    -placeTotem(p: Player): void
+    +calcNextState(): ControllerState
+  }
+
+  class ExtraMoveState {
+    +ExtraMoveState(game: Game, context: GameController)
+    +onEntry(): ControllerState
+    +visit(req: MoveRequest, vc: VirtualClient): void
+    +execute(move: Move, p: Player): void
+    +calcNextState(): ControllerState
+  }
+
+  class EventsState <<automatic>> {
+    +EventsState(game: Game, context: GameController)
+    +onEntry(): ControllerState
+    -executeAndAnnounce(cards: ArrayList<Card>): void
+    {static} -snapshotFoodPp(players: Set<Player>): Map<Player, int[]>
+    {static} -formatDeltas(title: String, players: Set<Player>, before: Map<Player, int[]>): String
+    {static} -signed(n: int): String
+    -formatTitle(e: Event): String
+    -romanEra(era: int): String
+    +calcNextState(): ControllerState
+  }
+
+  class EndRoundState <<automatic>> {
+    {static} -MAX_ERA: int = 3
+    +EndRoundState(game: Game, context: GameController)
+    +onEntry(): ControllerState
+    +calcNextState(): ControllerState
+  }
+
+  class EndGameState <<automatic, terminal>> {
+    +EndGameState(game: Game, context: GameController)
+    +onEntry(): ControllerState
+  }
+  note right of EndGameState
+    Returns null from onEntry → controller discards.
+    Computes Builder PP, Inventor icons,
+    Artist pairs, EndGame building bonuses.
+  end note
+
+  class RecoverState {
+    +RecoverState(game: Game, context: GameController)
+    +onEntry(): ControllerState
+    +visit(req: EnterGameRequest, vc: VirtualClient): void
+    +calcNextState(): ControllerState
+  }
+}
+
+LobbyState -up-|> ControllerState
+InitGameState -up-|> ControllerState
+TotemPickingState -up-|> ControllerState
+TotemPlacementState -up-|> ControllerState
+ActionExecutionState -up-|> ControllerState
+ExtraMoveState -up-|> ControllerState
+EventsState -up-|> ControllerState
+EndRoundState -up-|> ControllerState
+EndGameState -up-|> ControllerState
+RecoverState -up-|> ControllerState
+
+ControllerState ..|> "shared.network.requests.RequestVisitor"
+ServerController ..|> "shared.network.requests.RequestVisitor"
+ServerController ..|> "server.model.EndGameObserver"
+
+GameController *-- "1" ControllerState : "current state"
+ServerController *-- "*" GameController : games
+ServerController --> "1" "server.model.Home"
+StateFactory ..> ControllerState : "rebuilds via Phase"
+
+ControllerState --> "1" "server.model.Game"
+ControllerState --> "1" GameController
+
+note as N1
+  Phase enum → Concrete State (StateFactory):
+   TOTEM_PICKING    → TotemPickingState
+   TOTEM_PLACEMENT  → TotemPlacementState
+   ACTION_EXECUTION → ActionExecutionState
+   EXTRA_MOVE       → ExtraMoveState
+   EVENTS_EXECUTION → EventsState
+   END_ROUND        → EndRoundState
+   END_GAME         → EndGameState
+  Non-Phase states (special): LobbyState, InitGameState, RecoverState
+end note
+StateFactory .. N1
+
+@enduml

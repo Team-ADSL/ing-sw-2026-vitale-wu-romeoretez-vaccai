@@ -1,0 +1,2584 @@
+@startuml mesos-monolithic
+title MESOS — UML di dettaglio (Server + Client + Shared)
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam linetype ortho
+hide empty members
+
+'==========================================================================
+' SHARED
+'==========================================================================
+
+package "shared.enums" {
+
+  enum CardType {
+    INVENTOR
+    ARTIST
+    HUNTER
+    SHAMAN
+    GATHERER
+    BUILDER
+    BUILDINGS
+    SHAMANIC_RITUAL
+    SUSTENANCE
+    CAVE_PAINTINGS
+    HUNT
+  }
+
+  enum Icon {
+    BOAT
+    SPEARHEAD
+    HOOK
+    NECKLACE
+    BOWL
+    ROPE
+    TOTEM
+    FLUTE
+    LEATHER
+    BREAD
+  }
+
+  enum Phase {
+    TOTEM_PICKING
+    TOTEM_PLACEMENT
+    ACTION_EXECUTION
+    EXTRA_MOVE
+    EVENTS_EXECUTION
+    END_ROUND
+    END_GAME
+  }
+
+  enum Row {
+    UPPER
+    LOWER
+    OFFER
+  }
+
+  enum Totem {
+    RED
+    WHITE
+    BLACK
+    BLUE
+    YELLOW
+  }
+
+  enum Trigger {
+    SUSTENANCE
+    HUNT
+    CAVE_PAINTINGS
+    SHAMANIC_RITUAL
+    END_GAME
+    END_ROUND
+    END_TURN
+    DRAWING
+    CHECK_BUILDINGS
+    EVENT_EXECUTION
+  }
+}
+
+package "shared.exceptions" {
+
+  class ServerException {
+    +ServerException(message: String)
+  }
+
+  class HostDisconnectedException {
+    +HostDisconnectedException(message: String)
+  }
+
+  class InvalidResponseException {
+    +InvalidResponseException(message: String)
+  }
+
+  HostDisconnectedException -up-|> ServerException
+}
+
+package "shared.utils" {
+  class Move <<record, Serializable>> {
+    +rowIndex: int
+    +row: Row
+  }
+}
+
+package "shared.model" {
+
+  class GameDTO <<record, Serializable>> {
+    +id: int
+    +numPlayer: int
+    +round: int
+    +era: int
+    +players: Set<PlayerDTO>
+    +board: BoardDTO
+    +phase: Phase
+    +currentPlayerTotem: Totem
+  }
+
+  class BoardDTO <<record, Serializable>> {
+    +lowRow: ArrayList<CardDTO>
+    +topRow: ArrayList<CardDTO>
+    +offerTrack: ArrayList<OfferTileDTO>
+    +orderTile: OrderTileDTO
+    +remainingBuildings: ArrayList<Boolean>
+    +isDeckEmpty: boolean
+  }
+
+  class PlayerDTO <<record, Serializable>> {
+    +name: String
+    +food: int
+    +pp: int
+    +totem: Totem
+    +cards: Map<CardType, Set<CardDTO>>
+  }
+
+  class CardDTO <<record, Serializable>> {
+    +id: String
+    +typeLabel: String
+    +effectsLabel: String
+    +costLabel: String
+  }
+
+  class OfferTileDTO <<record, Serializable>> {
+    +id: String
+    +totem: Totem
+    +moves: Map<Row, Integer>
+    +givesFood: boolean
+  }
+
+  class OrderTileDTO <<record, Serializable>> {
+    +id: String
+    +cells: ArrayList<OrderCellDTO>
+  }
+
+  class OrderCellDTO <<record, Serializable>> {
+    +totem: Totem
+    +bonus: int
+    +isMalus: boolean
+  }
+
+  class CardToken <<utility>> {
+    {static} +BUILDING: String
+    {static} +HUNTER: String
+    {static} +GATHERER: String
+    {static} +BUILDER: String
+    {static} +SHAMAN: String
+    {static} +ARTIST: String
+    {static} +INVENTOR: String
+    {static} +HUNT: String
+    {static} +SUSTENANCE: String
+    {static} +RITUAL: String
+    {static} +PAINTINGS: String
+    {static} +PP: String
+    {static} +SHAMAN_STAR: String
+    {static} +FOOD_COST: String
+    {static} +FOOD: String
+    {static} +MEAT: String
+    {static} +SET: String
+    {static} +ENDGAME: String
+    {static} +EXTRA_MOVE: String
+    {static} +TOTEM: String
+    {static} +SHIELD: String
+    {static} +ICON_BOAT: String
+    {static} +ICON_SPEAR: String
+    {static} +ICON_HOOK: String
+    {static} +ICON_NECKLACE: String
+    {static} +ICON_BOWL: String
+    {static} +ICON_ROPE: String
+    {static} +ICON_FLUTE: String
+    {static} +ICON_LEATHER: String
+    {static} +ICON_BREAD: String
+    -CardToken()
+  }
+
+  class DBRecord <<record, Serializable>> {
+    +rank: int
+    +nickname: String
+    +score: int
+  }
+
+  class MatchResult <<record, Serializable>> {
+    +nickname: String
+    +pp: int
+    +food: int
+  }
+}
+
+package "shared.network.remote" {
+
+  interface RemoteClientStub <<RMI Remote>> {
+    +sendResponse(response: ServerResponse): void
+  }
+
+  interface RemoteServerService <<RMI Remote>> {
+    +connect(clientStub: RemoteClientStub): void
+    +sendRequest(request: ClientRequest, clientStub: RemoteClientStub): void
+    +disconnect(clientStub: RemoteClientStub): void
+  }
+}
+
+package "shared.network" {
+  class JsonMessageHandler <<utility>> {
+    {static} -mapper: ObjectMapper
+    {static} +deserializeClientRequest(jsonMessage: String): ClientRequest
+    {static} +deserializeServerResponse(jsonMessage: String): ServerResponse
+    {static} +serializeClientRequest(request: ClientRequest): String
+    {static} +serializeServerResponse(response: ServerResponse): String
+  }
+}
+
+package "shared.network.requests" {
+
+  interface "RequestVisitor<T>" as RequestVisitor {
+    +visit(req: ClientPing, ctx: T): void
+    +visit(req: ClientConnection, ctx: T): void
+    +visit(req: LoginRequest, ctx: T): void
+    +visit(req: LogoutRequest, ctx: T): void
+    +visit(req: ExitLobbyRequest, ctx: T): void
+    +visit(req: CreateGameRequest, ctx: T): void
+    +visit(req: EnterGameRequest, ctx: T): void
+    +visit(req: StartGameRequest, ctx: T): void
+    +visit(req: TotemPickingRequest, ctx: T): void
+    +visit(req: MoveRequest, ctx: T): void
+    +visit(req: ExitGameRequest, ctx: T): void
+    +visit(req: ClientDisconnected, ctx: T): void
+  }
+
+  abstract class ClientRequest <<@JsonTypeInfo, Serializable>> {
+    {abstract} +<T> accept(visitor: RequestVisitor<T>, context: T): void
+  }
+
+  class ClientConnection {
+    +<T> accept(visitor: RequestVisitor<T>, ctx: T): void
+  }
+
+  class ClientDisconnected {
+    +<T> accept(visitor: RequestVisitor<T>, ctx: T): void
+  }
+
+  class ClientPing {
+    +<T> accept(visitor: RequestVisitor<T>, ctx: T): void
+  }
+
+  class LoginRequest {
+    -username: String
+    +LoginRequest(username: String)
+    +getUsername(): String
+    +<T> accept(visitor: RequestVisitor<T>, ctx: T): void
+  }
+
+  class LogoutRequest {
+    +<T> accept(visitor: RequestVisitor<T>, ctx: T): void
+  }
+
+  class CreateGameRequest {
+    -numPlayer: int
+    +CreateGameRequest(numPlayer: int)
+    +getNumPlayer(): int
+    +<T> accept(visitor: RequestVisitor<T>, ctx: T): void
+  }
+
+  class EnterGameRequest {
+    -gameId: int
+    +EnterGameRequest(gameId: int)
+    +getGameId(): int
+    +<T> accept(visitor: RequestVisitor<T>, ctx: T): void
+  }
+
+  class ExitLobbyRequest {
+    +<T> accept(visitor: RequestVisitor<T>, ctx: T): void
+  }
+
+  class StartGameRequest {
+    +<T> accept(visitor: RequestVisitor<T>, ctx: T): void
+  }
+
+  class TotemPickingRequest {
+    -totem: Totem
+    +TotemPickingRequest(totem: Totem)
+    +getTotem(): Totem
+    +<T> accept(visitor: RequestVisitor<T>, ctx: T): void
+  }
+
+  class MoveRequest {
+    -moves: Set<Move>
+    +MoveRequest(moves: Set<Move>)
+    +getMoves(): Set<Move>
+    +<T> accept(visitor: RequestVisitor<T>, ctx: T): void
+  }
+
+  class ExitGameRequest {
+    +<T> accept(visitor: RequestVisitor<T>, ctx: T): void
+  }
+}
+
+package "shared.network.responses" {
+
+  interface ResponseVisitor {
+    +visit(response: ServerPing): void
+    +visit(response: LoginNeeded): void
+    +visit(response: HomeUpdate): void
+    +visit(response: LobbyUpdate): void
+    +visit(response: TotemAvailableUpdate): void
+    +visit(response: GameUpdate): void
+    +visit(response: GameEnded): void
+    +visit(response: ErrorResponse): void
+    +visit(response: ServerDisconnected): void
+    +visit(response: EventsTriggered): void
+  }
+
+  abstract class ServerResponse <<@JsonTypeInfo, Serializable>> {
+    -message: String
+    #ServerResponse()
+    #ServerResponse(message: String)
+    +getMessage(): String
+    +setMessage(message: String): void
+    +isHeartbeat(): boolean
+    {abstract} +accept(visitor: ResponseVisitor): void
+  }
+
+  class ServerPing {
+    +accept(visitor: ResponseVisitor): void
+    +isHeartbeat(): boolean
+  }
+
+  class ServerDisconnected {
+    +accept(visitor: ResponseVisitor): void
+  }
+
+  class LoginNeeded {
+    +accept(visitor: ResponseVisitor): void
+  }
+
+  class HomeUpdate {
+    -activeGames: List<Integer>
+    -gamePlayers: Map<Integer, List<String>>
+    -gameCapacity: Map<Integer, Integer>
+    +HomeUpdate(activeGames: List<Integer>, gamePlayers: Map, gameCapacity: Map)
+    +HomeUpdate(activeGames: List<Integer>)
+    +getActiveGames(): List<Integer>
+    +getGamePlayers(): Map<Integer, List<String>>
+    +getGameCapacity(): Map<Integer, Integer>
+    +accept(visitor: ResponseVisitor): void
+  }
+
+  class LobbyUpdate {
+    -gameId: int
+    -players: List<String>
+    -numPlayerAllowed: int
+    +LobbyUpdate(gameId: int, players: List<String>, numPlayerAllowed: int)
+    +getGameId(): int
+    +getPlayers(): List<String>
+    +getNumPlayerAllowed(): int
+    +accept(visitor: ResponseVisitor): void
+  }
+
+  class TotemAvailableUpdate {
+    -totemAvailable: List<Totem>
+    +TotemAvailableUpdate(totems: List<Totem>)
+    +getTotemAvailable(): List<Totem>
+    +accept(visitor: ResponseVisitor): void
+  }
+
+  class GameUpdate {
+    -game: GameDTO
+    +GameUpdate(game: GameDTO)
+    +getGame(): GameDTO
+    +accept(visitor: ResponseVisitor): void
+  }
+
+  class GameEnded {
+    -records: List<DBRecord>
+    -results: List<MatchResult>
+    +GameEnded(records: List<DBRecord>, results: List<MatchResult>)
+    +getRecords(): List<DBRecord>
+    +getResults(): List<MatchResult>
+    +accept(visitor: ResponseVisitor): void
+  }
+
+  class ErrorResponse {
+    +ErrorResponse(message: String)
+    +accept(visitor: ResponseVisitor): void
+  }
+
+  class EventsTriggered {
+    -eventTitle: String
+    -logMessage: String
+    +EventsTriggered(eventTitle: String, logMessage: String)
+    +getEventTitle(): String
+    +getLogMessage(): String
+    +accept(visitor: ResponseVisitor): void
+  }
+}
+
+'==========================================================================
+' SERVER
+'==========================================================================
+
+package "server.config" {
+
+  interface BoardConfigLoader {
+    +getCards(numPlayers: int): ArrayList<Set<Card>>
+    +getOfferTrack(numPlayers: int): OfferTrack
+    +getOrderTile(numPlayers: int): OrderTile
+    +getBuildings(): Set<Building>
+    +getSettings(numPlayers: int): GameSettings
+  }
+
+  class GameSettings <<record>> {
+    +numLowTribeCard: int
+    +numTopTribeCard: int
+    +numBuildingEra1: int
+    +numBuildingEra2: int
+    +numBuildingEra3: int
+  }
+
+  interface CardParser <<@FunctionalInterface>> {
+    +parse(node: JsonNode, era: int, numPlayers: Integer): Card
+  }
+
+  interface BuildingParser <<@FunctionalInterface>> {
+    +parse(node: JsonNode, era: int): Building
+  }
+
+  class JsonBoardConfigLoader {
+    {static} -CARD_PARSERS: Map<String, CardParser>
+    {static} -BUILDING_PARSERS: Map<String, BuildingParser>
+    -mapper: ObjectMapper
+    +getCards(numPlayers: int): ArrayList<Set<Card>>
+    -loadCardsFromFile(filename: String, arrayKey: String, np: int, result: ArrayList<Set<Card>>): void
+    +getOfferTrack(numPlayers: int): OfferTrack
+    +getOrderTile(numPlayers: int): OrderTile
+    +getBuildings(): Set<Building>
+    +getSettings(numPlayers: int): GameSettings
+  }
+}
+
+package "server.db" {
+
+  interface ConnectionProvider <<@FunctionalInterface>> {
+    +getConnection(): Connection
+  }
+
+  class DatabaseConfig <<utility>> {
+    {static} -HOST: String
+    {static} -PORT: String
+    {static} ~DB_NAME: String
+    {static} ~USER: String
+    {static} ~PASSWORD: String
+    {static} +URL_NO_DB: String
+    {static} +URL: String
+    {static} +getConnection(): Connection
+  }
+
+  class DatabaseManager <<utility>> {
+    {static} +initDatabase(): void
+  }
+}
+
+package "server.persistence" {
+
+  interface GameDAO {
+    +createMatch(): int
+    +deleteMatch(gameId: int): void
+    +saveMatch(gameId: int, playerCount: int, nicknames: List<String>, scores: List<Integer>): void
+    +getLeaderboard(playerCount: int): List<DBRecord>
+    +setInitialCounter(i: int): void
+  }
+
+  class SqlGameDAO {
+    -connectionProvider: ConnectionProvider
+    +SqlGameDAO(connectionProvider: ConnectionProvider)
+    +createMatch(): int
+    +deleteMatch(gameId: int): void
+    +saveMatch(gameId, playerCount, nicknames, scores): void
+    +getLeaderboard(playerCount: int): List<DBRecord>
+    +setInitialCounter(i: int): void
+  }
+
+  class NoGameDAO {
+    -actualCounter: int
+    +createMatch(): int
+    +deleteMatch(gameId: int): void
+    +saveMatch(gameId, playerCount, nicknames, scores): void
+    +getLeaderboard(playerCount: int): List<DBRecord>
+    +setInitialCounter(i: int): void
+  }
+
+  interface GamePersistenceManager {
+    +recoverGames(): List<Game>
+    +removeGame(gameId: int): void
+  }
+
+  class SerialGamePersistenceManager {
+    -saveDirectory: String
+    +SerialGamePersistenceManager(saveDirectory: String)
+    -ensureDirectoryExists(): void
+    +updateGame(game: Game): void
+    +recoverGames(): List<Game>
+    +removeGame(gameId: int): void
+    +updateLobby(gameId: int, players: List<String>, numPlayersAllowed: int): void
+    +updateTotemAvailable(totemsAvailable: List<Totem>, message: String): void
+  }
+}
+
+package "server.model.board" {
+
+  class Board <<record, Serializable>> {
+    +lowRow: CardRow
+    +topRow: CardRow
+    +offerTrack: OfferTrack
+    +orderTile: OrderTile
+    +remainingBuildings: ArrayList<Set<Card>>
+    +deck: Deck
+    +Board(numLowCard: int, numLowTribeCards: int, numTopCard: int, numTopTribeCards: int, offerTrack: OfferTrack, orderQueue: OrderTile, deck: Deck)
+    +createDTO(): BoardDTO
+  }
+
+  class CardRow <<Serializable>> {
+    -cards: ArrayList<Card>
+    -numTribeCards: int
+    +CardRow(cards: ArrayList<Card>, numTribeCards: int)
+    +CardRow(numCard: int, numTribeCards: int)
+    +size(): int
+    +pickCardAt(index: int): Card
+    +getCardAt(index: int): Card
+    +add(card: Card): void
+    +getTribeCards(): ArrayList<Card>
+    +addTribeCards(newCards: ArrayList<Card>): void
+    +clearTribeCards(): void
+    +getBuildings(): Set<Card>
+    +clearBuildings(): void
+    +addBuildings(newCards: Set<Card>): void
+    +createDTO(): ArrayList<CardDTO>
+    +getNumTribeCard(): int
+  }
+
+  class Deck <<record, Serializable>> {
+    +cards: ArrayList<Card>
+    +Deck()
+    +addTailCard(card: Card): void
+    +addTailCards(cards: ArrayList<Card>): void
+    +drawCard(): Card
+    {static} +createDeck(cards: ArrayList<Set<Card>>): Deck
+    +isNewEra(currentEra: int): boolean
+    +isEmpty(): boolean
+  }
+
+  class OfferTile <<Serializable>> {
+    -id: String
+    -player: Player
+    -moves: Map<Row, Integer>
+    -givesFood: boolean
+    +OfferTile(id: String, player: Player, moves: Map<Row, Integer>, givesFood: boolean)
+    +getPlayer(): Optional<Player>
+    +getNumMoves(): int
+    +getMoves(): Map<Row, Integer>
+    +isGivesFood(): boolean
+    +createDTO(): OfferTileDTO
+    +setPlayer(player: Player): void
+  }
+
+  class OfferTrack <<Serializable>> {
+    -offerQueue: ArrayList<OfferTile>
+    +OfferTrack(offerQueue: ArrayList<OfferTile>)
+    +placeInOfferTile(p: Player, arrayIndex: int): void
+    +removePlayer(player: Player): void
+    +getTileAt(i: int): OfferTile
+    +size(): int
+    +createDTO(): ArrayList<OfferTileDTO>
+  }
+
+  class OrderCell <<Serializable>> {
+    -player: Player
+    -bonus: int
+    -isMalus: boolean
+    +OrderCell(player: Player, bonus: int, isMalus: boolean)
+    +setPlayer(player: Player): void
+    +getPlayer(): Optional<Player>
+    +getBonus(): int
+    +isMalus(): boolean
+  }
+
+  class OrderTile <<Serializable>> {
+    -id: String
+    -orderQueue: ArrayList<OrderCell>
+    +OrderTile(id: String, orderQueue: ArrayList<OrderCell>)
+    +getPlayerAt(i: int): Optional<Player>
+    +placePlayersRandom(players: Set<Player>): void
+    +placePlayerAtNext(p: Player): int
+    +removePlayer(player: Player): void
+    +createDTO(): OrderTileDTO
+    +getCellAt(i: int): OrderCell
+    +size(): int
+  }
+}
+
+package "server.model.cards" {
+
+  abstract class Card <<Serializable>> {
+    -id: String
+    -era: int
+    -numPlayers: Integer
+    +Card(id: String, era: int, numPlayers: Integer)
+    {abstract} +canBeDrawn(p: Player): boolean
+    {abstract} +insert(cards: Map<CardType, Set<Card>>): void
+    {abstract} +activeEffect(players: Set<Player>, t: Trigger): void
+    #eraToRoman(era: int): String
+    {abstract} #getTypeLabel(): String
+    {abstract} #getEffectsLabel(): String
+    #getCostLabel(): String
+    +createDTO(): CardDTO
+    +getId(): String
+    +getEra(): int
+    +getNumPlayers(): Optional<Integer>
+  }
+}
+
+package "server.model.cards.characters" {
+
+  abstract class Character {
+    +Character(id: String, era: int, numPlayers: Integer)
+    +canBeDrawn(p: Player): boolean
+    +activeEffect(players: Set<Player>, t: Trigger): void
+  }
+
+  class Hunter {
+    -extraFood: boolean
+    +Hunter(id: String, extraFood: boolean, era: int, numPlayers: Integer)
+    +insert(cards: Map<CardType, Set<Card>>): void
+    +activeEffect(players: Set<Player>, t: Trigger): void
+    #getTypeLabel(): String
+    #getEffectsLabel(): String
+  }
+
+  class Gatherer {
+    -discount: int
+    +Gatherer(id: String, discount: int, era: int, numPlayers: Integer)
+    +insert(cards: Map<CardType, Set<Card>>): void
+    +getDiscount(): int
+    #getTypeLabel(): String
+    #getEffectsLabel(): String
+  }
+
+  class Builder {
+    -discount: int
+    -pp: int
+    +Builder(id: String, discount: int, pp: int, era: int, numPlayers: Integer)
+    +insert(cards: Map<CardType, Set<Card>>): void
+    +getDiscount(): int
+    +getPP(): int
+    #getTypeLabel(): String
+    #getEffectsLabel(): String
+  }
+
+  class Shaman {
+    -starNum: int
+    +Shaman(id: String, starNum: int, era: int, numPlayers: Integer)
+    +getStarNum(): int
+    +insert(cards: Map<CardType, Set<Card>>): void
+    #getTypeLabel(): String
+    #getEffectsLabel(): String
+  }
+
+  class Artist {
+    +Artist(id: String, era: int, numPlayers: Integer)
+    +insert(cards: Map<CardType, Set<Card>>): void
+    #getTypeLabel(): String
+    #getEffectsLabel(): String
+  }
+
+  class Inventor {
+    -icon: Icon
+    +Inventor(id: String, icon: Icon, era: int, numPlayers: Integer)
+    +insert(cards: Map<CardType, Set<Card>>): void
+    +getIcon(): Icon
+    #getTypeLabel(): String
+    #getEffectsLabel(): String
+  }
+}
+
+package "server.model.cards.events" {
+
+  abstract class Event {
+    -isFinal: boolean
+    +Event(id: String, isFinal: boolean, era: int, numPlayers: Integer)
+    +canBeDrawn(p: Player): boolean
+    {abstract} +getEventTitle(): String
+    +activateBuildings(p: Player, t: Trigger): void
+  }
+
+  class Hunt {
+    -multiplierPP: int
+    +Hunt(id: String, multiplierPP: int, isFinal: boolean, era: int, numPlayers: Integer)
+    +insert(cards: Map<CardType, Set<Card>>): void
+    +activeEffect(players: Set<Player>, t: Trigger): void
+    +getEventTitle(): String
+    #getTypeLabel(): String
+    #getEffectsLabel(): String
+  }
+
+  class Sustenance {
+    -lostPP: int
+    +Sustenance(id: String, lostPP: int, isFinal: boolean, era: int, numPlayers: Integer)
+    +getLostPP(): int
+    +insert(cards: Map<CardType, Set<Card>>): void
+    +activeEffect(players: Set<Player>, t: Trigger): void
+    +getEventTitle(): String
+    #getTypeLabel(): String
+    #getEffectsLabel(): String
+  }
+
+  class CavePaintings {
+    -minArtists: int
+    -lostPP: int
+    -multiplierPP: int
+    +CavePaintings(id, minArtists, lostPP, multiplierPP, isFinal, era, numPlayers)
+    +insert(cards: Map<CardType, Set<Card>>): void
+    +activeEffect(players: Set<Player>, t: Trigger): void
+    +getEventTitle(): String
+    #getTypeLabel(): String
+    #getEffectsLabel(): String
+  }
+
+  class ShamanicRitual {
+    -lostPP: int
+    -gainedPP: int
+    +ShamanicRitual(id, lostPP, gainedPP, isFinal, era, numPlayers)
+    +insert(cards: Map<CardType, Set<Card>>): void
+    +activeEffect(players: Set<Player>, t: Trigger): void
+    +getEventTitle(): String
+    #getTypeLabel(): String
+    #getEffectsLabel(): String
+  }
+}
+
+package "server.model.cards.buildings" {
+
+  abstract class Building {
+    -endGamePP: int
+    -cost: int
+    +Building(id: String, endGamePP: int, cost: int, era: int, numPlayers: Integer)
+    +canBeDrawn(p: Player): boolean
+    +insert(cards: Map<CardType, Set<Card>>): void
+    +getCost(): int
+    #getCostLabel(): String
+    +getEndGamePP(): int
+    #getTypeLabel(): String
+  }
+
+  class EndGame {
+    -buildingEffect: BuildingEffect
+    -characterTypeMultiplier: CardType
+    +EndGame(id, endGamePP, cost, era, numPlayers, buildingEffect, characterTypeForMultiplier)
+    +activeEffect(players: Set<Player>, t: Trigger): void
+    #getEffectsLabel(): String
+  }
+
+  class ExtraMove {
+    +ExtraMove(id, endGamePP, cost, trigger, characterUse, era, numPlayers)
+    +activeEffect(players: Set<Player>, t: Trigger): void
+    #getEffectsLabel(): String
+  }
+
+  class BonusTotem {
+    +BonusTotem(id, endGamePP, cost, era, numPlayers)
+    +activeEffect(players: Set<Player>, t: Trigger): void
+    #getEffectsLabel(): String
+  }
+
+  class SinceBuilt {
+    -buildingEffect: BuildingEffect
+    -characterInUse: Map<CardType, Set<Card>>
+    +SinceBuilt(id, endGamePP, cost, trigger, era, numPlayers, buildingEffect)
+    +SinceBuilt(id, endGamePP, cost, trigger, characterInUse, era, numPlayers, buildingEffect)
+    +activeEffect(players: Set<Player>, t: Trigger): void
+    #getEffectsLabel(): String
+  }
+}
+
+package "server.model.cards.buildings.forEvent" {
+
+  abstract class DuringEvent {
+    -eventTriggers: Set<Trigger>
+    +DuringEvent(id, endGamePP, cost, era, numPlayers)
+    +activeEffect(players: Set<Player>, t: Trigger): void
+    {abstract} +execute(players: Set<Player>, t: Trigger): void
+  }
+
+  class DuringHunt {
+    +DuringHunt(id, endGamePP, cost, era, numPlayers)
+    +execute(players: Set<Player>, t: Trigger): void
+    #getEffectsLabel(): String
+  }
+
+  class DuringPaintings {
+    +DuringPaintings(id, endGamePP, cost, era, numPlayers)
+    +execute(players: Set<Player>, t: Trigger): void
+    #getEffectsLabel(): String
+  }
+
+  class DuringRitual {
+    -buildingEffect: BuildingEffect
+    +DuringRitual(id, endGamePP, cost, era, numPlayers, buildingEffect)
+    +execute(players: Set<Player>, t: Trigger): void
+    #getEffectsLabel(): String
+  }
+
+  class DuringSustenance {
+    -typeMultiplier: CardType
+    +DuringSustenance(id, endGamePP, cost, era, numPlayers, typeMultiplier)
+    +execute(players: Set<Player>, t: Trigger): void
+    +getTypeMultiplier(): CardType
+    #getEffectsLabel(): String
+  }
+}
+
+package "server.model.cards.buildings.utils" {
+
+  class BuildingBonus {
+    -extraStars: int
+    -shamanMulitiplierPP: int
+    -builderMultiplierPP: int
+    -sustenanceDiscount: int
+    -huntEventBonus: boolean
+    -extraMove: boolean
+    -noRitualLostPP: boolean
+    -artistFood: boolean
+    -bonusFoodTile: boolean
+    -doubleRitualPP: boolean
+    +BuildingBonus()
+    +reset(): void
+    +isBonusFoodTile(): boolean
+    +setBonusFoodTile(b: boolean): void
+    +getExtraStars(): int
+    +setExtraStars(extraStars: int): void
+    +getShamanMulitiplierPP(): int
+    +setShamanMulitiplierPP(v: int): void
+    +getBuilderMultiplierPP(): int
+    +setBuilderMultiplierPP(v: int): void
+    +getSustenanceDiscount(): int
+    +setSustenanceDiscount(v: int): void
+    +isHuntEventBonus(): boolean
+    +setHuntEventBonus(b: boolean): void
+    +isExtraMove(): boolean
+    +setExtraMove(b: boolean): void
+    +isNoRitualLostPP(): boolean
+    +setNoRitualLostPP(b: boolean): void
+    +isArtistFood(): boolean
+    +setArtistFood(b: boolean): void
+    +isDoubleRitualPP(): boolean
+    +setDoubleRitualPP(b: boolean): void
+  }
+
+  enum BuildingEffect {
+    FOOD_COMPLETE_SET
+    COUPLE_INVENTOR
+    RITUAL_IMMUNITY
+    RITUAL_STARS_BONUS
+    RITUAL_DOUBLE_PP
+    END_BUILDER_MULTIPLIER
+    PP_COMPLETE_SET
+    END_CHARACTER_MULTIPLIER
+    END_PP_BONUS
+  }
+}
+
+package "server.model" {
+
+  class Game <<Serializable>> {
+    -gameId: int
+    -players: Set<Player>
+    -numPlayer: int
+    -board: Board
+    -round: int
+    -era: int
+    -currentPlayer: Player
+    -phase: Phase
+    -isInitialized: boolean <<transient>>
+    -gameObservers: List<GameObserver> <<transient>>
+    -endGameObservers: List<EndGameObserver> <<transient>>
+    +Game(gameId: int, numPlayer: int)
+    +Game(gameId, numPlayer, round, era, players, currentPlayer, board, phase)
+    +addVirtualClient(vc: VirtualClient): void
+    +removeVirtualClient(vc: VirtualClient): void
+    +addObserver(o: GameObserver): void
+    +removeObserver(o: GameObserver): void
+    +addObserver(o: EndGameObserver): void
+    +removeObserver(o: EndGameObserver): void
+    +createDTO(): GameDTO
+    +sendUpdateLobby(): void
+    +sendUpdateLobby(message: String): void
+    +sendTotemAvailable(totemAvailable: List<Totem>, message: String): void
+    +sendUpdateGame(): void
+    +sendUpdateGame(message: String): void
+    +broadcastError(message: String): void
+    +sendEventTriggered(eventTitle: String, logMessage: String): void
+    +sendEndGameResults(results: List<MatchResult>, records: List<DBRecord>): void
+    +sendEndGameResults(results, records, message: String): void
+    +setupTransientAttributes(): void
+    +changeEra(): void
+    +changeRound(): void
+    +getGameId(): int
+    +getBoard(): Board
+    +getPlayers(): Set<Player>
+    +getCurrentPlayer(): Optional<Player>
+    +getEra(): int
+    +getRound(): int
+    +getPhase(): Phase
+    +isInitialized(): boolean
+    +getNumPlayer(): int
+    +setCurrentPlayer(currentPlayer: Player): void
+    +setPhase(phase: Phase): void
+    +setBoard(board: Board): void
+    +setInitialized(initialized: boolean): void
+  }
+
+  class Player <<Serializable>> {
+    -name: String
+    -food: int
+    -pp: int
+    -color: Totem
+    -cards: Map<CardType, Set<Card>>
+    -lastPick: Card <<transient>>
+    -isActive: boolean <<transient>>
+    -buildingBonus: BuildingBonus <<transient>>
+    +Player(name: String)
+    +Player(name, food, pp, color, cards)
+    +createDTO(): PlayerDTO
+    -readObject(stream: ObjectInputStream): void
+    +changePP(pp: int): void
+    +changeFood(food: int): void
+    +getCards(): Map<CardType, Set<Card>>
+    +getBuildingBonus(): BuildingBonus
+    +getFood(): int
+    +getLastPick(): Card
+    +getColor(): Totem
+    +getPp(): int
+    +getName(): String
+    +isActive(): boolean
+    +setLastPick(lastPick: Card): void
+    +setColor(color: Totem): void
+    +setActive(active: boolean): void
+  }
+
+  class Home {
+    -games: List<Integer>
+    -observers: List<HomeObserver>
+    +Home()
+    +addGame(gameId: int): void
+    +removeGame(gameId: Integer): void
+    +update(): void
+    +update(message: String): void
+    +update(gamePlayers: Map, gameCapacity: Map): void
+    +update(gamePlayers: Map, gameCapacity: Map, message: String): void
+    +addObserver(observer: HomeObserver): void
+    +removeObserver(observer: HomeObserver): void
+  }
+
+  interface GameObserver {
+    +updateGame(game: Game): void
+    +updateGame(game: Game, message: String): void
+    +updateLobby(gameId: int, players: List<String>, numPlayersAllowed: int): void
+    +updateTotemAvailable(totemsAvailable: List<Totem>, message: String): void
+    +updateLobby(gameId, players, numPlayersAllowed, message): void
+    +notifyError(message: String): void
+    +notifyEventTriggered(eventTitle: String, logMessage: String): void
+  }
+
+  interface EndGameObserver {
+    +notifyEndGame(id: int, results: List<MatchResult>, records: List<DBRecord>): void
+    +notifyEndGame(id, results, records, message: String): void
+  }
+}
+
+package "server.network" {
+
+  interface HomeObserver {
+    +updateHome(activeGames: List<Integer>): void
+    +updateHome(activeGames: List<Integer>, message: String): void
+    +updateHome(activeGames, gamePlayers, gameCapacity): void
+    +updateHome(activeGames, gamePlayers, gameCapacity, message): void
+  }
+
+  abstract class VirtualClient {
+    -serverController: ServerController
+    -clientUsername: String
+    -gameId: Integer
+    -isConnected: boolean
+    -lastPing: long <<volatile>>
+    +VirtualClient(serverController: ServerController)
+    +processRequest(req: ClientRequest): void
+    +handleDisconnection(): void
+    +handleConnection(): void
+    +sendLoginNeededResponse(): void
+    +updateHome(activeGames: List<Integer>): void
+    +updateHome(activeGames: List<Integer>, message: String): void
+    +updateHome(activeGames, gamePlayers, gameCapacity): void
+    +updateHome(activeGames, gamePlayers, gameCapacity, message): void
+    +updateLobby(gameId: int, players: List<String>, numPlayersAllowed: int): void
+    +updateLobby(gameId, players, numPlayersAllowed, message): void
+    +updateTotemAvailable(totemAvailable: List<Totem>, message: String): void
+    +updateGame(game: Game): void
+    +updateGame(game: Game, message: String): void
+    +notifyError(message: String): void
+    +notifyEventTriggered(eventTitle: String, logMessage: String): void
+    +notifyEndGame(id: int, results: List<MatchResult>, records: List<DBRecord>): void
+    +notifyEndGame(id, results, records, message: String): void
+    +sendErrorMessage(error: String): void
+    +sendPing(): void
+    {abstract} +sendResponse(response: ServerResponse): void
+    {abstract} +closeConnection(): void
+    +getClientUsername(): Optional<String>
+    +getGameId(): Optional<Integer>
+    +getLastPing(): long
+    +isConnected(): boolean
+    +setGameId(gameId: Integer): void
+    +setClientUsername(clientUsername: String): void
+    +setConnected(connected: boolean): void
+    +updateLastPing(): void
+  }
+}
+
+package "server.network.socket" {
+
+  class SocketServer <<Runnable>> {
+    -serverController: ServerController
+    -threadPool: ExecutorService
+    -active: boolean
+    -port: int
+    -serverSocket: ServerSocket
+    +SocketServer(threadPool: ExecutorService, port: int)
+    +run(): void
+    +shutdown(): void
+    +setServerController(serverController: ServerController): void
+  }
+
+  class SocketClientHandler <<Runnable>> {
+    -socket: Socket
+    -in: BufferedReader
+    -out: PrintWriter
+    +SocketClientHandler(socket: Socket, serverController: ServerController)
+    +run(): void
+    +closeConnection(): void
+    +sendResponse(response: ServerResponse): void
+  }
+}
+
+package "server.network.rmi" {
+
+  class RemoteServerServiceImpl <<UnicastRemoteObject>> {
+    -serverController: ServerController
+    -clients: Map<RemoteClientStub, RMIClientHandler>
+    -threadPool: ExecutorService
+    +RemoteServerServiceImpl()
+    +connect(clientCallback: RemoteClientStub): void
+    +sendRequest(request: ClientRequest, clientStub: RemoteClientStub): void
+    +disconnect(clientStub: RemoteClientStub): void
+    +remove(clientStub: RemoteClientStub): void
+    +setServerController(serverController: ServerController): void
+  }
+
+  class RMIClientHandler {
+    -clientStub: RemoteClientStub
+    -serverService: RemoteServerServiceImpl
+    +RMIClientHandler(serverController, clientStub, serverService)
+    +sendResponse(response: ServerResponse): void
+    +closeConnection(): void
+  }
+}
+
+package "server.controller" {
+
+  class ServerController {
+    -games: Map<Integer, GameController>
+    -userConnected: Map<String, VirtualClient>
+    -home: Home
+    -gameDAO: GameDAO
+    -boardConfigLoader: BoardConfigLoader
+    -gamePersistenceManager: GamePersistenceManager
+    -timeoutScheduler: ScheduledExecutorService
+    -registry: Registry
+    -rmiServer: RemoteServerService
+    -socketServer: SocketServer
+    +ServerController(home, gameDAO, boardConfigLoader, gamePersistenceManager, registry, rmiServer, socketServer)
+    +startTimeoutChecker(pingRatioMs: int, clientTimeoutMs: long): void
+    +stopTimeoutChecker(): void
+    +handleClientRequest(req: ClientRequest, vc: VirtualClient): void
+    +pingRoutine(vc: VirtualClient): void
+    +visit(req: ClientPing, vc: VirtualClient): void
+    +visit(req: ClientConnection, vc: VirtualClient): void
+    +visit(req: LoginRequest, vc: VirtualClient): void
+    +visit(req: LogoutRequest, vc: VirtualClient): void
+    +visit(req: CreateGameRequest, vc: VirtualClient): void
+    +visit(req: EnterGameRequest, vc: VirtualClient): void
+    +visit(req: ClientDisconnected, vc: VirtualClient): void
+    +visit(req: StartGameRequest, vc: VirtualClient): void
+    +visit(req: MoveRequest, vc: VirtualClient): void
+    +visit(req: TotemPickingRequest, vc: VirtualClient): void
+    +visit(req: ExitLobbyRequest, vc: VirtualClient): void
+    +visit(req: ExitGameRequest, vc: VirtualClient): void
+    +controlIfLogged(vc: VirtualClient): void
+    +logout(req: ClientRequest, vc: VirtualClient): void
+    +handleHostDisconnection(gameId: int): void
+    +sendToGameController(gameId: int, req: ClientRequest, vc: VirtualClient): void
+    +notifyEndGame(gameId: int, results: List<MatchResult>, records: List<DBRecord>): void
+    +recoverGames(): void
+    -buildGamePlayersMap(): Map<Integer, List<String>>
+    -buildGameCapacityMap(): Map<Integer, Integer>
+    +getMaxGameId(): int
+    +shutdown(): void
+    +shutdownRMI(): void
+  }
+
+  class GameController {
+    -state: ControllerState
+    -boardConfigLoader: BoardConfigLoader
+    -persistenceManager: GamePersistenceManager
+    -gameDAO: GameDAO
+    +GameController(boardConfigLoader, persistenceManager, gameDAO)
+    +handleClientRequest(req: ClientRequest, vc: VirtualClient): void
+    -changeState(newState: ControllerState): void
+    +setState(state: ControllerState): void
+    +getBoardConfigLoader(): BoardConfigLoader
+    +getPersistenceManager(): GamePersistenceManager
+    +getGameDAO(): GameDAO
+    +getLobbyPlayers(): List<String>
+    +getCapacity(): int
+    +getState(): ControllerState
+  }
+
+  class StateFactory <<utility>> {
+    {static} -mapper: Map<Phase, BiFunction<Game, GameController, ControllerState>>
+    {static} +recover(game: Game, context: GameController): ControllerState
+  }
+}
+
+package "server.controller.states" {
+
+  abstract class ControllerState <<RequestVisitor<VirtualClient>>> {
+    -game: Game
+    -context: GameController
+    -nextState: ControllerState
+    -toStop: boolean
+    +ControllerState(game: Game, context: GameController)
+    +onEntry(): ControllerState
+    +calcNextState(): ControllerState
+    +controlIfPlayerTurn(vc: VirtualClient): Player
+    +visit(req: ClientPing, vc: VirtualClient): void
+    +visit(req: ClientConnection, vc: VirtualClient): void
+    +visit(req: LoginRequest, vc: VirtualClient): void
+    +visit(req: LogoutRequest, vc: VirtualClient): void
+    +visit(req: ExitLobbyRequest, vc: VirtualClient): void
+    +visit(req: CreateGameRequest, vc: VirtualClient): void
+    +visit(req: EnterGameRequest, vc: VirtualClient): void
+    +visit(req: StartGameRequest, vc: VirtualClient): void
+    +visit(req: TotemPickingRequest, vc: VirtualClient): void
+    +visit(req: MoveRequest, vc: VirtualClient): void
+    +visit(req: ExitGameRequest, vc: VirtualClient): void
+    +visit(req: ClientDisconnected, vc: VirtualClient): void
+    +getGame(): Game
+    +getContext(): GameController
+    +isToStop(): boolean
+    +setToStop(toStop: boolean): void
+    +getNextState(): ControllerState
+    +setNextState(nextState: ControllerState): void
+  }
+
+  class LobbyState {
+    -readyToStart: boolean
+    -host: String
+    +LobbyState(game: Game, context: GameController, host: String)
+    +visit(req: EnterGameRequest, vc: VirtualClient): void
+    +visit(req: ExitLobbyRequest, vc: VirtualClient): void
+    +visit(req: ClientDisconnected, vc: VirtualClient): void
+    +playerExit(vc: VirtualClient): void
+    +visit(req: StartGameRequest, vc: VirtualClient): void
+    +calcNextState(): ControllerState
+  }
+
+  class InitGameState {
+    +InitGameState(game: Game, context: GameController)
+    +onEntry(): ControllerState
+    +calcNextState(): ControllerState
+    +maxBuildings(gameSettings: GameSettings): int
+    +fillLowRow(targetSize: int): void
+    +fillTopRow(targetSize: int): void
+    +makeBuildingDecks(buildings: Set<Building>, numPlayers: int, gameSettings: GameSettings): void
+  }
+
+  class TotemPickingState {
+    -totemToPick: List<Totem>
+    -numPicked: int
+    +TotemPickingState(game: Game, context: GameController)
+    +onEntry(): ControllerState
+    +visit(req: TotemPickingRequest, vc: VirtualClient): void
+    +calcNextState(): ControllerState
+  }
+
+  class TotemPlacementState {
+    +TotemPlacementState(game: Game, context: GameController)
+    +onEntry(): ControllerState
+    +visit(req: MoveRequest, vc: VirtualClient): void
+    +execute(move: Move, p: Player): void
+    +calcNextState(): ControllerState
+  }
+
+  class ActionExecutionState {
+    +ActionExecutionState(game: Game, context: GameController)
+    +onEntry(): ControllerState
+    +visit(req: MoveRequest, vc: VirtualClient): void
+    -execute(moves: Set<Move>, p: Player): void
+    -placeTotem(p: Player): void
+    +calcNextState(): ControllerState
+  }
+
+  class ExtraMoveState {
+    +ExtraMoveState(game: Game, context: GameController)
+    +onEntry(): ControllerState
+    +visit(req: MoveRequest, vc: VirtualClient): void
+    +execute(move: Move, p: Player): void
+    +calcNextState(): ControllerState
+  }
+
+  class EventsState {
+    +EventsState(game: Game, context: GameController)
+    +onEntry(): ControllerState
+    -executeAndAnnounce(cards: ArrayList<Card>): void
+    {static} -snapshotFoodPp(players: Set<Player>): Map<Player, int[]>
+    {static} -formatDeltas(title: String, players: Set<Player>, before: Map): String
+    {static} -signed(n: int): String
+    -formatTitle(e: Event): String
+    -romanEra(era: int): String
+    +calcNextState(): ControllerState
+  }
+
+  class EndRoundState {
+    {static} -MAX_ERA: int
+    +EndRoundState(game: Game, context: GameController)
+    +onEntry(): ControllerState
+    +calcNextState(): ControllerState
+  }
+
+  class EndGameState {
+    +EndGameState(game: Game, context: GameController)
+    +onEntry(): ControllerState
+  }
+
+  class RecoverState {
+    +RecoverState(game: Game, context: GameController)
+    +onEntry(): ControllerState
+    +visit(req: EnterGameRequest, vc: VirtualClient): void
+    +calcNextState(): ControllerState
+  }
+}
+
+package "server" {
+  class ServerApp <<utility>> {
+    -ServerApp()
+    {static} ~main(args: String[]): void
+    {static} -startServer(socketPort: int, rmiPort: int, recoverDirectory: String): void
+    {static} -printUsageAndExit(errorMessage: String): void
+  }
+}
+
+'==========================================================================
+' CLIENT
+'==========================================================================
+
+package "client.network" {
+
+  interface ServerConnection {
+    +connect(ip: String, port: int): void
+    +sendRequest(clientRequest: ClientRequest): void
+    +disconnect(): void
+    +setAppCoordinator(appCoordinator: AppCoordinator): void
+  }
+}
+
+package "client.network.socket" {
+
+  class SocketClientConnection {
+    -socket: Socket
+    -out: PrintWriter
+    -in: BufferedReader
+    -appCoordinator: AppCoordinator
+    -isRunning: boolean <<volatile>>
+    +connect(ip: String, port: int): void
+    -listenToServer(): void
+    +sendRequest(request: ClientRequest): void
+    +disconnect(): void
+    -terminateResources(): void
+    +setAppCoordinator(appCoordinator: AppCoordinator): void
+  }
+}
+
+package "client.network.rmi" {
+
+  class RMIServerConnection {
+    -serverStub: RemoteServerService
+    -clientStub: RemoteClientStubImpl
+    -appCoordinator: AppCoordinator
+    -disconnected: boolean
+    +connect(ip: String, port: int): void
+    +sendRequest(request: ClientRequest): void
+    +disconnect(): void
+    +setAppCoordinator(appCoordinator: AppCoordinator): void
+  }
+
+  class RemoteClientStubImpl <<UnicastRemoteObject>> {
+    -coordinator: AppCoordinator <<transient>>
+    -threadPool: ExecutorService
+    +RemoteClientStubImpl(coordinator: AppCoordinator)
+    +sendResponse(response: ServerResponse): void
+    +shutdown(): void
+  }
+}
+
+package "client.network.fake" {
+
+  class FakeServerConnection {
+    -appCoordinator: AppCoordinator
+    -username: String
+    -numPlayers: int
+    -snapshot: GameDTO
+    +connect(ip: String, port: int): void
+    +disconnect(): void
+    +setAppCoordinator(appCoordinator: AppCoordinator): void
+    +sendRequest(request: ClientRequest): void
+    -buildSnapshot(): GameDTO
+    -resendSnapshot(): GameDTO
+  }
+}
+
+package "client.serverEvents" {
+
+  interface ServerEvent {
+    +<S> accept(visitor: EventVisitor<S>): S
+  }
+
+  interface "EventVisitor<S>" as EventVisitor {
+    +visit(event: LoginNeededEvent): S
+    +visit(event: HomeUpdateEvent): S
+    +visit(event: LobbyUpdateEvent): S
+    +visit(event: GameUpdateEvent): S
+    +visit(event: EndGameEvent): S
+    +visit(event: ErrorEvent): S
+    +visit(event: DisconnectedEvent): S
+    +visit(event: TotemAvailableEvent): S
+    +visit(event: EventsTriggeredEvent): S
+  }
+
+  class LoginNeededEvent {
+    +<S> accept(visitor: EventVisitor<S>): S
+  }
+
+  class HomeUpdateEvent <<record>> {
+    +activeGames: List<Integer>
+    +gamePlayers: Map<Integer, List<String>>
+    +gameCapacity: Map<Integer, Integer>
+    +message: String
+    +HomeUpdateEvent(activeGames, gamePlayers, gameCapacity, message)
+    +HomeUpdateEvent(activeGames: List<Integer>)
+    +<S> accept(visitor: EventVisitor<S>): S
+  }
+
+  class LobbyUpdateEvent <<record>> {
+    +gameId: int
+    +players: List<String>
+    +numPlayersAllowed: int
+    +message: String
+    +LobbyUpdateEvent(gameId, players, numPlayersAllowed, message)
+    +LobbyUpdateEvent(gameId: int, players: List<String>, numPlayersAllowed: int)
+    +<S> accept(visitor: EventVisitor<S>): S
+  }
+
+  class GameUpdateEvent <<record>> {
+    +game: GameDTO
+    +message: String
+    +GameUpdateEvent(game: GameDTO, message: String)
+    +GameUpdateEvent(game: GameDTO)
+    +<S> accept(visitor: EventVisitor<S>): S
+  }
+
+  class EndGameEvent <<record>> {
+    +results: List<MatchResult>
+    +records: List<DBRecord>
+    +message: String
+    +EndGameEvent(results, records, message)
+    +<S> accept(visitor: EventVisitor<S>): S
+  }
+
+  class ErrorEvent <<record>> {
+    +message: String
+    +ErrorEvent(message: String)
+    +<S> accept(visitor: EventVisitor<S>): S
+  }
+
+  class DisconnectedEvent <<record>> {
+    +message: String
+    +DisconnectedEvent(message: String)
+    +<S> accept(visitor: EventVisitor<S>): S
+  }
+
+  class TotemAvailableEvent <<record>> {
+    +totemList: List<Totem>
+    +message: String
+    +TotemAvailableEvent(totemList: List<Totem>, message: String)
+    +<S> accept(visitor: EventVisitor<S>): S
+  }
+
+  class EventsTriggeredEvent <<record>> {
+    +eventTitle: String
+    +logMessage: String
+    +EventsTriggeredEvent(eventTitle: String, logMessage: String)
+    +<S> accept(visitor: EventVisitor<S>): S
+  }
+}
+
+package "client" {
+
+  class ClientApp <<utility>> {
+    -ClientApp()
+    {static} +main(args: String[]): void
+    {static} -startTestTui(): void
+    {static} -startTestGui(): void
+    {static} -startClientTester(): void
+    {static} -startClient(connectionType: String, uiType: String, ipAddress: String, port: int): void
+    {static} -printUsageAndExit(errorMessage: String): void
+  }
+
+  class AppCoordinator <<ResponseVisitor>> {
+    {static} -DISPATCH_MIN_DELAY_MS: long
+    -gameUI: GameUI
+    -serverConnection: ServerConnection
+    -pingScheduler: ScheduledExecutorService
+    -dispatchPacer: ScheduledExecutorService
+    -lastServerPing: long <<volatile>>
+    -lastIp: String
+    -lastPort: int
+    -lastPingRatioMs: int
+    -lastServerTimeoutMs: long
+    -pacerLock: Object
+    -nextDispatchAtMs: long
+    -disconnected: AtomicBoolean
+    +AppCoordinator(gameUI: GameUI, serverConnection: ServerConnection)
+    +setConnectionParams(ip: String, port: int): void
+    +startPingScheduler(pingRatioMs: int, serverTimeoutMs: long): void
+    +stopPingScheduler(): void
+    +requestShutdown(): void
+    +handleServerResponse(response: ServerResponse): void
+    -dispatchResponse(response: ServerResponse): void
+    +visit(response: ServerPing): void
+    +visit(response: LoginNeeded): void
+    +visit(response: HomeUpdate): void
+    +visit(response: LobbyUpdate): void
+    +visit(response: TotemAvailableUpdate): void
+    +visit(response: GameUpdate): void
+    +visit(response: GameEnded): void
+    +visit(response: ErrorResponse): void
+    +visit(response: ServerDisconnected): void
+    +visit(response: EventsTriggered): void
+    +reconnect(): void
+    +connectRequest(): void
+    +createLoginRequest(username: String): void
+    +createLogoutRequest(): void
+    +createExitLobbyRequest(): void
+    +createGameRequest(numPlayer: int): void
+    +enterGameRequest(gameId: int): void
+    +startGameRequest(): void
+    +createTotemPickingRequest(totem: Totem): void
+    +makeMoveRequest(moves: Set<Move>): void
+    +disconnect(): void
+    +createExitGameRequest(): void
+  }
+}
+
+package "client.view" {
+
+  abstract class GameUI {
+    -appCoordinator: AppCoordinator
+    +showUsernameField(): void
+    +onHomeUpdate(activeGames: List<Integer>): void
+    +onHomeUpdate(activeGames: List<Integer>, message: String): void
+    +onHomeUpdate(activeGames, gamePlayers, gameCapacity, message): void
+    +onLobbyUpdate(gameId: int, players: List<String>, numPlayersAllowed: int): void
+    +onLobbyUpdate(gameId, players, numPlayersAllowed, message): void
+    +onTotemAvailableUpdate(totemList: List<Totem>, message: String): void
+    +onGameUpdate(game: GameDTO): void
+    +onGameUpdate(game: GameDTO, message: String): void
+    +onEndGame(results: List<MatchResult>, records: List<DBRecord>, message: String): void
+    +onEventTriggered(eventTitle: String, logMessage: String): void
+    +onErrorReceived(error: String): void
+    +onServerDisconnected(): void
+    {abstract} +dispatch(event: ServerEvent): void
+    {abstract} +start(): void
+    {abstract} +shutdown(): void
+    +getAppCoordinator(): AppCoordinator
+    +setAppCoordinator(appCoordinator: AppCoordinator): void
+  }
+
+  abstract class "Screen<S>" as Screen {
+    #appCoordinator: AppCoordinator
+    #error: String
+    +Screen(appCoordinator: AppCoordinator)
+    +isExit(): boolean
+    {abstract} +createLoginScreen(e: LoginNeededEvent, ac: AppCoordinator): S
+    {abstract} +createHomeScreen(e: HomeUpdateEvent, ac: AppCoordinator): S
+    {abstract} +createLobbyScreen(e: LobbyUpdateEvent, ac: AppCoordinator): S
+    {abstract} +createTotemPickingScreen(e: TotemAvailableEvent, ac: AppCoordinator): S
+    {abstract} +createGameScreen(e: GameUpdateEvent, ac: AppCoordinator): S
+    {abstract} +createEndGameScreen(e: EndGameEvent, ac: AppCoordinator): S
+    {abstract} +createDisconnectedScreen(e: DisconnectedEvent, ac: AppCoordinator): S
+    +visit(e: LoginNeededEvent): S
+    +visit(e: HomeUpdateEvent): S
+    +visit(e: LobbyUpdateEvent): S
+    +visit(e: TotemAvailableEvent): S
+    +visit(e: GameUpdateEvent): S
+    +visit(e: EndGameEvent): S
+    +visit(e: ErrorEvent): S
+    {abstract} +getThis(): S
+    +visit(e: DisconnectedEvent): S
+    +visit(e: EventsTriggeredEvent): S
+  }
+}
+
+package "client.view.tui" {
+
+  class TUI {
+    -terminal: TuiTerminal
+    -currentScreen: TUIScreen
+    -eventQueue: LinkedBlockingQueue<ServerEvent>
+    -running: boolean <<volatile>>
+    +start(): void
+    +shutdown(): void
+    -loop(): void
+    +transitionTo(screen: TUIScreen): boolean
+    -toInputEvent(key: Key): InputEvent
+    +dispatch(event: ServerEvent): void
+    +onServerDisconnected(): void
+    -showFatal(label: String, e: Exception): void
+  }
+
+  class TuiGameLog <<singleton>> {
+    {static} +INSTANCE: TuiGameLog
+    -history: List<String>
+    -TuiGameLog()
+    +append(text: String): void
+    +recent(n: int): List<String>
+    +all(): List<String>
+    +size(): int
+    +clear(): void
+  }
+
+  class CardCatalog <<utility>> {
+    -CardCatalog()
+    {static} +typeFromId(id: String): CardType
+    {static} +typeLabel(type: CardType): String
+    {static} +isEvent(type: CardType): boolean
+    {static} +isCharacter(type: CardType): boolean
+    {static} +typeSymbol(type: CardType): String
+    {static} +totemLabel(totem: Totem): String
+  }
+
+  class CardTokens <<utility>> {
+    -CardTokens()
+    {static} -EMOJI_MAP: Map<String, String>
+    {static} -TYPE_ABBR: Map<String, String>
+    {static} +toEmoji(s: String): String
+    {static} +toEffectLabel(s: String): String
+    {static} -applyFoodCost(s: String): String
+  }
+}
+
+package "client.view.tui.render" {
+
+  class AnsiCodes <<utility>> {
+    {static} +ESC: String
+    {static} +CSI: String
+    {static} +RESET: String
+    {static} +CLEAR_SCREEN: String
+    {static} +HIDE_CURSOR: String
+    {static} +SHOW_CURSOR: String
+    {static} +ALT_SCREEN_ON: String
+    {static} +ALT_SCREEN_OFF: String
+    {static} +moveCursor(row: int, col: int): String
+  }
+
+  enum TuiColor {
+    BLACK
+    RED
+    GREEN
+    YELLOW
+    BLUE
+    MAGENTA
+    CYAN
+    WHITE
+    DEFAULT
+    DARK_GRAY
+    ORANGE
+    DARK_PURPLE
+    +fg(): String
+    +bg(): String
+  }
+
+  class Key {
+    -type: Type
+    -character: char
+    +getType(): Type
+    +getCharacter(): char
+    {static} +character(c: char): Key
+    {static} +enter(): Key
+    {static} +arrowUp(): Key
+    {static} +arrowDown(): Key
+    {static} +arrowLeft(): Key
+    {static} +arrowRight(): Key
+    {static} +escape(): Key
+    {static} +backspace(): Key
+  }
+
+  enum "Key.Type" as KeyType {
+    CHARACTER
+    ENTER
+    ARROW_UP
+    ARROW_DOWN
+    ARROW_LEFT
+    ARROW_RIGHT
+    ESCAPE
+    BACKSPACE
+  }
+
+  class TuiSize <<record>> {
+    +columns: int
+    +rows: int
+    +getColumns(): int
+    +getRows(): int
+  }
+
+  class TuiTerminal {
+    -terminal: Terminal
+    -writer: PrintWriter
+    -bindingReader: BindingReader
+    -keyMap: KeyMap<KeyOp>
+    -buffer: StringBuilder
+    -savedAttributes: Attributes
+    -closed: boolean
+    +TuiTerminal()
+    {static} -buildKeyMap(t: Terminal): KeyMap<KeyOp>
+    {static} -bindArrow(m: KeyMap, t: Terminal, op: KeyOp, cap: Capability, ansiTail: String): void
+    +getTerminalSize(): TuiSize
+    +clear(): void
+    +newTextGraphics(): TuiTextGraphics
+    +refresh(): void
+    +pollInput(timeoutMillis: long): Key
+    +pollInput(): Key
+    +close(): void
+  }
+
+  enum "TuiTerminal.KeyOp" as KeyOp {
+    UP
+    DOWN
+    LEFT
+    RIGHT
+    ENTER
+    BACKSPACE
+    CHAR
+  }
+
+  class TuiTextGraphics {
+    -out: StringBuilder
+    -fg: TuiColor
+    -bg: TuiColor
+    ~TuiTextGraphics(out: StringBuilder)
+    +setForegroundColor(color: TuiColor): void
+    +setBackgroundColor(color: TuiColor): void
+    +putString(col: int, row: int, text: String): void
+  }
+}
+
+package "client.view.tui.events" {
+
+  interface InputEventVisitor {
+    +visit(event: ConfirmEvent): TUIScreen
+    +visit(event: SelectEvent): TUIScreen
+    +visit(event: NavigateLeftEvent): TUIScreen
+    +visit(event: NavigateRightEvent): TUIScreen
+    +visit(event: NavigateUpEvent): TUIScreen
+    +visit(event: NavigateDownEvent): TUIScreen
+    +visit(event: CharInputEvent): TUIScreen
+    +visit(event: BackspaceEvent): TUIScreen
+  }
+
+  abstract class InputEvent {
+    {abstract} +accept(visitor: InputEventVisitor): TUIScreen
+  }
+
+  class ConfirmEvent {
+    +accept(visitor: InputEventVisitor): TUIScreen
+  }
+
+  class SelectEvent {
+    +accept(visitor: InputEventVisitor): TUIScreen
+  }
+
+  class NavigateLeftEvent {
+    +accept(visitor: InputEventVisitor): TUIScreen
+  }
+
+  class NavigateRightEvent {
+    +accept(visitor: InputEventVisitor): TUIScreen
+  }
+
+  class NavigateUpEvent {
+    +accept(visitor: InputEventVisitor): TUIScreen
+  }
+
+  class NavigateDownEvent {
+    +accept(visitor: InputEventVisitor): TUIScreen
+  }
+
+  class CharInputEvent {
+    -character: char
+    +CharInputEvent(character: char)
+    +getCharacter(): char
+    +accept(visitor: InputEventVisitor): TUIScreen
+  }
+
+  class BackspaceEvent {
+    +accept(visitor: InputEventVisitor): TUIScreen
+  }
+}
+
+package "client.view.tui.screens" {
+
+  abstract class TUIScreen {
+    #terminal: TuiTerminal
+    #username: String
+    #toRender: boolean
+    #showLog: boolean
+    {static} -LOG_PREVIEW_COUNT: int
+    {static} -LOG_PREVIEW_WIDTH: int
+    #TUIScreen(terminal: TuiTerminal, ac: AppCoordinator, username: String)
+    #TUIScreen(terminal: TuiTerminal, ac: AppCoordinator)
+    #TUIScreen(terminal: TuiTerminal)
+    #TUIScreen()
+    +createLoginScreen(e: LoginNeededEvent, ac: AppCoordinator): TUIScreen
+    +createHomeScreen(e: HomeUpdateEvent, ac: AppCoordinator): TUIScreen
+    +createLobbyScreen(e: LobbyUpdateEvent, ac: AppCoordinator): TUIScreen
+    +createTotemPickingScreen(e: TotemAvailableEvent, ac: AppCoordinator): TUIScreen
+    +createGameScreen(e: GameUpdateEvent, ac: AppCoordinator): TUIScreen
+    +createEndGameScreen(e: EndGameEvent, ac: AppCoordinator): TUIScreen
+    +createDisconnectedScreen(e: DisconnectedEvent, ac: AppCoordinator): TUIScreen
+    +getThis(): TUIScreen
+    +visit(e: ConfirmEvent): TUIScreen
+    +visit(e: SelectEvent): TUIScreen
+    +visit(e: NavigateLeftEvent): TUIScreen
+    +visit(e: NavigateRightEvent): TUIScreen
+    +visit(e: NavigateUpEvent): TUIScreen
+    +visit(e: NavigateDownEvent): TUIScreen
+    +visit(e: CharInputEvent): TUIScreen
+    +visit(e: BackspaceEvent): TUIScreen
+    +handleEvent(event: ServerEvent): TUIScreen
+    -captureLogMessage(event: ServerEvent): void
+    #toggleLog(): void
+    #drawLogPreview(tg: TuiTextGraphics, sz: TuiSize): void
+    #drawLogWindow(tg: TuiTextGraphics, sz: TuiSize): void
+    +handleEvent(event: InputEvent): TUIScreen
+    +isToRender(): boolean
+    +setToRender(value: boolean): void
+    +onEnter(): TUIScreen
+    {abstract} +render(): void
+  }
+
+  class "ConnectingScreen" as TuiConnectingScreen {
+    +ConnectingScreen(terminal: TuiTerminal, coordinator: AppCoordinator)
+    +render(): void
+    +visit(e: CharInputEvent): TUIScreen
+  }
+
+  class "DisconnectedScreen" as TuiDisconnectedScreen {
+    {static} -FIELD_RECONNECT: int
+    {static} -FIELD_EXIT: int
+    {static} -FIELD_COUNT: int
+    -message: String
+    -focus: int
+    -localError: String
+    +DisconnectedScreen(terminal, coordinator, message)
+    +render(): void
+    +visit(e: NavigateLeftEvent): TUIScreen
+    +visit(e: NavigateRightEvent): TUIScreen
+    +visit(e: NavigateUpEvent): TUIScreen
+    +visit(e: NavigateDownEvent): TUIScreen
+    +visit(e: ConfirmEvent): TUIScreen
+  }
+
+  class "EndGameScreen" as TuiEndGameScreen {
+    -results: List<MatchResult>
+    -records: List<DBRecord>
+    -message: String
+    +EndGameScreen(terminal, coordinator, username, results, records, message)
+    +render(): void
+    -renderMatchBlock(tg, col: int, width: int): void
+    -renderDbBlock(tg, col: int, width: int): void
+    +visit(e: ConfirmEvent): TUIScreen
+    +visit(e: CharInputEvent): TUIScreen
+  }
+
+  class "ExitScreen" as TuiExitScreen {
+    {static} +INSTANCE: TuiExitScreen
+    -ExitScreen()
+    +render(): void
+    +isExit(): boolean
+  }
+
+  class "HomeScreen" as TuiHomeScreen {
+    {static} -CREATE_OPTIONS: int
+    -activeGames: List<Integer>
+    -gamePlayers: Map<Integer, List<String>>
+    -gameCapacity: Map<Integer, Integer>
+    -cursor: int
+    -scrollOffset: int
+    +HomeScreen(terminal, coordinator, username, activeGames, gamePlayers, gameCapacity)
+    +render(): void
+    +visit(e: HomeUpdateEvent): TUIScreen
+    +visit(e: NavigateUpEvent): TUIScreen
+    +visit(e: NavigateDownEvent): TUIScreen
+    +visit(e: NavigateLeftEvent): TUIScreen
+    +visit(e: NavigateRightEvent): TUIScreen
+    +visit(e: ConfirmEvent): TUIScreen
+    +visit(e: CharInputEvent): TUIScreen
+    -totalOptions(): int
+    -isJoinOption(i: int): boolean
+    -isGameFull(gameId: int): boolean
+    -optionLabel(i: int): String
+    -sectionHeader(label: String): String
+  }
+
+  class "LobbyScreen" as TuiLobbyScreen {
+    -gameId: int
+    -players: List<String>
+    -totalPlayers: int
+    +LobbyScreen(terminal, coordinator, username, gameId, players, totalPlayers)
+    +render(): void
+    +visit(e: CharInputEvent): TUIScreen
+    +visit(e: LobbyUpdateEvent): TUIScreen
+  }
+
+  class "LoginScreen" as TuiLoginScreen {
+    {static} -MAX_USERNAME_LENGTH: int
+    {static} -FIELD_TEXT: int
+    {static} -FIELD_LOGIN: int
+    {static} -FIELD_EXIT: int
+    {static} -FIELD_COUNT: int
+    -initialError: String
+    -typed: StringBuilder
+    -focus: int
+    -submitted: boolean
+    -localValidation: String
+    +LoginScreen(terminal, coordinator)
+    +LoginScreen(terminal, coordinator, initialError)
+    +render(): void
+    +visit(e: LoginNeededEvent): TUIScreen
+    +visit(e: ErrorEvent): TUIScreen
+    +visit(e: NavigateUpEvent): TUIScreen
+    +visit(e: NavigateDownEvent): TUIScreen
+    +visit(e: NavigateLeftEvent): TUIScreen
+    +visit(e: NavigateRightEvent): TUIScreen
+    +visit(e: ConfirmEvent): TUIScreen
+    +visit(e: CharInputEvent): TUIScreen
+    +visit(e: BackspaceEvent): TUIScreen
+    -trySubmit(): TUIScreen
+  }
+
+  class "TotemPickingScreen" as TuiTotemPickingScreen {
+    {static} -ALL_TOTEMS: Totem[]
+    -availableTotems: List<Totem>
+    -cursor: int
+    -selectedTotem: Totem
+    -pendingPick: boolean
+    -hasPicked: boolean
+    +TotemPickingScreen(terminal, ac, username, availableTotems)
+    +render(): void
+    +onEnter(): TUIScreen
+    +visit(e: NavigateUpEvent): TUIScreen
+    +visit(e: NavigateDownEvent): TUIScreen
+    +visit(e: NavigateLeftEvent): TUIScreen
+    +visit(e: NavigateRightEvent): TUIScreen
+    +visit(e: SelectEvent): TUIScreen
+    +visit(e: ConfirmEvent): TUIScreen
+    +visit(event: TotemAvailableEvent): TUIScreen
+    +visit(e: ErrorEvent): TUIScreen
+    -moveCursor(dir: int): void
+    -ensureCursorOnAvailable(dir: int): void
+    -totemColor(t: Totem): TuiColor
+  }
+
+  class "GameScreen" as TuiGameScreen {
+    -game: GameDTO
+    -myTotem: Totem
+    -subState: SubState
+    -preWaitState: SubState
+    -selectionIndex: int
+    -onTopRow: boolean
+    -selectedMoves: Set<Move>
+    -upperCount: int
+    -lowerCount: int
+    -viewOnTopRow: boolean
+    -topRowOffset: int
+    -lowRowOffset: int
+    -showLegend: boolean
+    -showDecks: boolean
+    -deckPlayerIndex: int
+    -deckOffset: int
+    {static} -CARD_W: int
+    -overlayTitle: String <<volatile>>
+    -overlayLog: String <<volatile>>
+    +GameScreen(terminal, coordinator, username, initialGame: GameDTO)
+    +onEnter(): TUIScreen
+    +render(): void
+    +visit(e: GameUpdateEvent): TUIScreen
+    +visit(e: EndGameEvent): TUIScreen
+    +visit(e: ErrorEvent): TUIScreen
+    +visit(e: EventsTriggeredEvent): TUIScreen
+    +visit(e: ConfirmEvent): TUIScreen
+    +visit(e: SelectEvent): TUIScreen
+    +visit(e: NavigateLeftEvent): TUIScreen
+    +visit(e: NavigateRightEvent): TUIScreen
+    +visit(e: NavigateUpEvent): TUIScreen
+    +visit(e: NavigateDownEvent): TUIScreen
+    +visit(e: CharInputEvent): TUIScreen
+  }
+
+  enum "GameScreen.SubState" as SubState {
+    MY_TURN_TOTEM
+    MY_TURN_CARDS
+    NOT_MY_TURN
+    WAITING_SERVER
+  }
+}
+
+package "client.view.gui" {
+
+  class GUI {
+    {static} -WINDOW_TITLE: String
+    {static} -WINDOW_W: double
+    {static} -WINDOW_H: double
+    {static} -MIN_W: double
+    {static} -MIN_H: double
+    -coordinator: AppCoordinator
+    -stage: Stage
+    -currentScreen: GUIScreen
+    -shuttingDown: AtomicBoolean
+    -keyboardNavMode: boolean
+    +setAppCoordinator(coordinator: AppCoordinator): void
+    +start(): void
+    +shutdown(): void
+    -installFocusVisibleBehavior(scene: Scene): void
+    +dispatch(event: ServerEvent): void
+    +transitionTo(screen: GUIScreen): void
+    -runOnEnterChain(screen: GUIScreen): void
+    -swapRoot(screen: GUIScreen): void
+  }
+
+  class Chip <<utility>> {
+    {static} -FOOD_FILL: Color
+    {static} -FOOD_STROKE: Color
+    {static} -PP_POS_FILL: Color
+    {static} -PP_NEG_FILL: Color
+    {static} -FOOD_OFFSET_Y_RATIO: double
+    {static} -BASE_FONT_RATIO: double
+    {static} -STROKE_RATIO: double
+    {static} -PP_BASE_MUL: double
+    {static} -PP_NEG_SHRINK: double
+    {static} -LENGTH_SHRINK: double[]
+    -Chip()
+    {static} +food(value: int, width: double): StackPane
+    {static} +pp(value: int, width: double): StackPane
+    {static} -roundImage(img: Image, width: double): ImageView
+    {static} -chalkNumber(text, width, fill, extraShrink): Text
+  }
+
+  class FloatingLog {
+    {static} -VISIBLE: int
+    {static} -MAX_W: double
+    -history: List<String>
+    -floating: VBox
+    -fullPanel: StackPane
+    -fullMessages: VBox
+    -fullScroll: ScrollPane
+    -title: String
+    +FloatingLog(title: String)
+    +getFloatingNode(): VBox
+    +getFullPanel(): StackPane
+    +append(text: String): void
+    -refresh(): void
+    -openFull(): void
+    -refillFull(): void
+  }
+
+  class ImageCatalog <<utility>> {
+    {static} -CACHE: Map<String, Image>
+    {static} -CHRISTMAS_CHALK: Font
+    {static} -ROBOTO: Font
+    -ImageCatalog()
+    {static} +loadFonts(): void
+    {static} +chalkFont(size: double): Font
+    {static} +robotoFont(size: double): Font
+    {static} +load(path: String): Image
+    {static} +cardFront(id: String): Image
+    {static} +cardBack(type: CardType, era: int, isFinal: boolean): Image
+    {static} -isEvent(type: CardType): boolean
+    {static} +totem2D(totem: Totem): Image
+    {static} +offerTile(id: String): Image
+    {static} +foodBack(): Image
+    {static} +ppEarnBack(): Image
+    {static} +ppLossBack(): Image
+  }
+}
+
+package "client.view.gui.screens" {
+
+  abstract class GUIScreen {
+    #username: String
+    #error: String
+    #root: Parent
+    {static} -BG_IMAGE: Image
+    {static} -BUTTON_HOVER_SCALE: double
+    #GUIScreen(coordinator: AppCoordinator, username: String)
+    #GUIScreen(coordinator: AppCoordinator)
+    +getRoot(): Parent
+    +onEnter(): GUIScreen
+    +createLoginScreen(e: LoginNeededEvent, ac: AppCoordinator): GUIScreen
+    +createHomeScreen(e: HomeUpdateEvent, ac: AppCoordinator): GUIScreen
+    +createLobbyScreen(e: LobbyUpdateEvent, ac: AppCoordinator): GUIScreen
+    +createTotemPickingScreen(e: TotemAvailableEvent, ac: AppCoordinator): GUIScreen
+    +createGameScreen(e: GameUpdateEvent, ac: AppCoordinator): GUIScreen
+    +createEndGameScreen(e: EndGameEvent, ac: AppCoordinator): GUIScreen
+    +createDisconnectedScreen(e: DisconnectedEvent, ac: AppCoordinator): GUIScreen
+    +getThis(): GUIScreen
+    {static} #applyTheme(root: Parent): void
+    {static} #applyTheme(root: Parent, withBackground: boolean): void
+    {static} -installButtonHover(node: Parent): void
+    {static} -wireButtonHover(b: Button): void
+    {static} -applyChalkFonts(node: Parent): void
+    {static} -setFont(node: Label): void
+    {static} -setFont(node: Button): void
+    {static} -setFont(node: TextField): void
+    {static} -pinFontFamily(node: Node, family: String): void
+    {static} -setFont(node: Pane): void
+    {static} -fontFor(node: Node, size: double): Font
+    {static} -extractFontSize(style: String, fallback: double): double
+  }
+
+  class "ConnectingScreen" as GuiConnectingScreen {
+    +ConnectingScreen(coordinator: AppCoordinator)
+  }
+
+  class "DisconnectedScreen" as GuiDisconnectedScreen {
+    -message: String
+    +DisconnectedScreen(coordinator: AppCoordinator, message: String)
+    -onReconnect(): void
+    -onExit(): void
+  }
+
+  class "ExitScreen" as GuiExitScreen {
+    {static} +INSTANCE: GuiExitScreen
+    -ExitScreen()
+    +isExit(): boolean
+  }
+
+  class "LoginScreen" as GuiLoginScreen {
+    +LoginScreen(coordinator: AppCoordinator)
+    -playIntroFade(): void
+    -onLogin(): void
+    -onExit(): void
+  }
+
+  class "HomeScreen" as GuiHomeScreen {
+    -activeGames: List<Integer>
+    -gamePlayers: Map<Integer, List<String>>
+    -gameCapacity: Map<Integer, Integer>
+    -floatingLog: FloatingLog
+    +HomeScreen(coordinator, username, activeGames)
+    +HomeScreen(coordinator, username, activeGames, gamePlayers, gameCapacity)
+    -setupGamesList(): void
+    -buildGameCard(gameId: int): Node
+    -installListKeyboardNav(): void
+    -decorateCreateButtons(): void
+    {static} -attachPersonIcon(b: Button): void
+    -create(n: int): void
+    -onJoinSelected(): void
+    -onLogout(): void
+  }
+
+  class "LobbyScreen" as GuiLobbyScreen {
+    -gameId: int
+    -players: List<String>
+    -totalPlayers: int
+    -floatingLog: FloatingLog
+    +LobbyScreen(coordinator, username, gameId, players, totalPlayers)
+    -refresh(): void
+    -onStart(): void
+    -onLeave(): void
+  }
+
+  class "TotemPickingScreen" as GuiTotemPickingScreen {
+    {static} -ALL_TOTEMS: Totem[]
+    {static} -TOTEM_SIZE: double
+    {static} -HOVER_SCALE: double
+    {static} -ANIM: Duration
+    -availableTotems: List<Totem>
+    -selectedTotem: Totem
+    -pendingPick: boolean
+    -hasPicked: boolean
+    -totemRow: FlowPane
+    -statusLabel: Label
+    -errorLabel: Label
+    -confirmButton: Button
+    +TotemPickingScreen(coordinator, username, availableTotems)
+    -buildUI(): StackPane
+    -populateTotemRow(): void
+    -buildCell(t: Totem): StackPane
+    -applyVisuals(container, iv, name, ...): void
+    -onTotemClicked(t: Totem): void
+    -onConfirm(): void
+    -showPickedState(): void
+    -isSelected(t: Totem): boolean
+    -scale(node: StackPane, to: double): void
+    -applyConfirmStyle(hover: boolean): void
+    -applyConfirmHover(): void
+    -glowColor(t: Totem): Color
+  }
+
+  class "GameScreen" as GuiGameScreen {
+    {static} -CARD_ASPECT: double
+    {static} -CARD_MAX_W: double
+    {static} -CARD_MIN_W: double
+    {static} -CARD_GAP: double
+    {static} -TILE_ASPECT: double
+    {static} -TILE_MAX_W: double
+    {static} -TILE_MIN_W: double
+    {static} -HOVER_SCALE: double
+    {static} -ANIM: Duration
+    {static} -CHIP_WIDTH: double
+    {static} -CHIP_WIDTH_SM: double
+    {static} -SELF_TOTEM: double
+    {static} -OPP_TOTEM: double
+    {static} -SELF_HAND_W: double
+    {static} -OPP_HAND_W: double
+    {static} -SELF_HAND_MIN: double
+    {static} -OPP_HAND_MIN: double
+    {static} -SIDE_PANEL_W: double
+    {static} -LR_PANEL_W: double
+    {static} -IDENTITY_COL_W: double
+    {static} -HAND_GAP: double
+    {static} -NAME_H_EST: double
+    {static} -SELF_HAND_PER_PAGE: int
+    {static} -OPP_HAND_PER_PAGE: int
+    {static} -NAV_BTN_W: double
+    {static} -OPP_NAV_BTN_W: double
+    -rootStack: StackPane <<@FXML>>
+    -rootPane: BorderPane <<@FXML>>
+    -centerBox: VBox <<@FXML>>
+    -headerLabel: Label <<@FXML>>
+    -phaseLabel: Label <<@FXML>>
+    -topRow: HBox <<@FXML>>
+    -offerTrack: HBox <<@FXML>>
+    -bottomRow: HBox <<@FXML>>
+    -topPlayersBox: HBox <<@FXML>>
+    -leftPlayersBox: VBox <<@FXML>>
+    -rightPlayersBox: VBox <<@FXML>>
+    -selfPanelBox: HBox <<@FXML>>
+    -hintLabel: Label <<@FXML>>
+    -confirmButton: Button <<@FXML>>
+    -errorLabel: Label <<@FXML>>
+    -logBox: VBox <<@FXML>>
+    -game: GameDTO
+    -selectedMoves: Set<Move>
+    -upperCount: int
+    -lowerCount: int
+    -waitingServer: boolean
+    -selfHandPage: int
+    -opponentHandPages: Map<String, Integer>
+    -floatingLog: FloatingLog
+    +GameScreen(coordinator: AppCoordinator, username: String, game: GameDTO)
+  }
+
+  class "EndGameScreen" as GuiEndGameScreen {
+    -matchTable: TableView <<@FXML>>
+    -matchRankCol: TableColumn <<@FXML>>
+    -matchPlayerCol: TableColumn <<@FXML>>
+    -matchPpCol: TableColumn <<@FXML>>
+    -matchFoodCol: TableColumn <<@FXML>>
+    -recordsTable: TableView <<@FXML>>
+    -dbRankCol: TableColumn <<@FXML>>
+    -dbPlayerCol: TableColumn <<@FXML>>
+    -dbScoreCol: TableColumn <<@FXML>>
+    -leaderboardBox: VBox <<@FXML>>
+    -noDbAlert: Label <<@FXML>>
+    -errorLabel: Label <<@FXML>>
+    +EndGameScreen(coordinator, username, results, records, message)
+    -wireMatchTable(results: List<MatchResult>): void
+    -wireRecordsTable(records: List<DBRecord>, message: String): void
+    -onBackHome(): void
+    -onExit(): void
+  }
+
+  class "EndGameScreen.RankedMatchRow" as RankedMatchRow <<record>> {
+    +rank: int
+    +nickname: String
+    +pp: int
+    +food: int
+  }
+}
+
+'==========================================================================
+' RELATIONSHIPS
+'==========================================================================
+
+' --- shared.exceptions ---
+ServerException -up-|> RuntimeException
+InvalidResponseException -up-|> RuntimeException
+
+' --- shared.network.requests ---
+ClientConnection -up-|> ClientRequest
+ClientDisconnected -up-|> ClientRequest
+ClientPing -up-|> ClientRequest
+LoginRequest -up-|> ClientRequest
+LogoutRequest -up-|> ClientRequest
+CreateGameRequest -up-|> ClientRequest
+EnterGameRequest -up-|> ClientRequest
+ExitLobbyRequest -up-|> ClientRequest
+StartGameRequest -up-|> ClientRequest
+TotemPickingRequest -up-|> ClientRequest
+MoveRequest -up-|> ClientRequest
+ExitGameRequest -up-|> ClientRequest
+ClientRequest ..> RequestVisitor
+MoveRequest ..> Move
+TotemPickingRequest ..> Totem
+
+' --- shared.network.responses ---
+ServerPing -up-|> ServerResponse
+ServerDisconnected -up-|> ServerResponse
+LoginNeeded -up-|> ServerResponse
+HomeUpdate -up-|> ServerResponse
+LobbyUpdate -up-|> ServerResponse
+TotemAvailableUpdate -up-|> ServerResponse
+GameUpdate -up-|> ServerResponse
+GameEnded -up-|> ServerResponse
+ErrorResponse -up-|> ServerResponse
+EventsTriggered -up-|> ServerResponse
+ServerResponse ..> ResponseVisitor
+GameUpdate ..> GameDTO
+TotemAvailableUpdate ..> Totem
+GameEnded ..> DBRecord
+GameEnded ..> MatchResult
+
+' --- shared.network.remote ---
+RemoteClientStub ..> ServerResponse
+RemoteServerService ..> ClientRequest
+JsonMessageHandler ..> ClientRequest
+JsonMessageHandler ..> ServerResponse
+
+' --- shared.model ---
+GameDTO *-- "many" PlayerDTO
+GameDTO *-- "1" BoardDTO
+BoardDTO *-- "*" CardDTO
+BoardDTO *-- "*" OfferTileDTO
+BoardDTO *-- "1" OrderTileDTO
+OrderTileDTO *-- "*" OrderCellDTO
+PlayerDTO *-- "*" CardDTO
+CardDTO ..> CardToken
+Move ..> Row
+
+' --- server.config ---
+JsonBoardConfigLoader ..|> BoardConfigLoader
+JsonBoardConfigLoader +-- CardParser
+JsonBoardConfigLoader +-- BuildingParser
+JsonBoardConfigLoader ..> Card
+JsonBoardConfigLoader ..> Building
+JsonBoardConfigLoader ..> OfferTrack
+JsonBoardConfigLoader ..> OrderTile
+JsonBoardConfigLoader ..> GameSettings
+
+' --- server.persistence ---
+SqlGameDAO ..|> GameDAO
+NoGameDAO ..|> GameDAO
+SerialGamePersistenceManager ..|> GamePersistenceManager
+GamePersistenceManager -up-|> GameObserver
+SqlGameDAO --> "1" ConnectionProvider
+SqlGameDAO ..> DBRecord
+
+' --- server.db ---
+DatabaseConfig ..|> ConnectionProvider
+DatabaseManager ..> DatabaseConfig
+
+' --- server.model.board ---
+Board *-- "2" CardRow
+Board *-- "1" OfferTrack
+Board *-- "1" OrderTile
+Board *-- "1" Deck
+Board o-- "*" Card
+CardRow o-- "*" Card
+Deck o-- "*" Card
+OfferTrack *-- "*" OfferTile
+OrderTile *-- "*" OrderCell
+OfferTile --> "0..1" Player
+OrderCell --> "0..1" Player
+Board ..> BoardDTO
+CardRow ..> CardDTO
+OfferTile ..> OfferTileDTO
+OfferTrack ..> OfferTileDTO
+OrderTile ..> OrderTileDTO
+OrderTile ..> OrderCellDTO
+
+' --- server.model.cards ---
+Character -up-|> Card
+Event -up-|> Card
+Building -up-|> Card
+
+Hunter -up-|> Character
+Gatherer -up-|> Character
+Builder -up-|> Character
+Shaman -up-|> Character
+Artist -up-|> Character
+Inventor -up-|> Character
+
+Hunt -up-|> Event
+Sustenance -up-|> Event
+CavePaintings -up-|> Event
+ShamanicRitual -up-|> Event
+
+EndGame -up-|> Building
+ExtraMove -up-|> Building
+BonusTotem -up-|> Building
+SinceBuilt -up-|> Building
+DuringEvent -up-|> Building
+DuringHunt -up-|> DuringEvent
+DuringPaintings -up-|> DuringEvent
+DuringRitual -up-|> DuringEvent
+DuringSustenance -up-|> DuringEvent
+
+EndGame ..> BuildingEffect
+SinceBuilt ..> BuildingEffect
+DuringRitual ..> BuildingEffect
+EndGame ..> CardType
+DuringSustenance ..> CardType
+Inventor ..> Icon
+Card ..> CardDTO
+
+' --- server.model ---
+Game *-- "many" Player
+Game *-- "1" Board
+Game o-- "*" GameObserver
+Game o-- "*" EndGameObserver
+Home o-- "*" HomeObserver
+Player ..> CardType
+Player ..> Totem
+Player *-- "1" BuildingBonus
+Player o-- "*" Card
+Game ..> GameDTO
+Player ..> PlayerDTO
+
+' --- server.network ---
+VirtualClient ..|> GameObserver
+VirtualClient ..|> HomeObserver
+VirtualClient ..|> EndGameObserver
+SocketClientHandler -up-|> VirtualClient
+RMIClientHandler -up-|> VirtualClient
+RemoteServerServiceImpl ..|> RemoteServerService
+RMIClientHandler --> "1" RemoteClientStub
+RemoteServerServiceImpl o-- "*" RMIClientHandler
+SocketServer --> "1" ServerController
+RemoteServerServiceImpl --> "1" ServerController
+VirtualClient --> "1" ServerController
+SocketClientHandler ..> JsonMessageHandler
+
+' --- server.controller ---
+ServerController ..|> RequestVisitor
+ServerController ..|> EndGameObserver
+ServerController *-- "*" GameController
+ServerController --> "1" Home
+ServerController --> "1" GameDAO
+ServerController --> "1" BoardConfigLoader
+ServerController --> "1" GamePersistenceManager
+GameController *-- "1" ControllerState
+GameController --> "1" GameDAO
+GameController --> "1" GamePersistenceManager
+GameController --> "1" BoardConfigLoader
+StateFactory ..> ControllerState
+StateFactory ..> Phase
+
+' --- server.controller.states ---
+ControllerState ..|> RequestVisitor
+ControllerState --> "1" Game
+ControllerState --> "1" GameController
+LobbyState -up-|> ControllerState
+InitGameState -up-|> ControllerState
+TotemPickingState -up-|> ControllerState
+TotemPlacementState -up-|> ControllerState
+ActionExecutionState -up-|> ControllerState
+ExtraMoveState -up-|> ControllerState
+EventsState -up-|> ControllerState
+EndRoundState -up-|> ControllerState
+EndGameState -up-|> ControllerState
+RecoverState -up-|> ControllerState
+EventsState ..> Event
+EventsState ..> CardType
+EventsState ..> Trigger
+EndGameState ..> Builder
+EndGameState ..> Inventor
+EndGameState ..> Building
+EndGameState ..> MatchResult
+EndGameState ..> DBRecord
+EndGameState ..> GameDAO
+InitGameState ..> BoardConfigLoader
+InitGameState ..> GameSettings
+InitGameState ..> Board
+InitGameState ..> CardRow
+InitGameState ..> Deck
+InitGameState ..> Building
+TotemPlacementState ..> OfferTile
+TotemPlacementState ..> OfferTrack
+TotemPlacementState ..> OrderTile
+ActionExecutionState ..> OfferTrack
+ActionExecutionState ..> OfferTile
+ActionExecutionState ..> CardRow
+ActionExecutionState ..> OrderCell
+ActionExecutionState ..> Move
+TotemPickingState ..> Totem
+RecoverState ..> StateFactory
+
+' --- server entrypoint ---
+ServerApp ..> ServerController
+ServerApp ..> JsonBoardConfigLoader
+ServerApp ..> SerialGamePersistenceManager
+ServerApp ..> SqlGameDAO
+ServerApp ..> NoGameDAO
+ServerApp ..> DatabaseManager
+ServerApp ..> SocketServer
+ServerApp ..> RemoteServerServiceImpl
+ServerApp ..> Home
+
+' --- client.network ---
+SocketClientConnection ..|> ServerConnection
+RMIServerConnection ..|> ServerConnection
+FakeServerConnection ..|> ServerConnection
+SocketClientConnection ..> JsonMessageHandler
+SocketClientConnection ..> ServerDisconnected
+RemoteClientStubImpl ..|> RemoteClientStub
+RMIServerConnection --> "1" RemoteClientStubImpl
+RMIServerConnection ..> RemoteServerService
+RemoteClientStubImpl --> "1" AppCoordinator
+FakeServerConnection ..> GameDTO
+
+' --- client.serverEvents ---
+LoginNeededEvent ..|> ServerEvent
+HomeUpdateEvent ..|> ServerEvent
+LobbyUpdateEvent ..|> ServerEvent
+GameUpdateEvent ..|> ServerEvent
+EndGameEvent ..|> ServerEvent
+ErrorEvent ..|> ServerEvent
+DisconnectedEvent ..|> ServerEvent
+TotemAvailableEvent ..|> ServerEvent
+EventsTriggeredEvent ..|> ServerEvent
+ServerEvent ..> EventVisitor
+EventVisitor ..> Screen
+GameUpdateEvent ..> GameDTO
+EndGameEvent ..> MatchResult
+EndGameEvent ..> DBRecord
+TotemAvailableEvent ..> Totem
+
+' --- client ---
+AppCoordinator ..|> ResponseVisitor
+AppCoordinator --> "1" ServerConnection
+AppCoordinator --> "1" GameUI
+ClientApp ..> AppCoordinator
+ClientApp ..> TUI
+ClientApp ..> GUI
+ClientApp ..> SocketClientConnection
+ClientApp ..> RMIServerConnection
+ClientApp ..> FakeServerConnection
+
+' --- client.view ---
+Screen ..|> EventVisitor
+GameUI --> "1" AppCoordinator
+
+' --- client.view.tui ---
+TUI -up-|> GameUI
+TUI *-- "1" TuiTerminal
+TUI *-- "1" TUIScreen
+TUIScreen -up-|> Screen
+TUIScreen ..|> InputEventVisitor
+TUIScreen --> "0..1" TuiTerminal
+TUIScreen ..> TuiGameLog
+TuiTerminal +-- KeyOp
+TuiTerminal --> TuiTextGraphics
+TuiTerminal ..> AnsiCodes
+TuiTerminal ..> Key
+TuiTextGraphics ..> TuiColor
+TuiTextGraphics ..> AnsiCodes
+Key +-- KeyType
+
+' --- TUI screens ---
+TuiConnectingScreen -up-|> TUIScreen
+TuiDisconnectedScreen -up-|> TUIScreen
+TuiEndGameScreen -up-|> TUIScreen
+TuiExitScreen -up-|> TUIScreen
+TuiHomeScreen -up-|> TUIScreen
+TuiLobbyScreen -up-|> TUIScreen
+TuiLoginScreen -up-|> TUIScreen
+TuiTotemPickingScreen -up-|> TUIScreen
+TuiGameScreen -up-|> TUIScreen
+TuiGameScreen +-- SubState
+TuiGameScreen ..> CardCatalog
+TuiGameScreen ..> CardTokens
+TuiGameScreen ..> GameDTO
+TuiGameScreen ..> Move
+TuiEndGameScreen ..> MatchResult
+TuiEndGameScreen ..> DBRecord
+TuiTotemPickingScreen ..> Totem
+
+' --- TUI input events ---
+ConfirmEvent -up-|> InputEvent
+SelectEvent -up-|> InputEvent
+NavigateLeftEvent -up-|> InputEvent
+NavigateRightEvent -up-|> InputEvent
+NavigateUpEvent -up-|> InputEvent
+NavigateDownEvent -up-|> InputEvent
+CharInputEvent -up-|> InputEvent
+BackspaceEvent -up-|> InputEvent
+InputEvent ..> InputEventVisitor
+InputEventVisitor ..> TUIScreen
+
+' --- client.view.gui ---
+GUI -up-|> GameUI
+GUI *-- "1" GUIScreen
+GUIScreen -up-|> Screen
+GUIScreen ..> ImageCatalog
+
+GuiConnectingScreen -up-|> GUIScreen
+GuiDisconnectedScreen -up-|> GUIScreen
+GuiExitScreen -up-|> GUIScreen
+GuiLoginScreen -up-|> GUIScreen
+GuiHomeScreen -up-|> GUIScreen
+GuiLobbyScreen -up-|> GUIScreen
+GuiTotemPickingScreen -up-|> GUIScreen
+GuiGameScreen -up-|> GUIScreen
+GuiEndGameScreen -up-|> GUIScreen
+GuiEndGameScreen +-- RankedMatchRow
+
+GuiHomeScreen *-- "1" FloatingLog
+GuiLobbyScreen *-- "1" FloatingLog
+GuiGameScreen *-- "1" FloatingLog
+GuiGameScreen ..> Chip
+GuiGameScreen ..> GameDTO
+GuiGameScreen ..> Move
+GuiEndGameScreen ..> MatchResult
+GuiEndGameScreen ..> DBRecord
+GuiTotemPickingScreen ..> Totem
+Chip ..> ImageCatalog
+FloatingLog ..> ImageCatalog
+ImageCatalog ..> CardType
+ImageCatalog ..> Totem
+
+@enduml

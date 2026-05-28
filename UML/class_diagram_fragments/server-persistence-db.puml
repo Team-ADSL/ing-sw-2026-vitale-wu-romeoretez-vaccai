@@ -1,0 +1,107 @@
+@startuml server-persistence-db
+title Server — Persistence & Database (org.adsl.server.persistence, org.adsl.server.db)
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+hide empty members
+
+package "server.persistence" {
+
+  interface GameDAO {
+    +createMatch(): int
+    +deleteMatch(gameId: int): void
+    +saveMatch(gameId: int, playerCount: int, nicknames: List<String>, scores: List<Integer>): void
+    +getLeaderboard(playerCount: int): List<DBRecord>
+    +setInitialCounter(i: int): void
+  }
+
+  class SqlGameDAO {
+    -connectionProvider: ConnectionProvider
+    +SqlGameDAO(connectionProvider: ConnectionProvider)
+    +createMatch(): int
+    +deleteMatch(gameId: int): void
+    +saveMatch(gameId, playerCount, nicknames, scores): void
+    +getLeaderboard(playerCount: int): List<DBRecord>
+    +setInitialCounter(i: int): void
+  }
+  note right of SqlGameDAO
+    saveMatch runs in a transaction with rollback on failure.
+    getLeaderboard computes dense rank client-side over
+    cumulative scores per player.
+  end note
+
+  class NoGameDAO {
+    -actualCounter: int
+    +createMatch(): int
+    +deleteMatch(gameId: int): void
+    +saveMatch(gameId, playerCount, nicknames, scores): void
+    +getLeaderboard(playerCount: int): List<DBRecord>
+    +setInitialCounter(i: int): void
+  }
+  note right of NoGameDAO
+    No-op fallback used when the
+    DB is unavailable. Returns
+    empty leaderboard, in-memory
+    monotonic counter for IDs.
+  end note
+
+  interface GamePersistenceManager {
+    +recoverGames(): List<Game>
+    +removeGame(gameId: int): void
+  }
+
+  class SerialGamePersistenceManager {
+    -saveDirectory: String
+    +SerialGamePersistenceManager(saveDirectory: String)
+    -ensureDirectoryExists(): void
+    +updateGame(game: Game): void
+    +recoverGames(): List<Game>
+    +removeGame(gameId: int): void
+    +updateLobby(gameId: int, players: List<String>, numPlayersAllowed: int): void
+    +updateTotemAvailable(totemsAvailable: List<Totem>, message: String): void
+  }
+  note right of SerialGamePersistenceManager
+    Serialises each Game to game_<id>.ser
+    in saveDirectory on every updateGame.
+    Lobby/totem updates are no-ops (no state worth persisting).
+  end note
+}
+
+package "server.db" {
+
+  interface ConnectionProvider <<@FunctionalInterface>> {
+    +getConnection(): Connection
+  }
+
+  class DatabaseConfig <<utility>> {
+    {static} -HOST: String = "localhost"
+    {static} -PORT: String = "3306"
+    {static} ~DB_NAME: String = "game_leaderboard"
+    {static} ~USER: String = "root"
+    {static} ~PASSWORD: String <<env: DB_PASSWORD>>
+    {static} +URL_NO_DB: String
+    {static} +URL: String
+    {static} +getConnection(): Connection
+  }
+
+  class DatabaseManager <<utility>> {
+    {static} +initDatabase(): void
+  }
+  note right of DatabaseManager
+    Creates the schema with CREATE IF NOT EXISTS
+    for tables: players, matches, results.
+    Fails fast if DB_PASSWORD is missing.
+  end note
+}
+
+SqlGameDAO ..|> GameDAO
+NoGameDAO ..|> GameDAO
+SerialGamePersistenceManager ..|> GamePersistenceManager
+GamePersistenceManager -up-|> "server.model.GameObserver"
+
+SqlGameDAO --> "1" ConnectionProvider
+DatabaseConfig ..|> ConnectionProvider : "static getConnection"
+DatabaseManager ..> DatabaseConfig
+SqlGameDAO ..> "shared.model.DBRecord"
+
+@enduml

@@ -1,0 +1,131 @@
+@startuml server-model-board
+title Server — Model: Board, Rows, Deck, Offer & Order tracks (org.adsl.server.model.board)
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+hide empty members
+
+package "server.model.board" {
+
+  class Board <<record, Serializable>> {
+    +lowRow: CardRow
+    +topRow: CardRow
+    +offerTrack: OfferTrack
+    +orderTile: OrderTile
+    +remainingBuildings: ArrayList<Set<Card>>
+    +deck: Deck
+    +Board(numLowCard: int, numLowTribeCards: int, numTopCard: int, numTopTribeCards: int, offerTrack: OfferTrack, orderQueue: OrderTile, deck: Deck)
+    +createDTO(): BoardDTO
+  }
+
+  class CardRow <<Serializable>> {
+    -cards: ArrayList<Card>
+    -numTribeCards: int
+    +CardRow(cards: ArrayList<Card>, numTribeCards: int)
+    +CardRow(numCard: int, numTribeCards: int)
+    +size(): int
+    +pickCardAt(index: int): Card
+    +getCardAt(index: int): Card
+    +add(card: Card): void
+    +getTribeCards(): ArrayList<Card>
+    +addTribeCards(newCards: ArrayList<Card>): void
+    +clearTribeCards(): void
+    +getBuildings(): Set<Card>
+    +clearBuildings(): void
+    +addBuildings(newCards: Set<Card>): void
+    +createDTO(): ArrayList<CardDTO>
+    +getNumTribeCard(): int
+  }
+
+  class Deck <<record, Serializable>> {
+    +cards: ArrayList<Card>
+    +Deck()
+    +addTailCard(card: Card): void
+    +addTailCards(cards: ArrayList<Card>): void
+    +drawCard(): Card
+    {static} +createDeck(cards: ArrayList<Set<Card>>): Deck
+    +isNewEra(currentEra: int): boolean
+    +isEmpty(): boolean
+  }
+
+  class OfferTile <<Serializable>> {
+    -id: String
+    -player: Player
+    -moves: Map<Row, Integer>
+    -givesFood: boolean
+    +OfferTile(id: String, player: Player, moves: Map<Row, Integer>, givesFood: boolean)
+    +getPlayer(): Optional<Player>
+    +getNumMoves(): int
+    +getMoves(): Map<Row, Integer>
+    +isGivesFood(): boolean
+    +createDTO(): OfferTileDTO
+    +setPlayer(player: Player): void
+  }
+
+  class OfferTrack <<Serializable>> {
+    -offerQueue: ArrayList<OfferTile>
+    +OfferTrack(offerQueue: ArrayList<OfferTile>)
+    +placeInOfferTile(p: Player, arrayIndex: int): void
+    +removePlayer(player: Player): void
+    +getTileAt(i: int): OfferTile
+    +size(): int
+    +createDTO(): ArrayList<OfferTileDTO>
+  }
+
+  class OrderCell <<Serializable>> {
+    -player: Player
+    -bonus: int
+    -isMalus: boolean
+    +OrderCell(player: Player, bonus: int, isMalus: boolean)
+    +setPlayer(player: Player): void
+    +getPlayer(): Optional<Player>
+    +getBonus(): int
+    +isMalus(): boolean
+  }
+
+  class OrderTile <<Serializable>> {
+    -id: String
+    -orderQueue: ArrayList<OrderCell>
+    +OrderTile(id: String, orderQueue: ArrayList<OrderCell>)
+    +getPlayerAt(i: int): Optional<Player>
+    +placePlayersRandom(players: Set<Player>): void
+    +placePlayerAtNext(p: Player): int
+    +removePlayer(player: Player): void
+    +createDTO(): OrderTileDTO
+    +getCellAt(i: int): OrderCell
+    +size(): int
+  }
+}
+
+Board *-- "2" CardRow : "topRow, lowRow"
+Board *-- "1" OfferTrack
+Board *-- "1" OrderTile
+Board *-- "1" Deck
+Board o-- "*" "server.model.cards.Card" : remainingBuildings (by era)
+
+CardRow o-- "*" "server.model.cards.Card"
+Deck o-- "*" "server.model.cards.Card"
+OfferTrack *-- "*" OfferTile
+OrderTile *-- "*" OrderCell
+OfferTile --> "0..1" "server.model.Player"
+OrderCell --> "0..1" "server.model.Player"
+
+Board ..> "shared.model.BoardDTO" : createDTO
+CardRow ..> "shared.model.CardDTO"
+OfferTile ..> "shared.model.OfferTileDTO"
+OfferTrack ..> "shared.model.OfferTileDTO"
+OrderTile ..> "shared.model.OrderTileDTO"
+OrderTile ..> "shared.model.OrderCellDTO"
+
+note bottom of CardRow
+  Layout: cards[0..numTribeCards-1] = tribe cards,
+  cards[numTribeCards..size-1] = buildings.
+  null slots = empty positions.
+end note
+
+note bottom of Deck
+  Era 1 cards first, era 3 last, final events tail.
+  Within each era cards are shuffled at creation.
+end note
+
+@enduml
