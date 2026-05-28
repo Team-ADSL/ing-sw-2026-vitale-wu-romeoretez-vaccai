@@ -1,0 +1,339 @@
+@startuml client-view-gui
+title Client — GUI: JavaFX, screens, FloatingLog, Chip, ImageCatalog (org.adsl.client.view.gui)
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+hide empty members
+
+package "client.view.gui" {
+
+  class GUI {
+    {static} -WINDOW_TITLE: String = "MESOS"
+    {static} -WINDOW_W: double = 1280
+    {static} -WINDOW_H: double = 800
+    {static} -MIN_W: double = 800
+    {static} -MIN_H: double = 540
+    -coordinator: AppCoordinator
+    -stage: Stage
+    -currentScreen: GUIScreen
+    -shuttingDown: AtomicBoolean
+    -keyboardNavMode: boolean
+    +setAppCoordinator(coordinator: AppCoordinator): void
+    +start(): void
+    +shutdown(): void
+    -installFocusVisibleBehavior(scene: Scene): void
+    +dispatch(event: ServerEvent): void
+    +transitionTo(screen: GUIScreen): void
+    -runOnEnterChain(screen: GUIScreen): void
+    -swapRoot(screen: GUIScreen): void
+  }
+  note right of GUI
+    Platform.startup wires JavaFX runtime
+    without subclassing Application.
+    Stage.setOnCloseRequest consumes ev
+    (sidesteps macOS Glass/JNI crash) and
+    delegates to shutdown() (idempotent).
+    swapRoot mutates the Scene's root
+    rather than replacing the Scene to
+    preserve macOS fullscreen state.
+  end note
+
+  class Chip <<utility>> {
+    {static} -FOOD_FILL: Color
+    {static} -FOOD_STROKE: Color
+    {static} -PP_POS_FILL: Color
+    {static} -PP_NEG_FILL: Color
+    {static} -FOOD_OFFSET_Y_RATIO: double
+    {static} -BASE_FONT_RATIO: double
+    {static} -STROKE_RATIO: double
+    {static} -PP_BASE_MUL: double
+    {static} -PP_NEG_SHRINK: double
+    {static} -LENGTH_SHRINK: double[]
+    -Chip()
+    {static} +food(value: int, width: double): StackPane
+    {static} +pp(value: int, width: double): StackPane
+    {static} -roundImage(img: Image, width: double): ImageView
+    {static} -chalkNumber(text, width, fill, extraShrink): Text
+  }
+
+  class FloatingLog {
+    {static} -VISIBLE: int = 5
+    {static} -MAX_W: double = 320
+    -history: List<String>
+    -floating: VBox
+    -fullPanel: StackPane
+    -fullMessages: VBox
+    -fullScroll: ScrollPane
+    -title: String
+    +FloatingLog(title: String)
+    +getFloatingNode(): VBox
+    +getFullPanel(): StackPane
+    +append(text: String): void
+    -refresh(): void
+    -openFull(): void
+    -refillFull(): void
+  }
+
+  class ImageCatalog <<utility>> {
+    {static} -CACHE: Map<String, Image>
+    {static} -CHRISTMAS_CHALK: Font
+    {static} -ROBOTO: Font
+    -ImageCatalog()
+    {static} +loadFonts(): void
+    {static} +chalkFont(size: double): Font
+    {static} +robotoFont(size: double): Font
+    {static} +load(path: String): Image
+    {static} +cardFront(id: String): Image
+    {static} +cardBack(type: CardType, era: int, isFinal: boolean): Image
+    {static} -isEvent(type: CardType): boolean
+    {static} +totem2D(totem: Totem): Image
+    {static} +offerTile(id: String): Image
+    {static} +foodBack(): Image
+    {static} +ppEarnBack(): Image
+    {static} +ppLossBack(): Image
+  }
+}
+
+package "client.view.gui.screens" {
+
+  abstract class GUIScreen <<extends Screen<GUIScreen>>> {
+    #username: String
+    #error: String
+    #root: Parent
+    {static} -BG_IMAGE: Image
+    {static} -BUTTON_HOVER_SCALE: double = 1.15
+    #GUIScreen(coordinator: AppCoordinator, username: String)
+    #GUIScreen(coordinator: AppCoordinator)
+    +getRoot(): Parent
+    +onEnter(): GUIScreen
+    +createLoginScreen(e: LoginNeededEvent, ac: AppCoordinator): GUIScreen
+    +createHomeScreen(e: HomeUpdateEvent, ac: AppCoordinator): GUIScreen
+    +createLobbyScreen(e: LobbyUpdateEvent, ac: AppCoordinator): GUIScreen
+    +createTotemPickingScreen(e: TotemAvailableEvent, ac: AppCoordinator): GUIScreen
+    +createGameScreen(e: GameUpdateEvent, ac: AppCoordinator): GUIScreen
+    +createEndGameScreen(e: EndGameEvent, ac: AppCoordinator): GUIScreen
+    +createDisconnectedScreen(e: DisconnectedEvent, ac: AppCoordinator): GUIScreen
+    +getThis(): GUIScreen
+    {static} #applyTheme(root: Parent): void
+    {static} #applyTheme(root: Parent, withBackground: boolean): void
+    {static} -installButtonHover(node: Parent): void
+    {static} -wireButtonHover(b: Button): void
+    {static} -applyChalkFonts(node: Parent): void
+    {static} -setFont(node: Label): void
+    {static} -setFont(node: Button): void
+    {static} -setFont(node: TextField): void
+    {static} -pinFontFamily(node: Node, family: String): void
+    {static} -setFont(node: Pane): void
+    {static} -fontFor(node: Node, size: double): Font
+    {static} -extractFontSize(style: String, fallback: double): double
+  }
+  note right of GUIScreen
+    applyTheme adds theme.css + background image,
+    pins ChristmasChalk font on Labels/Buttons,
+    Roboto for nodes with styleClass="tech-text".
+  end note
+
+  class ConnectingScreen {
+    +ConnectingScreen(coordinator: AppCoordinator)
+  }
+
+  class DisconnectedScreen {
+    -message: String
+    +DisconnectedScreen(coordinator: AppCoordinator, message: String)
+    -onReconnect(): void
+    -onExit(): void
+  }
+
+  class ExitScreen <<terminal>> {
+    {static} +INSTANCE: ExitScreen
+    -ExitScreen()
+    +isExit(): boolean
+  }
+
+  class LoginScreen {
+    +LoginScreen(coordinator: AppCoordinator)
+    -playIntroFade(): void
+    -onLogin(): void
+    -onExit(): void
+  }
+
+  class HomeScreen {
+    -activeGames: List<Integer>
+    -gamePlayers: Map<Integer, List<String>>
+    -gameCapacity: Map<Integer, Integer>
+    -floatingLog: FloatingLog
+    +HomeScreen(coordinator, username, activeGames)
+    +HomeScreen(coordinator, username, activeGames, gamePlayers, gameCapacity)
+    -setupGamesList(): void
+    -buildGameCard(gameId: int): Node
+    -installListKeyboardNav(): void
+    -decorateCreateButtons(): void
+    {static} -attachPersonIcon(b: Button): void
+    -create(n: int): void
+    -onJoinSelected(): void
+    -onLogout(): void
+  }
+
+  class LobbyScreen {
+    -gameId: int
+    -players: List<String>
+    -totalPlayers: int
+    -floatingLog: FloatingLog
+    +LobbyScreen(coordinator, username, gameId, players, totalPlayers)
+    -refresh(): void
+    -onStart(): void
+    -onLeave(): void
+  }
+
+  class TotemPickingScreen <<no FXML, programmatic>> {
+    {static} -ALL_TOTEMS: Totem[]
+    {static} -TOTEM_SIZE: double = 140.0
+    {static} -HOVER_SCALE: double = 1.18
+    {static} -ANIM: Duration
+    -availableTotems: List<Totem>
+    -selectedTotem: Totem
+    -pendingPick: boolean
+    -hasPicked: boolean
+    -totemRow: FlowPane
+    -statusLabel: Label
+    -errorLabel: Label
+    -confirmButton: Button
+    +TotemPickingScreen(coordinator, username, availableTotems)
+    -buildUI(): StackPane
+    -populateTotemRow(): void
+    -buildCell(t: Totem): StackPane
+    -applyVisuals(container, iv, name, ...): void
+    -onTotemClicked(t: Totem): void
+    -onConfirm(): void
+    -showPickedState(): void
+    -isSelected(t: Totem): boolean
+    -scale(node: StackPane, to: double): void
+    -applyConfirmStyle(hover: boolean): void
+    -applyConfirmHover(): void
+    -glowColor(t: Totem): Color
+  }
+
+  class GameScreen {
+    {static} -CARD_ASPECT: double = 1.484
+    {static} -CARD_MAX_W: double = 95.0
+    {static} -CARD_MIN_W: double = 48.0
+    {static} -CARD_GAP: double = 8.0
+    {static} -TILE_ASPECT: double = 1.65
+    {static} -TILE_MAX_W: double = 80.0
+    {static} -TILE_MIN_W: double = 42.0
+    {static} -HOVER_SCALE: double = 1.15
+    {static} -ANIM: Duration
+    {static} -CHIP_WIDTH: double = 38
+    {static} -CHIP_WIDTH_SM: double = 30
+    {static} -SELF_TOTEM: double = 36
+    {static} -OPP_TOTEM: double = 24
+    {static} -SELF_HAND_W: double = 78
+    {static} -OPP_HAND_W: double = 66
+    {static} -SELF_HAND_MIN: double = 32
+    {static} -OPP_HAND_MIN: double = 32
+    {static} -SIDE_PANEL_W: double = 220
+    {static} -LR_PANEL_W: double = 170
+    {static} -IDENTITY_COL_W: double = 100
+    {static} -HAND_GAP: double = 6
+    {static} -NAME_H_EST: double = 22
+    {static} -SELF_HAND_PER_PAGE: int = 11
+    {static} -OPP_HAND_PER_PAGE: int = 8
+    {static} -NAV_BTN_W: double = 44
+    {static} -OPP_NAV_BTN_W: double = 32
+    -rootStack: StackPane <<@FXML>>
+    -rootPane: BorderPane <<@FXML>>
+    -centerBox: VBox <<@FXML>>
+    -headerLabel: Label <<@FXML>>
+    -phaseLabel: Label <<@FXML>>
+    -topRow: HBox <<@FXML>>
+    -offerTrack: HBox <<@FXML>>
+    -bottomRow: HBox <<@FXML>>
+    -topPlayersBox: HBox <<@FXML>>
+    -leftPlayersBox: VBox <<@FXML>>
+    -rightPlayersBox: VBox <<@FXML>>
+    -selfPanelBox: HBox <<@FXML>>
+    -hintLabel: Label <<@FXML>>
+    -confirmButton: Button <<@FXML>>
+    -errorLabel: Label <<@FXML>>
+    -logBox: VBox <<@FXML>>
+    -game: GameDTO
+    -selectedMoves: Set<Move>
+    -upperCount: int
+    -lowerCount: int
+    -waitingServer: boolean
+    -selfHandPage: int
+    -opponentHandPages: Map<String, Integer>
+    -floatingLog: FloatingLog
+    +GameScreen(coordinator: AppCoordinator, username: String, game: GameDTO)
+  }
+
+  class EndGameScreen {
+    -matchTable: TableView<RankedMatchRow> <<@FXML>>
+    -matchRankCol: TableColumn <<@FXML>>
+    -matchPlayerCol: TableColumn <<@FXML>>
+    -matchPpCol: TableColumn <<@FXML>>
+    -matchFoodCol: TableColumn <<@FXML>>
+    -recordsTable: TableView<DBRecord> <<@FXML>>
+    -dbRankCol: TableColumn <<@FXML>>
+    -dbPlayerCol: TableColumn <<@FXML>>
+    -dbScoreCol: TableColumn <<@FXML>>
+    -leaderboardBox: VBox <<@FXML>>
+    -noDbAlert: Label <<@FXML>>
+    -errorLabel: Label <<@FXML>>
+    +EndGameScreen(coordinator, username, results, records, message)
+    -wireMatchTable(results: List<MatchResult>): void
+    -wireRecordsTable(records: List<DBRecord>, message: String): void
+    -onBackHome(): void
+    -onExit(): void
+  }
+
+  class "EndGameScreen.RankedMatchRow" as RankedMatchRow <<record>> {
+    +rank: int
+    +nickname: String
+    +pp: int
+    +food: int
+  }
+}
+
+GUI -up-|> "client.view.GameUI"
+GUIScreen -up-|> "client.view.Screen"
+
+ConnectingScreen -up-|> GUIScreen
+DisconnectedScreen -up-|> GUIScreen
+ExitScreen -up-|> GUIScreen
+LoginScreen -up-|> GUIScreen
+HomeScreen -up-|> GUIScreen
+LobbyScreen -up-|> GUIScreen
+TotemPickingScreen -up-|> GUIScreen
+GameScreen -up-|> GUIScreen
+EndGameScreen -up-|> GUIScreen
+EndGameScreen +-- RankedMatchRow
+
+GUI *-- "1" GUIScreen : currentScreen
+GUIScreen ..> ImageCatalog
+HomeScreen *-- "1" FloatingLog
+LobbyScreen *-- "1" FloatingLog
+GameScreen *-- "1" FloatingLog
+GameScreen ..> Chip
+GameScreen ..> "shared.model.GameDTO"
+GameScreen ..> "shared.utils.Move"
+EndGameScreen ..> "shared.model.MatchResult"
+EndGameScreen ..> "shared.model.DBRecord"
+Chip ..> ImageCatalog
+FloatingLog ..> ImageCatalog
+
+note bottom of GameScreen
+  FXML: /fxml/game.fxml — Hands & Table layout
+  (PR #115). selfHand/oppHand paging,
+  offer-track + top/bottom card rows,
+  FloatingLog overlay, errorLabel + hintLabel
+  use Roboto via tech-text styleClass.
+end note
+
+note bottom of TotemPickingScreen
+  Built programmatically (no FXML) —
+  flowpane of totem cells with hover/scale
+  animations and selection glow.
+end note
+
+@enduml

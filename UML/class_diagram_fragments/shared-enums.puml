@@ -1,0 +1,115 @@
+@startuml shared-enums
+title Shared — Enums & Exceptions (org.adsl.shared.enums, org.adsl.shared.exceptions, org.adsl.shared.utils)
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+hide empty members
+
+package "shared.enums" {
+
+  enum CardType {
+    INVENTOR
+    ARTIST
+    HUNTER
+    SHAMAN
+    GATHERER
+    BUILDER
+    BUILDINGS
+    SHAMANIC_RITUAL
+    SUSTENANCE
+    CAVE_PAINTINGS
+    HUNT
+  }
+
+  enum Icon {
+    BOAT
+    SPEARHEAD
+    HOOK
+    NECKLACE
+    BOWL
+    ROPE
+    TOTEM
+    FLUTE
+    LEATHER
+    BREAD
+  }
+
+  enum Phase {
+    TOTEM_PICKING
+    TOTEM_PLACEMENT
+    ACTION_EXECUTION
+    EXTRA_MOVE
+    EVENTS_EXECUTION
+    END_ROUND
+    END_GAME
+  }
+
+  enum Row {
+    UPPER
+    LOWER
+    OFFER
+  }
+
+  enum Totem {
+    RED
+    WHITE
+    BLACK
+    BLUE
+    YELLOW
+  }
+
+  enum Trigger {
+    SUSTENANCE
+    HUNT
+    CAVE_PAINTINGS
+    SHAMANIC_RITUAL
+    END_GAME
+    END_ROUND
+    END_TURN
+    DRAWING
+    CHECK_BUILDINGS
+    EVENT_EXECUTION
+  }
+}
+
+package "shared.exceptions" {
+
+  class RuntimeException <<JDK>> {
+  }
+
+  class ServerException {
+    +ServerException(message: String)
+  }
+
+  class HostDisconnectedException {
+    +HostDisconnectedException(message: String)
+  }
+
+  class InvalidResponseException {
+    +InvalidResponseException(message: String)
+  }
+
+  ServerException -up-|> RuntimeException
+  HostDisconnectedException -up-|> ServerException
+  InvalidResponseException -up-|> RuntimeException
+}
+
+package "shared.utils" {
+  class Move <<record>> {
+    +rowIndex: int
+    +row: Row
+  }
+  Move ..> Row
+}
+
+note right of CardType
+  Used as key for per-player card maps
+  and as event-dispatch buckets in EventsState.
+end note
+
+note right of Trigger
+  Passed to Card.activeEffect(Set<Player>, Trigger)
+  to gate which cards react to which timing.
+end note
+
+@enduml

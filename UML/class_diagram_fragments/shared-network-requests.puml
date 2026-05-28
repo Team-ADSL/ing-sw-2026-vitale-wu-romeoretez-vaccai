@@ -1,0 +1,120 @@
+@startuml shared-network-requests
+title Shared — Network Requests (org.adsl.shared.network.requests)
+
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+hide empty members
+
+package "shared.network.requests" {
+
+  interface "RequestVisitor<T>" as RequestVisitor {
+    +visit(req: ClientPing, ctx: T): void
+    +visit(req: ClientConnection, ctx: T): void
+    +visit(req: LoginRequest, ctx: T): void
+    +visit(req: LogoutRequest, ctx: T): void
+    +visit(req: ExitLobbyRequest, ctx: T): void
+    +visit(req: CreateGameRequest, ctx: T): void
+    +visit(req: EnterGameRequest, ctx: T): void
+    +visit(req: StartGameRequest, ctx: T): void
+    +visit(req: TotemPickingRequest, ctx: T): void
+    +visit(req: MoveRequest, ctx: T): void
+    +visit(req: ExitGameRequest, ctx: T): void
+    +visit(req: ClientDisconnected, ctx: T): void
+  }
+
+  abstract class ClientRequest <<@JsonTypeInfo, Serializable>> {
+    {abstract} +<T> accept(visitor: RequestVisitor<T>, context: T): void
+  }
+  note right of ClientRequest
+    Jackson polymorphic JSON with
+    discriminator property "type".
+    @JsonSubTypes registers every concrete
+    subtype (CONNECTION, DISCONNECTION,
+    LOGIN, LOGOUT, PING, CREATE_GAME,
+    ENTER_GAME, EXIT_LOBBY, START_GAME,
+    MOVE, EXIT_GAME, TOTEM_PICKING).
+  end note
+
+  class ClientConnection {
+    +<T> accept(visitor: RequestVisitor<T>, ctx: T): void
+  }
+
+  class ClientDisconnected {
+    +<T> accept(visitor: RequestVisitor<T>, ctx: T): void
+  }
+
+  class ClientPing {
+    +<T> accept(visitor: RequestVisitor<T>, ctx: T): void
+  }
+
+  class LoginRequest {
+    -username: String
+    +LoginRequest(username: String)
+    +getUsername(): String
+    +<T> accept(visitor: RequestVisitor<T>, ctx: T): void
+  }
+
+  class LogoutRequest {
+    +<T> accept(visitor: RequestVisitor<T>, ctx: T): void
+  }
+
+  class CreateGameRequest {
+    -numPlayer: int
+    +CreateGameRequest(numPlayer: int)
+    +getNumPlayer(): int
+    +<T> accept(visitor: RequestVisitor<T>, ctx: T): void
+  }
+
+  class EnterGameRequest {
+    -gameId: int
+    +EnterGameRequest(gameId: int)
+    +getGameId(): int
+    +<T> accept(visitor: RequestVisitor<T>, ctx: T): void
+  }
+
+  class ExitLobbyRequest {
+    +<T> accept(visitor: RequestVisitor<T>, ctx: T): void
+  }
+
+  class StartGameRequest {
+    +<T> accept(visitor: RequestVisitor<T>, ctx: T): void
+  }
+
+  class TotemPickingRequest {
+    -totem: Totem
+    +TotemPickingRequest(totem: Totem)
+    +getTotem(): Totem
+    +<T> accept(visitor: RequestVisitor<T>, ctx: T): void
+  }
+
+  class MoveRequest {
+    -moves: Set<Move>
+    +MoveRequest(moves: Set<Move>)
+    +getMoves(): Set<Move>
+    +<T> accept(visitor: RequestVisitor<T>, ctx: T): void
+  }
+
+  class ExitGameRequest {
+    +<T> accept(visitor: RequestVisitor<T>, ctx: T): void
+  }
+}
+
+ClientConnection -up-|> ClientRequest
+ClientDisconnected -up-|> ClientRequest
+ClientPing -up-|> ClientRequest
+LoginRequest -up-|> ClientRequest
+LogoutRequest -up-|> ClientRequest
+CreateGameRequest -up-|> ClientRequest
+EnterGameRequest -up-|> ClientRequest
+ExitLobbyRequest -up-|> ClientRequest
+StartGameRequest -up-|> ClientRequest
+TotemPickingRequest -up-|> ClientRequest
+MoveRequest -up-|> ClientRequest
+ExitGameRequest -up-|> ClientRequest
+
+ClientRequest ..> RequestVisitor : dispatches via accept
+
+MoveRequest ..> "shared.utils.Move"
+TotemPickingRequest ..> "shared.enums.Totem"
+
+@enduml
