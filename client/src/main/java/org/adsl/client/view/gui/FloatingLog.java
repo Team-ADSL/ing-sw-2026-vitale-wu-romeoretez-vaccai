@@ -34,7 +34,7 @@ public final class FloatingLog {
     private static final double MAX_W = 320;
     private static final double VERTICAL_MARGIN = 120;
 
-    private final List<String> history = new ArrayList<>();
+    private static final List<String> history = new ArrayList<>();
     private final VBox floating;
     private final StackPane fullPanel;
     private final VBox expandedBody;
@@ -76,8 +76,8 @@ public final class FloatingLog {
 
         Label closeChip = new Label("✕");
         closeChip.setFont(ImageCatalog.robotoFont(9));
-        closeChip.setStyle("-fx-text-fill: #f5deb3; -fx-font-size: 9px;"
-                + " -fx-background-color: rgba(0,0,0,0.55); -fx-padding: 3 10 3 10;"
+        closeChip.setStyle("-fx-text-fill: #1a0808; -fx-font-size: 9px;"
+                + " -fx-background-color: #F2B035; -fx-padding: 3 10 3 10;"
                 + " -fx-background-radius: 8; -fx-cursor: hand;");
         closeChip.setOnMouseClicked(e -> {
             e.consume();
