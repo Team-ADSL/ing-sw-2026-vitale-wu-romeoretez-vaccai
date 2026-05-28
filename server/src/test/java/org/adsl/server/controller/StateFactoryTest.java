@@ -24,6 +24,16 @@ public class StateFactoryTest {
     // ──────────────────────────────────────────────
 
     @Test
+    void testRecover_totemPickingPhase_returnsTotemPickingState() {
+        FakeGame game = new FakeGame(1, 2);
+        game.setPhase(Phase.TOTEM_PICKING);
+
+        ControllerState state = StateFactory.recover(game, controller);
+
+        assertInstanceOf(TotemPickingState.class, state);
+    }
+
+    @Test
     void testRecover_totemPlacementPhase_returnsTotemPlacementState() {
         FakeGame game = new FakeGame(1, 2);
         game.setPhase(Phase.TOTEM_PLACEMENT);

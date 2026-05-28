@@ -17,8 +17,13 @@ import java.util.stream.Collectors;
  * board is initialised.
  * <p>
  * Broadcasts the list of still-available totems after each pick. Once every
- * player has chosen a totem the state and registers the persistence manager
- * as a game observer before it compute the transition to {@link InitGameState}.
+ * player has chosen a totem the state transitions to {@link InitGameState}.
+ * </p>
+ * <p>
+ * If a player disconnects while totem picking is in progress the base-class
+ * {@code visit(ClientDisconnected)} sets {@code toStop = true}; the overridden
+ * {@link #calcNextState()} detects this and transitions to {@link RecoverState}
+ * instead, waiting for all players to reconnect before resuming.
  * </p>
  */
 public class TotemPickingState extends ControllerState {
