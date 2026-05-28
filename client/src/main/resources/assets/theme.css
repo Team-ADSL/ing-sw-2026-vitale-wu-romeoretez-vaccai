@@ -194,8 +194,18 @@
 .table-row-cell:odd {
     -fx-background-color: rgba(0,0,0,0.10);
 }
-.table-row-cell:selected {
+.table-row-cell:filled:hover {
+    -fx-background-color: rgba(242, 176, 53, 0.14);
+}
+.table-row-cell:selected,
+.table-row-cell:selected:hover {
     -fx-background-color: rgba(242, 176, 53, 0.32);
+}
+.table-row-cell:empty {
+    -fx-background-color: transparent;
+}
+.table-row-cell:empty .table-cell {
+    -fx-border-color: transparent;
 }
 .table-cell {
     -fx-text-fill: #FDF3D3;
@@ -204,4 +214,56 @@
 }
 .table-row-cell:selected .table-cell {
     -fx-text-fill: #FDF3D3;
+}
+
+/* ── TableView chrome (scrollbars, corner, sort arrow, +) ── */
+.table-view .scroll-bar:horizontal,
+.table-view .scroll-bar:vertical {
+    -fx-background-color: rgba(0, 0, 0, 0.35);
+    -fx-background-radius: 6;
+}
+.table-view .scroll-bar .thumb {
+    -fx-background-color: rgba(242, 176, 53, 0.55);
+    -fx-background-radius: 6;
+}
+.table-view .scroll-bar .track {
+    -fx-background-color: rgba(0, 0, 0, 0.45);
+    -fx-background-radius: 6;
+}
+.table-view .scroll-bar .increment-button,
+.table-view .scroll-bar .decrement-button,
+.table-view .scroll-bar .increment-arrow,
+.table-view .scroll-bar .decrement-arrow {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-shape: null;
+}
+.table-view .corner {
+    -fx-background-color: transparent;
+}
+.table-view .show-hide-columns-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0 4 0 4;
+}
+.table-view .show-hide-columns-button .show-hide-column-image {
+    -fx-background-color: rgba(253, 243, 211, 0.55);
+}
+.table-view .column-resize-line {
+    -fx-background-color: rgba(242, 176, 53, 0.55);
+}
+.table-view .arrow {
+    -fx-background-color: #F2B035;
+}
+.table-view .placeholder .label {
+    -fx-text-fill: rgba(253, 243, 211, 0.55);
+}
+
+/* ── SplitPane (used in endgame.fxml) ─────────────────── */
+.split-pane {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+.split-pane > .split-pane-divider {
+    -fx-background-color: rgba(242, 176, 53, 0.30);
+    -fx-padding: 0 1 0 1;
 }

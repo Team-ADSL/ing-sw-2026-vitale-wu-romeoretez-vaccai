@@ -7,8 +7,10 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.adsl.client.AppCoordinator;
+import org.adsl.client.view.gui.FloatingLog;
 import org.adsl.shared.model.DBRecord;
 import org.adsl.shared.model.MatchResult;
 
@@ -40,6 +42,8 @@ public class EndGameScreen extends GUIScreen {
     @FXML private Label noDbAlert;
     @FXML private Label errorLabel;
 
+    private FloatingLog floatingLog;
+
     public EndGameScreen(AppCoordinator coordinator, String username,
                          List<MatchResult> results, List<DBRecord> records, String message) {
         super(coordinator, username);
@@ -53,6 +57,11 @@ public class EndGameScreen extends GUIScreen {
         wireMatchTable(results);
         wireRecordsTable(records, message);
         applyTheme(this.root);
+
+        floatingLog = new FloatingLog("Endgame log");
+        if (this.root instanceof StackPane sp) {
+            sp.getChildren().add(floatingLog.getFloatingNode());
+        }
     }
 
     private void wireMatchTable(List<MatchResult> results) {
