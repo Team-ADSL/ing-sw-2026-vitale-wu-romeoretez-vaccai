@@ -147,8 +147,10 @@ public class ActionExecutionState extends ControllerState {
 
     String log = "[ACTION] Player " + p.getName() + " picked " + moves.size()
             + " card(s): " + String.join(", ", pickedNames) + ".";
-    if(!logsBuildingActivated.isEmpty()) {
-      log += "Activated following building: " + String.join(", ", logsBuildingActivated) + ".";
+    List<String> logsBuildingRelevant = logsBuildingActivated.stream()
+            .filter(l -> !l.contains("no change")).toList();
+    if(!logsBuildingRelevant.isEmpty()) {
+      log += "Activated following building: " + String.join(", ", logsBuildingRelevant) + ".";
     }
     System.out.println(log);
     setNextState(calcNextState());
