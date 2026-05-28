@@ -86,9 +86,14 @@ public class ExtraMoveState extends ControllerState {
       logsBuildingActivated.add(formatDeltas(title, Set.of(p), before));
     }
 
-    String log = "[EXTRA MOVE] Player " + p.getName() + " picked 1 card: " + pickName + "."
-                  + "Activated following building: " + String.join(", ", logsBuildingActivated) + ".";
+    String log = "[EXTRA MOVE] Player " + p.getName() + " picked 1 card: " + pickName + ".";
+    List<String> logsBuildingRelevant = logsBuildingActivated.stream()
+            .filter(l -> !l.contains("no change")).toList();
+    if(!logsBuildingRelevant.isEmpty()) {
+      log += "Activated following building: " + String.join(", ", logsBuildingRelevant) + ".";
+    }
     System.out.println(log);
+    getGame().setPhase(Phase.EVENTS_EXECUTION);
     setNextState(new EventsState(getGame(), getContext()));
     getGame().sendUpdateGame(log);
   }
