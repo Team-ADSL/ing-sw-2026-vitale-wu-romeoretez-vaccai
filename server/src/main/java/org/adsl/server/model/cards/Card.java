@@ -71,6 +71,8 @@ public abstract class Card implements Serializable {
         };
     }
 
+    public abstract int getCost();
+
     protected abstract String getTypeLabel();
     protected abstract String getEffectsLabel();
     protected String getCostLabel() { return null; }

@@ -49,4 +49,7 @@ public abstract class Event extends Card {
                 .map(c -> (Building)c)
                 .forEach(b -> b.activeEffect(Collections.singleton(p), t));
     }
+
+    @Override
+    public int getCost(){ return 0; }
 }
