@@ -49,7 +49,7 @@ public class SinceBuilt extends Building {
         if(t == Trigger.DRAWING){
             Optional<Player> playerContainer = players.stream().findFirst();
             if (playerContainer.isEmpty()) {
-                return; // ERRORE DA GESTIRE?
+                return;
             }
 
             Player p = playerContainer.get();

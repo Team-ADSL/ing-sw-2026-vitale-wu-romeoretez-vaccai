@@ -24,4 +24,7 @@ public abstract class Character extends Card {
 
     @Override
     public void activeEffect(Set<Player> players, Trigger t) {}
+
+    @Override
+    public int getCost(){ return 0; }
 }

@@ -14,8 +14,7 @@ import org.adsl.server.model.Game;
 import org.adsl.server.model.Player;
 import org.adsl.server.model.board.CardRow;
 
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 /**
  * State that handles the optional extra card draw granted by {@code ExtraMove}
@@ -72,9 +71,23 @@ public class ExtraMoveState extends ControllerState {
     CardRow selectedRow = getGame().getBoard().topRow();
     Card selectedCard = selectedRow.pickCardAt(move.rowIndex());
     String pickName = selectedCard.getClass().getSimpleName();
-    selectedCard.insert(p.getCards());
 
-    String log = "[EXTRA MOVE] Player " + p.getName() + " picked 1 card: " + pickName + ".";
+    selectedCard.insert(p.getCards());
+    p.changeFood(-selectedCard.getCost());
+    selectedCard.activeEffect(Set.of(p), Trigger.DRAWING);
+    p.setLastPick(selectedCard);
+
+    Map<Player, int[]> before = snapshotFoodPp(Set.of(p));
+    List<String> logsBuildingActivated = new ArrayList<>();
+
+    for(Card b : p.getCards().get(CardType.BUILDINGS)){
+      String title = b.toString();
+      b.activeEffect(Set.of(p), Trigger.DRAWING);
+      logsBuildingActivated.add(formatDeltas(title, Set.of(p), before));
+    }
+
+    String log = "[EXTRA MOVE] Player " + p.getName() + " picked 1 card: " + pickName + "."
+                  + "Activated following building: " + String.join(", ", logsBuildingActivated) + ".";
     System.out.println(log);
     setNextState(new EventsState(getGame(), getContext()));
     getGame().sendUpdateGame(log);

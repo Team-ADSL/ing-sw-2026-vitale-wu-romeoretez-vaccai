@@ -117,6 +117,8 @@ public class ActionExecutionState extends ControllerState {
 
   private void execute(Set<Move> moves, Player p) {
     List<String> pickedNames = new ArrayList<>();
+    List<String> logsBuildingActivated = new ArrayList<>();
+
     for (Move move : moves) {
       CardRow selectedRow;
       if (move.row() == Row.UPPER) {
@@ -124,17 +126,30 @@ public class ActionExecutionState extends ControllerState {
       } else {
         selectedRow = getGame().getBoard().lowRow();
       }
+
       Card selectedCard = selectedRow.pickCardAt(move.rowIndex());
       pickedNames.add(selectedCard.getClass().getSimpleName());
       selectedCard.insert(p.getCards());
+      p.changeFood(-selectedCard.getCost());
+      selectedCard.activeEffect(Set.of(p), Trigger.DRAWING);
       p.setLastPick(selectedCard);
-      p.getCards().get(CardType.BUILDINGS).forEach(b -> b.activeEffect(Set.of(p), Trigger.DRAWING));
+
+      Map<Player, int[]> before = snapshotFoodPp(Set.of(p));
+      for(Card b : p.getCards().get(CardType.BUILDINGS)){
+        String title = b.toString();
+        b.activeEffect(Set.of(p), Trigger.DRAWING);
+        logsBuildingActivated.add(formatDeltas(title, Set.of(p), before));
+      }
     }
     OfferTrack offerTrack = getGame().getBoard().offerTrack();
     offerTrack.removePlayer(p);
     placeTotem(p);
+
     String log = "[ACTION] Player " + p.getName() + " picked " + moves.size()
             + " card(s): " + String.join(", ", pickedNames) + ".";
+    if(!logsBuildingActivated.isEmpty()) {
+      log += "Activated following building: " + String.join(", ", logsBuildingActivated) + ".";
+    }
     System.out.println(log);
     setNextState(calcNextState());
     getGame().sendUpdateGame(log);

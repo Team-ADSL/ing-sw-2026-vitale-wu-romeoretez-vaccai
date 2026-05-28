@@ -18,6 +18,11 @@ public class FakeCard extends Card {
     @Override
     public void activeEffect(Set<Player> players, Trigger t) {}
     @Override
+    public int getCost() {
+        return 0;
+    }
+
+    @Override
     protected String getTypeLabel() { return "fake"; }
     @Override
     protected String getEffectsLabel() { return ""; }

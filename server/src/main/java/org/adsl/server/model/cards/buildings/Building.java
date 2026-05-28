@@ -43,17 +43,11 @@ public abstract class Building extends Card {
 
     @Override
     public void insert(Map<CardType, Set<Card>> cards) {
-        cards.get(CardType.BUILDINGS).add(this);
-    }
-
-    public int getCost() {
-        return cost;
+        if(cards.containsKey(CardType.BUILDINGS)) cards.get(CardType.BUILDINGS).add(this);
     }
 
     @Override
-    protected String getCostLabel() {
-        return null;
-    }
+    public int getCost(){ return cost; }
 
     public int getEndGamePP() {
         return endGamePP;
