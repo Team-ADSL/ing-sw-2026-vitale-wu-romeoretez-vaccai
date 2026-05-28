@@ -86,6 +86,9 @@ public class GameScreen extends GUIScreen {
     private static final int    OPP_HAND_PER_PAGE  = 8;
     private static final double NAV_BTN_W      = 44;
     private static final double OPP_NAV_BTN_W  = 32;
+    // Max fraction of window height an expanded TOP-slot panel may occupy
+    // before it is scaled down to fit (the TOP region itself grows unbounded).
+    private static final double TOP_EXPAND_BUDGET = 0.42;
 
     @FXML private StackPane  rootStack;
     @FXML private BorderPane rootPane;
@@ -697,14 +700,59 @@ public class GameScreen extends GUIScreen {
                 } else {
                     populateOpponentHandColumn((VBox) hand, panel, p, cardW, allCards);
                 }
+                // Shrink only this panel if its expanded content would overflow
+                // the window — runLater so prefHeight reflects the new content.
+                Platform.runLater(() -> fitExpandedPanel(panel, topSlot));
             } else {
                 panel.setPrefWidth(basePanelW);
                 panel.setMaxWidth(basePanelW);
+                panel.setScaleX(1);
+                panel.setScaleY(1);
+                panel.setTranslateY(0);
             }
         });
 
         panel.getChildren().addAll(header, hand, bottomBar);
         return panel;
+    }
+
+    /**
+     * Scales a single expanded opponent panel down so its content fits the
+     * available vertical space, anchoring the top so it never grows upward off
+     * the window. Acts per-panel: expanding one opponent leaves siblings
+     * untouched. Collapsed panels reset scale to 1 in the toggle handler.
+     *
+     * <p>Side (LEFT/RIGHT) panels are bounded by their BorderPane region height;
+     * TOP panels live in a region that grows with content, so they are bounded
+     * by a fraction of the window height instead.
+     */
+    private void fitExpandedPanel(VBox panel, boolean topSlot) {
+        panel.setScaleX(1);
+        panel.setScaleY(1);
+        panel.setTranslateY(0);
+
+        double availH;
+        if (topSlot) {
+            double winH = rootStack.getHeight();
+            if (winH <= 0) winH = 720;
+            availH = winH * TOP_EXPAND_BUDGET;
+        } else if (panel.getParent() instanceof Region region) {
+            Insets pad = region.getInsets();
+            availH = region.getHeight() - pad.getTop() - pad.getBottom();
+        } else {
+            return;
+        }
+        if (availH <= 0) return;
+
+        double prefH = panel.prefHeight(panel.getWidth());
+        if (prefH <= availH) return;
+
+        double scale = availH / prefH;
+        panel.setScaleX(scale);
+        panel.setScaleY(scale);
+        // Scaling pivots on the panel center; shift up so the visual top stays
+        // anchored at the region top instead of drifting off-screen.
+        panel.setTranslateY(-(prefH - availH) / 2.0);
     }
 
     /**
