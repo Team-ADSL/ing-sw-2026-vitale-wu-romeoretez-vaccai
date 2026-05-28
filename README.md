@@ -301,6 +301,93 @@ python3 tools/testers/socket_auto_plays.py -g 1 -p1 Alice -p2 Bob -r 5 -H 192.16
 
 ---
 
+## Javadoc
+
+### Generate
+
+From the repo root, run:
+
+```bash
+mvn javadoc:aggregate
+```
+
+This builds a single aggregated Javadoc site for all three modules (`shared`, `server`, `client`) and writes it to:
+
+```
+target/reports/apidocs/index.html
+```
+
+To generate per-module docs instead:
+
+```bash
+mvn javadoc:javadoc
+```
+
+Each module's output lands in its own `target/reports/apidocs/` folder:
+
+```
+shared/target/reports/apidocs/index.html
+server/target/reports/apidocs/index.html
+client/target/reports/apidocs/index.html
+```
+
+Add `-DskipTests` to skip tests if you only want docs:
+
+```bash
+mvn javadoc:aggregate -DskipTests
+```
+
+---
+
+### Open in a Browser
+
+After generating, open the HTML file directly:
+
+**macOS / Linux:**
+```bash
+open target/reports/apidocs/index.html
+```
+
+**Windows (Command Prompt):**
+```
+start target\reports\apidocs\index.html
+```
+
+**Windows (PowerShell):**
+```powershell
+Invoke-Item target\reports\apidocs\index.html
+```
+
+---
+
+### Open in IntelliJ IDEA
+
+#### Option A — Project panel (folder navigation)
+
+1. In the **Project** panel (left sidebar), expand the module you want:
+   - Aggregated: `ing-sw-2026-… → target → reports → apidocs`
+   - Per-module: `server → target → reports → apidocs`
+2. Double-click **`index.html`**.
+3. In the floating browser toolbar that appears at the top-right of the editor, click the browser icon (Chrome, Firefox, etc.) to open in an external browser, or click the **Built-in preview** icon (magnifying glass) to read it inside IntelliJ.
+
+> **Tip:** If the `target` folder is not visible, enable **Show Excluded Files** via the gear icon (⚙) at the top of the Project panel.
+
+#### Option B — IntelliJ built-in Javadoc tool
+
+1. Open any class or interface in the editor.
+2. Place the cursor on a class / method name.
+3. Press **Ctrl+Q** (Windows/Linux) or **F1** (macOS) to show the quick documentation popup.
+4. Click **View in external documentation** (the globe icon) in the popup to jump to the full HTML page.
+
+#### Option C — External Documentation URL
+
+If you have already generated the docs and want to set a persistent link:
+
+1. Go to **File → Settings → Tools → External Documentation**.
+2. Add a new entry for `org.adsl` pointing to the absolute path of `target/reports/apidocs/`.
+
+---
+
 ## Full Command Reference
 
 ```

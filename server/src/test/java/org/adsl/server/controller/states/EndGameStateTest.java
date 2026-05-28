@@ -9,6 +9,7 @@ import org.adsl.server.model.cards.characters.Inventor;
 import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Icon;
 import org.adsl.shared.model.DBRecord;
+import org.adsl.shared.model.MatchResult;
 
 import org.adsl.utils.builder.GameControllerBuilder;
 import org.adsl.utils.fakes.FakeGame;
@@ -156,5 +157,44 @@ public class EndGameStateTest {
         state.onEntry();
 
         assertEquals(5, player.getPp(), "1 artist must score 5 PP (10 * 1 / 2)");
+    }
+
+    // ──────────────────────────────────────────────
+    // MATCH RESULT CONTENT
+    // ──────────────────────────────────────────────
+
+    @Test
+    void testOnEntry_matchResultContainsCorrectNicknameAndPP() throws ServerException {
+        Player player = new Player("Alice");
+        player.changePP(12);
+        fakeGame.getPlayers().add(player);
+
+        state.onEntry();
+
+        assertNotNull(fakeGame.capturedResults, "MatchResult list must be forwarded");
+        assertEquals(1, fakeGame.capturedResults.size());
+        MatchResult result = fakeGame.capturedResults.get(0);
+        assertEquals("Alice", result.nickname());
+        assertEquals(12, result.pp());
+    }
+
+    @Test
+    void testOnEntry_matchResultContainsCorrectFood() throws ServerException {
+        Player player = new Player("Bob");
+        player.changeFood(5);
+        fakeGame.getPlayers().add(player);
+
+        state.onEntry();
+
+        MatchResult result = fakeGame.capturedResults.get(0);
+        assertEquals(5, result.food());
+    }
+
+    @Test
+    void testOnEntry_emptyLeaderboard_doesNotThrow() {
+        fakeGame.getPlayers().add(new Player("Charlie"));
+        assertDoesNotThrow(() -> state.onEntry(),
+                "Empty leaderboard (no DB) must not cause an exception");
+        assertTrue(fakeGame.endGameResultsSent);
     }
 }
