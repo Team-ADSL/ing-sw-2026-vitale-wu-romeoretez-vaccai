@@ -102,11 +102,23 @@ public final class ImageCatalog {
         return load("/assets/totems/2d_totem_" + totem.name().toLowerCase() + ".png");
     }
 
+    /** 3D standing-totem sprite for a given color. File: {@code 3d_totem_<color>.png}. */
+    public static Image totem3D(Totem totem) {
+        return load("/assets/totems/3d_totem_" + totem.name().toLowerCase() + ".png");
+    }
+
     // ── Offer tiles ─────────────────────────────────────────────────────────
 
     /** Offer tile sprite. ID matches the JSON entry (e.g. "offer_tile_a"). */
     public static Image offerTile(String id) {
         return load("/assets/offer_tiles/" + id + ".png");
+    }
+
+    // ── Order (turn-order) tile ───────────────────────────────────────────────
+
+    /** Turn-order tile sprite for the given player count. File: {@code order_tile_<n>p.png}. */
+    public static Image orderTile(int numPlayers) {
+        return load("/assets/order_tiles/order_tile_" + numPlayers + "p.png");
     }
 
     // ── PP / Food chip backgrounds ──────────────────────────────────────────
