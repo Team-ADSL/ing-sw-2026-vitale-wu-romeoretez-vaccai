@@ -54,7 +54,7 @@ public class EndGameState extends ControllerState {
             p.changePP(numInventors * inventorIcons);
 
             int numArtists = p.getCards().get(CardType.ARTIST).size();
-            p.changePP(10 * numArtists / 2);
+            p.changePP(10 * (numArtists / 2));
 
             int buildingPoints = p.getCards().get(CardType.BUILDINGS).stream()
                     .map(c -> (Building)c)

@@ -64,6 +64,12 @@ public class InitGameState extends ControllerState {
         fillTopRow(gameSettings.numTopTribeCard());
         board.orderTile().placePlayersRandom(getGame().getPlayers());
 
+        board.orderTile().getPlayerAt(0).ifPresent(p -> p.changeFood(2));
+        board.orderTile().getPlayerAt(1).ifPresent(p -> p.changeFood(3));
+        board.orderTile().getPlayerAt(2).ifPresent(p -> p.changeFood(3));
+        board.orderTile().getPlayerAt(3).ifPresent(p -> p.changeFood(4));
+        board.orderTile().getPlayerAt(4).ifPresent(p -> p.changeFood(4));
+
         getGame().setInitialized(true);
         setNextState(calcNextState());
         String log = "[INIT] Game config loaded.";

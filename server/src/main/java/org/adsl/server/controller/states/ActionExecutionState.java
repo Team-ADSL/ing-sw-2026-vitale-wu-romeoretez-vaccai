@@ -2,6 +2,7 @@ package org.adsl.server.controller.states;
 
 import org.adsl.server.controller.GameController;
 import org.adsl.server.model.board.*;
+import org.adsl.server.model.cards.characters.Builder;
 import org.adsl.server.network.VirtualClient;
 import org.adsl.shared.enums.Phase;
 import org.adsl.shared.network.requests.MoveRequest;
@@ -130,7 +131,14 @@ public class ActionExecutionState extends ControllerState {
       Card selectedCard = selectedRow.pickCardAt(move.rowIndex());
       pickedNames.add(selectedCard.getClass().getSimpleName());
       selectedCard.insert(p.getCards());
-      p.changeFood(-selectedCard.getCost());
+      int cost = selectedCard.getCost();
+      if(cost != 0){
+        p.changeFood(-cost + p.getCards().get(CardType.BUILDER).stream()
+                .map(c -> (Builder)c)
+                .mapToInt(Builder::getDiscount)
+                .sum()
+        );
+      }
       selectedCard.activeEffect(Set.of(p), Trigger.DRAWING);
       p.setLastPick(selectedCard);
 
