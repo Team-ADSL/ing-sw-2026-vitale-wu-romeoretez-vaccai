@@ -119,6 +119,7 @@ public class ActionExecutionState extends ControllerState {
   private void execute(Set<Move> moves, Player p) {
     List<String> pickedNames = new ArrayList<>();
     List<String> logsBuildingActivated = new ArrayList<>();
+    List<String> logsExtra = new ArrayList<>();
 
     for (Move move : moves) {
       CardRow selectedRow;
@@ -139,22 +140,31 @@ public class ActionExecutionState extends ControllerState {
                 .sum()
         );
       }
+      // Drawing self-effect (e.g. Hunter with meat icon gains food). Buildings are
+      // logged by their own loop below, so attribute only non-building draw effects.
+      Map<Player, int[]> beforeDraw = snapshotFoodPp(Set.of(p));
       selectedCard.activeEffect(Set.of(p), Trigger.DRAWING);
+      if (!p.getCards().get(CardType.BUILDINGS).contains(selectedCard)) {
+        addDelta(logsExtra, selectedCard.getClass().getSimpleName(), p, beforeDraw);
+      }
       p.setLastPick(selectedCard);
 
       Map<Player, int[]> before = snapshotFoodPp(Set.of(p));
       for(Card b : p.getCards().get(CardType.BUILDINGS)){
-        String title = b.toString();
+        String title = b.getClass().getSimpleName();
         b.activeEffect(Set.of(p), Trigger.DRAWING);
         logsBuildingActivated.add(formatDeltas(title, Set.of(p), before));
       }
     }
     OfferTrack offerTrack = getGame().getBoard().offerTrack();
     offerTrack.removePlayer(p);
-    placeTotem(p);
+    logsExtra.addAll(placeTotem(p));
 
     String log = "[ACTION] Player " + p.getName() + " picked " + moves.size()
             + " card(s): " + String.join(", ", pickedNames) + ".";
+    if (!logsExtra.isEmpty()) {
+      log += " " + String.join(", ", logsExtra) + ".";
+    }
     List<String> logsBuildingRelevant = logsBuildingActivated.stream()
             .filter(l -> !l.contains("no change")).toList();
     if(!logsBuildingRelevant.isEmpty()) {
@@ -165,7 +175,15 @@ public class ActionExecutionState extends ControllerState {
     getGame().sendUpdateGame(log);
   }
 
-  private void placeTotem(Player p) {
+  /** Appends "title — Player: ±N PP ±M food" to {@code out}, skipping no-op deltas. */
+  private void addDelta(List<String> out, String title, Player p, Map<Player, int[]> before) {
+    String delta = formatDeltas(title, Set.of(p), before);
+    if (!delta.contains("no change")) {
+      out.add(delta);
+    }
+  }
+
+  private List<String> placeTotem(Player p) {
     int i = getGame().getBoard().orderTile().placePlayerAtNext(p);
 
     // Eventual bonus for totem placement in order tile
@@ -173,6 +191,7 @@ public class ActionExecutionState extends ControllerState {
 
     // Set new point/food after player's move
     OrderCell orderCell = getGame().getBoard().orderTile().getCellAt(i);
+    Map<Player, int[]> before = snapshotFoodPp(Set.of(p));
     if (orderCell.getBonus() >= 0) {
       p.changeFood(orderCell.getBonus());
       if (p.getBuildingBonus().isBonusFoodTile()) {
@@ -187,6 +206,10 @@ public class ActionExecutionState extends ControllerState {
     }
 
     getGame().getPlayers().forEach(player -> player.getBuildingBonus().reset());
+
+    List<String> logs = new ArrayList<>();
+    addDelta(logs, "Order tile", p, before);
+    return logs;
   }
 
   @Override
@@ -208,10 +231,17 @@ public class ActionExecutionState extends ControllerState {
         // First update model (previous action) and execute the automation after
         getGame().sendUpdateGame();
         // Automatic action can be performed
-        getGame().setCurrentPlayer(currPlayer.get());
-        currPlayer.get().changeFood(3);
-        offerTrack.removePlayer(currPlayer.get());
-        placeTotem(currPlayer.get());
+        Player foodPlayer = currPlayer.get();
+        getGame().setCurrentPlayer(foodPlayer);
+        Map<Player, int[]> before = snapshotFoodPp(Set.of(foodPlayer));
+        foodPlayer.changeFood(3);
+        List<String> logs = new ArrayList<>();
+        addDelta(logs, "Offer tile", foodPlayer, before);
+        offerTrack.removePlayer(foodPlayer);
+        logs.addAll(placeTotem(foodPlayer));
+        if (!logs.isEmpty()) {
+          getGame().sendUpdateGame(String.join(", ", logs) + ".");
+        }
         return calcNextState();
       } else {
         getGame().setCurrentPlayer(currPlayer.get());

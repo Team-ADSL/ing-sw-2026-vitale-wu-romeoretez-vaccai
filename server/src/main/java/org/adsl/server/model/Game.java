@@ -34,6 +34,7 @@ public class Game implements Serializable {
     private int era;
     private Player currentPlayer;
     private Phase phase;
+    private List<String> gameLog;
 
     private transient boolean isInitialized;
     private transient List<GameObserver> gameObservers;
@@ -50,6 +51,7 @@ public class Game implements Serializable {
         this.currentPlayer = null;
         this.phase = null;
         this.isInitialized = false;
+        this.gameLog = new ArrayList<>();
         gameObservers = new ArrayList<>();
         endGameObservers = new ArrayList<>();
     }
@@ -66,6 +68,7 @@ public class Game implements Serializable {
         this.currentPlayer = currentPlayer;
         this.phase = phase;
         this.isInitialized = true;
+        this.gameLog = new ArrayList<>();
         gameObservers = new ArrayList<>();
         endGameObservers = new ArrayList<>();
     }
@@ -104,23 +107,39 @@ public class Game implements Serializable {
         for(GameObserver o : gameObservers) o.updateLobby(gameId, playerNames, numPlayer);
     }
     public void sendUpdateLobby(String message){
+        recordLog(message);
         List<String> playerNames = players.stream().filter(Player::isActive).map(Player::getName).toList();
         for(GameObserver o : gameObservers) o.updateLobby(gameId, playerNames, numPlayer, message);
     }
     public void sendTotemAvailable(List<Totem> totemAvailable, String message){
+        recordLog(message);
         for(GameObserver o : gameObservers) o.updateTotemAvailable(totemAvailable, message);
     }
     public void sendUpdateGame(){
         for(GameObserver o : gameObservers) o.updateGame(this);
     }
     public void sendUpdateGame(String message){
+        recordLog(message);
         for(GameObserver o : gameObservers) o.updateGame(this, message);
     }
     public void broadcastError(String message){
         for(GameObserver o : gameObservers) o.notifyError(message);
     }
     public void sendEventTriggered(String eventTitle, String logMessage){
+        recordLog(logMessage);
         for(GameObserver o : gameObservers) o.notifyEventTriggered(eventTitle, logMessage);
+    }
+
+    /** Appends a user-facing log line to the persisted transcript (skips blanks). */
+    private void recordLog(String message){
+        if (message == null || message.isBlank()) return;
+        if (gameLog == null) gameLog = new ArrayList<>();
+        gameLog.add(message);
+    }
+
+    /** Full game-log transcript accumulated so far, for restoring a reconnecting client. */
+    public List<String> getGameLog(){
+        return gameLog == null ? new ArrayList<>() : new ArrayList<>(gameLog);
     }
     /**
      * Broadcasts end-of-game data to all registered {@link EndGameObserver}s.
@@ -151,6 +170,7 @@ public class Game implements Serializable {
      */
     public void setupTransientAttributes(){
         isInitialized = true;
+        if (gameLog == null) gameLog = new ArrayList<>();
         gameObservers = new ArrayList<>();
         endGameObservers = new ArrayList<>();
     }

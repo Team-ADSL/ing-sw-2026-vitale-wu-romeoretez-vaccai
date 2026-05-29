@@ -25,6 +25,7 @@ import java.io.Serializable;
         @JsonSubTypes.Type(value = GameEnded.class, name = "GAME_ENDED"),
         @JsonSubTypes.Type(value = ErrorResponse.class, name = "ERROR_RESPONSE"),
         @JsonSubTypes.Type(value = EventsTriggered.class, name = "EVENTS_TRIGGERED"),
+        @JsonSubTypes.Type(value = GameLogRestore.class, name = "GAME_LOG_RESTORE"),
 })
 /**
  * Abstract base for all responses sent from server to client over the network.
