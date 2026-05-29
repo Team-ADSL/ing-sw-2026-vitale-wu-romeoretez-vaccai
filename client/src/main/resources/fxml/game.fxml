@@ -4,6 +4,8 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
@@ -36,7 +38,11 @@
                 <Label fx:id="headerLabel" style="-fx-font-size: 13px; -fx-text-fill: #FDF3D3;"/>
                 <Label fx:id="phaseLabel"  style="-fx-font-size: 10px; -fx-text-fill: #F2B035;"/>
                 <HBox fx:id="topRow"     alignment="CENTER" spacing="8"/>
-                <HBox fx:id="offerTrack" alignment="CENTER" spacing="0"/>
+                <HBox fx:id="offerRow"   alignment="CENTER" spacing="14">
+                    <Pane fx:id="orderTilePane"/>
+                    <HBox fx:id="offerTrack" alignment="CENTER" spacing="0"/>
+                    <Region fx:id="offerRightSpacer"/>
+                </HBox>
                 <HBox fx:id="bottomRow"  alignment="CENTER" spacing="8"/>
                 <HBox spacing="14" alignment="CENTER">
                     <Label fx:id="hintLabel" style="-fx-font-size: 13px;" wrapText="true" styleClass="tech-text"/>

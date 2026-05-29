@@ -37,6 +37,8 @@ import org.adsl.shared.enums.Totem;
 import org.adsl.shared.model.CardDTO;
 import org.adsl.shared.model.GameDTO;
 import org.adsl.shared.model.OfferTileDTO;
+import org.adsl.shared.model.OrderCellDTO;
+import org.adsl.shared.model.OrderTileDTO;
 import org.adsl.shared.model.PlayerDTO;
 import org.adsl.shared.utils.Move;
 
@@ -87,12 +89,40 @@ public class GameScreen extends GUIScreen {
     private static final double NAV_BTN_W      = 44;
     private static final double OPP_NAV_BTN_W  = 32;
 
+    // ── Order tile + 3D totem geometry ───────────────────────────────────────
+    // Reference pixel space of the order-tile PNGs (≈624×965) and the 3D totem
+    // PNGs (220×384). Cell centers and the totem support point were measured by
+    // hand on those originals, then normalised to fractions so they scale with
+    // the rendered tile.
+    private static final double ORDER_TILE_W   = 624.0;
+    private static final double ORDER_TILE_H   = 965.0;
+    private static final double TOTEM3D_W      = 220.0;
+    private static final double TOTEM3D_H      = 384.0;
+    // Support point inside the 3D totem sprite (the pixel that "rests" on a cell).
+    private static final double TOTEM_ANCHOR_X = 113.0 / TOTEM3D_W;
+    private static final double TOTEM_ANCHOR_Y = 339.0 / TOTEM3D_H;
+    // All cell centers share one horizontal line (centered on the tile).
+    private static final double ORDER_CELL_X   = 0.5;
+    // Totem width relative to tile width (≈ the measured cell rect width 201px).
+    private static final double ORDER_TOTEM_W_FRAC = 201.0 / ORDER_TILE_W;
+    private static final double OFFER_ROW_SPACING  = 14.0;
+    // Per-player-count vertical cell-center fractions (index = players − 2).
+    private static final double[][] ORDER_CELL_Y = {
+        { 298.0 / ORDER_TILE_H, 462.0 / ORDER_TILE_H },
+        { 257.0 / ORDER_TILE_H, 422.0 / ORDER_TILE_H, 587.0 / ORDER_TILE_H },
+        { 213.0 / ORDER_TILE_H, 379.0 / ORDER_TILE_H, 545.0 / ORDER_TILE_H, 711.0 / ORDER_TILE_H },
+        { 148.0 / ORDER_TILE_H, 314.0 / ORDER_TILE_H, 479.0 / ORDER_TILE_H, 646.0 / ORDER_TILE_H, 811.0 / ORDER_TILE_H },
+    };
+
     @FXML private StackPane  rootStack;
     @FXML private BorderPane rootPane;
     @FXML private VBox       centerBox;
     @FXML private Label      headerLabel;
     @FXML private Label      phaseLabel;
     @FXML private HBox       topRow;
+    @FXML private HBox       offerRow;
+    @FXML private Pane       orderTilePane;
+    @FXML private Region     offerRightSpacer;
     @FXML private HBox       offerTrack;
     @FXML private HBox       bottomRow;
     @FXML private HBox       topPlayersBox;
@@ -409,6 +439,7 @@ public class GameScreen extends GUIScreen {
         renderRow(topRow, top, Row.UPPER, topW);
         renderRow(bottomRow, bot, Row.LOWER, botW);
         renderOfferTrack(offerTrack, off, offW);
+        renderOrderTile(offW * TILE_ASPECT);
 
         renderSelfPanel();
         renderOpponentPanels();
@@ -993,6 +1024,69 @@ public class GameScreen extends GUIScreen {
             cell.setOpacity(0.7);
         }
         return cell;
+    }
+
+    /**
+     * Renders the turn-order tile to the left of the offer track. Picks the
+     * {@code order_tile_<n>p} sprite for the current player count, sizes it to
+     * the offer-tile height ({@code tileH}) so it sits in line with the rest of
+     * the board, then drops each occupied cell's 3D totem so its support point
+     * rests on the cell center. A right-side spacer of equal width keeps the
+     * offer track centered with the card rows.
+     */
+    private void renderOrderTile(double tileH) {
+        if (orderTilePane == null) return;
+        orderTilePane.getChildren().clear();
+
+        OrderTileDTO ot = (game != null && game.board() != null) ? game.board().orderTile() : null;
+        int n = (game != null && game.players() != null) ? game.players().size() : 0;
+        if (ot == null || n < 2 || n > 5 || tileH <= 0) {
+            sizeOrderTile(0, 0);
+            return;
+        }
+
+        double tileW = tileH * (ORDER_TILE_W / ORDER_TILE_H);
+        sizeOrderTile(tileW, tileH);
+
+        ImageView img = safeImageView(() -> ImageCatalog.orderTile(n));
+        if (img != null) {
+            img.setFitWidth(tileW);
+            img.setFitHeight(tileH);
+            img.setPreserveRatio(false);
+            orderTilePane.getChildren().add(img);
+        }
+
+        List<OrderCellDTO> cells = ot.cells();
+        if (cells == null) return;
+        double[] ys = ORDER_CELL_Y[n - 2];
+        double totemW = tileW * ORDER_TOTEM_W_FRAC;
+        double totemH = totemW * (TOTEM3D_H / TOTEM3D_W);
+
+        // Draw top-to-bottom so lower (nearer) totems overlap the ones behind.
+        for (int i = 0; i < cells.size() && i < ys.length; i++) {
+            Totem totem = cells.get(i).totem();
+            if (totem == null) continue;
+            ImageView t = safeImageView(() -> ImageCatalog.totem3D(totem));
+            if (t == null) continue;
+            t.setFitWidth(totemW);
+            t.setPreserveRatio(true);
+            double cx = ORDER_CELL_X * tileW;
+            double cy = ys[i] * tileH;
+            t.setLayoutX(cx - TOTEM_ANCHOR_X * totemW);
+            t.setLayoutY(cy - TOTEM_ANCHOR_Y * totemH);
+            orderTilePane.getChildren().add(t);
+        }
+    }
+
+    private void sizeOrderTile(double w, double h) {
+        orderTilePane.setMinSize(w, h);
+        orderTilePane.setPrefSize(w, h);
+        orderTilePane.setMaxSize(w, h);
+        if (offerRightSpacer != null) {
+            offerRightSpacer.setMinWidth(w);
+            offerRightSpacer.setPrefWidth(w);
+            offerRightSpacer.setMaxWidth(w);
+        }
     }
 
     private static DropShadow selectedGlow() {
