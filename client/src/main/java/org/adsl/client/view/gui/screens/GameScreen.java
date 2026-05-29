@@ -1190,12 +1190,17 @@ public class GameScreen extends GUIScreen {
     }
 
     /**
-     * Renders the face-down era-2 and era-3 building decks to the right of the
-     * offer track, separated from it and from each other. Each deck is shown
-     * only while its pile is non-empty ({@code remainingBuildings}: era 2 at
-     * index 0, era 3 at index 1). Only deck presence is known client-side, not
-     * the remaining count, so a single card-back (with a stacked shadow) stands
-     * in for the pile. Sized to the offer-tile height so it sits in line.
+     * Renders the face-down future-era building decks to the right of the offer
+     * track, separated from it and from each other. {@code remainingBuildings}
+     * is a shrinking queue (server does {@code removeFirst()} on each era
+     * advance), so index 0 is always the <em>next</em> era to enter and the
+     * list size tells which eras are left: size 2 → eras [2, 3], size 1 → [3].
+     * The era for a slot is therefore {@code (4 - size) + index}, not a fixed
+     * index. The innermost deck (next to the offer track) is the next to be
+     * consumed; once it is drawn onto the board the outer deck takes its place.
+     * Only deck presence is known client-side (not the card count), so a single
+     * card-back with a stacked shadow stands in for the pile, sized to the
+     * offer-tile height so it sits in line.
      */
     private void renderBuildingDecks(double tileH) {
         if (buildingDecks == null) return;
@@ -1203,22 +1208,33 @@ public class GameScreen extends GUIScreen {
         if (game == null || game.board() == null || tileH <= 0) return;
 
         List<Boolean> remaining = game.board().remainingBuildings();
-        if (remaining == null) return;
+        if (remaining == null || remaining.isEmpty()) return;
 
         // Keep the first deck clearly detached from the offer track.
         HBox.setMargin(buildingDecks, new Insets(0, 0, 0, 18));
 
-        for (int era = 2; era <= 3; era++) {
-            int idx = era - 2;
-            boolean present = idx < remaining.size() && Boolean.TRUE.equals(remaining.get(idx));
-            if (!present) continue;
-            final int e = era;
-            ImageView back = safeImageView(() -> ImageCatalog.cardBack(CardType.BUILDINGS, e, false));
+        int size = remaining.size();
+        double deckH = tileH;
+        double deckW = deckH / CARD_ASPECT;
+        for (int i = 0; i < size; i++) {
+            if (!Boolean.TRUE.equals(remaining.get(i))) continue;
+            final int era = (4 - size) + i;
+            if (era < 2 || era > 3) continue;
+            ImageView back = safeImageView(() -> ImageCatalog.cardBack(CardType.BUILDINGS, era, false));
             if (back == null) continue;
-            back.setFitHeight(tileH);
-            back.setPreserveRatio(true);
-            back.setEffect(deckShadow());
-            buildingDecks.getChildren().add(back);
+            back.setFitWidth(deckW);
+            back.setFitHeight(deckH);
+            back.setPreserveRatio(false);
+            // Round the corners like the board cards (arc = 12% of width).
+            Rectangle clip = new Rectangle(deckW, deckH);
+            clip.setArcWidth(deckW * 0.12);
+            clip.setArcHeight(deckW * 0.12);
+            back.setClip(clip);
+            // Wrap so the pile shadow survives the clip (a clip on the image
+            // itself would crop the shadow away).
+            StackPane deckCell = new StackPane(back);
+            deckCell.setEffect(deckShadow());
+            buildingDecks.getChildren().add(deckCell);
         }
     }
 
