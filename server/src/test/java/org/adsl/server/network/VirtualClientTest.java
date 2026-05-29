@@ -10,6 +10,7 @@ import org.adsl.shared.enums.Totem;
 import org.adsl.shared.model.DBRecord;
 import org.adsl.shared.network.requests.ClientConnection;
 import org.adsl.shared.network.requests.ClientRequest;
+import org.adsl.shared.network.responses.HomeUpdate;
 import org.adsl.shared.network.responses.ServerResponse;
 import org.adsl.utils.fakes.FakeHome;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -160,5 +162,60 @@ public class VirtualClientTest {
         client.setGameId(1);
         client.setGameId(null);
         assertTrue(client.getGameId().isEmpty());
+    }
+
+    // ──────────────────────────────────────────────
+    // updateHome overloads
+    // ──────────────────────────────────────────────
+
+    @Test
+    void updateHome_basicList_sendsHomeUpdateWithGames() {
+        List<Integer> games = List.of(1, 2, 3);
+        client.updateHome(games);
+
+        assertEquals(1, client.sent.size());
+        HomeUpdate update = (HomeUpdate) client.sent.get(0);
+        assertEquals(games, update.getActiveGames());
+    }
+
+    @Test
+    void updateHome_withMessage_sendsHomeUpdateWithMessage() {
+        List<Integer> games = List.of(1);
+        client.updateHome(games, "game started");
+
+        assertEquals(1, client.sent.size());
+        HomeUpdate update = (HomeUpdate) client.sent.get(0);
+        assertEquals("game started", update.getMessage());
+    }
+
+    @Test
+    void updateHome_withPlayersAndCapacity_sendsCorrectMaps() {
+        List<Integer> games = List.of(1);
+        Map<Integer, List<String>> players = Map.of(1, List.of("Alice", "Bob"));
+        Map<Integer, Integer> capacity = Map.of(1, 4);
+
+        client.updateHome(games, players, capacity);
+
+        assertEquals(1, client.sent.size());
+        HomeUpdate update = (HomeUpdate) client.sent.get(0);
+        assertEquals(games, update.getActiveGames());
+        assertEquals(players, update.getGamePlayers());
+        assertEquals(capacity, update.getGameCapacity());
+        assertNull(update.getMessage());
+    }
+
+    @Test
+    void updateHome_withPlayersCapacityAndMessage_sendsAllData() {
+        List<Integer> games = List.of(2);
+        Map<Integer, List<String>> players = Map.of(2, List.of("Charlie"));
+        Map<Integer, Integer> capacity = Map.of(2, 3);
+
+        client.updateHome(games, players, capacity, "player joined");
+
+        assertEquals(1, client.sent.size());
+        HomeUpdate update = (HomeUpdate) client.sent.get(0);
+        assertEquals(players, update.getGamePlayers());
+        assertEquals(capacity, update.getGameCapacity());
+        assertEquals("player joined", update.getMessage());
     }
 }

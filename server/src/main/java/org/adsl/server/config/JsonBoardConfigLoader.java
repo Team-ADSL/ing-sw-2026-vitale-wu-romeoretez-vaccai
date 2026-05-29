@@ -62,10 +62,11 @@ public class JsonBoardConfigLoader implements BoardConfigLoader {
         "DURING_PAINTINGS",  (n, era) -> new DuringPaintings(n.get("id").asText(), n.get("endGamePP").asInt(), n.get("cost").asInt(), era, null),
         "BONUS_TOTEM",       (n, era) -> new BonusTotem(n.get("id").asText(), n.get("endGamePP").asInt(), n.get("cost").asInt(), era, null),
         "EXTRA_MOVE",        (n, era) -> new ExtraMove(n.get("id").asText(), n.get("endGamePP").asInt(), n.get("cost").asInt(), null, null, era, null),
-        "END_GAME",          (n, era) -> {
+        "END_GAME",          (n, era) -> new EndGame(n.get("id").asText(), n.get("endGamePP").asInt(), n.get("cost").asInt(), era, null, BuildingEffect.valueOf(n.get("buildingEffect").asText())),
+        "END_CHARACTER_MULTIPLIER",          (n, era) -> {
             JsonNode charType = n.get("characterTypeMultiplier");
             CardType ct = (charType != null && !charType.isNull()) ? CardType.valueOf(charType.asText()) : null;
-            return new EndGame(n.get("id").asText(), n.get("endGamePP").asInt(), n.get("cost").asInt(), era, null, BuildingEffect.valueOf(n.get("buildingEffect").asText()), ct);
+            return new CharMultiplier(n.get("id").asText(), n.get("endGamePP").asInt(), n.get("cost").asInt(), era, null, ct, n.get("multiplier").asInt());
         }
     );
 

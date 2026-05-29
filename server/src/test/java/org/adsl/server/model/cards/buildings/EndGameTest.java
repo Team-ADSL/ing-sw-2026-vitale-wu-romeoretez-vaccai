@@ -23,14 +23,14 @@ public class EndGameTest {
 
     @Test
     void testEndBuilderMultiplier_endGameTrigger_setsBuilderMultiplierTo2() {
-        EndGame building = new EndGame("eg", 5, 3, 1, null, BuildingEffect.END_BUILDER_MULTIPLIER, null);
+        EndGame building = new EndGame("eg", 5, 3, 1, null, BuildingEffect.END_BUILDER_MULTIPLIER);
         building.activeEffect(Set.of(player), Trigger.END_GAME);
         assertEquals(2, player.getBuildingBonus().getBuilderMultiplierPP());
     }
 
     @Test
     void testEndBuilderMultiplier_wrongTrigger_doesNotChangeMultiplier() {
-        EndGame building = new EndGame("eg", 5, 3, 1, null, BuildingEffect.END_BUILDER_MULTIPLIER, null);
+        EndGame building = new EndGame("eg", 5, 3, 1, null, BuildingEffect.END_BUILDER_MULTIPLIER);
         building.activeEffect(Set.of(player), Trigger.END_ROUND);
         assertEquals(1, player.getBuildingBonus().getBuilderMultiplierPP());
     }
@@ -42,52 +42,35 @@ public class EndGameTest {
             player.getCards().get(type).add(new Hunter("h1", false, 1, null));
             player.getCards().get(type).add(new Hunter("h2", false, 1, null));
         }
-        EndGame building = new EndGame("eg", 5, 3, 1, null, BuildingEffect.PP_COMPLETE_SET, null);
+        EndGame building = new EndGame("eg", 5, 3, 1, null, BuildingEffect.PP_COMPLETE_SET);
         building.activeEffect(Set.of(player), Trigger.END_GAME);
         assertEquals(12, player.getPp());
     }
 
     @Test
     void testPpCompleteSet_someTypesEmpty_awardsZeroPP() {
-        EndGame building = new EndGame("eg", 5, 3, 1, null, BuildingEffect.PP_COMPLETE_SET, null);
-        building.activeEffect(Set.of(player), Trigger.END_GAME);
-        assertEquals(0, player.getPp());
-    }
-
-    @Test
-    void testEndCharacterMultiplier_endGameTrigger_awardsPPBasedOnCardTypeCount() {
-        player.getCards().get(CardType.HUNTER).add(new Hunter("h1", false, 1, null));
-        player.getCards().get(CardType.HUNTER).add(new Hunter("h2", false, 1, null));
-        player.getCards().get(CardType.HUNTER).add(new Hunter("h3", false, 1, null));
-        EndGame building = new EndGame("eg", 5, 3, 1, null, BuildingEffect.END_CHARACTER_MULTIPLIER, CardType.HUNTER);
-        building.activeEffect(Set.of(player), Trigger.END_GAME);
-        assertEquals(3, player.getPp());
-    }
-
-    @Test
-    void testEndCharacterMultiplier_noCardsOfType_awardsZero() {
-        EndGame building = new EndGame("eg", 5, 3, 1, null, BuildingEffect.END_CHARACTER_MULTIPLIER, CardType.INVENTOR);
+        EndGame building = new EndGame("eg", 5, 3, 1, null, BuildingEffect.PP_COMPLETE_SET);
         building.activeEffect(Set.of(player), Trigger.END_GAME);
         assertEquals(0, player.getPp());
     }
 
     @Test
     void testEndPpBonus_endGameTrigger_awards25PP() {
-        EndGame building = new EndGame("eg", 5, 3, 1, null, BuildingEffect.END_PP_BONUS, null);
+        EndGame building = new EndGame("eg", 5, 3, 1, null, BuildingEffect.END_PP_BONUS);
         building.activeEffect(Set.of(player), Trigger.END_GAME);
         assertEquals(25, player.getPp());
     }
 
     @Test
     void testEndPpBonus_wrongTrigger_doesNotAwardPP() {
-        EndGame building = new EndGame("eg", 5, 3, 1, null, BuildingEffect.END_PP_BONUS, null);
+        EndGame building = new EndGame("eg", 5, 3, 1, null, BuildingEffect.END_PP_BONUS);
         building.activeEffect(Set.of(player), Trigger.END_TURN);
         assertEquals(0, player.getPp());
     }
 
     @Test
     void testActiveEffect_emptyPlayerSet_doesNotThrow() {
-        EndGame building = new EndGame("eg", 5, 3, 1, null, BuildingEffect.END_PP_BONUS, null);
+        EndGame building = new EndGame("eg", 5, 3, 1, null, BuildingEffect.END_PP_BONUS);
         assertDoesNotThrow(() -> building.activeEffect(Set.of(), Trigger.END_GAME));
     }
 }

@@ -11,8 +11,16 @@ import java.util.stream.Collectors;
 
 /**
  * Response sent to clients on the home screen when the list of open games
- * changes. Contains the current list of active game IDs, along with per-game
- * player lists and capacities for rich UI rendering.
+ * changes.
+ * <p>
+ * Contains the current list of active game IDs ({@link #getActiveGames()}),
+ * a per-game map of player names ({@link #getGamePlayers()}), and a per-game
+ * capacity map ({@link #getGameCapacity()}) so the TUI and GUI can render
+ * "N / M players" without a separate request. The maps are populated by
+ * {@code ServerController.buildGamePlayersMap()} and
+ * {@code ServerController.buildGameCapacityMap()}; they are empty for
+ * backwards-compatible single-arg construction.
+ * </p>
  */
 public class HomeUpdate extends ServerResponse {
     private final List<Integer> activeGames;
