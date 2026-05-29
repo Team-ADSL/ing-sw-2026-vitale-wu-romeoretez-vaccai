@@ -43,7 +43,7 @@ public class EndGameState extends ControllerState {
                     .map(c -> (Builder)c)
                     .mapToInt(Builder::getPP)
                     .sum();
-            p.changePP(builderPoints);
+            p.changePP(builderPoints * p.getBuildingBonus().getBuilderMultiplierPP());
 
             int inventorIcons = (int)p.getCards().get(CardType.INVENTOR).stream()
                     .map(c -> (Inventor)c)
@@ -60,7 +60,7 @@ public class EndGameState extends ControllerState {
                     .map(c -> (Building)c)
                     .mapToInt(Building::getEndGamePP)
                     .sum();
-            p.changePP(buildingPoints * p.getBuildingBonus().getBuilderMultiplierPP());
+            p.changePP(buildingPoints);
         }
 
         GameDAO gameDAO = getContext().getGameDAO();
