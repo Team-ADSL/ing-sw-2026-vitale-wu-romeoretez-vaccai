@@ -64,11 +64,14 @@ public class InitGameState extends ControllerState {
         fillTopRow(gameSettings.numTopTribeCard());
         board.orderTile().placePlayersRandom(getGame().getPlayers());
 
-        board.orderTile().getPlayerAt(0).ifPresent(p -> p.changeFood(2));
-        board.orderTile().getPlayerAt(1).ifPresent(p -> p.changeFood(3));
-        board.orderTile().getPlayerAt(2).ifPresent(p -> p.changeFood(3));
-        board.orderTile().getPlayerAt(3).ifPresent(p -> p.changeFood(4));
-        board.orderTile().getPlayerAt(4).ifPresent(p -> p.changeFood(4));
+        // Starting food by turn-order position; the tile only has `numPlayers`
+        // cells, so never read past its size.
+        int[] startingFood = {2, 3, 3, 4, 4};
+        int orderSize = board.orderTile().size();
+        for (int i = 0; i < orderSize && i < startingFood.length; i++) {
+            int food = startingFood[i];
+            board.orderTile().getPlayerAt(i).ifPresent(p -> p.changeFood(food));
+        }
 
         getGame().setInitialized(true);
         setNextState(calcNextState());
