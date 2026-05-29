@@ -29,7 +29,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.adsl.shared.enums.CardType;
 import org.adsl.client.AppCoordinator;
@@ -52,6 +51,7 @@ import org.adsl.shared.utils.Move;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -174,6 +174,10 @@ public class GameScreen extends GUIScreen {
     private boolean waitingServer = false;
     private int selfHandPage = 0;
     private final java.util.Map<String, Integer> opponentHandPages = new java.util.HashMap<>();
+    // Fixed seat order, captured from the first game snapshot. The server
+    // reorders players() by turn order each phase; rendering against this stable
+    // list keeps each player's panel in the same slot for the whole game.
+    private List<String> playerOrder;
     private final FloatingLog floatingLog;
 
     private StackPane overlayPane;
@@ -201,9 +205,7 @@ public class GameScreen extends GUIScreen {
         centerBox.heightProperty().addListener((_, _, _) -> Platform.runLater(this::applyContentScale));
         rootStack.setFocusTraversable(true);
         rootStack.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.F11) {
-                toggleFullScreen();
-            } else if (e.getCode() == KeyCode.ENTER && confirmButton != null && !confirmButton.isDisabled()) {
+            if (e.getCode() == KeyCode.ENTER && confirmButton != null && !confirmButton.isDisabled()) {
                 onSendMove();
             }
         });
@@ -249,13 +251,6 @@ public class GameScreen extends GUIScreen {
         tint.setStyle("-fx-background-color: rgba(0,0,0,0.45);");
         tint.setMouseTransparent(true);
         rootStack.getChildren().add(1, tint);
-    }
-
-    private void toggleFullScreen() {
-        if (rootStack.getScene() == null) return;
-        if (rootStack.getScene().getWindow() instanceof Stage stage) {
-            stage.setFullScreen(!stage.isFullScreen());
-        }
     }
 
     private Image safeImage(String path) {
@@ -643,7 +638,18 @@ public class GameScreen extends GUIScreen {
         rightPlayersBox.getChildren().clear();
 
         if (game.players() == null || game.players().isEmpty()) return;
+
+        // Capture the seat order once, then always render against it so panels
+        // don't shuffle when the server reorders players() between phases.
+        if (playerOrder == null) {
+            playerOrder = new ArrayList<>();
+            for (PlayerDTO p : game.players()) playerOrder.add(p.name());
+        }
         List<PlayerDTO> all = new ArrayList<>(game.players());
+        all.sort(Comparator.comparingInt(p -> {
+            int i = playerOrder.indexOf(p.name());
+            return i < 0 ? Integer.MAX_VALUE : i;
+        }));
 
         int n = all.size();
         int selfIdx = findMyIndex(all);
