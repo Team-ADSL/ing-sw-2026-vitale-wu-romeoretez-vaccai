@@ -15,19 +15,19 @@
     <BorderPane fx:id="rootPane">
 
         <top>
-            <HBox fx:id="topPlayersBox" alignment="CENTER" spacing="20">
+            <HBox fx:id="topPlayersBox" alignment="TOP_CENTER" fillHeight="false" spacing="20">
                 <padding><Insets top="14" right="20" bottom="6" left="20"/></padding>
             </HBox>
         </top>
 
         <left>
-            <VBox fx:id="leftPlayersBox" alignment="CENTER" spacing="16">
+            <VBox fx:id="leftPlayersBox" alignment="TOP_CENTER" spacing="16">
                 <padding><Insets top="8" right="6" bottom="8" left="14"/></padding>
             </VBox>
         </left>
 
         <right>
-            <VBox fx:id="rightPlayersBox" alignment="CENTER" spacing="16">
+            <VBox fx:id="rightPlayersBox" alignment="TOP_CENTER" spacing="16">
                 <padding><Insets top="8" right="14" bottom="8" left="6"/></padding>
             </VBox>
         </right>
