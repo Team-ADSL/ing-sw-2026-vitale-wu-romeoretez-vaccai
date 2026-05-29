@@ -58,11 +58,11 @@ public class CavePaintingsTest {
     }
 
     @Test
-    void testActiveEffect_exactlyMinArtists_awardsPP() {
+    void testActiveEffect_exactlyMinArtists_losesPP() {
         player.getCards().get(CardType.ARTIST).add(new Artist("a1", 1, null));
         player.getCards().get(CardType.ARTIST).add(new Artist("a2", 1, null));
         cavePaintings.activeEffect(Set.of(player), Trigger.EVENT_EXECUTION);
-        assertEquals(6, player.getPp());
+        assertEquals(-5, player.getPp());
     }
 
     @Test
