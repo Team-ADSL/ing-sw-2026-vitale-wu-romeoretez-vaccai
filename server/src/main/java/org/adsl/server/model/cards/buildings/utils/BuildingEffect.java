@@ -22,8 +22,6 @@ public enum BuildingEffect {
     END_BUILDER_MULTIPLIER,
     /** {@code EndGame}: grants 6 PP per card in the owner's smallest card-type group. */
     PP_COMPLETE_SET,
-    /** {@code EndGame}: grants 1 PP per card of a specific character type. */
-    END_CHARACTER_MULTIPLIER,
     /** {@code EndGame}: grants a flat 25 PP. */
     END_PP_BONUS,
 }

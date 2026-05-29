@@ -147,4 +147,23 @@ public class TotemPickingStateTest {
         state.visit(new TotemPickingRequest(Totem.WHITE), client2);
         assertInstanceOf(InitGameState.class, state.calcNextState());
     }
+
+    // ──────────────────────────────────────────────
+    // TEST DISCONNECTION
+    // ──────────────────────────────────────────────
+
+    @Test
+    void testCalcNextState_isToStop_returnsRecoverState() {
+        state.setToStop(true);
+        assertInstanceOf(RecoverState.class, state.calcNextState());
+    }
+
+    @Test
+    void testVisitClientDisconnected_setsToStopAndTransitionsToRecoverState() throws ServerException {
+        org.adsl.shared.network.requests.ClientDisconnected req =
+                new org.adsl.shared.network.requests.ClientDisconnected();
+        state.visit(req, client1);
+        assertTrue(state.isToStop());
+        assertInstanceOf(RecoverState.class, state.getNextState());
+    }
 }

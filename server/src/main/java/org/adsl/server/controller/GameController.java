@@ -79,12 +79,28 @@ public class GameController {
         return gameDAO;
     }
 
+    /**
+     * Returns the display names of all players currently in the game, or an
+     * empty list if no state has been set yet.
+     * Used by {@link org.adsl.server.controller.ServerController} to build the
+     * per-game player map included in {@link org.adsl.shared.network.responses.HomeUpdate}.
+     *
+     * @return immutable list of player names; never {@code null}
+     */
     public List<String> getLobbyPlayers() {
         if (state == null) return List.of();
         return state.getGame().getPlayers().stream()
                 .map(Player::getName).toList();
     }
 
+    /**
+     * Returns the maximum number of players allowed in the game, or {@code 0}
+     * if no state has been set yet.
+     * Used by {@link org.adsl.server.controller.ServerController} to build the
+     * per-game capacity map included in {@link org.adsl.shared.network.responses.HomeUpdate}.
+     *
+     * @return player capacity of the underlying game, or {@code 0} if unset
+     */
     public int getCapacity() {
         if (state == null) return 0;
         return state.getGame().getNumPlayer();
