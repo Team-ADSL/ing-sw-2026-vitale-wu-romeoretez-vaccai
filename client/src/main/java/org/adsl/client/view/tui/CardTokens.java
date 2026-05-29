@@ -23,9 +23,11 @@ public final class CardTokens {
         Map.entry(CardToken.SUSTENANCE,    "SUSTENANCE"),
         Map.entry(CardToken.RITUAL,        "RITUAL"),
         Map.entry(CardToken.PAINTINGS,     "PAINTINGS"),
+        Map.entry(CardToken.CHARACTER,     "🧍"),
         Map.entry(CardToken.PP,            "🌟"),
         Map.entry(CardToken.SHAMAN_STAR,   "★"),
         Map.entry(CardToken.FOOD,          "🍖"),
+        Map.entry(CardToken.MEAT,          "🍖"),
         Map.entry(CardToken.SET,           "🌈"),
         Map.entry(CardToken.ENDGAME,       "🏁"),
         Map.entry(CardToken.EXTRA_MOVE,    "⏩"),
@@ -57,34 +59,28 @@ public final class CardTokens {
         Map.entry(CardToken.PAINTINGS,  "PAI")
     );
 
+    /** Replaces all tokens with emoji (or plain text for type tokens). */
     public static String toEmoji(String s) {
         if (s == null) return null;
         String result = applyFoodCost(s);
-        result = result.replace(CardToken.MEAT, "🍖");
         for (Map.Entry<String, String> entry : EMOJI_MAP.entrySet()) {
             result = result.replace(entry.getKey(), entry.getValue());
         }
         return result;
     }
 
+    /** Abbreviates type tokens to 3 chars, then replaces remaining tokens with emoji. */
     public static String toEffectLabel(String s) {
         if (s == null) return null;
         String result = s;
         for (Map.Entry<String, String> entry : TYPE_ABBR.entrySet()) {
             result = result.replace(entry.getKey(), entry.getValue());
         }
-        result = applyFoodCost(result);
-        result = result.replace(CardToken.MEAT, "🍖");
-        for (Map.Entry<String, String> entry : EMOJI_MAP.entrySet()) {
-            result = result.replace(entry.getKey(), entry.getValue());
-        }
-        return result;
+        return toEmoji(result);
     }
 
-    // [FOOD_COST]-N (sconto) → +N🍖 ; [FOOD_COST]N (costo) → -N🍖
+    // [FOOD_COST]N (discount on food cost) → +N🍖
     private static String applyFoodCost(String s) {
-        String result = s.replaceAll("\\[FOOD_COST\\]-(\\d+)", "+$1🍖");
-        result = result.replaceAll("\\[FOOD_COST\\](\\d+)", "-$1🍖");
-        return result; //TODO controllo che abbia senso
+        return s.replaceAll("\\[FOOD_COST\\](\\d+)", "+$1🍖");
     }
 }
