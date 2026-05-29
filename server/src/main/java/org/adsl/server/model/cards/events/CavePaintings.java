@@ -42,7 +42,7 @@ public class CavePaintings extends Event {
                 activateBuildings(p, Trigger.CAVE_PAINTINGS);
                 BuildingBonus bonus = p.getBuildingBonus();
                 int artistCount = p.getCards().get(CardType.ARTIST).size();
-                if (artistCount >= minArtists) {
+                if (artistCount > minArtists) {
                     p.changePP(artistCount * multiplierPP);
                 }
                 else {
