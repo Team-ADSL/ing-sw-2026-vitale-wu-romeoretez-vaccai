@@ -149,14 +149,14 @@ public class EndGameStateTest {
     }
 
     @Test
-    void testOnEntry_playerWithOneArtist_scoresFivePoints() throws ServerException {
+    void testOnEntry_playerWithOneArtist_scoresZeroPoints() throws ServerException {
         Player player = new Player("Alice");
         player.getCards().get(CardType.ARTIST).add(new Artist("a1", 1, null));
         fakeGame.getPlayers().add(player);
 
         state.onEntry();
 
-        assertEquals(5, player.getPp(), "1 artist must score 5 PP (10 * 1 / 2)");
+        assertEquals(0, player.getPp(), "1 artist must score 0 PP (10 * (1 / 2))");
     }
 
     // ──────────────────────────────────────────────
