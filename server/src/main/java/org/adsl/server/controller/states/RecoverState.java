@@ -46,6 +46,9 @@ public class RecoverState extends ControllerState {
         reqPlayer.setActive(true);
         getGame().addVirtualClient(virtualClient);
         virtualClient.setGameId(getGame().getGameId());
+        // Replay the accumulated transcript to the reconnecting client only, so a
+        // fresh client process recovers the full game log.
+        virtualClient.restoreGameLog(getGame().getGameLog());
         String log = "[LOBBY] Player " + virtualClient.getClientUsername().get() + " connected.";
         System.out.println(log);
         getGame().sendUpdateLobby(log);

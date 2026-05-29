@@ -35,6 +35,7 @@ public final class FloatingLog {
     private static final double VERTICAL_MARGIN = 120;
 
     private static final List<String> history = new ArrayList<>();
+    private static FloatingLog active;
     private final VBox floating;
     private final StackPane fullPanel;
     private final VBox expandedBody;
@@ -91,11 +92,31 @@ public final class FloatingLog {
         expandedBody.setMaxWidth(MAX_W);
         VBox.setVgrow(expandedScroll, Priority.ALWAYS);
 
+        active = this;
         refresh();
     }
 
     public VBox getFloatingNode() { return floating; }
     public StackPane getFullPanel() { return fullPanel; }
+
+    /**
+     * Replaces the shared transcript with {@code entries} (server-authoritative,
+     * used on reconnect) and refreshes the live widget. Replacing rather than
+     * appending avoids duplicates on a same-process reconnect. Must run on the
+     * JavaFX thread (callers dispatch via {@code Platform.runLater}).
+     */
+    public static void restore(List<String> entries) {
+        history.clear();
+        if (entries != null) {
+            for (String e : entries) {
+                if (e != null && !e.isBlank()) history.add(e);
+            }
+        }
+        if (active != null) {
+            if (active.expanded) active.refillExpanded();
+            else active.refresh();
+        }
+    }
 
     public void append(String text) {
         if (text == null || text.isBlank()) return;

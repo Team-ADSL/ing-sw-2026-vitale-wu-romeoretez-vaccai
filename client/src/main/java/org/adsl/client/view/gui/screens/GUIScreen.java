@@ -16,6 +16,7 @@ import javafx.scene.text.Font;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.serverEvents.*;
 import org.adsl.client.view.gui.ImageCatalog;
+import org.adsl.client.view.gui.FloatingLog;
 import org.adsl.client.view.Screen;
 
 import java.util.Objects;
@@ -97,6 +98,12 @@ public abstract class GUIScreen extends Screen<GUIScreen> {
     @Override
     public GUIScreen getThis(){
         return this;
+    }
+
+    @Override
+    public GUIScreen visit(GameLogRestoreEvent e) {
+        FloatingLog.restore(e.history());
+        return getThis();
     }
 
     // ── Dark theme helper ──────────────────────────────────────────────────────
