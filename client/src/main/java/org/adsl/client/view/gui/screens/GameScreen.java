@@ -11,9 +11,16 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.effect.ColorAdjust;
 import javafx.scene.effect.DropShadow;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundPosition;
+import javafx.scene.layout.BackgroundRepeat;
+import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -22,6 +29,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.adsl.shared.enums.CardType;
 import org.adsl.client.AppCoordinator;
@@ -65,7 +73,7 @@ public class GameScreen extends GUIScreen {
     private static final double CARD_ASPECT  = 1.484;
     private static final double CARD_MAX_W   = 95.0;
     private static final double CARD_MIN_W   = 48.0;
-    private static final double CARD_GAP     = 8.0;
+    private static final double CARD_GAP     = 24.0;
     private static final double TILE_ASPECT  = 1.65;
     private static final double TILE_MAX_W   = 80.0;
     private static final double TILE_MIN_W   = 42.0;
@@ -114,6 +122,28 @@ public class GameScreen extends GUIScreen {
         { 148.0 / ORDER_TILE_H, 314.0 / ORDER_TILE_H, 479.0 / ORDER_TILE_H, 646.0 / ORDER_TILE_H, 811.0 / ORDER_TILE_H },
     };
 
+    // ── Offer tile + 3D totem geometry ───────────────────────────────────────
+    // Reference pixel space of the offer-tile PNGs (602×1004). Each tile has a
+    // single totem slot whose center was measured by hand (the white frame),
+    // then normalised so it scales with the rendered tile. The 3D totem rests
+    // its support point (TOTEM_ANCHOR_*) on that slot center, same as the order
+    // tile.
+    private static final double OFFER_TILE_W = 602.0;
+    private static final double OFFER_TILE_H = 1004.0;
+    // Totem width chosen so its on-screen size matches the order-track totems
+    // (both are sized off the shared rendered tile height).
+    private static final double OFFER_TOTEM_W_FRAC = (201.0 / 965.0) * (OFFER_TILE_H / OFFER_TILE_W);
+    // Slot center fractions keyed by offer-tile id.
+    private static final Map<String, double[]> OFFER_SLOT = Map.of(
+        "offer_tile_a", new double[]{325.0 / OFFER_TILE_W, 280.0 / OFFER_TILE_H},
+        "offer_tile_b", new double[]{325.0 / OFFER_TILE_W, 280.0 / OFFER_TILE_H},
+        "offer_tile_c", new double[]{309.0 / OFFER_TILE_W, 281.0 / OFFER_TILE_H},
+        "offer_tile_d", new double[]{302.0 / OFFER_TILE_W, 281.0 / OFFER_TILE_H},
+        "offer_tile_e", new double[]{291.0 / OFFER_TILE_W, 280.0 / OFFER_TILE_H},
+        "offer_tile_f", new double[]{281.0 / OFFER_TILE_W, 281.0 / OFFER_TILE_H},
+        "offer_tile_g", new double[]{277.0 / OFFER_TILE_W, 281.0 / OFFER_TILE_H}
+    );
+
     @FXML private StackPane  rootStack;
     @FXML private BorderPane rootPane;
     @FXML private VBox       centerBox;
@@ -161,13 +191,16 @@ public class GameScreen extends GUIScreen {
         applyTheme(fxmlRoot, false);
 
         this.root = fxmlRoot;
+        installBackground();
         rootStack.widthProperty().addListener((_, _, _) -> Platform.runLater(this::renderBoard));
         rootStack.heightProperty().addListener((_, _, _) -> Platform.runLater(this::renderBoard));
         centerBox.widthProperty().addListener((_, _, _) -> Platform.runLater(this::renderBoard));
         centerBox.heightProperty().addListener((_, _, _) -> Platform.runLater(this::applyContentScale));
         rootStack.setFocusTraversable(true);
         rootStack.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.ENTER && confirmButton != null && !confirmButton.isDisabled()) {
+            if (e.getCode() == KeyCode.F11) {
+                toggleFullScreen();
+            } else if (e.getCode() == KeyCode.ENTER && confirmButton != null && !confirmButton.isDisabled()) {
                 onSendMove();
             }
         });
@@ -187,6 +220,48 @@ public class GameScreen extends GUIScreen {
 
         resolveMoveCounts();
         renderBoard();
+    }
+
+    /**
+     * Installs the aerial-view image as a cover-scaled background behind the
+     * board. A {@link Region} added as the first (bottom) child of the root
+     * stack auto-resizes to fill the window; {@code BackgroundSize} cover scales
+     * the image to always fill the area (cropping overflow) so no borders show.
+     */
+    private void installBackground() {
+        Image bg = safeImage("/assets/aerial_views/v2.png");
+        if (bg == null) return;
+        BackgroundSize cover = new BackgroundSize(
+                BackgroundSize.AUTO, BackgroundSize.AUTO, false, false, false, true);
+        BackgroundImage bgImage = new BackgroundImage(bg,
+                BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT,
+                BackgroundPosition.CENTER, cover);
+        Region bgLayer = new Region();
+        bgLayer.setBackground(new Background(bgImage));
+        bgLayer.setMouseTransparent(true);
+        rootStack.getChildren().add(0, bgLayer);
+
+        // Dark tint above the image to improve contrast/readability of the board.
+        Region tint = new Region();
+        tint.setStyle("-fx-background-color: rgba(0,0,0,0.45);");
+        tint.setMouseTransparent(true);
+        rootStack.getChildren().add(1, tint);
+    }
+
+    private void toggleFullScreen() {
+        if (rootStack.getScene() == null) return;
+        if (rootStack.getScene().getWindow() instanceof Stage stage) {
+            stage.setFullScreen(!stage.isFullScreen());
+        }
+    }
+
+    private Image safeImage(String path) {
+        try {
+            var in = getClass().getResourceAsStream(path);
+            return in != null ? new Image(in) : null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @Override
@@ -699,7 +774,7 @@ public class GameScreen extends GUIScreen {
         // Shown only in expanded state: player name in bottom-left while the
         // toggle stays centered.
         Label expandedName = new Label(p.name());
-        expandedName.setStyle("-fx-text-fill: #f5deb3; -fx-font-size: 11px;");
+        expandedName.setStyle("-fx-font-weight: bold; -fx-text-fill: #f5deb3; -fx-font-size: 13px;");
         expandedName.setVisible(false);
         expandedName.setManaged(false);
 
@@ -768,7 +843,13 @@ public class GameScreen extends GUIScreen {
                 populateOpponentHandRow(handRow, panel, p, cardW, allCards);
             }));
         }
-        handRow.getChildren().add(buildHandCards(pageCards, cardW));
+        if (total == 0) {
+            handRow.setAlignment(Pos.CENTER);
+            handRow.getChildren().add(buildNoCardsLabel());
+        } else {
+            handRow.setAlignment(Pos.CENTER_LEFT);
+            handRow.getChildren().add(buildHandCards(pageCards, cardW));
+        }
         if (hasNext) {
             handRow.getChildren().add(buildOppNavButton("▶", () -> {
                 opponentHandPages.put(p.name(), page + 1);
@@ -818,7 +899,11 @@ public class GameScreen extends GUIScreen {
                 populateOpponentHandColumn(container, panel, p, cardW, allCards);
             }));
         }
-        container.getChildren().add(buildOpponentGridPage(pageCards, cardW));
+        if (total == 0) {
+            container.getChildren().add(buildNoCardsLabel());
+        } else {
+            container.getChildren().add(buildOpponentGridPage(pageCards, cardW));
+        }
         if (hasNext) {
             container.getChildren().add(buildOppNavButton("▼", () -> {
                 opponentHandPages.put(p.name(), page + 1);
@@ -880,6 +965,16 @@ public class GameScreen extends GUIScreen {
         return Math.max(minCardW, Math.min(maxCardW, computed));
     }
 
+    /** Centered placeholder shown in an expanded panel when the player holds no cards. */
+    private Label buildNoCardsLabel() {
+        Label l = new Label("No cards yet");
+        l.setFont(ImageCatalog.chalkFont(18));
+        l.setStyle("-fx-text-fill: #f5deb3;");
+        l.setAlignment(Pos.CENTER);
+        l.setPadding(new Insets(6, 4, 6, 4));
+        return l;
+    }
+
     /** Builds a single-row HBox of mini-cards using a pre-computed card width. */
     private HBox buildHandCards(List<CardDTO> cards, double cardW) {
         HBox row = new HBox(HAND_GAP);
@@ -918,6 +1013,7 @@ public class GameScreen extends GUIScreen {
 
     private void renderRow(HBox container, List<CardDTO> cards, Row row, double cardW) {
         container.getChildren().clear();
+        container.setSpacing(CARD_GAP);
         if (cards == null) return;
         boolean clickable = canPickCards();
         int idx = 0;
@@ -971,7 +1067,7 @@ public class GameScreen extends GUIScreen {
             });
             cell.setOnMouseClicked(_ -> onCardClicked(row, idx, card, cell));
         } else {
-            cell.setOpacity(0.65);
+            cell.setEffect(darken());
         }
         return cell;
     }
@@ -989,11 +1085,10 @@ public class GameScreen extends GUIScreen {
 
     private Node buildOfferTileCell(OfferTileDTO tile, int idx, boolean clickable, double tileW) {
         double tileH = tileW * TILE_ASPECT;
-        StackPane cell = new StackPane();
+        Pane cell = new Pane();
         cell.setPrefSize(tileW, tileH);
         cell.setMinSize(tileW, tileH);
         cell.setMaxSize(tileW, tileH);
-        cell.setAlignment(Pos.CENTER);
 
         ImageView img = safeImageView(() -> ImageCatalog.offerTile(tile.id()));
         if (img != null) {
@@ -1004,14 +1099,23 @@ public class GameScreen extends GUIScreen {
         } else {
             Label fallback = new Label(tile.id());
             fallback.setStyle("-fx-text-fill: #f5deb3;");
+            fallback.setLayoutX(4);
+            fallback.setLayoutY(4);
             cell.getChildren().add(fallback);
         }
 
         if (tile.totem() != null) {
-            ImageView totem = safeImageView(() -> ImageCatalog.totem2D(tile.totem()));
+            ImageView totem = safeImageView(() -> ImageCatalog.totem3D(tile.totem()));
             if (totem != null) {
-                totem.setFitWidth(tileW * 0.5);
+                double totemW = tileW * OFFER_TOTEM_W_FRAC;
+                double totemH = totemW * (TOTEM3D_H / TOTEM3D_W);
+                double[] slot = OFFER_SLOT.getOrDefault(tile.id(), new double[]{0.5, 0.28});
+                double cx = slot[0] * tileW;
+                double cy = slot[1] * tileH;
+                totem.setFitWidth(totemW);
                 totem.setPreserveRatio(true);
+                totem.setLayoutX(cx - TOTEM_ANCHOR_X * totemW);
+                totem.setLayoutY(cy - TOTEM_ANCHOR_Y * totemH);
                 cell.getChildren().add(totem);
             }
         }
@@ -1021,7 +1125,7 @@ public class GameScreen extends GUIScreen {
             cell.setCursor(Cursor.HAND);
             cell.setOnMouseClicked(_ -> onOfferTileClicked(idx, tile));
         } else if (!clickable) {
-            cell.setOpacity(0.7);
+            cell.setEffect(darken());
         }
         return cell;
     }
@@ -1093,6 +1197,17 @@ public class GameScreen extends GUIScreen {
         DropShadow glow = new DropShadow(24, Color.WHITE);
         glow.setSpread(0.45);
         return glow;
+    }
+
+    /**
+     * Darkens a node while keeping it fully opaque. Used for non-interactable
+     * cards/tiles so they read as disabled without going transparent over the
+     * background image.
+     */
+    private static ColorAdjust darken() {
+        ColorAdjust ca = new ColorAdjust();
+        ca.setBrightness(-0.45);
+        return ca;
     }
 
     private void scale(StackPane node, double to) {
