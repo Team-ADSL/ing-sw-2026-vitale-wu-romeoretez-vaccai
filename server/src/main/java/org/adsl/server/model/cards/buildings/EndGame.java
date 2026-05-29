@@ -5,7 +5,6 @@ import org.adsl.shared.enums.Trigger;
 import org.adsl.server.model.cards.buildings.utils.BuildingEffect;
 import org.adsl.server.model.Player;
 import org.adsl.shared.model.CardToken;
-
 import java.util.Optional;
 import java.util.Set;
 
@@ -16,19 +15,15 @@ import java.util.Set;
  *   <li>{@code END_BUILDER_MULTIPLIER} – doubles end-game PP from all buildings.</li>
  *   <li>{@code PP_COMPLETE_SET} – grants 6 PP per card in the player's smallest
  *       card-type group.</li>
- *   <li>{@code END_CHARACTER_MULTIPLIER} – grants 1 PP per card of a specific
- *       character type.</li>
  *   <li>{@code END_PP_BONUS} – grants a flat 25 PP.</li>
  * </ul>
  */
 public class EndGame extends Building {
     private final BuildingEffect buildingEffect;
-    private final CardType characterTypeMultiplier;
 
-    public EndGame(String id, int endGamePP, int cost, int era, Integer numPlayers, BuildingEffect buildingEffect, CardType characterTypeForMultiplier) {
+    public EndGame(String id, int endGamePP, int cost, int era, Integer numPlayers, BuildingEffect buildingEffect) {
         super(id, endGamePP, cost, era, numPlayers);
         this.buildingEffect = buildingEffect;
-        this.characterTypeMultiplier = characterTypeForMultiplier;
     }
 
     @Override
@@ -36,20 +31,21 @@ public class EndGame extends Building {
         if(t == Trigger.END_GAME){
             Optional<Player> playerContainer = players.stream().findFirst();
             if (playerContainer.isEmpty()) {
-                return; // ERRORE DA GESTIRE?
+                return;
             }
             Player p = playerContainer.get();
             switch (buildingEffect) {
-                case BuildingEffect.END_BUILDER_MULTIPLIER -> p.getBuildingBonus().setBuilderMultiplierPP(2);
+                case BuildingEffect.END_BUILDER_MULTIPLIER -> {
+                    p.getBuildingBonus().setBuilderMultiplierPP(2);
+                }
                 case BuildingEffect.PP_COMPLETE_SET -> {
-                    int min = p.getCards().values().stream()
-                            .mapToInt(Set::size)
+                    int min = p.getCards().entrySet().stream()
+                            .filter(e -> e.getKey() != CardType.BUILDINGS)
+                            .mapToInt(e -> e.getValue().size())
                             .min()
                             .orElse(0);
+
                     p.changePP(min * 6);
-                }
-                case BuildingEffect.END_CHARACTER_MULTIPLIER -> {
-                    p.changePP(p.getCards().get(characterTypeMultiplier).size());
                 }
                 case BuildingEffect.END_PP_BONUS -> {
                     p.changePP(25);
@@ -63,19 +59,12 @@ public class EndGame extends Building {
     @Override
     protected String getEffectsLabel() {
         String base = CardToken.ENDGAME;
-        if (characterTypeMultiplier != null) {
-            String charToken = switch (characterTypeMultiplier) {
-                case HUNTER   -> CardToken.HUNTER;
-                case GATHERER -> CardToken.GATHERER;
-                case BUILDER  -> CardToken.BUILDER;
-                case SHAMAN   -> CardToken.SHAMAN;
-                case ARTIST   -> CardToken.ARTIST;
-                case INVENTOR -> CardToken.INVENTOR;
-                default       -> "";
-            };
-            base += " x" + charToken;
-        }
+        switch (buildingEffect) {
+            case END_BUILDER_MULTIPLIER -> base += "2x" + CardToken.BUILDER + CardToken.PP;
+            case PP_COMPLETE_SET -> base += "6" + CardToken.PP + "x" + CardToken.SET;
+            case END_PP_BONUS -> base += "+25" + CardToken.PP;
+            default -> base += "";
+        };
         return base;
     }
 }
-//GESTIRE IL CAMBIO DI PP MULTIPLIER IN BASE AL PERSONAGGIO
