@@ -81,7 +81,7 @@ public class GUI extends GameUI {
             });
 
             currentScreen = new ConnectingScreen(coordinator);
-            Scene scene = new Scene(currentScreen.getRoot(), WINDOW_W, WINDOW_H);
+            Scene scene = new Scene(ResponsiveScaler.wrap(currentScreen.getRoot()), WINDOW_W, WINDOW_H);
             installFocusVisibleBehavior(scene);
             // F11 toggles fullscreen on every screen (scene-level, focus-agnostic).
             scene.addEventFilter(KeyEvent.KEY_PRESSED, ev -> {
@@ -225,7 +225,7 @@ public class GUI extends GameUI {
         if (scene != null) {
             scene.setRoot(screen.getRoot());
         } else {
-            stage.setScene(new Scene(screen.getRoot(), stage.getWidth(), stage.getHeight()));
+            stage.setScene(new Scene(ResponsiveScaler.wrap(screen.getRoot()), stage.getWidth(), stage.getHeight()));
         }
     }
 }
