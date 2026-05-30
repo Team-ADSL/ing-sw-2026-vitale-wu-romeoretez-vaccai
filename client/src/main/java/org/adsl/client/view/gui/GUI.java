@@ -35,8 +35,8 @@ public class GUI extends GameUI {
     private static final String WINDOW_TITLE = "MESOS";
     private static final double WINDOW_W = 1280;
     private static final double WINDOW_H = 800;
-    private static final double MIN_W = 800;
-    private static final double MIN_H = 540;
+    private static final double MIN_W = 900;
+    private static final double MIN_H = 620;
 
     private AppCoordinator coordinator;
     private Stage stage;
