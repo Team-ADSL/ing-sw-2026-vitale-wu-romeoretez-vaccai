@@ -18,4 +18,5 @@ public interface ResponseVisitor {
     void visit(ErrorResponse response) throws InvalidResponseException;
     void visit(ServerDisconnected response) throws InvalidResponseException;
     void visit(EventsTriggered response) throws InvalidResponseException;
+    void visit(GameLogRestore response) throws InvalidResponseException;
 }

@@ -77,6 +77,10 @@ public abstract class GameUI {
         dispatch(new EventsTriggeredEvent(eventTitle, logMessage));
     }
 
+    public void onGameLogRestore(List<String> history) {
+        dispatch(new GameLogRestoreEvent(history != null ? history : Collections.emptyList()));
+    }
+
     public void onErrorReceived(String error) {
         dispatch(new ErrorEvent(error));
     }
