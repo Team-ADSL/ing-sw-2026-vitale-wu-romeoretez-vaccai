@@ -98,6 +98,7 @@ public class ActionExecutionState extends ControllerState {
           "Wrong card(s) picks: upper " + upperRule + ", lower " + lowerRule + ".");
     }
 
+    int foodPaid = 0; // Ensure that all the card picked can be paid by the player
     for (Move move : moves) {
       CardRow selectedRow;
       if (move.row() == Row.UPPER) {
@@ -106,11 +107,15 @@ public class ActionExecutionState extends ControllerState {
         selectedRow = getGame().getBoard().lowRow();
       }
       Card selectedCard = selectedRow.getCardAt(move.rowIndex());
+      reqPlayer.changeFood(-foodPaid);
       if (selectedCard == null || !selectedCard.canBeDrawn(reqPlayer)) {
+        reqPlayer.changeFood(+foodPaid);
         throw new ServerException("Invalid picking: " +
             "card at " + move.row().toString() + " row and index " +
             move.rowIndex() + " cannot be picked");
       }
+      reqPlayer.changeFood(+foodPaid);
+      foodPaid += selectedCard.getCost();
     }
 
     execute(moves, reqPlayer);
