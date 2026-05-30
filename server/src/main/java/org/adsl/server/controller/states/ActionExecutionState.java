@@ -192,7 +192,7 @@ public class ActionExecutionState extends ControllerState {
     // Set new point/food after player's move
     OrderCell orderCell = getGame().getBoard().orderTile().getCellAt(i);
     Map<Player, int[]> before = snapshotFoodPp(Set.of(p));
-    if (orderCell.getBonus() >= 0) {
+    if (orderCell.getBonus() > 0) {
       p.changeFood(orderCell.getBonus());
       if (p.getBuildingBonus().isBonusFoodTile()) {
         p.changeFood(1);
