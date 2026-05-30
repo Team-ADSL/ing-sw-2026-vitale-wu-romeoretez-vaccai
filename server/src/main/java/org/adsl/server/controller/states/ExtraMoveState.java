@@ -52,7 +52,9 @@ public class ExtraMoveState extends ControllerState {
       getGame().setCurrentPlayer(null);
       getGame().setPhase(Phase.EVENTS_EXECUTION);
       setNextState(new EventsState(getGame(), getContext()));
-      getGame().sendUpdateGame();
+      String log = "[EXTRA MOVE] Player " + reqPlayer.getName() + " picked 0 card: ";
+      System.out.println(log);
+      getGame().sendUpdateGame(log);
     } else {
       Move currentMove = moves.stream().findFirst().get();
       if (currentMove.row() != Row.UPPER) {
