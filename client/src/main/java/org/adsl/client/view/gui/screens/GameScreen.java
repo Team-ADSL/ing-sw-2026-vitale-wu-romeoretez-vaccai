@@ -155,8 +155,8 @@ public class GameScreen extends GUIScreen {
     @FXML private HBox       topRow;
     @FXML private HBox       offerRow;
     @FXML private Pane       orderTilePane;
-    @FXML private Region     offerRightSpacer;
     @FXML private HBox       offerTrack;
+    @FXML private HBox       buildingDecks;
     @FXML private HBox       bottomRow;
     @FXML private HBox       topPlayersBox;
     @FXML private VBox       leftPlayersBox;
@@ -513,6 +513,7 @@ public class GameScreen extends GUIScreen {
         renderRow(bottomRow, bot, Row.LOWER, botW);
         renderOfferTrack(offerTrack, off, offW);
         renderOrderTile(offW * TILE_ASPECT);
+        renderBuildingDecks(offW * TILE_ASPECT);
 
         renderSelfPanel();
         renderOpponentPanels();
@@ -1240,11 +1241,61 @@ public class GameScreen extends GUIScreen {
         orderTilePane.setMinSize(w, h);
         orderTilePane.setPrefSize(w, h);
         orderTilePane.setMaxSize(w, h);
-        if (offerRightSpacer != null) {
-            offerRightSpacer.setMinWidth(w);
-            offerRightSpacer.setPrefWidth(w);
-            offerRightSpacer.setMaxWidth(w);
+    }
+
+    /**
+     * Renders the face-down future-era building decks to the right of the offer
+     * track, separated from it and from each other. {@code remainingBuildings}
+     * is a shrinking queue (server does {@code removeFirst()} on each era
+     * advance), so index 0 is always the <em>next</em> era to enter and the
+     * list size tells which eras are left: size 2 → eras [2, 3], size 1 → [3].
+     * The era for a slot is therefore {@code (4 - size) + index}, not a fixed
+     * index. The innermost deck (next to the offer track) is the next to be
+     * consumed; once it is drawn onto the board the outer deck takes its place.
+     * Only deck presence is known client-side (not the card count), so a single
+     * card-back with a stacked shadow stands in for the pile, sized to the
+     * offer-tile height so it sits in line.
+     */
+    private void renderBuildingDecks(double tileH) {
+        if (buildingDecks == null) return;
+        buildingDecks.getChildren().clear();
+        if (game == null || game.board() == null || tileH <= 0) return;
+
+        List<Boolean> remaining = game.board().remainingBuildings();
+        if (remaining == null || remaining.isEmpty()) return;
+
+        // Keep the first deck clearly detached from the offer track.
+        HBox.setMargin(buildingDecks, new Insets(0, 0, 0, 18));
+
+        int size = remaining.size();
+        double deckH = tileH;
+        double deckW = deckH / CARD_ASPECT;
+        for (int i = 0; i < size; i++) {
+            if (!Boolean.TRUE.equals(remaining.get(i))) continue;
+            final int era = (4 - size) + i;
+            if (era < 2 || era > 3) continue;
+            ImageView back = safeImageView(() -> ImageCatalog.cardBack(CardType.BUILDINGS, era, false));
+            if (back == null) continue;
+            back.setFitWidth(deckW);
+            back.setFitHeight(deckH);
+            back.setPreserveRatio(false);
+            // Round the corners like the board cards (arc = 12% of width).
+            Rectangle clip = new Rectangle(deckW, deckH);
+            clip.setArcWidth(deckW * 0.12);
+            clip.setArcHeight(deckW * 0.12);
+            back.setClip(clip);
+            // Wrap so the pile shadow survives the clip (a clip on the image
+            // itself would crop the shadow away).
+            StackPane deckCell = new StackPane(back);
+            deckCell.setEffect(deckShadow());
+            buildingDecks.getChildren().add(deckCell);
         }
+    }
+
+    /** Soft offset shadow that makes a single card-back read as a small pile. */
+    private static DropShadow deckShadow() {
+        DropShadow s = new DropShadow(6, 3, 3, Color.rgb(0, 0, 0, 0.55));
+        return s;
     }
 
     private static DropShadow selectedGlow() {

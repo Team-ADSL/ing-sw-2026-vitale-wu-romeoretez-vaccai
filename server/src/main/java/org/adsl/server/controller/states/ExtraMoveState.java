@@ -81,7 +81,7 @@ public class ExtraMoveState extends ControllerState {
     List<String> logsBuildingActivated = new ArrayList<>();
 
     for(Card b : p.getCards().get(CardType.BUILDINGS)){
-      String title = b.toString();
+      String title = b.getClass().getSimpleName();
       b.activeEffect(Set.of(p), Trigger.DRAWING);
       logsBuildingActivated.add(formatDeltas(title, Set.of(p), before));
     }
