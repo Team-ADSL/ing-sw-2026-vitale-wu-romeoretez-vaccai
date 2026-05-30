@@ -15,12 +15,7 @@ import org.adsl.shared.enums.Trigger;
 import org.adsl.server.model.Game;
 import org.adsl.server.model.Player;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Manual state in which the current player picks cards from the board rows.
@@ -126,6 +121,7 @@ public class ActionExecutionState extends ControllerState {
     List<String> logsBuildingActivated = new ArrayList<>();
     List<String> logsExtra = new ArrayList<>();
 
+    Map<CardType, Set<Card>> cardsPicked = createTempDeck();
     for (Move move : moves) {
       CardRow selectedRow;
       if (move.row() == Row.UPPER) {
@@ -136,7 +132,7 @@ public class ActionExecutionState extends ControllerState {
 
       Card selectedCard = selectedRow.pickCardAt(move.rowIndex());
       pickedNames.add(selectedCard.getClass().getSimpleName());
-      selectedCard.insert(p.getCards());
+      selectedCard.insert(cardsPicked);
       int cost = selectedCard.getCost();
       if(cost != 0){
         p.changeFood(-cost + p.getCards().get(CardType.BUILDER).stream()
@@ -145,15 +141,12 @@ public class ActionExecutionState extends ControllerState {
                 .sum()
         );
       }
-      // Drawing self-effect (e.g. Hunter with meat icon gains food). Buildings are
-      // logged by their own loop below, so attribute only non-building draw effects.
+      // Drawing self-effect (e.g. Hunter with meat icon gains food).
       Map<Player, int[]> beforeDraw = snapshotFoodPp(Set.of(p));
       selectedCard.activeEffect(Set.of(p), Trigger.DRAWING);
-      if (!p.getCards().get(CardType.BUILDINGS).contains(selectedCard)) {
-        addDelta(logsExtra, selectedCard.getClass().getSimpleName(), p, beforeDraw);
-      }
-      p.setLastPick(selectedCard);
+      addDelta(logsExtra, selectedCard.getClass().getSimpleName(), p, beforeDraw);
 
+      p.setLastPick(selectedCard);
       Map<Player, int[]> before = snapshotFoodPp(Set.of(p));
       for(Card b : p.getCards().get(CardType.BUILDINGS)){
         String title = b.getClass().getSimpleName();
@@ -164,6 +157,13 @@ public class ActionExecutionState extends ControllerState {
     OfferTrack offerTrack = getGame().getBoard().offerTrack();
     offerTrack.removePlayer(p);
     logsExtra.addAll(placeTotem(p));
+
+    // Actual inserting in player's deck
+    for(CardType key : cardsPicked.keySet()){
+      for(Card newCard : cardsPicked.get(key)){
+        newCard.insert(p.getCards());
+      }
+    }
 
     String log = "[ACTION] Player " + p.getName() + " picked " + moves.size()
             + " card(s): " + String.join(", ", pickedNames) + ".";
@@ -178,6 +178,18 @@ public class ActionExecutionState extends ControllerState {
     System.out.println(log);
     setNextState(calcNextState());
     getGame().sendUpdateGame(log);
+  }
+
+  private Map<CardType, Set<Card>> createTempDeck(){
+    Map<CardType, Set<Card>> cardsPicked = new EnumMap<>(CardType.class);
+    cardsPicked.put(CardType.HUNTER, new HashSet<>());
+    cardsPicked.put(CardType.GATHERER, new HashSet<>());
+    cardsPicked.put(CardType.SHAMAN, new HashSet<>());
+    cardsPicked.put(CardType.BUILDER, new HashSet<>());
+    cardsPicked.put(CardType.INVENTOR, new HashSet<>());
+    cardsPicked.put(CardType.ARTIST, new HashSet<>());
+    cardsPicked.put(CardType.BUILDINGS, new HashSet<>());
+    return cardsPicked;
   }
 
   /** Appends "title — Player: ±N PP ±M food" to {@code out}, skipping no-op deltas. */
