@@ -11,16 +11,16 @@
            style="-fx-background-color: transparent;">
 
     <VBox alignment="TOP_CENTER" spacing="14">
-        <padding><Insets top="40" right="24" bottom="24" left="24"/></padding>
+        <padding><Insets top="28" right="28" bottom="28" left="28"/></padding>
 
         <Label fx:id="titleLabel"  style="-fx-font-size: 34px; -fx-text-fill: #FDF3D3; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.9), 5, 0.5, 0, 0);"/>
         <Label fx:id="statusLabel" style="-fx-font-size: 20px; -fx-text-fill: #F2B035; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.9), 5, 0.5, 0, 0);"/>
 
         <!-- Players panel -->
-        <VBox styleClass="panel" spacing="10" alignment="CENTER" maxWidth="700" fillWidth="false">
+        <VBox styleClass="panel" spacing="10" alignment="CENTER" maxWidth="700" fillWidth="true" VBox.vgrow="ALWAYS">
             <padding><Insets top="16" right="20" bottom="16" left="20"/></padding>
             <Label text="Players in lobby" style="-fx-font-size: 15px; -fx-text-fill: #F2B035;"/>
-            <ListView fx:id="playersList" prefWidth="460" prefHeight="180"/>
+            <ListView fx:id="playersList" maxWidth="Infinity" VBox.vgrow="ALWAYS"/>
             <HBox spacing="10" alignment="CENTER">
                 <Button text="Start Game" onAction="#onStart"/>
                 <Button text="Leave Lobby" onAction="#onLeave"/>
