@@ -38,7 +38,7 @@ public class Hunter extends Character {
                     .orElse(null);
             if(p != null){
                 int numHunter = p.getCards().get(CardType.HUNTER).size();
-                p.changeFood(numHunter);
+                p.changeFood(numHunter + 1);
             }
         }
     }
