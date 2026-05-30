@@ -49,6 +49,8 @@ public class ExtraMoveState extends ControllerState {
     }
 
     if (moves.isEmpty()) {
+      getGame().setCurrentPlayer(null);
+      getGame().setPhase(Phase.EVENTS_EXECUTION);
       setNextState(new EventsState(getGame(), getContext()));
       getGame().sendUpdateGame();
     } else {
@@ -93,6 +95,8 @@ public class ExtraMoveState extends ControllerState {
       log += "Activated following building: " + String.join(", ", logsBuildingRelevant) + ".";
     }
     System.out.println(log);
+
+    getGame().setCurrentPlayer(null);
     getGame().setPhase(Phase.EVENTS_EXECUTION);
     setNextState(new EventsState(getGame(), getContext()));
     getGame().sendUpdateGame(log);
