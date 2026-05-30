@@ -1,5 +1,6 @@
 package org.adsl.client.view.gui.screens;
 
+import javafx.animation.PauseTransition;
 import javafx.animation.ScaleTransition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -52,6 +53,7 @@ import org.adsl.shared.utils.Move;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -79,8 +81,8 @@ public class GameScreen extends GUIScreen {
     private static final double TILE_MIN_W   = 42.0;
     private static final double HOVER_SCALE  = 1.15;
     private static final Duration ANIM       = Duration.millis(140);
-    private static final double CHIP_WIDTH   = 38;
-    private static final double CHIP_WIDTH_SM = 30;
+    private static final double CHIP_WIDTH   = 50;
+    private static final double CHIP_WIDTH_SM = 40;
     private static final double SELF_TOTEM   = 36;
     private static final double OPP_TOTEM    = 24;
     private static final double SELF_HAND_W  = 78;
@@ -173,6 +175,9 @@ public class GameScreen extends GUIScreen {
     private int lowerCount = 0;
     private boolean waitingServer = false;
     private int selfHandPage = 0;
+    /** Opponent names whose card hand is currently expanded. Persisted here (not
+     *  on the panel node) so the expanded state survives a full board re-render. */
+    private final Set<String> expandedOpponents = new HashSet<>();
     private final java.util.Map<String, Integer> opponentHandPages = new java.util.HashMap<>();
     // Fixed seat order, captured from the first game snapshot. The server
     // reorders players() by turn order each phase; rendering against this stable
@@ -183,6 +188,16 @@ public class GameScreen extends GUIScreen {
     private StackPane overlayPane;
     private Label overlayTitle;
     private VBox overlayPlayerList;
+
+    /**
+     * Shared debounce timer for resize-driven re-renders. Each resize listener
+     * resets it; the actual {@link #renderBoard()} fires only once the window
+     * has been still for {@link #RESIZE_DEBOUNCE_MS}, avoiding hundreds of full
+     * board rebuilds per second while dragging the window edge.
+     */
+    private static final double RESIZE_DEBOUNCE_MS = 90;
+    private final PauseTransition resizeDebounce =
+            new PauseTransition(Duration.millis(RESIZE_DEBOUNCE_MS));
 
     public GameScreen(AppCoordinator coordinator, String username, GameDTO game) {
         super(coordinator, username);
@@ -199,10 +214,14 @@ public class GameScreen extends GUIScreen {
 
         this.root = fxmlRoot;
         installBackground();
-        rootStack.widthProperty().addListener((_, _, _) -> Platform.runLater(this::renderBoard));
-        rootStack.heightProperty().addListener((_, _, _) -> Platform.runLater(this::renderBoard));
-        centerBox.widthProperty().addListener((_, _, _) -> Platform.runLater(this::renderBoard));
-        centerBox.heightProperty().addListener((_, _, _) -> Platform.runLater(this::applyContentScale));
+        // Only the window (rootStack) drives re-renders. We deliberately do NOT
+        // listen on centerBox size: its height/width change as a *result* of
+        // renderBoard (and of expanding an opponent panel), so listening there
+        // created a feedback loop that re-rendered the board and collapsed any
+        // expanded panel. applyContentScale is invoked at the end of renderBoard.
+        resizeDebounce.setOnFinished(_ -> renderBoard());
+        rootStack.widthProperty().addListener((_, _, _) -> resizeDebounce.playFromStart());
+        rootStack.heightProperty().addListener((_, _, _) -> resizeDebounce.playFromStart());
         rootStack.setFocusTraversable(true);
         rootStack.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.ENTER && confirmButton != null && !confirmButton.isDisabled()) {
@@ -795,8 +814,10 @@ public class GameScreen extends GUIScreen {
         StackPane.setAlignment(toggle, topSlot ? Pos.CENTER : Pos.BOTTOM_RIGHT);
         bottomBar.getChildren().addAll(expandedName, toggle);
 
-        toggle.setOnAction(_ -> {
-            boolean showCards = !hand.isVisible();
+        // Applies the expanded/collapsed look and records it in expandedOpponents
+        // so a later re-render can restore it. Used by the toggle and by the
+        // initial state below.
+        java.util.function.Consumer<Boolean> setExpanded = showCards -> {
             hand.setVisible(showCards);
             hand.setManaged(showCards);
             header.setVisible(!showCards);
@@ -805,6 +826,7 @@ public class GameScreen extends GUIScreen {
             expandedName.setManaged(showCards);
             toggle.setText(showCards ? "▴ Player" : "▾ Cards");
             if (showCards) {
+                expandedOpponents.add(p.name());
                 // Recompute layout. For TOP slot the panel resizes to fit the
                 // current page's content; for side slots the panel stays at
                 // SIDE_PANEL_W (the column grows vertically only).
@@ -817,15 +839,19 @@ public class GameScreen extends GUIScreen {
                 // the window — runLater so prefHeight reflects the new content.
                 Platform.runLater(() -> fitExpandedPanel(panel, topSlot));
             } else {
+                expandedOpponents.remove(p.name());
                 panel.setPrefWidth(basePanelW);
                 panel.setMaxWidth(basePanelW);
                 panel.setScaleX(1);
                 panel.setScaleY(1);
                 panel.setTranslateY(0);
             }
-        });
+        };
+        toggle.setOnAction(_ -> setExpanded.accept(!hand.isVisible()));
 
         panel.getChildren().addAll(header, hand, bottomBar);
+        // Restore expanded state across re-renders.
+        if (expandedOpponents.contains(p.name())) setExpanded.accept(true);
         return panel;
     }
 
