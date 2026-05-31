@@ -1240,7 +1240,7 @@ public class GameScreen extends GUIScreen {
             Rectangle hoverRect = new Rectangle(rectW, rectH);
             hoverRect.setX(cx - rectW / 2);
             hoverRect.setY(cy - rectH / 2);
-            hoverRect.setFill(Color.TRANSPARENT);
+            hoverRect.setFill(Color.web("#F2B035", 0.45));
             hoverRect.setStroke(Color.web("#F2B035"));
             hoverRect.setStrokeWidth(2.5);
             hoverRect.setArcWidth(8);
