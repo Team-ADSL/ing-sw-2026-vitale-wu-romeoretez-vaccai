@@ -86,10 +86,7 @@ public class GameScreen extends GUIScreen {
     private static final double CHIP_WIDTH_SM = 40;
     private static final double SELF_TOTEM   = 36;
     private static final double OPP_TOTEM    = 24;
-    private static final double SELF_HAND_W  = 78;
     private static final double OPP_HAND_W   = 66;
-    private static final double SELF_HAND_MIN = 32;
-    private static final double OPP_HAND_MIN  = 32;
     private static final double SIDE_PANEL_W   = 220;
     private static final double LR_PANEL_W     = 170;
     private static final double IDENTITY_COL_W = 100;
@@ -1023,12 +1020,6 @@ public class GameScreen extends GUIScreen {
             if (set != null) all.addAll(set);
         }
         return all;
-    }
-
-    private double computeHandCardWidth(int n, double maxCardW, double minCardW, double availableWidth) {
-        if (n <= 0) return maxCardW;
-        double computed = (availableWidth - HAND_GAP * (n - 1)) / n;
-        return Math.max(minCardW, Math.min(maxCardW, computed));
     }
 
     /** Centered placeholder shown in an expanded panel when the player holds no cards. */
