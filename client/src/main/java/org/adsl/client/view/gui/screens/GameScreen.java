@@ -1151,17 +1151,15 @@ public class GameScreen extends GUIScreen {
         boolean selected = selectedMoves.contains(new Move(idx, row));
         if (selected) {
             cell.setEffect(selectedGlow());
-            cell.setScaleX(HOVER_SCALE);
-            cell.setScaleY(HOVER_SCALE);
         }
 
         if (clickable) {
             cell.setCursor(Cursor.HAND);
             cell.setOnMouseEntered(_ -> {
-                if (!selectedMoves.contains(new Move(idx, row))) scale(cell, HOVER_SCALE);
+                if (!selectedMoves.contains(new Move(idx, row))) cell.setEffect(selectedGlow());;
             });
             cell.setOnMouseExited(_ -> {
-                if (!selectedMoves.contains(new Move(idx, row))) scale(cell, 1.0);
+                if (!selectedMoves.contains(new Move(idx, row))) cell.setEffect(null);;
             });
             cell.setOnMouseClicked(_ -> onCardClicked(row, idx, card, cell));
         } else {
@@ -1358,12 +1356,7 @@ public class GameScreen extends GUIScreen {
         return ca;
     }
 
-    private void scale(StackPane node, double to) {
-        ScaleTransition st = new ScaleTransition(ANIM, node);
-        st.setToX(to);
-        st.setToY(to);
-        st.play();
-    }
+
 
     private static ImageView safeImageView(java.util.function.Supplier<javafx.scene.image.Image> supplier) {
         try {
