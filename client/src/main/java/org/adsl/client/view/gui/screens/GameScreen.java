@@ -39,6 +39,7 @@ import org.adsl.client.serverEvents.GameUpdateEvent;
 import org.adsl.client.view.gui.Chip;
 import org.adsl.client.view.gui.FloatingLog;
 import org.adsl.client.view.gui.ImageCatalog;
+import org.adsl.client.view.gui.LayoutMath;
 import org.adsl.shared.enums.Phase;
 import org.adsl.shared.enums.Row;
 import org.adsl.shared.enums.Totem;
@@ -94,7 +95,6 @@ public class GameScreen extends GUIScreen {
     private static final double IDENTITY_COL_W = 100;
     private static final double HAND_GAP       = 6;
     private static final double NAME_H_EST     = 22;
-    private static final int    SELF_HAND_PER_PAGE = 11;
     private static final int    OPP_HAND_PER_PAGE  = 8;
     private static final double NAV_BTN_W      = 44;
     private static final double OPP_NAV_BTN_W  = 32;
@@ -175,6 +175,9 @@ public class GameScreen extends GUIScreen {
     private int lowerCount = 0;
     private boolean waitingServer = false;
     private int selfHandPage = 0;
+    /** The single card width shared by every card row and hand, set each render
+     *  by {@link #renderBoard()} from the most-constrained board row. */
+    private double sharedCardW = CARD_MIN_W;
     /** Opponent names whose card hand is currently expanded. Persisted here (not
      *  on the panel node) so the expanded state survives a full board re-render. */
     private final Set<String> expandedOpponents = new HashSet<>();
@@ -213,12 +216,14 @@ public class GameScreen extends GUIScreen {
         applyTheme(fxmlRoot, false);
 
         this.root = fxmlRoot;
+        rootPane.setMinWidth(Region.USE_PREF_SIZE);
+        rootPane.setMinHeight(Region.USE_PREF_SIZE);
         installBackground();
         // Only the window (rootStack) drives re-renders. We deliberately do NOT
         // listen on centerBox size: its height/width change as a *result* of
         // renderBoard (and of expanding an opponent panel), so listening there
         // created a feedback loop that re-rendered the board and collapsed any
-        // expanded panel. applyContentScale is invoked at the end of renderBoard.
+        // expanded panel. Board zoom-out is handled by the global ResponsiveScaler.
         resizeDebounce.setOnFinished(_ -> renderBoard());
         rootStack.widthProperty().addListener((_, _, _) -> resizeDebounce.playFromStart());
         rootStack.heightProperty().addListener((_, _, _) -> resizeDebounce.playFromStart());
@@ -489,27 +494,6 @@ public class GameScreen extends GUIScreen {
         return Math.max(200, w - 40);
     }
 
-    private void applyContentScale() {
-        if (centerBox == null) return;
-        double availH = centerBox.getHeight();
-        if (availH <= 0) return;
-        double prefH = centerBox.prefHeight(centerBox.getWidth());
-        if (prefH <= 0) return;
-        double scale = Math.min(1.0, availH / prefH);
-        centerBox.setScaleX(scale);
-        centerBox.setScaleY(scale);
-        centerBox.setTranslateY(-prefH / 2.0 * (1.0 - scale));
-    }
-
-    private double computeCardWidth(int n, double gap, double max, double min) {
-        if (n <= 0) return max;
-        double avail = availableWidth();
-        double w = (avail - gap * Math.max(0, n - 1)) / n;
-        if (w > max) w = max;
-        if (w < min) w = min;
-        return w;
-    }
-
     private void renderBoard() {
         if (game == null) return;
         headerLabel.setText(String.format("MESOS — Round %d/10  ·  Era %d  ·  Current: %s",
@@ -524,12 +508,14 @@ public class GameScreen extends GUIScreen {
         int botN = (int) bot.stream().filter(java.util.Objects::nonNull).count();
         int offN = off.size();
 
-        double topW = computeCardWidth(topN, CARD_GAP, CARD_MAX_W, CARD_MIN_W);
-        double botW = computeCardWidth(botN, CARD_GAP, CARD_MAX_W, CARD_MIN_W);
-        double offW = computeCardWidth(offN, 0,         TILE_MAX_W, TILE_MIN_W);
+        // One card size for EVERY card (top row, bottom row, hands): size the
+        // most-constrained single-line card row, so cards never differ in size.
+        int maxRowCards = Math.max(topN, botN);
+        sharedCardW = LayoutMath.cardWidth(availableWidth(), maxRowCards, CARD_GAP, CARD_MIN_W, CARD_MAX_W);
+        double offW = LayoutMath.cardWidth(availableWidth(), offN, 0, TILE_MIN_W, TILE_MAX_W);
 
-        renderRow(topRow, top, Row.UPPER, topW);
-        renderRow(bottomRow, bot, Row.LOWER, botW);
+        renderRow(topRow, top, Row.UPPER, sharedCardW);
+        renderRow(bottomRow, bot, Row.LOWER, sharedCardW);
         renderOfferTrack(offerTrack, off, offW);
         renderOrderTile(offW * TILE_ASPECT);
         renderBuildingDecks(offW * TILE_ASPECT);
@@ -538,7 +524,6 @@ public class GameScreen extends GUIScreen {
         renderOpponentPanels();
 
         renderHintAndConfirm();
-        Platform.runLater(this::applyContentScale);
     }
 
     // ── Self panel (bottom) ──────────────────────────────────────────────────
@@ -553,24 +538,26 @@ public class GameScreen extends GUIScreen {
         // pagination is needed) two nav-button slots.
         List<CardDTO> allCards = collectHand(me);
         int total = allCards.size();
-        boolean paginated = total > SELF_HAND_PER_PAGE;
-        int pageCount = paginated ? (int) Math.ceil(total / (double) SELF_HAND_PER_PAGE) : 1;
+        double stack = rootStack.getWidth();
+        if (stack <= 0) stack = 1280;
+        double cardW = sharedCardW;            // identical to the board card size
+        double cardH = cardW * CARD_ASPECT;
+
+        // Fit as many board-sized cards as the hand area allows; only then paginate.
+        // Recompute once with the nav-button reservation if a page overflows.
+        int perPage = LayoutMath.perPage(stack - IDENTITY_COL_W - 40, cardW, HAND_GAP);
+        boolean paginated = total > perPage;
+        if (paginated) {
+            perPage = LayoutMath.perPage(stack - IDENTITY_COL_W - 40 - (NAV_BTN_W * 2 + 16), cardW, HAND_GAP);
+            paginated = total > perPage;
+        }
+        int pageCount = paginated ? (int) Math.ceil(total / (double) perPage) : 1;
         if (selfHandPage >= pageCount) selfHandPage = pageCount - 1;
         if (selfHandPage < 0) selfHandPage = 0;
 
-        int from = selfHandPage * SELF_HAND_PER_PAGE;
-        int to = Math.min(from + SELF_HAND_PER_PAGE, total);
+        int from = selfHandPage * perPage;
+        int to = Math.min(from + perPage, total);
         List<CardDTO> pageCards = allCards.subList(from, to);
-
-        double stack = rootStack.getWidth();
-        if (stack <= 0) stack = 1280;
-        double navReserved = paginated ? (NAV_BTN_W * 2 + 16) : 0;
-        double avail = stack - IDENTITY_COL_W - 40 - navReserved;
-        // Size cards based on a full page (so card size stays consistent across
-        // pages even when the last page has fewer cards).
-        int sizingN = Math.min(total, SELF_HAND_PER_PAGE);
-        double cardW = computeHandCardWidth(sizingN, SELF_HAND_W, SELF_HAND_MIN, avail);
-        double cardH = cardW * CARD_ASPECT;
 
         // Identity column: totem pinned to top, name + chips pinned to bottom,
         // overall height = card height so the boundaries line up. The totem
@@ -779,9 +766,7 @@ public class GameScreen extends GUIScreen {
         toggle.setFocusTraversable(false);
         toggle.setStyle("-fx-font-size: 11px; -fx-padding: 4 8 4 8;");
 
-        final double cardW = topSlot
-                ? computeHandCardWidth(sizingN, OPP_HAND_W, OPP_HAND_MIN, cardAvail)
-                : computeHandCardWidth(2, OPP_HAND_W, OPP_HAND_MIN, cardAvail);
+        final double cardW = sharedCardW;      // all cards share one size
 
         final javafx.scene.layout.Pane hand;
         if (topSlot) {
