@@ -1,12 +1,14 @@
 package org.adsl.client.view.gui.screens;
 
 import javafx.animation.FadeTransition;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
 import javafx.util.Duration;
 import org.adsl.client.AppCoordinator;
 import org.adsl.client.serverEvents.ErrorEvent;
@@ -45,7 +47,49 @@ public class LoginScreen extends GUIScreen {
             logoImage.setImage(ImageCatalog.load("/assets/general/mesos_logo_white.png"));
         }
         applyTheme(this.root);
+        installKeyboardNav();
         playIntroFade();
+    }
+
+    /**
+     * Arrow-key navigation mirroring HomeScreen. The username field starts
+     * focused (cursor ready to type); the first arrow press moves focus onto a
+     * button, which the {@code .button:focused} theme rule outlines in white.
+     * Layout is: usernameField on top, then [Login | Close] side by side.
+     *   field  DOWN  → Login
+     *   Login  UP    → field, RIGHT → Close, ENTER → submit
+     *   Close  UP    → field, LEFT  → Login, ENTER → close
+     */
+    private void installKeyboardNav() {
+        // Focus the username field as soon as the screen is shown.
+        usernameField.sceneProperty().addListener((_, _, scene) -> {
+            if (scene != null) Platform.runLater(usernameField::requestFocus);
+        });
+
+        usernameField.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.DOWN) {
+                loginButton.requestFocus();
+                e.consume();
+            }
+        });
+
+        loginButton.setOnKeyPressed(e -> {
+            switch (e.getCode()) {
+                case UP    -> { usernameField.requestFocus(); e.consume(); }
+                case RIGHT -> { exitButton.requestFocus();    e.consume(); }
+                case ENTER -> { onLogin();                    e.consume(); }
+                default    -> { /* ignore */ }
+            }
+        });
+
+        exitButton.setOnKeyPressed(e -> {
+            switch (e.getCode()) {
+                case UP   -> { usernameField.requestFocus(); e.consume(); }
+                case LEFT -> { loginButton.requestFocus();   e.consume(); }
+                case ENTER -> { onExit();                    e.consume(); }
+                default   -> { /* ignore */ }
+            }
+        });
     }
 
     private void playIntroFade() {
