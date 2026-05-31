@@ -57,7 +57,7 @@ public class Sustenance extends Event {
 
     @Override
     protected String getEffectsLabel() {
-        return "-1" + CardToken.FOOD + "/" + lostPP + CardToken.PP + "x" + CardToken.CHARACTER;
+        return "-1" + CardToken.FOOD + "/" + lostPP + CardToken.PP + " x" + CardToken.CHARACTER;
     }
 
     @Override

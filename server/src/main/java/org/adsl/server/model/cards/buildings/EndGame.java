@@ -60,9 +60,9 @@ public class EndGame extends Building {
     protected String getEffectsLabel() {
         String base = CardToken.ENDGAME;
         switch (buildingEffect) {
-            case END_BUILDER_MULTIPLIER -> base += "2x" + CardToken.BUILDER + CardToken.PP;
-            case PP_COMPLETE_SET -> base += "6" + CardToken.PP + "x" + CardToken.SET;
-            case END_PP_BONUS -> base += "+25" + CardToken.PP;
+            case END_BUILDER_MULTIPLIER -> base += "  2x" + CardToken.BUILDER + CardToken.PP;
+            case PP_COMPLETE_SET -> base += "  6" + CardToken.PP + "x" + CardToken.SET;
+            case END_PP_BONUS -> base += "  +25" + CardToken.PP;
             default -> base += "";
         };
         return base;
