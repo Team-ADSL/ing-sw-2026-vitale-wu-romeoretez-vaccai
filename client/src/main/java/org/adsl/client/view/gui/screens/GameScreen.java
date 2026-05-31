@@ -76,7 +76,7 @@ public class GameScreen extends GUIScreen {
     private static final double CARD_ASPECT  = 1.484;
     private static final double CARD_MAX_W   = 95.0;
     private static final double CARD_MIN_W   = 48.0;
-    private static final double CARD_GAP     = 24.0;
+    private static final double CARD_GAP     = 12.0;
     private static final double TILE_ASPECT  = 1.65;
     private static final double TILE_MAX_W   = 80.0;
     private static final double TILE_MIN_W   = 42.0;
@@ -1301,8 +1301,8 @@ public class GameScreen extends GUIScreen {
     }
 
     private static DropShadow selectedGlow() {
-        DropShadow glow = new DropShadow(24, Color.WHITE);
-        glow.setSpread(0.45);
+        DropShadow glow = new DropShadow(10, Color.WHITE);
+        glow.setSpread(0.30);
         return glow;
     }
 

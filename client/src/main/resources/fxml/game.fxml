@@ -13,6 +13,7 @@
            style="-fx-background-color: #2c1a0e;">
 
     <BorderPane fx:id="rootPane">
+        <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
 
         <top>
             <HBox fx:id="topPlayersBox" alignment="TOP_CENTER" fillHeight="false" spacing="20">
@@ -62,7 +63,6 @@
         </bottom>
     </BorderPane>
 
-    <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
 
     <VBox fx:id="logBox" mouseTransparent="false" pickOnBounds="false"
           alignment="BOTTOM_RIGHT" maxWidth="320" maxHeight="220"
