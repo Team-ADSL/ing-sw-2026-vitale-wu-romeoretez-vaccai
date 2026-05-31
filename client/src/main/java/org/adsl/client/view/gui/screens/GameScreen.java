@@ -80,6 +80,10 @@ public class GameScreen extends GUIScreen {
     private static final double CARD_GAP     = 6.0;
     /** Margin (px) kept between the uniformly-scaled board and the window edges. */
     private static final double BOARD_MARGIN = 24.0;
+    /** Estimated natural board height (px) at reference size, used only to size
+     *  hand pagination before the exact scale is known (applyBoardScale computes
+     *  the real scale from measured prefHeight). Tune if hand card count looks off. */
+    private static final double REF_BOARD_H = 820.0;
     private static final double TILE_ASPECT  = 1.65;
     private static final double TILE_MAX_W   = 80.0;
     private static final double TILE_MIN_W   = 42.0;
@@ -178,6 +182,9 @@ public class GameScreen extends GUIScreen {
     /** The single card width shared by every card row and hand, set each render
      *  by {@link #renderBoard()} from the most-constrained board row. */
     private double sharedCardW = CARD_MIN_W;
+    /** Height-driven estimate of the board scale, used to size hand pagination in
+     *  reference space so the hand fills the row at whatever size the board scales to. */
+    private double boardScale = 1.0;
     /** Opponent names whose card hand is currently expanded. Persisted here (not
      *  on the panel node) so the expanded state survives a full board re-render. */
     private final Set<String> expandedOpponents = new HashSet<>();
@@ -518,6 +525,11 @@ public class GameScreen extends GUIScreen {
         renderOrderTile(offW * TILE_ASPECT);
         renderBuildingDecks(offW * TILE_ASPECT);
 
+        // Height-driven scale estimate: lets the hand show as many reference-sized
+        // cards as fit once the board is scaled up to fill the window height.
+        double bh = rootStack.getHeight();
+        boardScale = (bh > 0) ? Math.max(0.1, (bh - 2 * BOARD_MARGIN) / REF_BOARD_H) : 1.0;
+
         renderSelfPanel();
         renderOpponentPanels();
 
@@ -530,8 +542,8 @@ public class GameScreen extends GUIScreen {
 
     /**
      * Scales the whole board ({@link #rootPane}) as one block so it fits the
-     * window minus {@link #BOARD_MARGIN}, keeping its aspect ratio. Capped at 1.0
-     * (never enlarged past the reference layout) and driven by the tighter of the
+     * window minus {@link #BOARD_MARGIN}, keeping its aspect ratio. Scales both
+     * down AND up (to fill large screens), driven by the tighter of the
      * width/height fits — so every element resizes together and the decks pinned
      * top and bottom are never pushed off-screen. The background fills the window
      * behind it and is not scaled.
@@ -544,7 +556,7 @@ public class GameScreen extends GUIScreen {
         double prefW = rootPane.prefWidth(-1);
         double prefH = rootPane.prefHeight(-1);
         if (prefW <= 0 || prefH <= 0) return;
-        double s = Math.min(1.0, Math.min(availW / prefW, availH / prefH));
+        double s = Math.min(availW / prefW, availH / prefH);   // also scales UP to fill
         rootPane.setScaleX(s);
         rootPane.setScaleY(s);
     }
@@ -568,10 +580,13 @@ public class GameScreen extends GUIScreen {
 
         // Fit as many board-sized cards as the hand area allows; only then paginate.
         // Recompute once with the nav-button reservation if a page overflows.
-        int perPage = LayoutMath.perPage(stack - IDENTITY_COL_W - 40, cardW, HAND_GAP);
+        // Pagination works in reference space (window width ÷ board scale) so the
+        // hand fills the row at whatever size the board ends up scaled to.
+        double usable = stack / boardScale;
+        int perPage = LayoutMath.perPage(usable - IDENTITY_COL_W - 40, cardW, HAND_GAP);
         boolean paginated = total > perPage;
         if (paginated) {
-            perPage = LayoutMath.perPage(stack - IDENTITY_COL_W - 40 - (NAV_BTN_W * 2 + 16), cardW, HAND_GAP);
+            perPage = LayoutMath.perPage(usable - IDENTITY_COL_W - 40 - (NAV_BTN_W * 2 + 16), cardW, HAND_GAP);
             paginated = total > perPage;
         }
         int pageCount = paginated ? (int) Math.ceil(total / (double) perPage) : 1;
