@@ -5,6 +5,7 @@ import javafx.animation.ScaleTransition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -87,7 +88,6 @@ public class GameScreen extends GUIScreen {
     private static final double TILE_ASPECT  = 1.65;
     private static final double TILE_MAX_W   = 80.0;
     private static final double TILE_MIN_W   = 42.0;
-    private static final double HOVER_SCALE  = 1.15;
     private static final Duration ANIM       = Duration.millis(140);
     private static final double CHIP_WIDTH   = 50;
     private static final double CHIP_WIDTH_SM = 40;
@@ -195,6 +195,15 @@ public class GameScreen extends GUIScreen {
     private List<String> playerOrder;
     private final FloatingLog floatingLog;
 
+    // ── Keyboard navigation (spatial) ────────────────────────────────────────
+    // Rebuilt each render: stable key → the active node it points to. Only
+    // elements that are actually actionable in the current phase are added, so
+    // the arrows never land on inert cards/tiles. navKey survives a re-render so
+    // the cursor stays put across board updates.
+    private final java.util.Map<String, Node> navIndex = new java.util.LinkedHashMap<>();
+    private String navKey = null;
+    private Node navFocusedNode = null;
+
     private StackPane overlayPane;
     private Label overlayTitle;
     private VBox overlayPlayerList;
@@ -242,11 +251,7 @@ public class GameScreen extends GUIScreen {
         rootStack.widthProperty().addListener((_, _, _) -> resizeDebounce.playFromStart());
         rootStack.heightProperty().addListener((_, _, _) -> resizeDebounce.playFromStart());
         rootStack.setFocusTraversable(true);
-        rootStack.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.ENTER && confirmButton != null && !confirmButton.isDisabled()) {
-                onSendMove();
-            }
-        });
+        rootStack.setOnKeyPressed(e -> { if (handleNavKey(e.getCode())) e.consume(); });
 
         buildEventsOverlay();
         rootStack.getChildren().add(overlayPane);
@@ -536,8 +541,9 @@ public class GameScreen extends GUIScreen {
         renderHintAndConfirm();
 
         // Defer until the new content has been laid out so prefWidth/prefHeight
-        // reflect it, then scale the whole board to fit the window.
-        Platform.runLater(this::applyBoardScale);
+        // reflect it, then scale the whole board to fit the window and rebuild
+        // the keyboard-navigation index against the freshly-built nodes.
+        Platform.runLater(() -> { applyBoardScale(); refreshNav(); });
     }
 
     /**
@@ -656,6 +662,7 @@ public class GameScreen extends GUIScreen {
             selfHandPage += delta;
             renderSelfPanel();
         });
+        markNav(b, "SELF_NAV:" + (delta < 0 ? "PREV" : "NEXT"), "BUTTON", b::fire);
         return b;
     }
 
@@ -871,6 +878,9 @@ public class GameScreen extends GUIScreen {
             }
         };
         toggle.setOnAction(_ -> setExpanded.accept(!hand.isVisible()));
+        // The "Cards" toggle is always navigable so the player can browse any
+        // opponent's hand, regardless of phase.
+        markNav(toggle, "TOG:" + p.name(), "BUTTON", toggle::fire);
 
         panel.getChildren().addAll(header, hand, bottomBar);
         // Restore expanded state across re-renders.
@@ -945,7 +955,7 @@ public class GameScreen extends GUIScreen {
             handRow.getChildren().add(buildOppNavButton("◀", () -> {
                 opponentHandPages.put(p.name(), page - 1);
                 populateOpponentHandRow(handRow, panel, p, cardW, allCards);
-            }));
+            }, "OPP_NAV:" + p.name() + ":PREV"));
         }
         if (total == 0) {
             handRow.setAlignment(Pos.CENTER);
@@ -958,7 +968,7 @@ public class GameScreen extends GUIScreen {
             handRow.getChildren().add(buildOppNavButton("▶", () -> {
                 opponentHandPages.put(p.name(), page + 1);
                 populateOpponentHandRow(handRow, panel, p, cardW, allCards);
-            }));
+            }, "OPP_NAV:" + p.name() + ":NEXT"));
         }
 
         // When expanded, size the panel to the actual content (cards + the
@@ -1001,7 +1011,7 @@ public class GameScreen extends GUIScreen {
             container.getChildren().add(buildOppNavButton("▲", () -> {
                 opponentHandPages.put(p.name(), page - 1);
                 populateOpponentHandColumn(container, panel, p, cardW, allCards);
-            }));
+            }, "OPP_NAV:" + p.name() + ":PREV"));
         }
         if (total == 0) {
             container.getChildren().add(buildNoCardsLabel());
@@ -1012,7 +1022,7 @@ public class GameScreen extends GUIScreen {
             container.getChildren().add(buildOppNavButton("▼", () -> {
                 opponentHandPages.put(p.name(), page + 1);
                 populateOpponentHandColumn(container, panel, p, cardW, allCards);
-            }));
+            }, "OPP_NAV:" + p.name() + ":NEXT"));
         }
         // Side panels keep SIDE_PANEL_W; height grows automatically with content.
     }
@@ -1033,11 +1043,12 @@ public class GameScreen extends GUIScreen {
         return grid;
     }
 
-    private Button buildOppNavButton(String glyph, Runnable onClick) {
+    private Button buildOppNavButton(String glyph, Runnable onClick, String navKey) {
         Button b = new Button(glyph);
         b.setFocusTraversable(false);
         b.setStyle("-fx-font-size: 13px; -fx-padding: 3 8 3 8; -fx-background-radius: 6;");
         b.setOnAction(_ -> onClick.run());
+        markNav(b, navKey, "BUTTON", b::fire);
         return b;
     }
 
@@ -1162,6 +1173,8 @@ public class GameScreen extends GUIScreen {
                 if (!selectedMoves.contains(new Move(idx, row))) cell.setEffect(null);;
             });
             cell.setOnMouseClicked(_ -> onCardClicked(row, idx, card, cell));
+            markNav(cell, "CARD:" + row.name() + ":" + idx, "CARD", () -> onCardClicked(row, idx, card, cell));
+            cell.getProperties().put("navSelected", selected);
         } else {
             cell.setEffect(darken());
         }
@@ -1218,8 +1231,33 @@ public class GameScreen extends GUIScreen {
 
         boolean occupied = tile.totem() != null;
         if (clickable && !occupied) {
+            double rectW = tileW * (217.0 / OFFER_TILE_W);
+            double rectH = tileH * (121.0 / OFFER_TILE_H);
+            double[] slot = OFFER_SLOT.getOrDefault(tile.id(), new double[]{0.5, 0.28});
+            double cx = slot[0] * tileW;
+            double cy = slot[1] * tileH;
+            
+            Rectangle hoverRect = new Rectangle(rectW, rectH);
+            hoverRect.setX(cx - rectW / 2);
+            hoverRect.setY(cy - rectH / 2);
+            hoverRect.setFill(Color.TRANSPARENT);
+            hoverRect.setStroke(Color.web("#F2B035"));
+            hoverRect.setStrokeWidth(2.5);
+            hoverRect.setArcWidth(8);
+            hoverRect.setArcHeight(8);
+            hoverRect.setVisible(false);
+            hoverRect.setMouseTransparent(true);
+            
+            cell.getChildren().add(hoverRect);
+            cell.getProperties().put("hoverRect", hoverRect);
+
             cell.setCursor(Cursor.HAND);
             cell.setOnMouseClicked(_ -> onOfferTileClicked(idx, tile));
+            cell.setOnMouseEntered(_ -> hoverRect.setVisible(true));
+            cell.setOnMouseExited(_ -> {
+                if (cell != navFocusedNode) hoverRect.setVisible(false);
+            });
+            markNav(cell, "TILE:" + idx, "TILE", () -> onOfferTileClicked(idx, tile));
         } else if (!clickable) {
             cell.setEffect(darken());
         }
@@ -1372,25 +1410,30 @@ public class GameScreen extends GUIScreen {
         if (waitingServer) {
             hintLabel.setText("Waiting for server...");
             confirmButton.setDisable(true);
+            unmarkNav(confirmButton);
             return;
         }
         if (!isMyTurn()) {
             hintLabel.setText(waitingHint());
             confirmButton.setDisable(true);
+            unmarkNav(confirmButton);
             return;
         }
         if (phase == Phase.TOTEM_PLACEMENT) {
             hintLabel.setText("Click an offer tile to place your totem.");
             confirmButton.setDisable(true);
+            unmarkNav(confirmButton);
         } else if (phase == Phase.ACTION_EXECUTION || phase == Phase.EXTRA_MOVE) {
             int required = upperCount + lowerCount;
             hintLabel.setText(String.format(
                     "Pick cards (top×%d, bottom×%d)  —  Selected: %d / %d",
                     upperCount, lowerCount, selectedMoves.size(), required));
             confirmButton.setDisable(false);
+            markNav(confirmButton, "CONFIRM", "BUTTON", this::onSendMove);
         } else {
             hintLabel.setText(waitingHint());
             confirmButton.setDisable(true);
+            unmarkNav(confirmButton);
         }
     }
 
@@ -1423,6 +1466,188 @@ public class GameScreen extends GUIScreen {
             if (username.equals(p.name())) return p;
         }
         return null;
+    }
+    // ── Keyboard Navigation (Spatial) ────────────────────────────────────────
+
+    private void markNav(Node node, String key, String kind, Runnable action) {
+        node.getProperties().put("navKey", key);
+        node.getProperties().put("navKind", kind);
+        node.getProperties().put("navAction", action);
+    }
+
+    private void unmarkNav(Node node) {
+        node.getProperties().remove("navKey");
+        node.getProperties().remove("navKind");
+        node.getProperties().remove("navAction");
+        if (node.getProperties().containsKey("navBaseStyle")) {
+            node.setStyle((String) node.getProperties().get("navBaseStyle"));
+        }
+    }
+
+    private void walkNav(Node n) {
+        if (n.getProperties().containsKey("navKey")) {
+            navIndex.put((String) n.getProperties().get("navKey"), n);
+        }
+        if (n instanceof Parent p) {
+            for (Node child : p.getChildrenUnmodifiable()) {
+                walkNav(child);
+            }
+        }
+    }
+
+    private void refreshNav() {
+        navIndex.clear();
+        walkNav(rootStack);
+
+        if (navKey != null && !navIndex.containsKey(navKey)) {
+            navKey = null;
+            navFocusedNode = null;
+        }
+
+        for (Node n : navIndex.values()) {
+            setNavHighlight(n, false);
+        }
+        if (navKey != null) {
+            navFocusedNode = navIndex.get(navKey);
+            setNavHighlight(navFocusedNode, true);
+        }
+    }
+
+    private void setNavHighlight(Node node, boolean focused) {
+        if (node == null) return;
+        String kind = (String) node.getProperties().get("navKind");
+        if (kind == null) return;
+
+        if (focused) {
+            if (kind.equals("CARD")) {
+                node.setEffect(selectedGlow());
+            } else if (kind.equals("TILE")) {
+                Rectangle r = (Rectangle) node.getProperties().get("hoverRect");
+                if (r != null) r.setVisible(true);
+            } else if (kind.equals("BUTTON")) {
+                if (!node.getProperties().containsKey("navBaseStyle")) {
+                    node.getProperties().put("navBaseStyle", node.getStyle());
+                }
+                String baseStyle = (String) node.getProperties().get("navBaseStyle");
+                if (baseStyle == null) baseStyle = "";
+                node.setStyle(baseStyle + (baseStyle.endsWith(";") || baseStyle.isEmpty() ? "" : ";") + " -fx-border-color: white; -fx-border-width: 2; -fx-border-radius: 4;");
+            }
+        } else {
+            if (kind.equals("CARD")) {
+                Boolean sel = (Boolean) node.getProperties().get("navSelected");
+                if (Boolean.TRUE.equals(sel)) {
+                    node.setEffect(selectedGlow());
+                } else {
+                    node.setEffect(null);
+                }
+            } else if (kind.equals("TILE")) {
+                Rectangle r = (Rectangle) node.getProperties().get("hoverRect");
+                if (r != null) r.setVisible(false);
+            } else if (kind.equals("BUTTON")) {
+                if (node.getProperties().containsKey("navBaseStyle")) {
+                    node.setStyle((String) node.getProperties().get("navBaseStyle"));
+                }
+            }
+        }
+    }
+
+    private boolean handleNavKey(KeyCode code) {
+        if (navIndex.isEmpty()) return false;
+
+        if (code == KeyCode.ENTER || code == KeyCode.SPACE) {
+            if (navFocusedNode != null) {
+                Runnable action = (Runnable) navFocusedNode.getProperties().get("navAction");
+                if (action != null) action.run();
+                return true;
+            }
+            return false;
+        }
+
+        double dx = 0; double dy = 0;
+        if (code == KeyCode.UP) dy = -1;
+        else if (code == KeyCode.DOWN) dy = 1;
+        else if (code == KeyCode.LEFT) dx = -1;
+        else if (code == KeyCode.RIGHT) dx = 1;
+        else return false;
+
+        if (navFocusedNode == null) {
+            navFocusedNode = getLeftmostNode();
+            if (navFocusedNode != null) {
+                navKey = (String) navFocusedNode.getProperties().get("navKey");
+                setNavHighlight(navFocusedNode, true);
+            }
+            return true;
+        }
+
+        Node next = geometricNext(navFocusedNode, dx, dy);
+        if (next != null && next != navFocusedNode) {
+            setNavHighlight(navFocusedNode, false);
+            navFocusedNode = next;
+            navKey = (String) navFocusedNode.getProperties().get("navKey");
+            setNavHighlight(navFocusedNode, true);
+        }
+        return true;
+    }
+
+    private Node getLeftmostNode() {
+        Node best = null;
+        double minScore = Double.MAX_VALUE;
+        for (Node n : navIndex.values()) {
+            if (!n.isVisible() || !n.isManaged()) continue;
+            Bounds b = n.localToScene(n.getBoundsInLocal());
+            if (b == null) continue;
+            // score prioritizes top-left items.
+            double score = b.getCenterX() + b.getCenterY();
+            if (score < minScore) {
+                minScore = score;
+                best = n;
+            }
+        }
+        return best;
+    }
+
+    private Node geometricNext(Node current, double dx, double dy) {
+        Bounds curB = current.localToScene(current.getBoundsInLocal());
+        if (curB == null) return null;
+        double cx = curB.getCenterX();
+        double cy = curB.getCenterY();
+
+        Node best = null;
+        double bestDist = Double.MAX_VALUE;
+
+        for (Node n : navIndex.values()) {
+            if (n == current) continue;
+            if (!n.isVisible() || !n.isManaged()) continue;
+
+            Bounds b = n.localToScene(n.getBoundsInLocal());
+            if (b == null) continue;
+            double nx = b.getCenterX();
+            double ny = b.getCenterY();
+
+            double dirX = nx - cx;
+            double dirY = ny - cy;
+
+            boolean valid = false;
+            if (dx > 0 && dirX > 10) valid = true;
+            if (dx < 0 && dirX < -10) valid = true;
+            if (dy > 0 && dirY > 10) valid = true;
+            if (dy < 0 && dirY < -10) valid = true;
+
+            if (valid) {
+                double dist;
+                if (dx != 0) {
+                    dist = Math.abs(dirX) + 4 * Math.abs(dirY);
+                } else {
+                    dist = Math.abs(dirY) + 4 * Math.abs(dirX);
+                }
+
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    best = n;
+                }
+            }
+        }
+        return best;
     }
 
 }

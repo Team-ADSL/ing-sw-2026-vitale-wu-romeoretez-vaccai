@@ -1,10 +1,13 @@
 package org.adsl.client.view.gui.screens;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.adsl.client.AppCoordinator;
@@ -28,6 +31,8 @@ public class LobbyScreen extends GUIScreen {
     @FXML private Label statusLabel;
     @FXML private Label errorLabel;
     @FXML private ListView<String> playersList;
+    @FXML private Button startButton;
+    @FXML private Button leaveButton;
     @FXML private VBox logBox;
 
     private int gameId;
@@ -52,6 +57,7 @@ public class LobbyScreen extends GUIScreen {
             throw new RuntimeException("Failed to load lobby.fxml", e);
         }
         refresh();
+        installKeyboardNav();
         applyTheme(this.root);
 
         floatingLog = new FloatingLog("Lobby log");
@@ -65,6 +71,43 @@ public class LobbyScreen extends GUIScreen {
                 ? String.format("(%d / %d players ready)", players.size(), totalPlayers)
                 : String.format("(%d players in lobby)", players.size()));
         playersList.setItems(FXCollections.observableArrayList(players));
+    }
+
+    /**
+     * Arrow-key navigation limited to the two action buttons. The players list
+     * is display-only and stays out of traversal. On entry, focus rests on the
+     * (non-button) root so no outline shows; the first arrow press selects Start
+     * Game (white outline via the {@code .button:focused} theme rule), and from
+     * there RIGHT/LEFT toggle to Leave Lobby and back. ENTER fires the focused
+     * button.
+     */
+    private void installKeyboardNav() {
+        playersList.setFocusTraversable(false);
+
+        rootStack.setFocusTraversable(true);
+        rootStack.sceneProperty().addListener((_, _, scene) -> {
+            if (scene != null) Platform.runLater(rootStack::requestFocus);
+        });
+        rootStack.setOnKeyPressed(e -> {
+            switch (e.getCode()) {
+                case LEFT, RIGHT, UP, DOWN -> { startButton.requestFocus(); e.consume(); }
+                default -> { /* ignore */ }
+            }
+        });
+
+        startButton.setOnKeyPressed(e -> {
+            switch (e.getCode()) {
+                case RIGHT -> { leaveButton.requestFocus(); e.consume(); }
+                default    -> { /* ignore */ }
+            }
+        });
+
+        leaveButton.setOnKeyPressed(e -> {
+            switch (e.getCode()) {
+                case LEFT  -> { startButton.requestFocus(); e.consume(); }
+                default    -> { /* ignore */ }
+            }
+        });
     }
 
     @FXML
