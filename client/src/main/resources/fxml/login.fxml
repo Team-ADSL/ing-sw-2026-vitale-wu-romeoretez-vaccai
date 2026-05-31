@@ -11,6 +11,7 @@
 <StackPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
            style="-fx-background-color: transparent;">
     <VBox alignment="CENTER" spacing="10" StackPane.alignment="CENTER">
+        <padding><Insets top="28" right="28" bottom="28" left="28"/></padding>
         <VBox alignment="CENTER" spacing="14" maxWidth="480" maxHeight="-Infinity" styleClass="panel">
             <padding><Insets top="32" right="40" bottom="32" left="40"/></padding>
             <ImageView fx:id="logoImage" fitWidth="380" preserveRatio="true"/>
