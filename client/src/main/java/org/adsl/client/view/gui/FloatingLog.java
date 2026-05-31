@@ -31,8 +31,9 @@ import java.util.List;
 public final class FloatingLog {
 
     private static final int VISIBLE = 5;
-    private static final double MAX_W = 320;
+    private static final double MAX_W = 420;
     private static final double VERTICAL_MARGIN = 120;
+    private static final double COLLAPSED_MAX_H = 300;
 
     private static final List<String> history = new ArrayList<>();
     private static FloatingLog active;
@@ -50,7 +51,7 @@ public final class FloatingLog {
         floating = new VBox(2);
         floating.setAlignment(Pos.BOTTOM_RIGHT);
         floating.setMaxWidth(MAX_W);
-        floating.setMaxHeight(220);
+        floating.setMaxHeight(COLLAPSED_MAX_H);
         floating.setPickOnBounds(false);
         floating.setMouseTransparent(false);
         floating.setCursor(Cursor.HAND);
@@ -76,9 +77,9 @@ public final class FloatingLog {
         expandedScroll.setMaxWidth(MAX_W);
 
         Label closeChip = new Label("✕");
-        closeChip.setFont(ImageCatalog.robotoFont(9));
-        closeChip.setStyle("-fx-text-fill: #1a0808; -fx-font-size: 9px;"
-                + " -fx-background-color: #F2B035; -fx-padding: 3 10 3 10;"
+        closeChip.setFont(ImageCatalog.robotoFont(12));
+        closeChip.setStyle("-fx-text-fill: #1a0808; -fx-font-size: 12px;"
+                + " -fx-background-color: #F2B035; -fx-padding: 4 12 4 12;"
                 + " -fx-background-radius: 8; -fx-cursor: hand;");
         closeChip.setOnMouseClicked(e -> {
             e.consume();
@@ -143,7 +144,7 @@ public final class FloatingLog {
     private void collapse() {
         expanded = false;
         floating.setCursor(Cursor.HAND);
-        floating.setMaxHeight(220);
+        floating.setMaxHeight(COLLAPSED_MAX_H);
         removeOutsideClickFilter();
         refresh();
     }
@@ -204,9 +205,9 @@ public final class FloatingLog {
         Label entry = new Label(text);
         entry.setWrapText(true);
         entry.setMaxWidth(MAX_W - 20);
-        entry.setFont(ImageCatalog.robotoFont(9));
-        entry.setStyle("-fx-text-fill: #f5deb3; -fx-font-size: 9px;"
-                + " -fx-background-color: rgba(0,0,0,0.40); -fx-padding: 3 10 3 10;"
+        entry.setFont(ImageCatalog.robotoFont(13));
+        entry.setStyle("-fx-text-fill: #f5deb3; -fx-font-size: 13px;"
+                + " -fx-background-color: rgba(0,0,0,0.40); -fx-padding: 5 12 5 12;"
                 + " -fx-background-radius: 8;");
         entry.setOpacity(opacity);
         return entry;
