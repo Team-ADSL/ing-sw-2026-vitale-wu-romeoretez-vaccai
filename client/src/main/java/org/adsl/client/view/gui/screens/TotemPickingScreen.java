@@ -65,7 +65,7 @@ public class TotemPickingScreen extends GUIScreen {
     private StackPane buildUI() {
         VBox outer = new VBox(28);
         outer.setAlignment(Pos.CENTER);
-        outer.setPadding(new Insets(50));
+        outer.setPadding(new Insets(28));
         outer.setStyle("-fx-background-color: transparent;");
 
         Label title = new Label("M E S O S  —  Choose Your Totem");

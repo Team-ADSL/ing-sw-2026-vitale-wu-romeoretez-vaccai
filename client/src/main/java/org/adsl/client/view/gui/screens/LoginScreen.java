@@ -22,6 +22,10 @@ import java.io.IOException;
  */
 public class LoginScreen extends GUIScreen {
 
+    /** Intro fade plays only on the first login screen of the process, not on
+     *  every return to it (e.g. after logout/relogin). */
+    private static boolean introShown = false;
+
     @FXML private TextField usernameField;
     @FXML private Label errorLabel;
     @FXML private Button loginButton;
@@ -45,7 +49,8 @@ public class LoginScreen extends GUIScreen {
     }
 
     private void playIntroFade() {
-        if (root == null) return;
+        if (root == null || introShown) return;
+        introShown = true;
         root.setOpacity(0);
         FadeTransition ft = new FadeTransition(Duration.millis(900), root);
         ft.setFromValue(0);

@@ -12,7 +12,7 @@
 
     <!-- Main content: fills full window height, panels centered horizontally -->
     <VBox alignment="TOP_CENTER" spacing="14">
-        <padding><Insets top="40" right="24" bottom="24" left="24"/></padding>
+        <padding><Insets top="28" right="28" bottom="28" left="28"/></padding>
 
         <Label fx:id="welcomeLabel" style="-fx-font-size: 26px; -fx-text-fill: #FDF3D3; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.9), 5, 0.5, 0, 0);"/>
 
@@ -29,10 +29,10 @@
         </VBox>
 
         <!-- Join game panel -->
-        <VBox styleClass="panel" spacing="10" alignment="CENTER" maxWidth="700" fillWidth="false">
+        <VBox styleClass="panel" spacing="10" alignment="CENTER" maxWidth="700" fillWidth="true" VBox.vgrow="ALWAYS">
             <padding><Insets top="16" right="20" bottom="16" left="20"/></padding>
             <Label text="Join an active game" style="-fx-font-size: 15px; -fx-text-fill: #F2B035;"/>
-            <ListView fx:id="gamesList" prefWidth="460" prefHeight="180"/>
+            <ListView fx:id="gamesList" maxWidth="Infinity" VBox.vgrow="ALWAYS"/>
             <HBox spacing="10" alignment="CENTER">
                 <Button fx:id="joinButton" text="Join Selected" onAction="#onJoinSelected"/>
                 <Button fx:id="logoutButton" text="Logout" onAction="#onLogout"/>
