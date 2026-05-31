@@ -37,6 +37,7 @@ build/
 
 ### Claude Code ###
 .claude/
+.superpowers/
 
 saved/
 saves/

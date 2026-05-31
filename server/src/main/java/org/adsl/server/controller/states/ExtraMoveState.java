@@ -49,8 +49,12 @@ public class ExtraMoveState extends ControllerState {
     }
 
     if (moves.isEmpty()) {
+      getGame().setCurrentPlayer(null);
+      getGame().setPhase(Phase.EVENTS_EXECUTION);
       setNextState(new EventsState(getGame(), getContext()));
-      getGame().sendUpdateGame();
+      String log = "[EXTRA MOVE] Player " + reqPlayer.getName() + " picked 0 card: ";
+      System.out.println(log);
+      getGame().sendUpdateGame(log);
     } else {
       Move currentMove = moves.stream().findFirst().get();
       if (currentMove.row() != Row.UPPER) {
@@ -81,7 +85,7 @@ public class ExtraMoveState extends ControllerState {
     List<String> logsBuildingActivated = new ArrayList<>();
 
     for(Card b : p.getCards().get(CardType.BUILDINGS)){
-      String title = b.toString();
+      String title = b.getClass().getSimpleName();
       b.activeEffect(Set.of(p), Trigger.DRAWING);
       logsBuildingActivated.add(formatDeltas(title, Set.of(p), before));
     }
@@ -93,6 +97,8 @@ public class ExtraMoveState extends ControllerState {
       log += "Activated following building: " + String.join(", ", logsBuildingRelevant) + ".";
     }
     System.out.println(log);
+
+    getGame().setCurrentPlayer(null);
     getGame().setPhase(Phase.EVENTS_EXECUTION);
     setNextState(new EventsState(getGame(), getContext()));
     getGame().sendUpdateGame(log);

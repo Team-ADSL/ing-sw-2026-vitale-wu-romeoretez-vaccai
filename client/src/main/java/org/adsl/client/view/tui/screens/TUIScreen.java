@@ -163,6 +163,13 @@ public abstract class TUIScreen extends Screen<TUIScreen> implements InputEventV
      * here so every concrete screen automatically contributes to the transcript
      * without needing its own append logic.
      */
+    @Override
+    public TUIScreen visit(GameLogRestoreEvent e) {
+        TuiGameLog.INSTANCE.restore(e.history());
+        setToRender(true);
+        return getThis();
+    }
+
     private void captureLogMessage(ServerEvent event) {
         String msg = switch (event) {
             case GameUpdateEvent e       -> e.message();

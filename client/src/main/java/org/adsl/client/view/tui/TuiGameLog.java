@@ -37,4 +37,17 @@ public final class TuiGameLog {
     public synchronized void clear() {
         history.clear();
     }
+
+    /**
+     * Replaces the whole transcript with {@code entries} (server-authoritative,
+     * used on reconnect). Replacing rather than appending keeps a same-process
+     * reconnect from duplicating lines.
+     */
+    public synchronized void restore(List<String> entries) {
+        history.clear();
+        if (entries == null) return;
+        for (String e : entries) {
+            if (e != null && !e.isBlank()) history.add(e);
+        }
+    }
 }

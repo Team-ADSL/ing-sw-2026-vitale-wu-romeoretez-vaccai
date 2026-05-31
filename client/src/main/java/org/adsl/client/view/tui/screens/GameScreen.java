@@ -933,8 +933,8 @@ public class GameScreen extends TUIScreen {
 
     // ── Player card summary (full-text, compact) ───────────────────────────────
 
-    private static final Pattern PP_FROM_EFFECT  = Pattern.compile("\\[PP\\](\\d+)");
-    private static final Pattern DISC_FROM_EFFECT = Pattern.compile("\\[FOOD_COST\\]-(\\d+)");
+    private static final Pattern PP_FROM_EFFECT  = Pattern.compile("(\\d+)\\[PP\\]");
+    private static final Pattern DISC_FROM_EFFECT = Pattern.compile("-(\\d+)\\[FOOD\\]");
     private static final Pattern PP_FROM_TYPE    = Pattern.compile("(\\d+)\\[PP\\]");
 
     private static final String SEP = "│";

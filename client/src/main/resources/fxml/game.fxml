@@ -15,19 +15,19 @@
     <BorderPane fx:id="rootPane">
 
         <top>
-            <HBox fx:id="topPlayersBox" alignment="CENTER" spacing="20">
+            <HBox fx:id="topPlayersBox" alignment="TOP_CENTER" fillHeight="false" spacing="20">
                 <padding><Insets top="14" right="20" bottom="6" left="20"/></padding>
             </HBox>
         </top>
 
         <left>
-            <VBox fx:id="leftPlayersBox" alignment="CENTER" spacing="16">
+            <VBox fx:id="leftPlayersBox" alignment="TOP_CENTER" spacing="16">
                 <padding><Insets top="8" right="6" bottom="8" left="14"/></padding>
             </VBox>
         </left>
 
         <right>
-            <VBox fx:id="rightPlayersBox" alignment="CENTER" spacing="16">
+            <VBox fx:id="rightPlayersBox" alignment="TOP_CENTER" spacing="16">
                 <padding><Insets top="8" right="14" bottom="8" left="6"/></padding>
             </VBox>
         </right>
@@ -41,7 +41,7 @@
                 <HBox fx:id="offerRow"   alignment="CENTER" spacing="14">
                     <Pane fx:id="orderTilePane"/>
                     <HBox fx:id="offerTrack" alignment="CENTER" spacing="0"/>
-                    <Region fx:id="offerRightSpacer"/>
+                    <HBox fx:id="buildingDecks" alignment="CENTER" spacing="14"/>
                 </HBox>
                 <HBox fx:id="bottomRow"  alignment="CENTER" spacing="8"/>
                 <HBox spacing="14" alignment="CENTER">
@@ -62,8 +62,9 @@
         </bottom>
     </BorderPane>
 
+
     <VBox fx:id="logBox" mouseTransparent="false" pickOnBounds="false"
-          alignment="BOTTOM_RIGHT" maxWidth="320" maxHeight="220"
+          alignment="BOTTOM_RIGHT" maxWidth="420" maxHeight="300"
           StackPane.alignment="BOTTOM_RIGHT" spacing="2">
         <padding><Insets top="6" right="0" bottom="0" left="6"/></padding>
     </VBox>

@@ -24,10 +24,6 @@ public class Sustenance extends Event {
         this.lostPP = lostPP;
     }
 
-    public int getLostPP() {
-        return lostPP;
-    }
-
     @Override
     public void insert(Map<CardType, Set<Card>> cards) {
         if(cards.containsKey(CardType.SUSTENANCE)) cards.get(CardType.SUSTENANCE).add(this);

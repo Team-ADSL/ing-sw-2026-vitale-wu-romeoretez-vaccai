@@ -35,8 +35,8 @@ public class GUI extends GameUI {
     private static final String WINDOW_TITLE = "MESOS";
     private static final double WINDOW_W = 1280;
     private static final double WINDOW_H = 800;
-    private static final double MIN_W = 800;
-    private static final double MIN_H = 540;
+    private static final double MIN_W = 900;
+    private static final double MIN_H = 620;
 
     private AppCoordinator coordinator;
     private Stage stage;
@@ -81,8 +81,15 @@ public class GUI extends GameUI {
             });
 
             currentScreen = new ConnectingScreen(coordinator);
-            Scene scene = new Scene(currentScreen.getRoot(), WINDOW_W, WINDOW_H);
+            Scene scene = new Scene(ResponsiveScaler.wrap(currentScreen.getRoot()), WINDOW_W, WINDOW_H);
             installFocusVisibleBehavior(scene);
+            // F11 toggles fullscreen on every screen (scene-level, focus-agnostic).
+            scene.addEventFilter(KeyEvent.KEY_PRESSED, ev -> {
+                if (ev.getCode() == KeyCode.F11) {
+                    stage.setFullScreen(!stage.isFullScreen());
+                    ev.consume();
+                }
+            });
             stage.setScene(scene);
             runOnEnterChain(currentScreen);
             stage.show();
@@ -218,7 +225,7 @@ public class GUI extends GameUI {
         if (scene != null) {
             scene.setRoot(screen.getRoot());
         } else {
-            stage.setScene(new Scene(screen.getRoot(), stage.getWidth(), stage.getHeight()));
+            stage.setScene(new Scene(ResponsiveScaler.wrap(screen.getRoot()), stage.getWidth(), stage.getHeight()));
         }
     }
 }

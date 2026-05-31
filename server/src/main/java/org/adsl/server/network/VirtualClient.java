@@ -170,6 +170,14 @@ public abstract class VirtualClient implements GameObserver, HomeObserver, EndGa
         this.sendResponse(serverResponse);
     }
 
+    /** Sends the full game-log transcript to this client only (used on reconnect). */
+    public void restoreGameLog(List<String> history){
+        ServerResponse serverResponse = new GameLogRestore(history);
+        System.out.println("[SENDING] Game log restore (" + history.size()
+                + " lines) to: " + getClientUsername());
+        this.sendResponse(serverResponse);
+    }
+
     public void sendPing(){
         ServerResponse serverResponse = new ServerPing();
         this.sendResponse(serverResponse);
