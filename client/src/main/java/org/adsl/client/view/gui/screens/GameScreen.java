@@ -76,7 +76,7 @@ public class GameScreen extends GUIScreen {
     private static final double CARD_ASPECT  = 1.484;
     private static final double CARD_MAX_W   = 95.0;
     private static final double CARD_MIN_W   = 48.0;
-    private static final double CARD_GAP     = 12.0;
+    private static final double CARD_GAP     = 6.0;
     // Height-aware sizing: the shared card width is also capped so the two board
     // card rows + the self hand (CARD_VROWS stacked) plus the offer row fit the
     // window height, keeping the decks visible. V_CHROME_EST is the fixed vertical
