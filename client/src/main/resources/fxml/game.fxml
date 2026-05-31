@@ -62,8 +62,9 @@
         </bottom>
     </BorderPane>
 
+
     <VBox fx:id="logBox" mouseTransparent="false" pickOnBounds="false"
-          alignment="BOTTOM_RIGHT" maxWidth="320" maxHeight="220"
+          alignment="BOTTOM_RIGHT" maxWidth="420" maxHeight="300"
           StackPane.alignment="BOTTOM_RIGHT" spacing="2">
         <padding><Insets top="6" right="0" bottom="0" left="6"/></padding>
     </VBox>
