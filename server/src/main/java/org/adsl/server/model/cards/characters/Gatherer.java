@@ -37,6 +37,6 @@ public class Gatherer extends Character {
 
     @Override
     protected String getEffectsLabel() {
-        return CardToken.FOOD_COST + "-" + discount;
+        return CardToken.FOOD_COST + discount;
     }
 }
