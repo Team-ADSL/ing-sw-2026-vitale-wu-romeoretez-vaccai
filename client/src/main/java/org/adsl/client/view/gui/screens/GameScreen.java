@@ -8,6 +8,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
+import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
@@ -77,13 +78,8 @@ public class GameScreen extends GUIScreen {
     private static final double CARD_MAX_W   = 95.0;
     private static final double CARD_MIN_W   = 48.0;
     private static final double CARD_GAP     = 6.0;
-    // Height-aware sizing: the shared card width is also capped so the two board
-    // card rows + the self hand (CARD_VROWS stacked) plus the offer row fit the
-    // window height, keeping the decks visible. V_CHROME_EST is the fixed vertical
-    // overhead (header, hint, error, panel headers, chips, paddings) — tune if the
-    // board leaves too much/too little vertical slack.
-    private static final double V_CHROME_EST = 230.0;
-    private static final double CARD_VROWS    = 3.0;
+    /** Margin (px) kept between the uniformly-scaled board and the window edges. */
+    private static final double BOARD_MARGIN = 24.0;
     private static final double TILE_ASPECT  = 1.65;
     private static final double TILE_MAX_W   = 80.0;
     private static final double TILE_MIN_W   = 42.0;
@@ -220,8 +216,15 @@ public class GameScreen extends GUIScreen {
         applyTheme(fxmlRoot, false);
 
         this.root = fxmlRoot;
-        rootPane.setMinWidth(Region.USE_PREF_SIZE);
-        rootPane.setMinHeight(Region.USE_PREF_SIZE);
+        // Lay the board out at its natural size inside a Group (which sizes its
+        // child to preferred and ignores the parent's sizing), centered in the
+        // root stack. applyBoardScale() then scales that whole block to fit the
+        // window; the aerial background fills the window behind it (not scaled).
+        int boardIdx = rootStack.getChildren().indexOf(rootPane);
+        rootStack.getChildren().remove(rootPane);
+        Group boardGroup = new Group(rootPane);
+        StackPane.setAlignment(boardGroup, Pos.CENTER);
+        rootStack.getChildren().add(boardIdx, boardGroup);
         installBackground();
         // Only the window (rootStack) drives re-renders. We deliberately do NOT
         // listen on centerBox size: its height/width change as a *result* of
@@ -487,17 +490,6 @@ public class GameScreen extends GUIScreen {
 
     // ── Rendering ────────────────────────────────────────────────────────────
 
-    private double availableWidth() {
-        double w = (centerBox != null) ? centerBox.getWidth() : 0;
-        if (w <= 0) {
-            // Fallback before first layout: estimate after side panels.
-            double stack = rootStack.getWidth();
-            if (stack <= 0) stack = 1280;
-            w = stack - 2 * LR_PANEL_W;
-        }
-        return Math.max(200, w - 40);
-    }
-
     private void renderBoard() {
         if (game == null) return;
         headerLabel.setText(String.format("MESOS — Round %d/10  ·  Era %d  ·  Current: %s",
@@ -514,18 +506,11 @@ public class GameScreen extends GUIScreen {
 
         // One card size for EVERY card (top row, bottom row, hands): size the
         // most-constrained single-line card row, so cards never differ in size.
-        int maxRowCards = Math.max(topN, botN);
-        sharedCardW = LayoutMath.cardWidth(availableWidth(), maxRowCards, CARD_GAP, CARD_MIN_W, CARD_MAX_W);
-        double offW = LayoutMath.cardWidth(availableWidth(), offN, 0, TILE_MIN_W, TILE_MAX_W);
-
-        // Cap the shared card size by the available height so the two board card
-        // rows + offer row + self hand all fit vertically (decks never clipped).
-        // Below CARD_MIN_W the ResponsiveScaler zooms the whole board out.
-        double winH = rootStack.getHeight();
-        if (winH <= 0) winH = 800;
-        double offerH = offW * TILE_ASPECT;
-        double cardWByHeight = ((winH - offerH - V_CHROME_EST) / CARD_VROWS) / CARD_ASPECT;
-        sharedCardW = Math.max(CARD_MIN_W, Math.min(sharedCardW, cardWByHeight));
+        // Every card/tile is drawn at a fixed reference size; the whole board is
+        // then scaled as one block (applyBoardScale) to fit the window, so all
+        // elements resize together and nothing is ever clipped.
+        sharedCardW = CARD_MAX_W;
+        double offW = TILE_MAX_W;
 
         renderRow(topRow, top, Row.UPPER, sharedCardW);
         renderRow(bottomRow, bot, Row.LOWER, sharedCardW);
@@ -537,6 +522,31 @@ public class GameScreen extends GUIScreen {
         renderOpponentPanels();
 
         renderHintAndConfirm();
+
+        // Defer until the new content has been laid out so prefWidth/prefHeight
+        // reflect it, then scale the whole board to fit the window.
+        Platform.runLater(this::applyBoardScale);
+    }
+
+    /**
+     * Scales the whole board ({@link #rootPane}) as one block so it fits the
+     * window minus {@link #BOARD_MARGIN}, keeping its aspect ratio. Capped at 1.0
+     * (never enlarged past the reference layout) and driven by the tighter of the
+     * width/height fits — so every element resizes together and the decks pinned
+     * top and bottom are never pushed off-screen. The background fills the window
+     * behind it and is not scaled.
+     */
+    private void applyBoardScale() {
+        if (rootStack == null || rootPane == null) return;
+        double availW = rootStack.getWidth() - 2 * BOARD_MARGIN;
+        double availH = rootStack.getHeight() - 2 * BOARD_MARGIN;
+        if (availW <= 0 || availH <= 0) return;
+        double prefW = rootPane.prefWidth(-1);
+        double prefH = rootPane.prefHeight(-1);
+        if (prefW <= 0 || prefH <= 0) return;
+        double s = Math.min(1.0, Math.min(availW / prefW, availH / prefH));
+        rootPane.setScaleX(s);
+        rootPane.setScaleY(s);
     }
 
     // ── Self panel (bottom) ──────────────────────────────────────────────────
