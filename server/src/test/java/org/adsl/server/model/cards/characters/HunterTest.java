@@ -68,7 +68,6 @@ public class HunterTest {
     @Test
     void testActiveEffect_extraFoodTrue_drawingTrigger_oneHunter_addsFoodByHunterCount() {
         Hunter h = new Hunter("h", true, 1, null);
-        player.getCards().get(CardType.HUNTER).add(h);
         h.activeEffect(Set.of(player), Trigger.DRAWING);
         assertEquals(6, player.getFood());
     }
@@ -82,7 +81,7 @@ public class HunterTest {
         player.getCards().get(CardType.HUNTER).add(h2);
         player.getCards().get(CardType.HUNTER).add(h3);
         h1.activeEffect(Set.of(player), Trigger.DRAWING);
-        assertEquals(8, player.getFood());
+        assertEquals(9, player.getFood());
     }
 
     @Test

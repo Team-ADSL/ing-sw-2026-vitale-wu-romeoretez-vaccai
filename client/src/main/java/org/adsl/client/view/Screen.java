@@ -92,4 +92,9 @@ public abstract class Screen<S extends Screen<S>> implements EventVisitor<S> {
     public S visit(EventsTriggeredEvent e) {
         return getThis();
     }
+
+    @Override
+    public S visit(GameLogRestoreEvent e) {
+        return getThis();
+    }
 }

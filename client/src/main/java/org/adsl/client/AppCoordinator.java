@@ -200,6 +200,11 @@ public class AppCoordinator implements ResponseVisitor{
         gameUI.onEventTriggered(response.getEventTitle(), response.getLogMessage());
     }
 
+    @Override
+    public void visit(GameLogRestore response) throws InvalidResponseException {
+        gameUI.onGameLogRestore(response.getHistory());
+    }
+
     public void reconnect() throws Exception {
         stopPingScheduler();
         try { serverConnection.disconnect(); } catch (Exception ignored) {}
