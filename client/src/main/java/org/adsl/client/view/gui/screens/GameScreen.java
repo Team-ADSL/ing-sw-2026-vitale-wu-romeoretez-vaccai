@@ -77,6 +77,13 @@ public class GameScreen extends GUIScreen {
     private static final double CARD_MAX_W   = 95.0;
     private static final double CARD_MIN_W   = 48.0;
     private static final double CARD_GAP     = 12.0;
+    // Height-aware sizing: the shared card width is also capped so the two board
+    // card rows + the self hand (CARD_VROWS stacked) plus the offer row fit the
+    // window height, keeping the decks visible. V_CHROME_EST is the fixed vertical
+    // overhead (header, hint, error, panel headers, chips, paddings) — tune if the
+    // board leaves too much/too little vertical slack.
+    private static final double V_CHROME_EST = 230.0;
+    private static final double CARD_VROWS    = 3.0;
     private static final double TILE_ASPECT  = 1.65;
     private static final double TILE_MAX_W   = 80.0;
     private static final double TILE_MIN_W   = 42.0;
@@ -510,6 +517,15 @@ public class GameScreen extends GUIScreen {
         int maxRowCards = Math.max(topN, botN);
         sharedCardW = LayoutMath.cardWidth(availableWidth(), maxRowCards, CARD_GAP, CARD_MIN_W, CARD_MAX_W);
         double offW = LayoutMath.cardWidth(availableWidth(), offN, 0, TILE_MIN_W, TILE_MAX_W);
+
+        // Cap the shared card size by the available height so the two board card
+        // rows + offer row + self hand all fit vertically (decks never clipped).
+        // Below CARD_MIN_W the ResponsiveScaler zooms the whole board out.
+        double winH = rootStack.getHeight();
+        if (winH <= 0) winH = 800;
+        double offerH = offW * TILE_ASPECT;
+        double cardWByHeight = ((winH - offerH - V_CHROME_EST) / CARD_VROWS) / CARD_ASPECT;
+        sharedCardW = Math.max(CARD_MIN_W, Math.min(sharedCardW, cardWByHeight));
 
         renderRow(topRow, top, Row.UPPER, sharedCardW);
         renderRow(bottomRow, bot, Row.LOWER, sharedCardW);
