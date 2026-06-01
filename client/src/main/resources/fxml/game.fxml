@@ -39,6 +39,7 @@
                 <Label fx:id="phaseLabel"  style="-fx-font-size: 10px; -fx-text-fill: #F2B035;"/>
                 <HBox fx:id="topRow"     alignment="CENTER" spacing="8"/>
                 <HBox fx:id="offerRow"   alignment="CENTER" spacing="14">
+                    <Pane fx:id="deckPane"/>
                     <Pane fx:id="orderTilePane"/>
                     <HBox fx:id="offerTrack" alignment="CENTER" spacing="0"/>
                     <HBox fx:id="buildingDecks" alignment="CENTER" spacing="14"/>

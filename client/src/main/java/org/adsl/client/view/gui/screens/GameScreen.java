@@ -160,6 +160,7 @@ public class GameScreen extends GUIScreen {
     @FXML private Label      phaseLabel;
     @FXML private HBox       topRow;
     @FXML private HBox       offerRow;
+    @FXML private Pane       deckPane;
     @FXML private Pane       orderTilePane;
     @FXML private HBox       offerTrack;
     @FXML private HBox       buildingDecks;
@@ -527,6 +528,7 @@ public class GameScreen extends GUIScreen {
         renderRow(topRow, top, Row.UPPER, sharedCardW);
         renderRow(bottomRow, bot, Row.LOWER, sharedCardW);
         renderOfferTrack(offerTrack, off, offW);
+        renderDeckCard(offW * TILE_ASPECT);
         renderOrderTile(offW * TILE_ASPECT);
         renderBuildingDecks(offW * TILE_ASPECT);
 
@@ -1369,6 +1371,36 @@ public class GameScreen extends GUIScreen {
             deckCell.setEffect(deckShadow());
             buildingDecks.getChildren().add(deckCell);
         }
+    }
+
+    private void renderDeckCard(double tileH) {
+        if (deckPane == null) return;
+        deckPane.getChildren().clear();
+        boolean empty = game == null || game.board() == null || game.board().isDeckEmpty();
+        int era = (game != null) ? game.era() : 0;
+        if (empty || era < 1 || era > 3 || tileH <= 0) {
+            deckPane.setMinSize(0, 0);
+            deckPane.setPrefSize(0, 0);
+            deckPane.setMaxSize(0, 0);
+            return;
+        }
+        double deckH = tileH;
+        double deckW = deckH / CARD_ASPECT;
+        deckPane.setMinSize(deckW, deckH);
+        deckPane.setPrefSize(deckW, deckH);
+        deckPane.setMaxSize(deckW, deckH);
+        ImageView back = safeImageView(() -> ImageCatalog.deckCardBack(era));
+        if (back == null) return;
+        back.setFitWidth(deckW);
+        back.setFitHeight(deckH);
+        back.setPreserveRatio(false);
+        Rectangle clip = new Rectangle(deckW, deckH);
+        clip.setArcWidth(deckW * 0.12);
+        clip.setArcHeight(deckW * 0.12);
+        back.setClip(clip);
+        StackPane deckCell = new StackPane(back);
+        deckCell.setEffect(deckShadow());
+        deckPane.getChildren().add(deckCell);
     }
 
     /** Soft offset shadow that makes a single card-back read as a small pile. */
