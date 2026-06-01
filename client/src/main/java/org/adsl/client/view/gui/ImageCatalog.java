@@ -121,6 +121,13 @@ public final class ImageCatalog {
         return load("/assets/order_tiles/order_tile_" + numPlayers + "p.png");
     }
 
+    // ── Main deck card back ───────────────────────────────────────────────────
+
+    /** Card back for the main draw pile of the given era (1–3). File: {@code cards_era_<era>.png}. */
+    public static Image deckCardBack(int era) {
+        return load("/assets/cards_back_cropped/cards_era_" + era + ".png");
+    }
+
     // ── PP / Food chip backgrounds ──────────────────────────────────────────
 
     public static Image foodBack()   { return load("/assets/fustelle_back/food_back.png"); }
