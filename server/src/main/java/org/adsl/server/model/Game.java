@@ -141,17 +141,6 @@ public class Game implements Serializable {
     public List<String> getGameLog(){
         return gameLog == null ? new ArrayList<>() : new ArrayList<>(gameLog);
     }
-    /**
-     * Broadcasts end-of-game data to all registered {@link EndGameObserver}s.
-     *
-     * @param results per-player final scores (nickname, pp, food); {@code null}
-     *                if the game ended before it started
-     * @param records all-time leaderboard from the database; empty when no DBMS
-     *                is available
-     */
-    public void sendEndGameResults(List<MatchResult> results, List<DBRecord> records){
-        for(EndGameObserver o : endGameObservers) o.notifyEndGame(gameId, results, records);
-    }
 
     /**
      * Broadcasts end-of-game data with an optional log message.
