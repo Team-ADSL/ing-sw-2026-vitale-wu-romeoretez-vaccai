@@ -65,13 +65,6 @@ public class FakeGame extends Game {
     }
 
     @Override
-    public void sendEndGameResults(List<MatchResult> results, List<DBRecord> records) {
-        this.endGameResultsSent = true;
-        this.capturedRecords = records;
-        this.capturedResults = results;
-    }
-
-    @Override
     public void sendEndGameResults(List<MatchResult> results, List<DBRecord> records, String message) {
         this.endGameResultsSent = true;
         this.capturedRecords = records;
