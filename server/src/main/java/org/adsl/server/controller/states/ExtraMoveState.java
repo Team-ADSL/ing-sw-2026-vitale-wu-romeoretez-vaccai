@@ -76,9 +76,9 @@ public class ExtraMoveState extends ControllerState {
     Card selectedCard = selectedRow.pickCardAt(move.rowIndex());
     String pickName = selectedCard.getClass().getSimpleName();
 
+    selectedCard.activeEffect(Set.of(p), Trigger.DRAWING);
     selectedCard.insert(p.getCards());
     p.changeFood(-selectedCard.getCost());
-    selectedCard.activeEffect(Set.of(p), Trigger.DRAWING);
     p.setLastPick(selectedCard);
 
     Map<Player, int[]> before = snapshotFoodPp(Set.of(p));
