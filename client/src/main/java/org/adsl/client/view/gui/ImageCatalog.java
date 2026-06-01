@@ -5,7 +5,9 @@ import javafx.scene.text.Font;
 import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Totem;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -121,9 +123,32 @@ public final class ImageCatalog {
         return load("/assets/order_tiles/order_tile_" + numPlayers + "p.png");
     }
 
+    // ── Main deck card back ───────────────────────────────────────────────────
+
+    /** Card back for the main draw pile of the given era (1–3). File: {@code cards_era_<era>.png}. */
+    public static Image deckCardBack(int era) {
+        return load("/assets/cards_back_cropped/cards_era_" + era + ".png");
+    }
+
     // ── PP / Food chip backgrounds ──────────────────────────────────────────
 
     public static Image foodBack()   { return load("/assets/fustelle_back/food_back.png"); }
     public static Image ppEarnBack() { return load("/assets/fustelle_front/pp_earn_back.png"); }
     public static Image ppLossBack() { return load("/assets/fustelle_back/pp_loss_back.png"); }
+
+    // ── Rules pages ──────────────────────────────────────────────────────────
+
+    /** Loads all rules pages from {@code /assets/rules/page_01.png}, {@code page_02.png}, etc.
+     *  Stops at the first missing file. Returns an empty list if none found. */
+    public static List<Image> rulesPages() {
+        List<Image> pages = new ArrayList<>();
+        for (int i = 1; i <= 99; i++) {
+            String path = "/assets/rules/mesos_rules_" + i + ".png";
+            var stream = ImageCatalog.class.getResourceAsStream(path);
+            if (stream == null) break;
+            Image img = CACHE.computeIfAbsent(path, p -> new Image(stream));
+            pages.add(img);
+        }
+        return pages;
+    }
 }
