@@ -14,6 +14,10 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
+import javafx.scene.text.TextFlow;
 import javafx.scene.effect.ColorAdjust;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
@@ -160,6 +164,7 @@ public class GameScreen extends GUIScreen {
     @FXML private Label      phaseLabel;
     @FXML private HBox       topRow;
     @FXML private HBox       offerRow;
+    @FXML private Pane       deckPane;
     @FXML private Pane       orderTilePane;
     @FXML private HBox       offerTrack;
     @FXML private HBox       buildingDecks;
@@ -168,7 +173,7 @@ public class GameScreen extends GUIScreen {
     @FXML private VBox       leftPlayersBox;
     @FXML private VBox       rightPlayersBox;
     @FXML private HBox       selfPanelBox;
-    @FXML private Label      hintLabel;
+    @FXML private TextFlow   hintLabel;
     @FXML private Button     confirmButton;
     @FXML private Label      errorLabel;
     @FXML private VBox       logBox;
@@ -527,6 +532,7 @@ public class GameScreen extends GUIScreen {
         renderRow(topRow, top, Row.UPPER, sharedCardW);
         renderRow(bottomRow, bot, Row.LOWER, sharedCardW);
         renderOfferTrack(offerTrack, off, offW);
+        renderDeckCard(offW * TILE_ASPECT);
         renderOrderTile(offW * TILE_ASPECT);
         renderBuildingDecks(offW * TILE_ASPECT);
 
@@ -1300,19 +1306,25 @@ public class GameScreen extends GUIScreen {
         double totemW = tileW * ORDER_TOTEM_W_FRAC;
         double totemH = totemW * (TOTEM3D_H / TOTEM3D_W);
 
-        // Draw top-to-bottom so lower (nearer) totems overlap the ones behind.
+        double rectW = totemW * 1.25;
+        double rectH = totemW * 0.72;
+        double arc   = totemW * 0.18;
+
         for (int i = 0; i < cells.size() && i < ys.length; i++) {
             Totem totem = cells.get(i).totem();
             if (totem == null) continue;
-            ImageView t = safeImageView(() -> ImageCatalog.totem3D(totem));
-            if (t == null) continue;
-            t.setFitWidth(totemW);
-            t.setPreserveRatio(true);
             double cx = ORDER_CELL_X * tileW;
             double cy = ys[i] * tileH;
-            t.setLayoutX(cx - TOTEM_ANCHOR_X * totemW);
-            t.setLayoutY(cy - TOTEM_ANCHOR_Y * totemH);
-            orderTilePane.getChildren().add(t);
+            Rectangle rect = new Rectangle(rectW, rectH);
+            rect.setArcWidth(arc);
+            rect.setArcHeight(arc);
+            rect.setFill(totemFill(totem));
+            rect.setStroke(Color.web("#000000", 0.75));
+            rect.setStrokeWidth(1.0);
+            rect.setEffect(new DropShadow(5, 0, 2, Color.web("#000000", 0.55)));
+            rect.setLayoutX(cx - rectW / 2.0);
+            rect.setLayoutY(cy - rectH / 2.0);
+            orderTilePane.getChildren().add(rect);
         }
     }
 
@@ -1371,6 +1383,36 @@ public class GameScreen extends GUIScreen {
         }
     }
 
+    private void renderDeckCard(double tileH) {
+        if (deckPane == null) return;
+        deckPane.getChildren().clear();
+        boolean empty = game == null || game.board() == null || game.board().isDeckEmpty();
+        int era = (game != null) ? game.era() : 0;
+        if (empty || era < 1 || era > 3 || tileH <= 0) {
+            deckPane.setMinSize(0, 0);
+            deckPane.setPrefSize(0, 0);
+            deckPane.setMaxSize(0, 0);
+            return;
+        }
+        double deckH = tileH;
+        double deckW = deckH / CARD_ASPECT;
+        deckPane.setMinSize(deckW, deckH);
+        deckPane.setPrefSize(deckW, deckH);
+        deckPane.setMaxSize(deckW, deckH);
+        ImageView back = safeImageView(() -> ImageCatalog.deckCardBack(era));
+        if (back == null) return;
+        back.setFitWidth(deckW);
+        back.setFitHeight(deckH);
+        back.setPreserveRatio(false);
+        Rectangle clip = new Rectangle(deckW, deckH);
+        clip.setArcWidth(deckW * 0.12);
+        clip.setArcHeight(deckW * 0.12);
+        back.setClip(clip);
+        StackPane deckCell = new StackPane(back);
+        deckCell.setEffect(deckShadow());
+        deckPane.getChildren().add(deckCell);
+    }
+
     /** Soft offset shadow that makes a single card-back read as a small pile. */
     private static DropShadow deckShadow() {
         DropShadow s = new DropShadow(6, 3, 3, Color.rgb(0, 0, 0, 0.55));
@@ -1408,33 +1450,84 @@ public class GameScreen extends GUIScreen {
     private void renderHintAndConfirm() {
         Phase phase = game.phase();
         if (waitingServer) {
-            hintLabel.setText("Waiting for server...");
+            setHint("Waiting for server...");
             confirmButton.setDisable(true);
             unmarkNav(confirmButton);
             return;
         }
         if (!isMyTurn()) {
-            hintLabel.setText(waitingHint());
+            setHint(waitingHint());
             confirmButton.setDisable(true);
             unmarkNav(confirmButton);
             return;
         }
         if (phase == Phase.TOTEM_PLACEMENT) {
-            hintLabel.setText("Click an offer tile to place your totem.");
+            setHint("Click an offer tile to place your totem.");
             confirmButton.setDisable(true);
             unmarkNav(confirmButton);
         } else if (phase == Phase.ACTION_EXECUTION || phase == Phase.EXTRA_MOVE) {
             int required = upperCount + lowerCount;
-            hintLabel.setText(String.format(
-                    "Pick cards (top×%d, bottom×%d)  —  Selected: %d / %d",
-                    upperCount, lowerCount, selectedMoves.size(), required));
+            long pickedUpper = selectedMoves.stream().filter(m -> m.row() == Row.UPPER).count();
+            long pickedLower = selectedMoves.stream().filter(m -> m.row() == Row.LOWER).count();
+            setMoveHint(upperCount, lowerCount, (int) pickedUpper, (int) pickedLower, selectedMoves.size(), required);
             confirmButton.setDisable(false);
             markNav(confirmButton, "CONFIRM", "BUTTON", this::onSendMove);
         } else {
-            hintLabel.setText(waitingHint());
+            setHint(waitingHint());
             confirmButton.setDisable(true);
             unmarkNav(confirmButton);
         }
+    }
+
+    private void setHint(String text) {
+        Text t = new Text(text);
+        t.setFill(Color.web("#FDF3D3"));
+        t.setFont(Font.font(13));
+        hintLabel.getChildren().setAll(t);
+    }
+
+    private void setMoveHint(int upper, int lower, int pickedUpper, int pickedLower, int selected, int required) {
+        List<Text> nodes = new ArrayList<>();
+
+        boolean upActive = upper > 0 && pickedUpper < upper;
+        boolean downActive = lower > 0 && pickedLower < lower;
+
+        Color orange = Color.web("#F2B035");
+        Color white  = Color.web("#FDF3D3");
+        Color dim    = Color.web("#FDF3D3", 0.35);
+
+        Text upArrow = new Text("⬆");
+        upArrow.setFont(Font.font(22));
+        upArrow.setFill(upActive ? orange : (upper == 0 ? dim : white));
+
+        Text upCount = new Text(" " + (upper - pickedUpper) + "   ");
+        upCount.setFont(Font.font(15));
+        upCount.setFill(upActive ? orange : (upper == 0 ? dim : white));
+
+        Text downArrow = new Text("⬇");
+        downArrow.setFont(Font.font(22));
+        downArrow.setFill(downActive ? orange : (lower == 0 ? dim : white));
+
+        Text downCount = new Text(" " + (lower - pickedLower) + "   ");
+        downCount.setFont(Font.font(15));
+        downCount.setFill(downActive ? orange : (lower == 0 ? dim : white));
+
+        Text sep = new Text("│   ");
+        sep.setFont(Font.font(13));
+        sep.setFill(Color.web("#FDF3D3", 0.45));
+
+        Text selText = new Text(selected + " / " + required + " selected");
+        selText.setFont(Font.font(13));
+        selText.setFill(white);
+
+        nodes.add(upArrow);
+        nodes.add(upCount);
+        nodes.add(downArrow);
+        nodes.add(downCount);
+        nodes.add(sep);
+        nodes.add(selText);
+        hintLabel.getChildren().setAll(nodes);
+        hintLabel.setTextAlignment(TextAlignment.CENTER);
     }
 
     private String waitingHint() {
@@ -1449,6 +1542,16 @@ public class GameScreen extends GUIScreen {
             case END_GAME -> "Game over.";
             case null -> "Waiting...";
             default -> "Waiting...";
+        };
+    }
+
+    private static Color totemFill(Totem totem) {
+        return switch (totem) {
+            case RED    -> Color.rgb(170, 35,  35);
+            case WHITE  -> Color.rgb(200, 200, 195);
+            case BLACK  -> Color.rgb(55,  0,   90);
+            case BLUE   -> Color.rgb(45,  95,  175);
+            case YELLOW -> Color.rgb(185, 155, 30);
         };
     }
 
