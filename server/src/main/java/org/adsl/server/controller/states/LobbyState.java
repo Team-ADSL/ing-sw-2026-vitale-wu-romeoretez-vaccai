@@ -33,23 +33,23 @@ public class LobbyState extends ControllerState {
     public void visit(EnterGameRequest req, VirtualClient virtualClient) throws ServerException {
         if(getGame().getPlayers().size() == getGame().getNumPlayer()) {
             throw new ServerException("[LOBBY] The lobby is full");
-        } else {
-            if(virtualClient.getClientUsername().isEmpty()){
-                throw new ServerException("[LOBBY] Virtual client has no username associated.");
-            }
-            String newUser = virtualClient.getClientUsername().get();
-            boolean isDuplicate = getGame().getPlayers().stream()
-                    .anyMatch(p -> p.getName().equals(newUser));
-            if(isDuplicate){
-                throw new ServerException("[LOBBY] Client already connected.");
-            }
-            getGame().getPlayers().add(new Player(virtualClient.getClientUsername().get()));
-            getGame().addVirtualClient(virtualClient);
-            virtualClient.setGameId(getGame().getGameId());
-            String log = "[LOBBY] Player " + virtualClient.getClientUsername().get() + " connected.";
-            System.out.println(log);
-            getGame().sendUpdateLobby(log);
         }
+        if(virtualClient.getClientUsername().isEmpty()){
+            throw new ServerException("[LOBBY] Virtual client has no username associated.");
+        }
+        String newUser = virtualClient.getClientUsername().get();
+        boolean isDuplicate = getGame().getPlayers().stream()
+                .anyMatch(p -> p.getName().equals(newUser));
+        if(isDuplicate){
+            throw new ServerException("[LOBBY] Client already connected.");
+        }
+        getGame().getPlayers().add(new Player(virtualClient.getClientUsername().get()));
+        getGame().addVirtualClient(virtualClient);
+        virtualClient.setGameId(getGame().getGameId());
+
+        String log = "[LOBBY] Player " + virtualClient.getClientUsername().get() + " connected.";
+        System.out.println(log);
+        getGame().sendUpdateLobby(log);
         setNextState(calcNextState());
     }
 
