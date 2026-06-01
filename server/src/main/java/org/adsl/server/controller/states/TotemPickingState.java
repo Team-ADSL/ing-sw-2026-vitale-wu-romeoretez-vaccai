@@ -74,6 +74,7 @@ public class TotemPickingState extends ControllerState {
         reqPlayer.setColor(req.getTotem());
         totemToPick.remove(req.getTotem());
         numPicked++;
+
         String log = "[TOTEM PICKING] " + virtualClient.getClientUsername().get() + " has picked "
                 + req.getTotem();
         System.out.println(log);
