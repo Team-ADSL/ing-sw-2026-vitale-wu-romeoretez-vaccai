@@ -11,9 +11,13 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Tooltip;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.adsl.client.AppCoordinator;
@@ -52,6 +56,9 @@ public class HomeScreen extends GUIScreen {
     private Map<Integer, List<String>> gamePlayers;
     private Map<Integer, Integer> gameCapacity;
     private FloatingLog floatingLog;
+    private List<Image> rulesPages;
+    private int rulesPageIndex = 0;
+    private StackPane rulesOverlay;
 
     public HomeScreen(AppCoordinator coordinator, String username, List<Integer> activeGames) {
         this(coordinator, username, activeGames, Collections.emptyMap(), Collections.emptyMap());
@@ -76,6 +83,7 @@ public class HomeScreen extends GUIScreen {
         decorateCreateButtons();
         setupButtonNav();
         applyTheme(this.root);
+        setupRulesButton();
 
         floatingLog = new FloatingLog("Home log");
         logBox.getChildren().setAll(floatingLog.getFloatingNode());
@@ -240,6 +248,90 @@ public class HomeScreen extends GUIScreen {
         b.setGraphic(icon);
         b.setContentDisplay(ContentDisplay.RIGHT);
         b.setGraphicTextGap(3);
+    }
+
+    private static void wireHover(Button b) {
+        b.setOnMouseEntered(_ -> { b.setScaleX(1.15); b.setScaleY(1.15); });
+        b.setOnMouseExited(_  -> { b.setScaleX(1.0);  b.setScaleY(1.0);  });
+    }
+
+    private void setupRulesButton() {
+        Button btn = new Button("?");
+        btn.setStyle(
+            "-fx-font-size: 18px; -fx-font-weight: bold;" +
+            "-fx-min-width: 40px; -fx-min-height: 40px;" +
+            "-fx-max-width: 40px; -fx-max-height: 40px;" +
+            "-fx-background-radius: 20; -fx-padding: 0;"
+        );
+        btn.setOnAction(_ -> openRulesOverlay());
+        wireHover(btn);
+        StackPane.setAlignment(btn, Pos.BOTTOM_LEFT);
+        StackPane.setMargin(btn, new Insets(0, 0, 14, 14));
+        rootStack.getChildren().add(btn);
+    }
+
+    private void openRulesOverlay() {
+        if (rulesPages == null) rulesPages = ImageCatalog.rulesPages();
+        if (rulesPages.isEmpty()) return;
+
+        rulesPageIndex = 0;
+        rulesOverlay = new StackPane();
+        rulesOverlay.setStyle("-fx-background-color: rgba(0,0,0,0.88);");
+
+        Rectangle clip = new Rectangle();
+        clip.widthProperty().bind(rulesOverlay.widthProperty());
+        clip.heightProperty().bind(rulesOverlay.heightProperty());
+        rulesOverlay.setClip(clip);
+
+        ImageView iv = new ImageView(rulesPages.get(0));
+        iv.setPreserveRatio(true);
+        iv.fitWidthProperty().bind(rulesOverlay.widthProperty().multiply(0.88));
+        iv.fitHeightProperty().bind(rulesOverlay.heightProperty().multiply(0.88));
+
+        Button prev = new Button("◀");
+        Button next = new Button("▶");
+        Button close = new Button("✕");
+        close.setStyle("-fx-font-size: 14px; -fx-min-width: 34px; -fx-min-height: 34px;" +
+                       "-fx-max-width: 34px; -fx-max-height: 34px; -fx-background-radius: 17; -fx-padding: 0;");
+
+        Label counter = new Label("1 / " + rulesPages.size());
+        counter.setStyle("-fx-text-fill: #FDF3D3; -fx-font-size: 14px;");
+
+        prev.setOnAction(_ -> {
+            if (rulesPageIndex > 0) {
+                rulesPageIndex--;
+                iv.setImage(rulesPages.get(rulesPageIndex));
+                counter.setText((rulesPageIndex + 1) + " / " + rulesPages.size());
+            }
+        });
+        next.setOnAction(_ -> {
+            if (rulesPageIndex < rulesPages.size() - 1) {
+                rulesPageIndex++;
+                iv.setImage(rulesPages.get(rulesPageIndex));
+                counter.setText((rulesPageIndex + 1) + " / " + rulesPages.size());
+            }
+        });
+        close.setOnAction(_ -> rootStack.getChildren().remove(rulesOverlay));
+        rulesOverlay.setOnMouseClicked(e -> {
+            if (e.getTarget() == rulesOverlay) rootStack.getChildren().remove(rulesOverlay);
+        });
+
+        wireHover(prev);
+        wireHover(next);
+        wireHover(close);
+
+        HBox nav = new HBox(16, prev, counter, next);
+        nav.setAlignment(Pos.CENTER);
+
+        VBox content = new VBox(12, iv, nav);
+        content.setAlignment(Pos.CENTER);
+        content.setPickOnBounds(false);
+
+        StackPane.setAlignment(close, Pos.TOP_RIGHT);
+        StackPane.setMargin(close, new Insets(12, 12, 0, 0));
+
+        rulesOverlay.getChildren().addAll(content, close);
+        rootStack.getChildren().add(rulesOverlay);
     }
 
     @FXML private void onCreate2() { create(2); }
