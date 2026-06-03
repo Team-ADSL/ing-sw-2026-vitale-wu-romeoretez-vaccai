@@ -188,6 +188,10 @@ public class GameScreen extends GUIScreen {
     private int upperCount = 0;
     private int lowerCount = 0;
     private boolean waitingServer = false;
+    /** Identity of the picking turn the current selection belongs to; when it
+     *  changes (new player or phase) the pending selection is dropped so a past
+     *  turn's picks never bleed into a new ACTION_EXECUTION / EXTRA_MOVE turn. */
+    private String selectionTurnToken = "none";
     private int selfHandPage = 0;
     /** The single card width shared by every card row and hand, set each render
      *  by {@link #renderBoard()} from the most-constrained board row. */
@@ -440,9 +444,7 @@ public class GameScreen extends GUIScreen {
         hideEventOverlay();
         this.game = e.game();
         waitingServer = false;
-        if (game.phase() != Phase.ACTION_EXECUTION && game.phase() != Phase.EXTRA_MOVE) {
-            selectedMoves.clear();
-        }
+        syncSelectionToTurn();
         resolveMoveCounts();
         renderBoard();
         if (e.message() != null && !e.message().isBlank()) appendChat(e.message());
@@ -494,12 +496,19 @@ public class GameScreen extends GUIScreen {
             return;
         }
         Move m = new Move(idx, row);
-        boolean added = selectedMoves.add(m);
-        if (!added) selectedMoves.remove(m);
-        // Update only the clicked card's glow — no full board re-render, so the
-        // board never rescales or shifts just because the hint text changes.
-        pane.setEffect(added ? selectedGlow() : null);
-        pane.getProperties().put("navSelected", added);
+        if (game.phase() == Phase.EXTRA_MOVE) {
+            if (row != Row.UPPER) {
+                errorLabel.setText("Extra move: pick from the top row only.");
+                return;
+            }
+            boolean wasSelected = selectedMoves.contains(m);
+            selectedMoves.clear();
+            if (!wasSelected) selectedMoves.add(m);
+        } else if (!selectedMoves.add(m)) {
+            selectedMoves.remove(m);
+        }
+        pane.setEffect(selectedMoves.contains(m) ? selectedGlow() : null);
+        pane.getProperties().put("navSelected", selectedMoves.contains(m));
         errorLabel.setText("");
         renderHintAndConfirm();
         Platform.runLater(this::refreshNav);
@@ -538,10 +547,41 @@ public class GameScreen extends GUIScreen {
                 && (game.phase() == Phase.ACTION_EXECUTION || game.phase() == Phase.EXTRA_MOVE);
     }
 
+    /** During EXTRA_MOVE only the top row is pickable; otherwise any row when picking. */
+    private boolean canPickRow(Row row) {
+        if (!canPickCards()) return false;
+        return game.phase() != Phase.EXTRA_MOVE || row == Row.UPPER;
+    }
+
+    /** Drops the pending selection when the picking turn changes (see {@link #selectionTurnToken}). */
+    private void syncSelectionToTurn() {
+        String token = pickingTurnToken();
+        if (!token.equals(selectionTurnToken)) {
+            selectedMoves.clear();
+            selectionTurnToken = token;
+        }
+    }
+
+    /** A stable id for the current picking turn ({@code phase:totem}), or {@code "none"}
+     *  outside the card-picking phases. */
+    private String pickingTurnToken() {
+        if (game == null) return "none";
+        Phase ph = game.phase();
+        if (ph != Phase.ACTION_EXECUTION && ph != Phase.EXTRA_MOVE) return "none";
+        Totem cur = game.currentPlayerTotem();
+        return ph.name() + ":" + (cur == null ? "?" : cur.name());
+    }
+
     private void resolveMoveCounts() {
         upperCount = 0;
         lowerCount = 0;
         if (game == null) return;
+        if (game.phase() == Phase.EXTRA_MOVE) {
+            // Extra move grants one optional pick from the top row only.
+            upperCount = 1;
+            lowerCount = 0;
+            return;
+        }
         Totem current = game.currentPlayerTotem();
         if (current == null || game.board() == null) return;
         for (OfferTileDTO tile : game.board().offerTrack()) {
@@ -1230,7 +1270,7 @@ public class GameScreen extends GUIScreen {
         container.getChildren().clear();
         container.setSpacing(CARD_GAP);
         if (cards == null) return;
-        boolean clickable = canPickCards();
+        boolean clickable = canPickRow(row);
         int idx = 0;
         for (CardDTO c : cards) {
             if (c == null) { idx++; continue; }
@@ -1757,13 +1797,21 @@ public class GameScreen extends GUIScreen {
     private boolean handleNavKey(KeyCode code) {
         if (navIndex.isEmpty()) return false;
 
-        if (code == KeyCode.ENTER || code == KeyCode.SPACE) {
-            if (navFocusedNode != null) {
-                Runnable action = (Runnable) navFocusedNode.getProperties().get("navAction");
-                if (action != null) action.run();
+        // SPACE selects/deselects the focused card (or activates the focused tile /
+        // page button) — mirrors the TUI's select key.
+        if (code == KeyCode.SPACE) {
+            return runFocusedAction();
+        }
+
+        // ENTER confirms the whole selection when a confirm action is available;
+        // otherwise it activates the focused node (e.g. placing a totem on a tile).
+        if (code == KeyCode.ENTER) {
+            Node confirm = navIndex.get("CONFIRM");
+            if (confirm != null && !confirm.isDisabled()) {
+                onSendMove();
                 return true;
             }
-            return false;
+            return runFocusedAction();
         }
 
         double dx = 0; double dy = 0;
@@ -1790,6 +1838,17 @@ public class GameScreen extends GUIScreen {
             setNavHighlight(navFocusedNode, true);
         }
         return true;
+    }
+
+    /** Runs the navAction of the currently focused node, if any. */
+    private boolean runFocusedAction() {
+        if (navFocusedNode == null) return false;
+        Runnable action = (Runnable) navFocusedNode.getProperties().get("navAction");
+        if (action != null) {
+            action.run();
+            return true;
+        }
+        return false;
     }
 
     private Node getLeftmostNode() {
