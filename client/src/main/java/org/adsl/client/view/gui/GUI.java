@@ -83,6 +83,7 @@ public class GUI extends GameUI {
             currentScreen = new ConnectingScreen(coordinator);
             Scene scene = new Scene(ResponsiveScaler.wrap(currentScreen.getRoot()), WINDOW_W, WINDOW_H);
             installFocusVisibleBehavior(scene);
+            installEnterActivatesButton(scene);
             // F11 toggles fullscreen on every screen (scene-level, focus-agnostic).
             scene.addEventFilter(KeyEvent.KEY_PRESSED, ev -> {
                 if (ev.getCode() == KeyCode.F11) {
@@ -137,6 +138,31 @@ public class GUI extends GameUI {
         }, "gui-force-exit");
         killer.setDaemon(true);
         killer.start();
+    }
+
+    // ── Keyboard activation (ENTER presses the focused button) ───────────────
+
+    /**
+     * Makes ENTER activate the keyboard-focused button on every screen, so the
+     * arrow-navigation model is consistent: arrows move the highlight, ENTER
+     * presses it. Registered as a bubbling handler so it runs <em>after</em> any
+     * screen-level key handler — screens that give ENTER a dedicated meaning
+     * (totem/card confirm in GameScreen and TotemPickingScreen, the games list in
+     * HomeScreen, the per-button handlers in LoginScreen) consume the event
+     * first, so this fires only where ENTER would otherwise be dead (e.g. the
+     * Lobby start/leave buttons, the Home create/join buttons). In the
+     * select-then-confirm screens the focus owner is the root pane, never a
+     * button, so this never collides with SPACE-selects / ENTER-confirms.
+     */
+    private void installEnterActivatesButton(Scene scene) {
+        scene.addEventHandler(KeyEvent.KEY_PRESSED, e -> {
+            if (e.isConsumed() || e.getCode() != KeyCode.ENTER) return;
+            Node owner = scene.getFocusOwner();
+            if (owner instanceof Button b && !b.isDisabled()) {
+                b.fire();
+                e.consume();
+            }
+        });
     }
 
     // ── Focus-visible (keyboard-only focus ring) ─────────────────────────────
