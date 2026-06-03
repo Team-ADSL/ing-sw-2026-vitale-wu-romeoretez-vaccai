@@ -26,8 +26,9 @@ import java.util.List;
 
 /**
  * GUI screen for the totem-picking phase. Displays totem images in a row;
- * greyed-out totems are already taken. The player clicks to select and confirms
- * with the button or ENTER key. Updates on {@code TotemAvailableEvent}.
+ * greyed-out totems are already taken. The player clicks (or presses SPACE) to
+ * select and confirms with the button or ENTER key. Updates on
+ * {@code TotemAvailableEvent}.
  */
 public class TotemPickingScreen extends GUIScreen {
 
@@ -83,7 +84,7 @@ public class TotemPickingScreen extends GUIScreen {
         playerLabel.setFont(ImageCatalog.chalkFont(34));
         playerLabel.setStyle("-fx-text-fill: #F2B035; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.9), 5, 0.5, 0, 0);");
 
-        statusLabel = new Label("Select a totem, then press CONFIRM or ENTER");
+        statusLabel = new Label("Select a totem (click or SPACE), then confirm with ENTER");
         statusLabel.setFont(ImageCatalog.chalkFont(24));
         statusLabel.setStyle("-fx-text-fill: #FDF3D3; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.9), 5, 0.5, 0, 0);");
 
@@ -202,9 +203,21 @@ public class TotemPickingScreen extends GUIScreen {
         if (hasPicked) return;
         List<Totem> nav = navTotems();
 
+        // ENTER confirms the current selection; SPACE selects/deselects the
+        // highlighted totem — mirrors the TUI's confirm/select split.
         if (code == KeyCode.ENTER) {
+            onConfirm();
+            return;
+        }
+
+        if (code == KeyCode.SPACE) {
+            if (focus == Focus.NONE) {
+                focus = Focus.TOTEMS;
+                keyboardTotem = nav.isEmpty() ? null : nav.getFirst();
+                populateTotemRow();
+                return;
+            }
             if (focus == Focus.TOTEMS && keyboardTotem != null) onTotemClicked(keyboardTotem);
-            else onConfirm();
             return;
         }
 
@@ -313,7 +326,7 @@ public class TotemPickingScreen extends GUIScreen {
     public GUIScreen visit(ErrorEvent e) {
         pendingPick = false;
         errorLabel.setText(e.message());
-        statusLabel.setText("Select a totem, then press CONFIRM or ENTER");
+        statusLabel.setText("Select a totem (click or SPACE), then confirm with ENTER");
         statusLabel.setStyle("-fx-text-fill: #FDF3D3;");
         confirmButton.setDisable(false);
         applyConfirmStyle(confirmButton.isHover(), focus == Focus.BUTTON);
