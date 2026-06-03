@@ -106,6 +106,11 @@ public class GameScreen extends GUIScreen {
     private static final int    OPP_HAND_PER_PAGE  = 8;
     private static final double NAV_BTN_W      = 44;
     private static final double OPP_NAV_BTN_W  = 32;
+    /** Fixed space reserved for opponent panels in applyBoardScale.
+     *  Using constants (not live measurements) means expanded panels never
+     *  cause the board to rescale — expansion only shows a semi-transparent overlay. */
+    private static final double TOP_PANEL_H_RESERVE  = 95.0;
+    private static final double SIDE_PANEL_W_RESERVE = LR_PANEL_W + 40;
     // Max fraction of window height an expanded TOP-slot panel may occupy
     // before it is scaled down to fit (the TOP region itself grows unbounded).
     private static final double TOP_EXPAND_BUDGET = 0.42;
@@ -199,6 +204,15 @@ public class GameScreen extends GUIScreen {
     // list keeps each player's panel in the same slot for the whole game.
     private List<String> playerOrder;
     private final FloatingLog floatingLog;
+    /** Scaled board group; stored as a field so applyBoardScale can translate it. */
+    private Group boardGroup;
+    /** Hand nodes (HBox/VBox with cards only) of all currently-expanded panels.
+     *  Rebuilt each renderOpponentPanels. Opacity is applied here, not on the
+     *  whole panel, so buttons and headers stay fully opaque. */
+    private final java.util.List<Pane> expandedHandNodes = new java.util.ArrayList<>();
+    /** Shared fade timer: fires after hover leaves ALL expanded panels. */
+    private final PauseTransition expandedFadeTimer =
+            new PauseTransition(Duration.millis(4000));
 
     // ── Keyboard navigation (spatial) ────────────────────────────────────────
     // Rebuilt each render: stable key → the active node it points to. Only
@@ -243,10 +257,43 @@ public class GameScreen extends GUIScreen {
         // window; the aerial background fills the window behind it (not scaled).
         int boardIdx = rootStack.getChildren().indexOf(rootPane);
         rootStack.getChildren().remove(rootPane);
-        Group boardGroup = new Group(rootPane);
+        boardGroup = new Group(rootPane);
         StackPane.setAlignment(boardGroup, Pos.CENTER);
         rootStack.getChildren().add(boardIdx, boardGroup);
         installBackground();
+
+        // Opponent panels are lifted out of the BorderPane (rootPane) into rootStack
+        // so they float as screen-fixed overlays independent of board scale. This
+        // prevents their size from contributing to rootPane.prefWidth/prefHeight, which
+        // would shift the board every time a panel expands or its content changes.
+        rootPane.setTop(null);
+        rootPane.setLeft(null);
+        rootPane.setRight(null);
+        StackPane.setAlignment(topPlayersBox, Pos.TOP_CENTER);
+        topPlayersBox.setPickOnBounds(false);
+        StackPane.setAlignment(leftPlayersBox, Pos.CENTER_LEFT);
+        leftPlayersBox.setPickOnBounds(false);
+        leftPlayersBox.setMaxWidth(LR_PANEL_W + 40);
+        StackPane.setAlignment(rightPlayersBox, Pos.CENTER_RIGHT);
+        rightPlayersBox.setPickOnBounds(false);
+        rightPlayersBox.setMaxWidth(LR_PANEL_W + 40);
+        int panelInsertIdx = rootStack.getChildren().indexOf(boardGroup) + 1;
+        rootStack.getChildren().add(panelInsertIdx,     topPlayersBox);
+        rootStack.getChildren().add(panelInsertIdx + 1, leftPlayersBox);
+        rootStack.getChildren().add(panelInsertIdx + 2, rightPlayersBox);
+
+        // Fix the hint-row height so changes to its content (arrows vs plain text)
+        // never alter rootPane.prefHeight and thus never cause the board to rescale.
+        if (hintLabel != null && hintLabel.getParent() instanceof HBox hintRow) {
+            hintRow.setMinHeight(40);
+            hintRow.setPrefHeight(40);
+            hintRow.setMaxHeight(40);
+        }
+
+        // Header labels stay inside centerBox (part of the scaled board block).
+        // applyBoardScale reserves space for opponent panels via TOP_PANEL_H_RESERVE /
+        // SIDE_PANEL_W_RESERVE so the board is never hidden behind them.
+
         // Only the window (rootStack) drives re-renders. We deliberately do NOT
         // listen on centerBox size: its height/width change as a *result* of
         // renderBoard (and of expanding an opponent panel), so listening there
@@ -447,11 +494,15 @@ public class GameScreen extends GUIScreen {
             return;
         }
         Move m = new Move(idx, row);
-        if (!selectedMoves.add(m)) {
-            selectedMoves.remove(m);
-        }
+        boolean added = selectedMoves.add(m);
+        if (!added) selectedMoves.remove(m);
+        // Update only the clicked card's glow — no full board re-render, so the
+        // board never rescales or shifts just because the hint text changes.
+        pane.setEffect(added ? selectedGlow() : null);
+        pane.getProperties().put("navSelected", added);
         errorLabel.setText("");
-        renderBoard();
+        renderHintAndConfirm();
+        Platform.runLater(this::refreshNav);
     }
 
     private void onOfferTileClicked(int idx, OfferTileDTO tile) {
@@ -507,11 +558,24 @@ public class GameScreen extends GUIScreen {
 
     // ── Rendering ────────────────────────────────────────────────────────────
 
+    private static String formatPhase(Phase phase) {
+        if (phase == null) return "—";
+        StringBuilder sb = new StringBuilder();
+        for (String word : phase.name().split("_")) {
+            if (sb.length() > 0) sb.append(' ');
+            if (!word.isEmpty()) {
+                sb.append(Character.toUpperCase(word.charAt(0)));
+                sb.append(word.substring(1).toLowerCase());
+            }
+        }
+        return sb.toString();
+    }
+
     private void renderBoard() {
         if (game == null) return;
         headerLabel.setText(String.format("MESOS — Round %d/10  ·  Era %d  ·  Current: %s",
                 game.round(), game.era(), nameFor(game.currentPlayerTotem())));
-        phaseLabel.setText("Phase: " + (game.phase() != null ? game.phase().name() : "—"));
+        phaseLabel.setText("Phase: " + formatPhase(game.phase()));
 
         List<CardDTO> top = game.board().topRow();
         List<CardDTO> bot = game.board().lowRow();
@@ -561,16 +625,28 @@ public class GameScreen extends GUIScreen {
      * behind it and is not scaled.
      */
     private void applyBoardScale() {
-        if (rootStack == null || rootPane == null) return;
-        double availW = rootStack.getWidth() - 2 * BOARD_MARGIN;
-        double availH = rootStack.getHeight() - 2 * BOARD_MARGIN;
+        if (rootStack == null || rootPane == null || boardGroup == null) return;
+
+        // Reserve fixed space for opponent panels regardless of their expanded/collapsed
+        // state — this keeps the board scale stable when panels open or close.
+        int n      = (game != null && game.players() != null) ? game.players().size() : 0;
+        double topH  = n >= 2 ? TOP_PANEL_H_RESERVE  : 0;
+        double sideW = n >= 4 ? SIDE_PANEL_W_RESERVE : 0;
+
+        double availW = rootStack.getWidth()  - 2 * BOARD_MARGIN - 2 * sideW;
+        double availH = rootStack.getHeight() - 2 * BOARD_MARGIN - topH;
         if (availW <= 0 || availH <= 0) return;
         double prefW = rootPane.prefWidth(-1);
         double prefH = rootPane.prefHeight(-1);
         if (prefW <= 0 || prefH <= 0) return;
-        double s = Math.min(availW / prefW, availH / prefH);   // also scales UP to fill
+        double s = Math.min(availW / prefW, availH / prefH);
         rootPane.setScaleX(s);
         rootPane.setScaleY(s);
+        // Center the board in the area that remains after panel reservations.
+        // sideW is symmetric so no horizontal shift; topH pushes the vertical
+        // center down by half the reserved top space.
+        boardGroup.setTranslateX(0);
+        boardGroup.setTranslateY(topH / 2.0);
     }
 
     // ── Self panel (bottom) ──────────────────────────────────────────────────
@@ -690,7 +766,23 @@ public class GameScreen extends GUIScreen {
         };
     }
 
+    /** Called when mouse enters or exits any expanded opponent panel.
+     *  On enter: cancel fade timer, show ALL expanded panels at full opacity.
+     *  On exit: start shared timer; when it fires fade all back to semi-transparent. */
+    private void onExpandedPanelHover(boolean entering) {
+        expandedFadeTimer.stop();
+        if (entering) {
+            for (Pane h : expandedHandNodes) h.setOpacity(1.0);
+        } else {
+            expandedFadeTimer.setOnFinished(_ -> {
+                for (Pane h : expandedHandNodes) h.setOpacity(0.45);
+            });
+            expandedFadeTimer.playFromStart();
+        }
+    }
+
     private void renderOpponentPanels() {
+        expandedHandNodes.clear();
         topPlayersBox.getChildren().clear();
         leftPlayersBox.getChildren().clear();
         rightPlayersBox.getChildren().clear();
@@ -863,24 +955,32 @@ public class GameScreen extends GUIScreen {
             toggle.setText(showCards ? "▴ Player" : "▾ Cards");
             if (showCards) {
                 expandedOpponents.add(p.name());
-                // Recompute layout. For TOP slot the panel resizes to fit the
-                // current page's content; for side slots the panel stays at
-                // SIDE_PANEL_W (the column grows vertically only).
                 if (topSlot) {
                     populateOpponentHandRow((HBox) hand, panel, p, cardW, allCards);
                 } else {
                     populateOpponentHandColumn((VBox) hand, panel, p, cardW, allCards);
                 }
-                // Shrink only this panel if its expanded content would overflow
-                // the window — runLater so prefHeight reflects the new content.
                 Platform.runLater(() -> fitExpandedPanel(panel, topSlot));
+                // Only the card hand fades — toggle, name, chips stay fully opaque.
+                expandedHandNodes.add(hand);
+                // Start at full opacity (user just clicked the toggle, mouse is on
+                // the panel). The fade timer runs immediately; if the mouse stays
+                // inside, onMouseEntered cancels it and keeps everything at 1.0.
+                hand.setOpacity(1.0);
+                panel.setOnMouseEntered(_ -> onExpandedPanelHover(true));
+                panel.setOnMouseExited(_ -> onExpandedPanelHover(false));
+                onExpandedPanelHover(false);
             } else {
                 expandedOpponents.remove(p.name());
+                expandedHandNodes.remove(hand);
+                hand.setOpacity(1.0);
                 panel.setPrefWidth(basePanelW);
                 panel.setMaxWidth(basePanelW);
                 panel.setScaleX(1);
                 panel.setScaleY(1);
                 panel.setTranslateY(0);
+                panel.setOnMouseEntered(null);
+                panel.setOnMouseExited(null);
             }
         };
         toggle.setOnAction(_ -> setExpanded.accept(!hand.isVisible()));
@@ -1306,9 +1406,9 @@ public class GameScreen extends GUIScreen {
         double totemW = tileW * ORDER_TOTEM_W_FRAC;
         double totemH = totemW * (TOTEM3D_H / TOTEM3D_W);
 
-        double rectW = totemW * 1.25;
-        double rectH = totemW * 0.72;
-        double arc   = totemW * 0.18;
+        double rectW = tileW * (186.0 / ORDER_TILE_W);
+        double rectH = tileH * (96.0 / ORDER_TILE_H);
+        double arc   = rectW * 0.10;
 
         for (int i = 0; i < cells.size() && i < ys.length; i++) {
             Totem totem = cells.get(i).totem();
@@ -1547,11 +1647,11 @@ public class GameScreen extends GUIScreen {
 
     private static Color totemFill(Totem totem) {
         return switch (totem) {
-            case RED    -> Color.rgb(170, 35,  35);
-            case WHITE  -> Color.rgb(200, 200, 195);
-            case BLACK  -> Color.rgb(55,  0,   90);
-            case BLUE   -> Color.rgb(45,  95,  175);
-            case YELLOW -> Color.rgb(185, 155, 30);
+            case RED    -> Color.web("#ec6645");
+            case WHITE  -> Color.web("#f7f1f0");
+            case BLACK  -> Color.web("#421528");
+            case BLUE   -> Color.web("#2391ae");
+            case YELLOW -> Color.web("#f6c81f");
         };
     }
 
