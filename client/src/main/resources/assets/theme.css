@@ -33,6 +33,10 @@
 .button:hover {
     -fx-background-color: #F25835;
     -fx-text-fill: #FDF3D3;
+    -fx-padding: 8 22 8 22;
+    -fx-background-radius: 12;
+    -fx-border-width: 0;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45), 6, 0.25, 0, 2);
 }
 .button:pressed {
     -fx-background-color: #8C1636;
