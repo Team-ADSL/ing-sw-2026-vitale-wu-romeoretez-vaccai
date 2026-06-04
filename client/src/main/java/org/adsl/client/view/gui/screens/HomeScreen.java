@@ -274,10 +274,7 @@ public class HomeScreen extends GUIScreen {
         b.setGraphicTextGap(3);
     }
 
-    private static void wireHover(Button b) {
-        b.setOnMouseEntered(_ -> { b.setScaleX(1.15); b.setScaleY(1.15); });
-        b.setOnMouseExited(_  -> { b.setScaleX(1.0);  b.setScaleY(1.0);  });
-    }
+
 
     private void setupRulesButton() {
         Button btn = new Button("?");
@@ -288,7 +285,6 @@ public class HomeScreen extends GUIScreen {
             "-fx-background-radius: 20; -fx-padding: 0;"
         );
         btn.setOnAction(_ -> openRulesOverlay());
-        wireHover(btn);
         StackPane.setAlignment(btn, Pos.BOTTOM_LEFT);
         StackPane.setMargin(btn, new Insets(0, 0, 14, 14));
         rootStack.getChildren().add(btn);
@@ -339,10 +335,6 @@ public class HomeScreen extends GUIScreen {
         rulesOverlay.setOnMouseClicked(e -> {
             if (e.getTarget() == rulesOverlay) rootStack.getChildren().remove(rulesOverlay);
         });
-
-        wireHover(prev);
-        wireHover(next);
-        wireHover(close);
 
         HBox nav = new HBox(16, prev, counter, next);
         nav.setAlignment(Pos.CENTER);
