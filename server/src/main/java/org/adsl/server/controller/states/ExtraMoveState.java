@@ -94,7 +94,7 @@ public class ExtraMoveState extends ControllerState {
     List<String> logsBuildingRelevant = logsBuildingActivated.stream()
             .filter(l -> !l.contains("no change")).toList();
     if(!logsBuildingRelevant.isEmpty()) {
-      log += "Activated following building: " + String.join(", ", logsBuildingRelevant) + ".";
+      log += " Activated following building: " + String.join(", ", logsBuildingRelevant) + ".";
     }
     System.out.println(log);
 
