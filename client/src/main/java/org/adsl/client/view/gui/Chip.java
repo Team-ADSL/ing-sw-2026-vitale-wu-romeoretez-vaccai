@@ -1,6 +1,7 @@
 package org.adsl.client.view.gui;
 
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -8,6 +9,8 @@ import javafx.scene.image.WritableImage;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.StrokeLineCap;
+import javafx.scene.shape.StrokeLineJoin;
 import javafx.scene.shape.StrokeType;
 import javafx.scene.text.Text;
 import javafx.scene.transform.Scale;
@@ -90,6 +93,11 @@ public final class Chip {
         num.setStroke(FOOD_STROKE);
         num.setStrokeType(StrokeType.OUTSIDE);
         num.setStrokeWidth(Math.max(0.8, width * STROKE_RATIO));
+        // Round join/cap so the chalk font's sharp corners don't shoot miter
+        // spikes past the outline (same treatment as the move-count glyphs).
+        num.setStrokeLineJoin(StrokeLineJoin.ROUND);
+        num.setStrokeLineCap(StrokeLineCap.ROUND);
+        num.setStrokeMiterLimit(1.0);
         num.setTranslateY(width * FOOD_OFFSET_Y_RATIO);
 
         chip.getChildren().addAll(bg, num);
