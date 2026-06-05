@@ -212,25 +212,30 @@ public abstract class GUIScreen extends Screen<GUIScreen> {
     private static void setFont(Label node){
         Font f = fontFor(node, extractFontSize(node.getStyle(), 15.0));
         node.setFont(f);
-        pinFontFamily(node, f.getFamily());
+        pinFontFamily(node, f.getFamily(), f.getSize());
     }
     private static void setFont(Button node){
         Font f = fontFor(node, extractFontSize(node.getStyle(), 16.0));
         node.setFont(f);
-        pinFontFamily(node, f.getFamily());
+        pinFontFamily(node, f.getFamily(), f.getSize());
     }
     private static void setFont(TextField node){
         Font f = fontFor(node, extractFontSize(node.getStyle(), 15.0));
         node.setFont(f);
-        pinFontFamily(node, f.getFamily());
+        pinFontFamily(node, f.getFamily(), f.getSize());
     }
 
-    /** Pins font-family into the inline style so CSS layout pass cannot override setFont(). */
-    private static void pinFontFamily(Node node, String family) {
+    /** Pins font-family and font-size into the inline style so CSS re-application
+     *  triggered by setStyle(press/hov) cannot override the sizes set by setFont(). */
+    private static void pinFontFamily(Node node, String family, double size) {
         String s = node.getStyle() != null ? node.getStyle() : "";
         if (!s.contains("-fx-font-family")) {
-            node.setStyle(s + "; -fx-font-family: '" + family + "';");
+            s = s + "; -fx-font-family: '" + family + "';";
         }
+        if (!s.contains("-fx-font-size")) {
+            s = s + " -fx-font-size: " + (int) Math.round(size) + "px;";
+        }
+        node.setStyle(s);
     }
     private static void setFont(Pane node){
         applyChalkFonts(node);
