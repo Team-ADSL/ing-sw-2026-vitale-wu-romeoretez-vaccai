@@ -206,7 +206,7 @@ public abstract class ControllerState implements RequestVisitor<VirtualClient> {
         return sb.toString();
     }
 
-    private static String signed(int n) {
+    static String signed(int n) {
         return (n > 0 ? "+" : "") + n;
     }
 

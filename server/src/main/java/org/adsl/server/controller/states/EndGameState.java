@@ -36,14 +36,24 @@ public class EndGameState extends ControllerState {
     public ControllerState onEntry() throws ServerException {
         Set<Player> players = getGame().getPlayers();
         for(Player p : players){
+            // Score each component separately and record the deltas so the final
+            // tally is reported in the game log (it stays visible on the end-game
+            // screen). The components mirror the Mesos end-game scoring rules.
+            int basePP = p.getPp();
+
+            // Building end-game effects (PP bonuses, multipliers). The builder
+            // multiplier set here is consumed by the builder tally just below,
+            // so this pass must run first.
             p.getCards().get(CardType.BUILDINGS)
                     .forEach(b -> b.activeEffect(Set.of(p), Trigger.END_GAME));
+            int buildingEffectPP = p.getPp() - basePP;
 
             int builderPoints = p.getCards().get(CardType.BUILDER).stream()
                     .map(c -> (Builder)c)
                     .mapToInt(Builder::getPP)
                     .sum();
-            p.changePP(builderPoints * p.getBuildingBonus().getBuilderMultiplierPP());
+            int builderPP = builderPoints * p.getBuildingBonus().getBuilderMultiplierPP();
+            p.changePP(builderPP);
 
             int inventorIcons = (int)p.getCards().get(CardType.INVENTOR).stream()
                     .map(c -> (Inventor)c)
@@ -51,16 +61,31 @@ public class EndGameState extends ControllerState {
                     .distinct()
                     .count();
             int numInventors = p.getCards().get(CardType.INVENTOR).size();
-            p.changePP(numInventors * inventorIcons);
+            int inventorPP = numInventors * inventorIcons;
+            p.changePP(inventorPP);
 
             int numArtists = p.getCards().get(CardType.ARTIST).size();
-            p.changePP(10 * (numArtists / 2));
+            int artistPP = 10 * (numArtists / 2);
+            p.changePP(artistPP);
 
-            int buildingPoints = p.getCards().get(CardType.BUILDINGS).stream()
+            int buildingOwnPP = p.getCards().get(CardType.BUILDINGS).stream()
                     .map(c -> (Building)c)
                     .mapToInt(Building::getEndGamePP)
                     .sum();
-            p.changePP(buildingPoints);
+            p.changePP(buildingOwnPP);
+
+            // "Buildings" groups the cards' own end-game PP and their effects.
+            int buildingsPP = buildingOwnPP + buildingEffectPP;
+            // [TAG] at the start, signed tokens like the event log (see formatDeltas),
+            // with " — " separating the player from the breakdown mid-message.
+            String breakdown = "[FINAL SCORE] " + p.getName() + " — "
+                    + signed(builderPP) + " builders "
+                    + signed(inventorPP) + " inventors "
+                    + signed(artistPP) + " artists "
+                    + signed(buildingsPP) + " buildings "
+                    + signed(basePP) + " base = " + p.getPp() + " PP";
+            System.out.println(breakdown);
+            getGame().sendUpdateGame(breakdown);
         }
 
         GameDAO gameDAO = getContext().getGameDAO();

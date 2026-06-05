@@ -80,7 +80,9 @@ public class EventsState extends ControllerState {
       Map<Player, int[]> before = snapshotFoodPp(players);
       e.activeEffect(players, Trigger.EVENT_EXECUTION);
       String title = formatTitle(e);
-      String log = formatDeltas(title, players, before);
+      // [TAG] prefix for the game log; the " — " from formatDeltas stays mid-message
+      // (the event overlay still parses the deltas after that separator).
+      String log = "[EVENT] " + formatDeltas(title, players, before);
       getGame().sendEventTriggered(title, log);
     }
   }

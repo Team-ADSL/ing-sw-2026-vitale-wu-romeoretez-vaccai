@@ -66,4 +66,18 @@ public abstract class ServerResponse implements Serializable {
     public boolean isHeartbeat() {
         return false;
     }
+
+    /**
+     * Marks responses shown as the full-screen event-resolution overlay (the
+     * orange screen). The client-side pacer holds these on screen longer than a
+     * normal response so players can read the per-player food/PP deltas before
+     * the next update replaces them. Defaults to {@code false}; the
+     * events subtype overrides it. The hold durations themselves live on the
+     * client — this flag only classifies the response. {@link JsonIgnore} keeps
+     * it off the wire (derivable from the runtime subtype).
+     */
+    @JsonIgnore
+    public boolean isEventOverlay() {
+        return false;
+    }
 }

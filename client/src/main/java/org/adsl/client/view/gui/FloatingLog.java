@@ -1,51 +1,54 @@
 package org.adsl.client.view.gui;
 
 import javafx.application.Platform;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Cursor;
-import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.SVGPath;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Bottom-right log used across screens. Collapsed it shows the last N messages
- * with an opacity gradient (older = more transparent). Clicking expands it
- * in place: the gradient is removed and every message is shown using the same
- * card style, stacked one above the other in the same spot. The list scrolls
- * only when it would overflow the available vertical space. Closing happens via
- * the ✕ chip or by clicking outside the log area.
+ * Bottom-right log used across screens. Collapsed it is a single gold "chat"
+ * toggle button tucked into the very bottom-right corner; clicking it expands
+ * the log in place into a scrollable stack of every message, each shown with
+ * the same card style. The list scrolls only when it would overflow the
+ * available vertical space. Once open it stays open until the user closes it
+ * with the ✕ chip — clicking elsewhere does not collapse it.
  *
  * Wire it by adding {@link #getFloatingNode()} as a child of the log container.
  * {@link #getFullPanel()} is kept for backward compatibility and is a no-op.
  */
 public final class FloatingLog {
 
-    private static final int VISIBLE = 5;
     private static final double MAX_W = 420;
     private static final double VERTICAL_MARGIN = 120;
     private static final double COLLAPSED_MAX_H = 300;
+
+    /** Tight inset so the collapsed toggle sits as far into the corner as possible. */
+    private static final Insets COLLAPSED_PAD = new Insets(6, 10, 10, 6);
+    /** Original inset for the expanded panel — kept unchanged. */
+    private static final Insets EXPANDED_PAD = new Insets(6, 20, 20, 6);
 
     private static final List<String> history = new ArrayList<>();
     private static FloatingLog active;
     private final VBox floating;
     private final StackPane fullPanel;
+    private final Button toggleButton;
     private final VBox expandedBody;
     private final VBox expandedMessages;
     private final ScrollPane expandedScroll;
 
     private boolean expanded = false;
-    private EventHandler<MouseEvent> outsideClickFilter;
-    private Scene filterScene;
+    private boolean scrollCapBound = false;
 
     public FloatingLog(String title) {
         floating = new VBox(2);
@@ -54,12 +57,17 @@ public final class FloatingLog {
         floating.setMaxHeight(COLLAPSED_MAX_H);
         floating.setPickOnBounds(false);
         floating.setMouseTransparent(false);
-        floating.setCursor(Cursor.HAND);
-        floating.setPadding(new Insets(6, 20, 20, 6));
+        floating.setPadding(COLLAPSED_PAD);
         StackPane.setAlignment(floating, Pos.BOTTOM_RIGHT);
-        floating.setOnMouseClicked(e -> {
-            if (!expanded) expand();
-        });
+
+        // Collapsed state: a gold chat-style toggle (reuses the shared ".button"
+        // style so it matches the other gold toggles). Not focus-traversable so
+        // it never steals keyboard focus from the in-game arrow navigation.
+        toggleButton = new Button();
+        toggleButton.setGraphic(chatIcon());
+        toggleButton.setFocusTraversable(false);
+        toggleButton.setStyle("-fx-padding: 6;");
+        toggleButton.setOnAction(_ -> expand());
 
         // Backward-compat no-op node (no longer shown).
         fullPanel = new StackPane();
@@ -125,27 +133,25 @@ public final class FloatingLog {
         if (expanded) {
             refillExpanded();
             Platform.runLater(() -> expandedScroll.setVvalue(1.0));
-        } else {
-            refresh();
         }
+        // Collapsed state is a static toggle button — nothing to re-render.
     }
 
     private void expand() {
         expanded = true;
-        floating.setCursor(Cursor.DEFAULT);
+        floating.setPadding(EXPANDED_PAD);
         floating.setMaxHeight(Double.MAX_VALUE);
         floating.getChildren().setAll(expandedBody);
         refillExpanded();
         applyScrollCap();
-        installOutsideClickFilter();
+        bindScrollCapToHeight();
         Platform.runLater(() -> expandedScroll.setVvalue(1.0));
     }
 
+    /** Closes the log. Only ever called from the ✕ chip — clicking elsewhere keeps it open. */
     private void collapse() {
         expanded = false;
-        floating.setCursor(Cursor.HAND);
         floating.setMaxHeight(COLLAPSED_MAX_H);
-        removeOutsideClickFilter();
         refresh();
     }
 
@@ -156,42 +162,18 @@ public final class FloatingLog {
         expandedScroll.setMaxHeight(Math.max(120, available));
     }
 
-    private void installOutsideClickFilter() {
+    /** Re-cap the scroll viewport when the window is resized while open (bound once). */
+    private void bindScrollCapToHeight() {
         Scene scene = floating.getScene();
-        if (scene == null) return;
-        outsideClickFilter = e -> {
-            if (!expanded) return;
-            Node n = e.getPickResult().getIntersectedNode();
-            while (n != null) {
-                if (n == floating) return;
-                n = n.getParent();
-            }
-            collapse();
-        };
-        filterScene = scene;
-        scene.addEventFilter(MouseEvent.MOUSE_PRESSED, outsideClickFilter);
+        if (scene == null || scrollCapBound) return;
         scene.heightProperty().addListener((o, a, b) -> { if (expanded) applyScrollCap(); });
+        scrollCapBound = true;
     }
 
-    private void removeOutsideClickFilter() {
-        if (filterScene != null && outsideClickFilter != null) {
-            filterScene.removeEventFilter(MouseEvent.MOUSE_PRESSED, outsideClickFilter);
-        }
-        outsideClickFilter = null;
-        filterScene = null;
-    }
-
+    /** Collapsed view: just the gold toggle button in the corner. */
     private void refresh() {
-        floating.getChildren().clear();
-        int n = history.size();
-        int from = Math.max(0, n - VISIBLE);
-        List<String> recent = history.subList(from, n);
-        int count = recent.size();
-        for (int i = 0; i < count; i++) {
-            double frac = (i + 1) / (double) count;
-            double opacity = 0.15 + frac * 0.85;
-            floating.getChildren().add(card(recent.get(i), opacity));
-        }
+        floating.setPadding(COLLAPSED_PAD);
+        floating.getChildren().setAll(toggleButton);
     }
 
     private void refillExpanded() {
@@ -211,5 +193,15 @@ public final class FloatingLog {
                 + " -fx-background-radius: 8;");
         entry.setOpacity(opacity);
         return entry;
+    }
+
+    /** Material "chat bubble" glyph (24×24), tinted to match the gold button text. */
+    private static SVGPath chatIcon() {
+        SVGPath icon = new SVGPath();
+        icon.setContent("M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z");
+        icon.setFill(Color.web("#1a0808"));
+        icon.setScaleX(0.82);
+        icon.setScaleY(0.82);
+        return icon;
     }
 }
