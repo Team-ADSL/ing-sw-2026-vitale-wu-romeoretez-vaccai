@@ -8,7 +8,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Character card. Artists score 5 PP per pair at end-game (resolved in
+ * Character card. Artists score 10 PP for every pair at end-game — an odd
+ * leftover artist scores nothing, so 3 artists still yield 10 PP (resolved in
  * {@code EndGameState}). They also interact with the {@code CavePaintings} event
  * and the {@code DuringPaintings} building.
  */

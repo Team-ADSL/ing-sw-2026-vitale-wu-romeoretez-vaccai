@@ -173,7 +173,7 @@ public class ActionExecutionState extends ControllerState {
     List<String> logsBuildingRelevant = logsBuildingActivated.stream()
             .filter(l -> !l.contains("no change")).toList();
     if(!logsBuildingRelevant.isEmpty()) {
-      log += "Activated following building: " + String.join(", ", logsBuildingRelevant) + ".";
+      log += " Activated following building: " + String.join(", ", logsBuildingRelevant) + ".";
     }
     System.out.println(log);
     setNextState(calcNextState());
@@ -257,7 +257,7 @@ public class ActionExecutionState extends ControllerState {
         offerTrack.removePlayer(foodPlayer);
         logs.addAll(placeTotem(foodPlayer));
         if (!logs.isEmpty()) {
-          getGame().sendUpdateGame(String.join(", ", logs) + ".");
+          getGame().sendUpdateGame("[ACTION] " + String.join(", ", logs) + ".");
         }
         return calcNextState();
       } else {
