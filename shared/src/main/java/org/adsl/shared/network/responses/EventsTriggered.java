@@ -27,6 +27,11 @@ public class EventsTriggered extends ServerResponse {
         visitor.visit(this);
     }
 
+    @Override
+    public boolean isEventOverlay() {
+        return true;
+    }
+
     public String getEventTitle() {
         return eventTitle;
     }

@@ -1631,42 +1631,99 @@ public class GameScreen extends GUIScreen {
         hintLabel.getChildren().setAll(t);
     }
 
-    private void setMoveHint(int upper, int lower, int pickedUpper, int pickedLower) {
-        List<Text> nodes = new ArrayList<>();
+    private void setMoveHint(int upper, int lower, int pickedUpper, int pickedLower, int selected, int required) {
+        Color white = Color.web("#FDF3D3");
 
-        boolean upActive = upper > 0 && pickedUpper < upper;
-        boolean downActive = lower > 0 && pickedLower < lower;
+        int upLeft   = upper - pickedUpper;
+        int downLeft = lower - pickedLower;
+        boolean upGrey   = upLeft <= 0;
+        boolean downGrey = downLeft <= 0;
 
-        Color orange = Color.web("#F2B035");
-        Color white  = Color.web("#FDF3D3");
-        Color dim    = Color.web("#FDF3D3", 0.35);
+        ImageView upArrow = arrowIcon("/assets/general/arrow_up.png", upGrey);
+        ImageView upCount = countGlyph(upLeft, "up", upGrey);
 
-        Text upArrow = new Text("⬆");
-        upArrow.setFont(Font.font(22));
-        upArrow.setTranslateY(4);
-        Color paint1 = upActive ? orange : (upper == 0 ? dim : white);
-        upArrow.setFill(paint1);
+        ImageView downArrow = arrowIcon("/assets/general/arrow_down.png", downGrey);
+        ImageView downCount = countGlyph(downLeft, "down", downGrey);
 
-        Text upCount = new Text(" " + (upper - pickedUpper) + "   ");
-        upCount.setFont(Font.font(15));
-        upCount.setFill(paint1);
+        Text sep = new Text("│");
+        sep.setFont(Font.font(13));
+        sep.setFill(Color.web("#FDF3D3", 0.45));
 
-        Text downArrow = new Text("⬇");
-        downArrow.setFont(Font.font(22));
-        downArrow.setTranslateY(4);
-        Color paint = downActive ? orange : (lower == 0 ? dim : white);
-        downArrow.setFill(paint);
+        Text selText = new Text(selected + " / " + required + " selected");
+        selText.setFont(Font.font(13));
+        selText.setFill(white);
 
-        Text downCount = new Text(" " + (lower - pickedLower) + "   ");
-        downCount.setFont(Font.font(15));
-        downCount.setFill(paint);
+        // HBox (not the raw TextFlow flow) so arrows and the number glyphs share
+        // a common vertical center instead of being aligned on the text baseline,
+        // which dropped the arrows below the digits.
+        HBox row = new HBox(4, upArrow, upCount, gap(12), downArrow, downCount, gap(12), sep, gap(6), selText);
+        row.setAlignment(Pos.CENTER);
 
-        nodes.add(upArrow);
-        nodes.add(upCount);
-        nodes.add(downArrow);
-        nodes.add(downCount);
-        hintLabel.getChildren().setAll(nodes);
+        hintLabel.getChildren().setAll(row);
         hintLabel.setTextAlignment(TextAlignment.CENTER);
+    }
+
+    /** Fixed-width invisible spacer for the move-hint row. */
+    private Node gap(double w) {
+        Region r = new Region();
+        r.setMinWidth(w);
+        r.setPrefWidth(w);
+        r.setMaxWidth(w);
+        return r;
+    }
+
+    /** PNGs are baked at this oversampling; the ImageView downscales by it. */
+    private static final double COUNT_GLYPH_SCALE = 2.0;
+
+    /**
+     * Move-count label as a pre-baked PNG from
+     * {@code /assets/move_counts/<variant>/<n>.png} (variant: up | down).
+     * The numbers are rendered offline by {@code tools/CountGlyphGenerator}
+     * (ChristmasChalk font, white outer outline, round joins) so there is zero
+     * runtime rasterisation — the earlier live {@link Node#snapshot} froze the
+     * window while warming the cache. {@link ImageCatalog#load} caches the decode.
+     * If {@code grey} is true, we apply a greyscale filter in the GUI.
+     */
+    private ImageView countGlyph(int value, String variant, boolean grey) {
+        String filename;
+        if (value < 0) {
+            int clamped = Math.max(-20, value);
+            filename = String.valueOf(clamped);
+        } else {
+            int clamped = Math.min(2, value);
+            filename = String.valueOf(clamped);
+        }
+        Image img = ImageCatalog.load("/assets/move_counts/" + variant + "/" + filename + ".png");
+        ImageView iv = new ImageView(img);
+        iv.setFitHeight(img.getHeight() / COUNT_GLYPH_SCALE);
+        iv.setPreserveRatio(true);
+        iv.setSmooth(true);
+        if (grey) {
+            ColorAdjust desaturate = new ColorAdjust();
+            desaturate.setSaturation(-1);
+            desaturate.setBrightness(-0.15);
+            iv.setEffect(desaturate);
+            iv.setOpacity(0.5);
+        }
+        return iv;
+    }
+
+    /**
+     * Arrow icon for the move hint. {@code grey} desaturates it to greyscale
+     * (used when its move count is 0, so the inactive arrow reads as dim).
+     */
+    private ImageView arrowIcon(String path, boolean grey) {
+        ImageView iv = new ImageView(ImageCatalog.load(path));
+        iv.setFitHeight(24);
+        iv.setPreserveRatio(true);
+        if (grey) {
+            ColorAdjust desaturate = new ColorAdjust();
+            desaturate.setSaturation(-1);
+            desaturate.setBrightness(-0.15);
+            iv.setEffect(desaturate);
+            iv.setOpacity(0.5);
+        }
+        return iv;
     }
 
     private String waitingHint() {
