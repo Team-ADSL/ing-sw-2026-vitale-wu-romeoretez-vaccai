@@ -1,6 +1,10 @@
 package org.adsl.server.model;
 
 import org.adsl.server.model.cards.Card;
+import org.adsl.server.model.cards.characters.Builder;
+import org.adsl.server.model.cards.characters.Gatherer;
+import org.adsl.server.model.cards.characters.Inventor;
+import org.adsl.server.model.cards.characters.Shaman;
 import org.adsl.shared.enums.CardType;
 import org.adsl.server.model.cards.buildings.utils.BuildingBonus;
 import org.adsl.shared.enums.Totem;
@@ -75,7 +79,24 @@ public class Player implements Serializable {
                             .map(Card::createDTO)
                             .collect(Collectors.toSet())
             ));
-        return new PlayerDTO(name, food, pp, color, cardsDTO);
+        int builderPP = cardsOf(CardType.BUILDER)
+                .map(c -> (Builder) c).mapToInt(Builder::getPP).sum();
+        int builderDiscount = cardsOf(CardType.BUILDER)
+                .map(c -> (Builder) c).mapToInt(Builder::getDiscount).sum();
+        int gathererDiscount = cardsOf(CardType.GATHERER)
+                .map(c -> (Gatherer) c).mapToInt(Gatherer::getDiscount).sum();
+        int shamanStars = cardsOf(CardType.SHAMAN)
+                .map(c -> (Shaman) c).mapToInt(Shaman::getStarNum).sum();
+        int inventorUniqueIcons = (int) cardsOf(CardType.INVENTOR)
+                .map(c -> (Inventor) c).map(Inventor::getIcon).distinct().count();
+        return new PlayerDTO(name, food, pp, color, cardsDTO,
+                builderPP, builderDiscount, gathererDiscount, shamanStars, inventorUniqueIcons);
+    }
+
+    /** Null-safe stream of the cards of a given type (the recovered-game map may be sparse). */
+    private java.util.stream.Stream<Card> cardsOf(CardType type) {
+        Set<Card> set = cards.get(type);
+        return set == null ? java.util.stream.Stream.empty() : set.stream();
     }
 
     private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {

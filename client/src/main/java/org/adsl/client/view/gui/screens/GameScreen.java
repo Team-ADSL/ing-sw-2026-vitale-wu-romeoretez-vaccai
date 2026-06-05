@@ -14,6 +14,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
@@ -29,6 +30,7 @@ import javafx.scene.layout.BackgroundPosition;
 import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
@@ -42,10 +44,10 @@ import org.adsl.client.AppCoordinator;
 import org.adsl.client.serverEvents.ErrorEvent;
 import org.adsl.client.serverEvents.EventsTriggeredEvent;
 import org.adsl.client.serverEvents.GameUpdateEvent;
+import org.adsl.client.view.gui.ChalkBadge;
 import org.adsl.client.view.gui.Chip;
 import org.adsl.client.view.gui.FloatingLog;
 import org.adsl.client.view.gui.ImageCatalog;
-import org.adsl.client.view.gui.LayoutMath;
 import org.adsl.shared.enums.Phase;
 import org.adsl.shared.enums.Row;
 import org.adsl.shared.enums.Totem;
@@ -97,23 +99,38 @@ public class GameScreen extends GUIScreen {
     private static final double CHIP_WIDTH_SM = 40;
     private static final double SELF_TOTEM   = 36;
     private static final double OPP_TOTEM    = 24;
-    private static final double OPP_HAND_W   = 66;
-    private static final double SIDE_PANEL_W   = 220;
     private static final double LR_PANEL_W     = 170;
     private static final double IDENTITY_COL_W = 100;
-    private static final double HAND_GAP       = 6;
-    private static final double NAME_H_EST     = 22;
-    private static final int    OPP_HAND_PER_PAGE  = 8;
-    private static final double NAV_BTN_W      = 44;
-    private static final double OPP_NAV_BTN_W  = 32;
-    /** Fixed space reserved for opponent panels in applyBoardScale.
-     *  Using constants (not live measurements) means expanded panels never
-     *  cause the board to rescale — expansion only shows a semi-transparent overlay. */
-    private static final double TOP_PANEL_H_RESERVE  = 95.0;
+    /** Fixed space reserved for opponent panels in applyBoardScale (kept constant
+     *  so the board never rescales when panel content changes). */
+    private static final double TOP_PANEL_H_RESERVE  = 132.0;
     private static final double SIDE_PANEL_W_RESERVE = LR_PANEL_W + 40;
-    // Max fraction of window height an expanded TOP-slot panel may occupy
-    // before it is scaled down to fit (the TOP region itself grows unbounded).
-    private static final double TOP_EXPAND_BUDGET = 0.42;
+    /** Top inset pushing the LEFT/RIGHT panels down so their top lines up with the
+     *  central "MESOS — …" header instead of the screen edge. */
+    private static final double SIDE_PANEL_TOP       = 178.0;
+
+    // ── Deck-summary icons (player panels) ────────────────────────────────────
+    private static final double DECK_ICON_W       = 65.0;          // opponent icon width
+    private static final double DECK_ICON_SELF_W  = 92.0;          // self icon width (larger)
+    private static final double DECK_ICON_AR      = 147.0 / 174.0; // native icon height / width
+    private static final double DECK_ICON_GAP     = 6.0;
+    private static final int    DECK_SIDE_COLS    = 2;             // grid columns in narrow L/R panels
+    private static final double BADGE_W           = 29.0;          // extra-info badge width (corner)
+    private static final double BADGE_FONT        = 12.5;
+    private static final double DISCOUNT_FONT     = 10.0;          // smaller, fits "-NN"
+    private static final double DECK_COUNT_FONT   = 14.5;          // xN counts + inventor number
+    private static final double DECK_COUNT_STROKE = 1.1;
+    // Drill-down card widths shown when an icon toggle is open.
+    private static final double DECK_CARD_W_H     = 62.0;          // TOP (cards in a row)
+    private static final double DECK_CARD_W_SELF  = 100.0;         // self (large, plenty of room)
+    private static final double DECK_CARD_W_V     = 68.0;          // LEFT / RIGHT (cards in 2-col pairs)
+    private static final Color  BUILDER_INK  = Color.web("#541620");
+    private static final Color  GATHERER_INK = Color.web("#f57a13");
+    private static final Color  SHAMAN_INK   = Color.web("#9a445d");
+    // Extra-info badge native pixel spaces + the centred coord of the dynamic number.
+    private static final double PP_W = 161, PP_H = 137, PP_CX = 82, PP_CY = 50;
+    private static final double FL_W = 188, FL_H = 127, FL_CX = 41, FL_CY = 73;
+    private static final double SS_W = 188, SS_H = 127, SS_CX = 53, SS_CY = 62;
 
     // ── Order tile + 3D totem geometry ───────────────────────────────────────
     // Reference pixel space of the order-tile PNGs (≈624×965) and the 3D totem
@@ -192,31 +209,19 @@ public class GameScreen extends GUIScreen {
      *  changes (new player or phase) the pending selection is dropped so a past
      *  turn's picks never bleed into a new ACTION_EXECUTION / EXTRA_MOVE turn. */
     private String selectionTurnToken = "none";
-    private int selfHandPage = 0;
     /** The single card width shared by every card row and hand, set each render
      *  by {@link #renderBoard()} from the most-constrained board row. */
     private double sharedCardW = CARD_MIN_W;
-    /** Height-driven estimate of the board scale, used to size hand pagination in
-     *  reference space so the hand fills the row at whatever size the board scales to. */
-    private double boardScale = 1.0;
-    /** Opponent names whose card hand is currently expanded. Persisted here (not
-     *  on the panel node) so the expanded state survives a full board re-render. */
-    private final Set<String> expandedOpponents = new HashSet<>();
-    private final java.util.Map<String, Integer> opponentHandPages = new java.util.HashMap<>();
     // Fixed seat order, captured from the first game snapshot. The server
     // reorders players() by turn order each phase; rendering against this stable
     // list keeps each player's panel in the same slot for the whole game.
     private List<String> playerOrder;
+    /** Player name -> the card type whose cards are currently drilled into (icon
+     *  toggle open). Persisted here so the open deck survives a board re-render. */
+    private final java.util.Map<String, CardType> openDeck = new java.util.HashMap<>();
     private final FloatingLog floatingLog;
     /** Scaled board group; stored as a field so applyBoardScale can translate it. */
     private Group boardGroup;
-    /** Hand nodes (HBox/VBox with cards only) of all currently-expanded panels.
-     *  Rebuilt each renderOpponentPanels. Opacity is applied here, not on the
-     *  whole panel, so buttons and headers stay fully opaque. */
-    private final java.util.List<Pane> expandedHandNodes = new java.util.ArrayList<>();
-    /** Shared fade timer: fires after hover leaves ALL expanded panels. */
-    private final PauseTransition expandedFadeTimer =
-            new PauseTransition(Duration.millis(4000));
 
     // ── Keyboard navigation (spatial) ────────────────────────────────────────
     // Rebuilt each render: stable key → the active node it points to. Only
@@ -275,12 +280,17 @@ public class GameScreen extends GUIScreen {
         rootPane.setRight(null);
         StackPane.setAlignment(topPlayersBox, Pos.TOP_CENTER);
         topPlayersBox.setPickOnBounds(false);
-        StackPane.setAlignment(leftPlayersBox, Pos.CENTER_LEFT);
+        // Side panels start TOP-aligned, pushed down by SIDE_PANEL_TOP so their top
+        // lines up with the central header (only the TOP panels keep the screen-edge
+        // margin). The boxes fill the height; their content top-aligns inside.
+        StackPane.setAlignment(leftPlayersBox, Pos.TOP_LEFT);
         leftPlayersBox.setPickOnBounds(false);
         leftPlayersBox.setMaxWidth(LR_PANEL_W + 40);
-        StackPane.setAlignment(rightPlayersBox, Pos.CENTER_RIGHT);
+        leftPlayersBox.setPadding(new Insets(SIDE_PANEL_TOP, 6, 8, 14));
+        StackPane.setAlignment(rightPlayersBox, Pos.TOP_RIGHT);
         rightPlayersBox.setPickOnBounds(false);
         rightPlayersBox.setMaxWidth(LR_PANEL_W + 40);
+        rightPlayersBox.setPadding(new Insets(SIDE_PANEL_TOP, 14, 8, 6));
         int panelInsertIdx = rootStack.getChildren().indexOf(boardGroup) + 1;
         rootStack.getChildren().add(panelInsertIdx,     topPlayersBox);
         rootStack.getChildren().add(panelInsertIdx + 1, leftPlayersBox);
@@ -640,11 +650,6 @@ public class GameScreen extends GUIScreen {
         renderOrderTile(offW * TILE_ASPECT);
         renderBuildingDecks(offW * TILE_ASPECT);
 
-        // Height-driven scale estimate: lets the hand show as many reference-sized
-        // cards as fit once the board is scaled up to fill the window height.
-        double bh = rootStack.getHeight();
-        boardScale = (bh > 0) ? Math.max(0.1, (bh - 2 * BOARD_MARGIN) / REF_BOARD_H) : 1.0;
-
         renderSelfPanel();
         renderOpponentPanels();
 
@@ -696,96 +701,51 @@ public class GameScreen extends GUIScreen {
         PlayerDTO me = findMe();
         if (me == null) return;
 
-        // Bottom spans the full window width in BorderPane, so the hand can
-        // use everything minus the identity column, side paddings, and (if
-        // pagination is needed) two nav-button slots.
-        List<CardDTO> allCards = collectHand(me);
-        int total = allCards.size();
-        double stack = rootStack.getWidth();
-        if (stack <= 0) stack = 1280;
-        double cardW = sharedCardW;            // identical to the board card size
-        double cardH = cardW * CARD_ASPECT;
+        VBox identity = buildSelfIdentity(me);
 
-        // Fit as many board-sized cards as the hand area allows; only then paginate.
-        // Recompute once with the nav-button reservation if a page overflows.
-        // Pagination works in reference space (window width ÷ board scale) so the
-        // hand fills the row at whatever size the board ends up scaled to.
-        double usable = stack / boardScale;
-        int perPage = LayoutMath.perPage(usable - IDENTITY_COL_W - 40, cardW, HAND_GAP);
-        boolean paginated = total > perPage;
-        if (paginated) {
-            perPage = LayoutMath.perPage(usable - IDENTITY_COL_W - 40 - (NAV_BTN_W * 2 + 16), cardW, HAND_GAP);
-            paginated = total > perPage;
+        if (openDeck.containsKey(me.name())) {
+            // Drill-down open: keep the self totem + name + chips unchanged; show the
+            // cards in a row with the back button on the RIGHT.
+            HBox cardsRow = new HBox(DECK_ICON_GAP);
+            cardsRow.setAlignment(Pos.CENTER_LEFT);
+            cardsRow.getChildren().addAll(deckCardNodes(me, openDeck.get(me.name()), DECK_CARD_W_SELF));
+            selfPanelBox.getChildren().addAll(identity, cardsRow, buildDeckBackButton(me.name(), 18));
+            return;
         }
-        int pageCount = paginated ? (int) Math.ceil(total / (double) perPage) : 1;
-        if (selfHandPage >= pageCount) selfHandPage = pageCount - 1;
-        if (selfHandPage < 0) selfHandPage = 0;
 
-        int from = selfHandPage * perPage;
-        int to = Math.min(from + perPage, total);
-        List<CardDTO> pageCards = allCards.subList(from, to);
+        // Default: totem + name + chips on the left, the seven deck icons on the right.
+        selfPanelBox.getChildren().addAll(identity, buildDeckIcons(me, false, DECK_ICON_SELF_W));
+    }
 
-        // Identity column: totem pinned to top, name + chips pinned to bottom,
-        // overall height = card height so the boundaries line up. The totem
-        // is clamped to whatever vertical space is left after name + chip.
+    /** Self identity column: totem on top, name + food/pp chips below. */
+    private VBox buildSelfIdentity(PlayerDTO me) {
         VBox left = new VBox(4);
-        left.setAlignment(Pos.TOP_CENTER);
+        left.setAlignment(Pos.CENTER);
         left.setPrefWidth(IDENTITY_COL_W);
         left.setMinWidth(IDENTITY_COL_W);
-        left.setPrefHeight(cardH);
-        left.setMinHeight(cardH);
-        left.setMaxHeight(cardH);
-
-        double totemMaxH = Math.max(16, cardH - NAME_H_EST - CHIP_WIDTH - 12);
 
         if (me.totem() != null) {
             ImageView totem = safeImageView(() -> ImageCatalog.totem2D(me.totem()));
             if (totem != null) {
                 totem.setFitWidth(SELF_TOTEM);
-                totem.setFitHeight(totemMaxH);
                 totem.setPreserveRatio(true);
                 left.getChildren().add(totem);
             }
         }
 
-        Region spacer = new Region();
-        VBox.setVgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
-        left.getChildren().add(spacer);
-
         Label name = new Label("★ " + me.name());
         name.setStyle("-fx-font-weight: bold; -fx-font-size: 15px; -fx-text-fill: #f5deb3;");
-        left.getChildren().add(name);
-
         HBox stats = new HBox(8, Chip.food(me.food(), CHIP_WIDTH), Chip.pp(me.pp(), CHIP_WIDTH));
         stats.setAlignment(Pos.CENTER);
-        left.getChildren().add(stats);
-
-        HBox cards = buildHandCards(pageCards, cardW);
-
-        HBox handRow = new HBox(8);
-        handRow.setAlignment(Pos.CENTER_LEFT);
-        if (selfHandPage > 0) {
-            handRow.getChildren().add(buildHandNavButton("◀", -1));
-        }
-        handRow.getChildren().add(cards);
-        if (selfHandPage < pageCount - 1) {
-            handRow.getChildren().add(buildHandNavButton("▶", +1));
-        }
-
-        selfPanelBox.getChildren().addAll(left, handRow);
-        HBox.setHgrow(handRow, javafx.scene.layout.Priority.ALWAYS);
+        left.getChildren().addAll(name, stats);
+        return left;
     }
 
-    private Button buildHandNavButton(String glyph, int delta) {
-        Button b = new Button(glyph);
-        b.setFocusTraversable(false);
-        b.setStyle("-fx-font-size: 16px; -fx-padding: 4 10 4 10; -fx-background-radius: 8;");
-        b.setOnAction(_ -> {
-            selfHandPage += delta;
-            renderSelfPanel();
-        });
-        markNav(b, "SELF_NAV:" + (delta < 0 ? "PREV" : "NEXT"), "BUTTON", b::fire);
-        return b;
+    /** Compact textual identity used while an opponent drill-down is open: "Name: x food; y pp". */
+    private Label buildCompactHeader(PlayerDTO p) {
+        Label l = new Label(p.name() + ": " + p.food() + " food; " + p.pp() + " pp");
+        l.setStyle("-fx-text-fill: #f5deb3; -fx-font-size: 12px; -fx-font-weight: bold;");
+        return l;
     }
 
     // ── Opponent panels (sides) ──────────────────────────────────────────────
@@ -806,23 +766,7 @@ public class GameScreen extends GUIScreen {
         };
     }
 
-    /** Called when mouse enters or exits any expanded opponent panel.
-     *  On enter: cancel fade timer, show ALL expanded panels at full opacity.
-     *  On exit: start shared timer; when it fires fade all back to semi-transparent. */
-    private void onExpandedPanelHover(boolean entering) {
-        expandedFadeTimer.stop();
-        if (entering) {
-            for (Pane h : expandedHandNodes) h.setOpacity(1.0);
-        } else {
-            expandedFadeTimer.setOnFinished(_ -> {
-                for (Pane h : expandedHandNodes) h.setOpacity(0.45);
-            });
-            expandedFadeTimer.playFromStart();
-        }
-    }
-
     private void renderOpponentPanels() {
-        expandedHandNodes.clear();
         topPlayersBox.getChildren().clear();
         leftPlayersBox.getChildren().clear();
         rightPlayersBox.getChildren().clear();
@@ -918,333 +862,223 @@ public class GameScreen extends GUIScreen {
     }
 
     private Node buildOpponentPanel(PlayerDTO p, Slot slot) {
-        // TOP slot: cards lay out horizontally (single row), arrows on the
-        // sides. LEFT/RIGHT: 4×2 vertical grid (paired columns) with arrows on
-        // top/bottom. Both branches share the same pagination model.
         boolean topSlot = (slot == Slot.TOP);
-        List<CardDTO> allCards = collectHand(p);
-        int total = allCards.size();
-        boolean paginated = total > OPP_HAND_PER_PAGE;
-        int sizingN = Math.min(total, OPP_HAND_PER_PAGE);
-        double cardsWidth = (sizingN == 0) ? 0 : sizingN * OPP_HAND_W + (sizingN - 1) * HAND_GAP;
-        double navReserved = paginated ? (OPP_NAV_BTN_W * 2 + 16) : 0;
-        final double basePanelW = topSlot ? SIDE_PANEL_W : LR_PANEL_W;
-        double expandedW = topSlot
-                ? Math.max(basePanelW, cardsWidth + navReserved + 28)
-                : basePanelW;
-        double cardAvail = topSlot
-                ? expandedW - 28 - navReserved
-                : basePanelW - 28;
-
         VBox panel = new VBox(6);
         panel.getStyleClass().add("panel");
         panel.setPadding(new Insets(8, 10, 8, 10));
         panel.setAlignment(Pos.TOP_CENTER);
-        panel.setPrefWidth(basePanelW);
-        panel.setMaxWidth(basePanelW);
 
-        Pane header = buildOpponentHeader(p, topSlot);
-
-        Button toggle = new Button("▾ Cards");
-        toggle.setFocusTraversable(false);
-        toggle.setStyle("-fx-font-size: 11px; -fx-padding: 4 8 4 8;");
-
-        final double cardW = sharedCardW;      // all cards share one size
-
-        final javafx.scene.layout.Pane hand;
-        if (topSlot) {
-            HBox row = new HBox(8);
-            row.setAlignment(Pos.CENTER_LEFT);
-            row.setVisible(false);
-            row.setManaged(false);
-            populateOpponentHandRow(row, panel, p, cardW, allCards);
-            hand = row;
+        if (openDeck.containsKey(p.name())) {
+            // Drill-down: compact header (top-left) and the back button (top-right)
+            // share one row; the chosen type's cards sit below (TOP = row,
+            // LEFT/RIGHT = vertical pairs).
+            Region spacer = new Region();
+            HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
+            HBox topBar = new HBox(6, buildCompactHeader(p), spacer, buildDeckBackButton(p.name(), 13));
+            topBar.setAlignment(Pos.CENTER_LEFT);
+            panel.getChildren().addAll(topBar, buildDeckCardsBox(p, openDeck.get(p.name()), !topSlot));
         } else {
-            VBox col = new VBox(6);
-            col.setAlignment(Pos.CENTER);
-            col.setVisible(false);
-            col.setManaged(false);
-            populateOpponentHandColumn(col, panel, p, cardW, allCards);
-            hand = col;
+            // Default: full header (totem + chips) + the seven icons.
+            panel.getChildren().addAll(buildOpponentHeader(p, topSlot),
+                    buildDeckIcons(p, !topSlot, DECK_ICON_W));
         }
 
-        // Shown only in expanded state: player name in bottom-left while the
-        // toggle stays centered.
-        Label expandedName = new Label(p.name());
-        expandedName.setStyle("-fx-font-weight: bold; -fx-text-fill: #f5deb3; -fx-font-size: 13px;");
-        expandedName.setVisible(false);
-        expandedName.setManaged(false);
-
-        StackPane bottomBar = new StackPane();
-        StackPane.setAlignment(expandedName, Pos.BOTTOM_LEFT);
-        // TOP slot has plenty of horizontal room → toggle centered; side
-        // slots are narrow so we tuck the toggle in the bottom-right corner.
-        StackPane.setAlignment(toggle, topSlot ? Pos.CENTER : Pos.BOTTOM_RIGHT);
-        bottomBar.getChildren().addAll(expandedName, toggle);
-
-        // Applies the expanded/collapsed look and records it in expandedOpponents
-        // so a later re-render can restore it. Used by the toggle and by the
-        // initial state below.
-        java.util.function.Consumer<Boolean> setExpanded = showCards -> {
-            hand.setVisible(showCards);
-            hand.setManaged(showCards);
-            header.setVisible(!showCards);
-            header.setManaged(!showCards);
-            expandedName.setVisible(showCards);
-            expandedName.setManaged(showCards);
-            toggle.setText(showCards ? "▴ Player" : "▾ Cards");
-            if (showCards) {
-                expandedOpponents.add(p.name());
-                if (topSlot) {
-                    populateOpponentHandRow((HBox) hand, panel, p, cardW, allCards);
-                } else {
-                    populateOpponentHandColumn((VBox) hand, panel, p, cardW, allCards);
-                }
-                Platform.runLater(() -> fitExpandedPanel(panel, topSlot));
-                // Only the card hand fades — toggle, name, chips stay fully opaque.
-                expandedHandNodes.add(hand);
-                // Start at full opacity (user just clicked the toggle, mouse is on
-                // the panel). The fade timer runs immediately; if the mouse stays
-                // inside, onMouseEntered cancels it and keeps everything at 1.0.
-                hand.setOpacity(1.0);
-                panel.setOnMouseEntered(_ -> onExpandedPanelHover(true));
-                panel.setOnMouseExited(_ -> onExpandedPanelHover(false));
-                onExpandedPanelHover(false);
-            } else {
-                expandedOpponents.remove(p.name());
-                expandedHandNodes.remove(hand);
-                hand.setOpacity(1.0);
-                panel.setPrefWidth(basePanelW);
-                panel.setMaxWidth(basePanelW);
-                panel.setScaleX(1);
-                panel.setScaleY(1);
-                panel.setTranslateY(0);
-                panel.setOnMouseEntered(null);
-                panel.setOnMouseExited(null);
-            }
-        };
-        toggle.setOnAction(_ -> setExpanded.accept(!hand.isVisible()));
-        // The "Cards" toggle is always navigable so the player can browse any
-        // opponent's hand, regardless of phase.
-        markNav(toggle, "TOG:" + p.name(), "BUTTON", toggle::fire);
-
-        panel.getChildren().addAll(header, hand, bottomBar);
-        // Restore expanded state across re-renders.
-        if (expandedOpponents.contains(p.name())) setExpanded.accept(true);
+        if (!topSlot) {
+            panel.setPrefWidth(LR_PANEL_W);
+            panel.setMaxWidth(LR_PANEL_W);
+        }
         return panel;
     }
 
-    /**
-     * Scales a single expanded opponent panel down so its content fits the
-     * available vertical space, anchoring the top so it never grows upward off
-     * the window. Acts per-panel: expanding one opponent leaves siblings
-     * untouched. Collapsed panels reset scale to 1 in the toggle handler.
-     *
-     * <p>Side (LEFT/RIGHT) panels are bounded by their BorderPane region height;
-     * TOP panels live in a region that grows with content, so they are bounded
-     * by a fraction of the window height instead.
-     */
-    private void fitExpandedPanel(VBox panel, boolean topSlot) {
-        panel.setScaleX(1);
-        panel.setScaleY(1);
-        panel.setTranslateY(0);
+    // ── Deck-summary icons (replaces the old hand view) ───────────────────────
 
-        double availH;
-        if (topSlot) {
-            double winH = rootStack.getHeight();
-            if (winH <= 0) winH = 720;
-            availH = winH * TOP_EXPAND_BUDGET;
-        } else if (panel.getParent() instanceof Region region) {
-            Insets pad = region.getInsets();
-            availH = region.getHeight() - pad.getTop() - pad.getBottom();
-        } else {
-            return;
-        }
-        if (availH <= 0) return;
-
-        double prefH = panel.prefHeight(panel.getWidth());
-        if (prefH <= availH) return;
-
-        double scale = availH / prefH;
-        panel.setScaleX(scale);
-        panel.setScaleY(scale);
-        // Scaling pivots on the panel center; shift up so the visual top stays
-        // anchored at the region top instead of drifting off-screen.
-        panel.setTranslateY(-(prefH - availH) / 2.0);
-    }
+    /** The seven hand card types, in the order their icons are laid out. */
+    private static final List<CardType> DECK_ORDER = List.of(
+            CardType.HUNTER, CardType.GATHERER, CardType.BUILDER, CardType.SHAMAN,
+            CardType.INVENTOR, CardType.ARTIST, CardType.BUILDINGS);
 
     /**
-     * Fills {@code handRow} with optional prev/next nav buttons around the
-     * current page of cards for {@code p}. The row mutates in-place so toggling
-     * the page doesn't force a full board re-render (which would close the
-     * expanded panel).
+     * Builds the seven deck-summary icons for a player. {@code grid=false} lays
+     * them in a single row (wide self/TOP panels); {@code grid=true} uses a
+     * {@link #DECK_SIDE_COLS}-column grid for the narrow LEFT/RIGHT panels.
      */
-    private void populateOpponentHandRow(HBox handRow, VBox panel, PlayerDTO p,
-                                          double cardW, List<CardDTO> allCards) {
-        int total = allCards.size();
-        boolean paginated = total > OPP_HAND_PER_PAGE;
-        int pageCount = paginated ? (int) Math.ceil(total / (double) OPP_HAND_PER_PAGE) : 1;
-        int cur = opponentHandPages.getOrDefault(p.name(), 0);
-        if (cur >= pageCount) cur = pageCount - 1;
-        if (cur < 0) cur = 0;
-        opponentHandPages.put(p.name(), cur);
-        final int page = cur;
-
-        int from = page * OPP_HAND_PER_PAGE;
-        int to   = Math.min(from + OPP_HAND_PER_PAGE, total);
-        List<CardDTO> pageCards = allCards.subList(from, to);
-
-        handRow.getChildren().clear();
-        boolean hasPrev = page > 0;
-        boolean hasNext = page < pageCount - 1;
-        if (hasPrev) {
-            handRow.getChildren().add(buildOppNavButton("◀", () -> {
-                opponentHandPages.put(p.name(), page - 1);
-                populateOpponentHandRow(handRow, panel, p, cardW, allCards);
-            }, "OPP_NAV:" + p.name() + ":PREV"));
+    private Pane buildDeckIcons(PlayerDTO p, boolean grid, double iconW) {
+        if (!grid) {
+            HBox row = new HBox(DECK_ICON_GAP);
+            row.setAlignment(Pos.CENTER);
+            for (CardType t : DECK_ORDER) row.getChildren().add(buildDeckIconCell(p, t, iconW));
+            return row;
         }
-        if (total == 0) {
-            handRow.setAlignment(Pos.CENTER);
-            handRow.getChildren().add(buildNoCardsLabel());
-        } else {
-            handRow.setAlignment(Pos.CENTER_LEFT);
-            handRow.getChildren().add(buildHandCards(pageCards, cardW));
+        GridPane g = new GridPane();
+        g.setHgap(DECK_ICON_GAP);
+        g.setVgap(DECK_ICON_GAP);
+        g.setAlignment(Pos.CENTER);
+        for (int i = 0; i < DECK_ORDER.size(); i++) {
+            g.add(buildDeckIconCell(p, DECK_ORDER.get(i), iconW), i % DECK_SIDE_COLS, i / DECK_SIDE_COLS);
         }
-        if (hasNext) {
-            handRow.getChildren().add(buildOppNavButton("▶", () -> {
-                opponentHandPages.put(p.name(), page + 1);
-                populateOpponentHandRow(handRow, panel, p, cardW, allCards);
-            }, "OPP_NAV:" + p.name() + ":NEXT"));
-        }
-
-        // When expanded, size the panel to the actual content (cards + the
-        // arrows currently visible). When collapsed the toggle handler keeps
-        // the panel at SIDE_PANEL_W.
-        if (handRow.isVisible()) {
-            int sizingN = Math.min(total, OPP_HAND_PER_PAGE);
-            double cardsW = sizingN * cardW + Math.max(0, sizingN - 1) * HAND_GAP;
-            int navCount = (hasPrev ? 1 : 0) + (hasNext ? 1 : 0);
-            double w = Math.max(SIDE_PANEL_W, cardsW + navCount * (OPP_NAV_BTN_W + 8) + 28);
-            panel.setPrefWidth(w);
-            panel.setMaxWidth(w);
-        }
+        return g;
     }
 
-    /**
-     * Vertical counterpart of {@link #populateOpponentHandRow}: lays the page
-     * as a 4×2 grid (4 rows × 2 columns), with ▲/▼ arrows above/below when
-     * pagination is active. Used for LEFT/RIGHT slot opponents.
-     */
-    private void populateOpponentHandColumn(VBox container, VBox panel, PlayerDTO p,
-                                             double cardW, List<CardDTO> allCards) {
-        int total = allCards.size();
-        boolean paginated = total > OPP_HAND_PER_PAGE;
-        int pageCount = paginated ? (int) Math.ceil(total / (double) OPP_HAND_PER_PAGE) : 1;
-        int cur = opponentHandPages.getOrDefault(p.name(), 0);
-        if (cur >= pageCount) cur = pageCount - 1;
-        if (cur < 0) cur = 0;
-        opponentHandPages.put(p.name(), cur);
-        final int page = cur;
+    /** One deck icon with its {@code xN} count and any type-specific extra-info badge(s). */
+    private StackPane buildDeckIconCell(PlayerDTO p, CardType type, double iconW) {
+        double w = iconW;
+        double h = w * DECK_ICON_AR;
+        StackPane cell = new StackPane();
+        cell.setMinSize(w, h);
+        cell.setPrefSize(w, h);
+        cell.setMaxSize(w, h);
 
-        int from = page * OPP_HAND_PER_PAGE;
-        int to   = Math.min(from + OPP_HAND_PER_PAGE, total);
-        List<CardDTO> pageCards = allCards.subList(from, to);
+        ImageView icon = safeImageView(() -> ImageCatalog.deckIcon(type));
+        if (icon != null) {
+            icon.setFitWidth(w);
+            icon.setPreserveRatio(true);
+            cell.getChildren().add(icon);
+        }
 
-        container.getChildren().clear();
-        boolean hasPrev = page > 0;
-        boolean hasNext = page < pageCount - 1;
-        if (hasPrev) {
-            container.getChildren().add(buildOppNavButton("▲", () -> {
-                opponentHandPages.put(p.name(), page - 1);
-                populateOpponentHandColumn(container, panel, p, cardW, allCards);
-            }, "OPP_NAV:" + p.name() + ":PREV"));
-        }
-        if (total == 0) {
-            container.getChildren().add(buildNoCardsLabel());
-        } else {
-            container.getChildren().add(buildOpponentGridPage(pageCards, cardW));
-        }
-        if (hasNext) {
-            container.getChildren().add(buildOppNavButton("▼", () -> {
-                opponentHandPages.put(p.name(), page + 1);
-                populateOpponentHandColumn(container, panel, p, cardW, allCards);
-            }, "OPP_NAV:" + p.name() + ":NEXT"));
-        }
-        // Side panels keep SIDE_PANEL_W; height grows automatically with content.
-    }
-
-    /** Lays {@code pageCards} as a 4-row × 2-column grid (left-to-right, top-to-bottom). */
-    private VBox buildOpponentGridPage(List<CardDTO> pageCards, double cardW) {
-        VBox grid = new VBox(HAND_GAP);
-        grid.setAlignment(Pos.CENTER);
-        HBox row = null;
-        for (int i = 0; i < pageCards.size(); i++) {
-            if (i % 2 == 0) {
-                row = new HBox(HAND_GAP);
-                row.setAlignment(Pos.CENTER);
-                grid.getChildren().add(row);
+        switch (type) {
+            case BUILDER -> {
+                // Bottom-left: total builder PP on the laurel. Top-right: discount
+                // (shown as a negative, with a smaller font so "-NN" fits).
+                StackPane pp = buildBadge(safeImage(ImageCatalog::ppCard), PP_W, PP_H, BADGE_W,
+                        String.valueOf(p.builderPP()), BUILDER_INK, BADGE_FONT, PP_CX, PP_CY);
+                StackPane.setAlignment(pp, Pos.BOTTOM_LEFT);
+                StackPane disc = buildBadge(safeImage(ImageCatalog::foodLoss), FL_W, FL_H, BADGE_W,
+                        "-" + p.builderDiscount(), BUILDER_INK, DISCOUNT_FONT, FL_CX, FL_CY);
+                StackPane.setAlignment(disc, Pos.TOP_RIGHT);
+                cell.getChildren().addAll(pp, disc);
             }
-            row.getChildren().add(buildMiniCard(pageCards.get(i), cardW));
+            case GATHERER -> {
+                // Top-right: discount (negative) on the drumstick — same drawing as
+                // the builder but with the maroon strokes repainted orange.
+                StackPane disc = buildBadge(safeImage(ImageCatalog::foodLossOrange), FL_W, FL_H, BADGE_W,
+                        "-" + p.gathererDiscount(), GATHERER_INK, DISCOUNT_FONT, FL_CX, FL_CY);
+                StackPane.setAlignment(disc, Pos.TOP_RIGHT);
+                cell.getChildren().add(disc);
+            }
+            case SHAMAN -> {
+                // Top-right: total shaman stars.
+                StackPane stars = buildBadge(safeImage(ImageCatalog::shamanStars), SS_W, SS_H, BADGE_W,
+                        String.valueOf(p.shamanStars()), SHAMAN_INK, BADGE_FONT, SS_CX, SS_CY);
+                StackPane.setAlignment(stars, Pos.TOP_RIGHT);
+                cell.getChildren().add(stars);
+            }
+            case INVENTOR -> {
+                // Top-right: number of unique inventor icons (explained on hover).
+                ImageView uniq = ChalkBadge.number(String.valueOf(p.inventorUniqueIcons()),
+                        DECK_COUNT_FONT, Color.WHITE, Color.BLACK, DECK_COUNT_STROKE);
+                StackPane.setAlignment(uniq, Pos.TOP_RIGHT);
+                Tooltip.install(uniq, new Tooltip("Number of unique icons"));
+                cell.getChildren().add(uniq);
+            }
+            default -> { }
         }
-        return grid;
+
+        // Bottom-right of every icon: how many cards of this type the player holds.
+        int count = (p.cards() == null || p.cards().get(type) == null) ? 0 : p.cards().get(type).size();
+        ImageView xn = ChalkBadge.number("x" + count, DECK_COUNT_FONT, Color.WHITE, Color.BLACK, DECK_COUNT_STROKE);
+        StackPane.setAlignment(xn, Pos.BOTTOM_RIGHT);
+        cell.getChildren().add(xn);
+
+        // Clicking an icon drills into this player's cards of that type (toggle).
+        cell.setCursor(Cursor.HAND);
+        cell.setOnMouseClicked(_ -> { openDeck.put(p.name(), type); renderBoard(); });
+
+        return cell;
     }
 
-    private Button buildOppNavButton(String glyph, Runnable onClick, String navKey) {
-        Button b = new Button(glyph);
+    /**
+     * A small corner extra-info badge: the {@code img} with {@code text} drawn
+     * centred on the image's {@code (cx,cy)} reference pixel. Any per-type
+     * recolouring is baked into {@code img} by the caller (see
+     * {@link ImageCatalog#foodLossOrange()}).
+     */
+    private StackPane buildBadge(Image img, double nativeW, double nativeH, double dispW,
+                                 String text, Color ink, double fontSize, double cx, double cy) {
+        double dispH = dispW * nativeH / nativeW;
+        StackPane sp = new StackPane();
+        sp.setMinSize(dispW, dispH);
+        sp.setPrefSize(dispW, dispH);
+        sp.setMaxSize(dispW, dispH);
+        sp.setMouseTransparent(true);
+        if (img != null) {
+            ImageView iv = new ImageView(img);
+            iv.setFitWidth(dispW);
+            iv.setFitHeight(dispH);
+            iv.setPreserveRatio(false);
+            sp.getChildren().add(iv);
+        }
+        ImageView num = ChalkBadge.number(text, fontSize, ink, null, 0);
+        StackPane.setAlignment(num, Pos.CENTER);
+        num.setTranslateX((cx - nativeW / 2.0) * (dispW / nativeW));
+        num.setTranslateY((cy - nativeH / 2.0) * (dispH / nativeH));
+        sp.getChildren().add(num);
+        return sp;
+    }
+
+    // ── Deck drill-down (icon toggle → that type's cards) ─────────────────────
+
+    /** The card images for {@code p}'s cards of {@code type} (sorted), or a single
+     *  "—" placeholder when the player holds none of that type. */
+    private List<Node> deckCardNodes(PlayerDTO p, CardType type, double cw) {
+        List<CardDTO> cards = new ArrayList<>();
+        if (p.cards() != null && p.cards().get(type) != null) cards.addAll(p.cards().get(type));
+        cards.sort(Comparator.comparing(CardDTO::id));
+        List<Node> nodes = new ArrayList<>();
+        if (cards.isEmpty()) {
+            Label none = new Label("—");
+            none.setFont(ImageCatalog.chalkFont(16));
+            none.setStyle("-fx-text-fill: #f5deb3; -fx-padding: 6;");
+            nodes.add(none);
+        } else {
+            for (CardDTO c : cards) nodes.add(buildDeckCard(c, cw));
+        }
+        return nodes;
+    }
+
+    /**
+     * The cards-only container for an opponent drill-down (the back button lives
+     * in the header row): {@code vertical=false} (TOP) lays them in a single row;
+     * {@code vertical=true} (LEFT/RIGHT) lays them in vertical pairs (two columns)
+     * to keep the panel narrow.
+     */
+    private Pane buildDeckCardsBox(PlayerDTO p, CardType type, boolean vertical) {
+        double cw = vertical ? DECK_CARD_W_V : DECK_CARD_W_H;
+        List<Node> cardNodes = deckCardNodes(p, type, cw);
+        if (vertical) {
+            GridPane grid = new GridPane();
+            grid.setHgap(DECK_ICON_GAP);
+            grid.setVgap(DECK_ICON_GAP);
+            grid.setAlignment(Pos.CENTER);
+            for (int i = 0; i < cardNodes.size(); i++) {
+                grid.add(cardNodes.get(i), i % DECK_SIDE_COLS, i / DECK_SIDE_COLS);
+            }
+            return grid;
+        }
+        HBox rowBox = new HBox(DECK_ICON_GAP);
+        rowBox.setAlignment(Pos.CENTER);
+        rowBox.getChildren().addAll(cardNodes);
+        return rowBox;
+    }
+
+    /** Gold back button that closes the drill-down for {@code playerName}, at the
+     *  given font size (the self panel uses a larger one). */
+    private Button buildDeckBackButton(String playerName, int fontSize) {
+        Button b = new Button("↩");
         b.setFocusTraversable(false);
-        b.setStyle("-fx-font-size: 13px; -fx-padding: 3 8 3 8; -fx-background-radius: 6;");
-        b.setOnAction(_ -> onClick.run());
-        markNav(b, navKey, "BUTTON", b::fire);
+        int padV = Math.round(fontSize * 0.3f);
+        int padH = Math.round(fontSize * 0.7f);
+        b.setStyle("-fx-font-size: " + fontSize + "px; -fx-padding: "
+                + padV + " " + padH + " " + padV + " " + padH + "; -fx-background-radius: 8;");
+        b.setOnAction(_ -> { openDeck.remove(playerName); renderBoard(); });
         return b;
     }
 
-    // ── Hand cards view (used by both self and opponents) ────────────────────
-
-    private int countHandCards(PlayerDTO p) {
-        if (p.cards() == null) return 0;
-        int n = 0;
-        for (Set<CardDTO> set : p.cards().values()) {
-            if (set != null) n += set.size();
-        }
-        return n;
-    }
-
-    /** Flattens the player's hand to a single list in CardType enum order. */
-    private List<CardDTO> collectHand(PlayerDTO p) {
-        List<CardDTO> all = new ArrayList<>();
-        if (p.cards() == null) return all;
-        for (CardType type : CardType.values()) {
-            Set<CardDTO> set = p.cards().get(type);
-            if (set != null) all.addAll(set);
-        }
-        return all;
-    }
-
-    /** Centered placeholder shown in an expanded panel when the player holds no cards. */
-    private Label buildNoCardsLabel() {
-        Label l = new Label("No cards yet");
-        l.setFont(ImageCatalog.chalkFont(18));
-        l.setStyle("-fx-text-fill: #f5deb3;");
-        l.setAlignment(Pos.CENTER);
-        l.setPadding(new Insets(6, 4, 6, 4));
-        return l;
-    }
-
-    /** Builds a single-row HBox of mini-cards using a pre-computed card width. */
-    private HBox buildHandCards(List<CardDTO> cards, double cardW) {
-        HBox row = new HBox(HAND_GAP);
-        row.setAlignment(Pos.CENTER_LEFT);
-        for (CardDTO c : cards) {
-            row.getChildren().add(buildMiniCard(c, cardW));
-        }
-        return row;
-    }
-
-    private Node buildMiniCard(CardDTO card, double w) {
+    /** A single rounded card image used in the drill-down view. */
+    private Node buildDeckCard(CardDTO card, double w) {
         double h = w * CARD_ASPECT;
         StackPane cell = new StackPane();
-        cell.setPrefSize(w, h);
         cell.setMinSize(w, h);
+        cell.setPrefSize(w, h);
         cell.setMaxSize(w, h);
         ImageView img = safeImageView(() -> ImageCatalog.cardFront(card.id()));
         if (img != null) {
@@ -1257,13 +1091,23 @@ public class GameScreen extends GUIScreen {
             img.setClip(clip);
             cell.getChildren().add(img);
         } else {
-            Label fallback = new Label(card.id());
-            fallback.setWrapText(true);
-            fallback.setStyle("-fx-text-fill: #f5deb3; -fx-background-color: #3a2410;"
+            Label fb = new Label(card.id());
+            fb.setWrapText(true);
+            fb.setStyle("-fx-text-fill: #f5deb3; -fx-background-color: #3a2410;"
                     + " -fx-background-radius: 6; -fx-padding: 4; -fx-font-size: 10px;");
-            cell.getChildren().add(fallback);
+            cell.getChildren().add(fb);
         }
         return cell;
+    }
+
+    /** Loads an image, swallowing failures (mirrors {@link #safeImageView}). */
+    private static Image safeImage(java.util.function.Supplier<Image> supplier) {
+        try {
+            return supplier.get();
+        } catch (Exception e) {
+            System.err.println("[GUI] image load failed: " + e.getMessage());
+            return null;
+        }
     }
 
     private void renderRow(HBox container, List<CardDTO> cards, Row row, double cardW) {

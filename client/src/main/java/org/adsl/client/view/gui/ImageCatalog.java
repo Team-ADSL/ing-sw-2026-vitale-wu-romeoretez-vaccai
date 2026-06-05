@@ -1,6 +1,10 @@
 package org.adsl.client.view.gui;
 
 import javafx.scene.image.Image;
+import javafx.scene.image.PixelReader;
+import javafx.scene.image.PixelWriter;
+import javafx.scene.image.WritableImage;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Totem;
@@ -96,6 +100,75 @@ public final class ImageCatalog {
                 || type == CardType.SHAMANIC_RITUAL
                 || type == CardType.CAVE_PAINTINGS;
     }
+
+    // ── Deck-summary icons ────────────────────────────────────────────────────
+
+    /** Per-type deck-summary icon shown in the player panels. File: {@code <type>_icon.png}. */
+    public static Image deckIcon(CardType type) {
+        return load("/assets/decks_icons/" + deckIconName(type) + "_icon.png");
+    }
+
+    private static String deckIconName(CardType type) {
+        return switch (type) {
+            case HUNTER    -> "hunter";
+            case GATHERER  -> "gatherer";
+            case BUILDER   -> "builder";
+            case SHAMAN    -> "shaman";
+            case INVENTOR  -> "inventor";
+            case ARTIST    -> "artist";
+            case BUILDINGS -> "building";
+            default -> throw new IllegalArgumentException("no deck icon for " + type);
+        };
+    }
+
+    /** Laurel-wreath badge for the builders' total end-game PP. */
+    public static Image ppCard()      { return load("/assets/decks_icons/pp_card.png"); }
+    /** Drumstick badge for the builders' food discount (the original maroon drawing). */
+    public static Image foodLoss()    { return load("/assets/decks_icons/food_loss.png"); }
+
+    /**
+     * The same drumstick as {@link #foodLoss()} but with the maroon strokes
+     * repainted orange for gatherers — identical drawing, orange in place of the
+     * maroon, the light body left as-is. Recoloured per pixel once and cached.
+     */
+    public static Image foodLossOrange() {
+        return CACHE.computeIfAbsent("__food_loss_orange",
+                k -> recolorStrokes(foodLoss(), Color.web("#f57a13")));
+    }
+
+    /**
+     * Maps the dark (stroke) pixels of {@code src} to {@code target}, leaving the
+     * light body untouched and blending the anti-aliased edges in between. Alpha
+     * is preserved so the transparent background stays transparent.
+     */
+    private static Image recolorStrokes(Image src, Color target) {
+        int w = (int) src.getWidth();
+        int h = (int) src.getHeight();
+        WritableImage out = new WritableImage(w, h);
+        PixelReader r = src.getPixelReader();
+        PixelWriter wr = out.getPixelWriter();
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                Color c = r.getColor(x, y);
+                double a = c.getOpacity();
+                if (a <= 0) {
+                    wr.setColor(x, y, Color.TRANSPARENT);
+                    continue;
+                }
+                double lum = 0.299 * c.getRed() + 0.587 * c.getGreen() + 0.114 * c.getBlue();
+                // 1 for dark strokes (→ target), 0 for the light body (keep original).
+                double f = Math.max(0, Math.min(1, (0.78 - lum) / (0.78 - 0.32)));
+                wr.setColor(x, y, Color.color(
+                        c.getRed()   * (1 - f) + target.getRed()   * f,
+                        c.getGreen() * (1 - f) + target.getGreen() * f,
+                        c.getBlue()  * (1 - f) + target.getBlue()  * f,
+                        a));
+            }
+        }
+        return out;
+    }
+    /** Star badge for the shamans' total stars. */
+    public static Image shamanStars() { return load("/assets/decks_icons/shaman_stars.png"); }
 
     // ── Totems ──────────────────────────────────────────────────────────────
 

@@ -98,7 +98,7 @@ public class FakeServerConnection implements ServerConnection {
         Map<CardType, Set<org.adsl.shared.model.CardDTO>> emptyCards = new EnumMap<>(CardType.class);
         for (CardType t : CardType.values()) emptyCards.put(t, new HashSet<>());
 
-        PlayerDTO me = new PlayerDTO(username, 0, 0, Totem.RED, emptyCards);
+        PlayerDTO me = new PlayerDTO(username, 0, 0, Totem.RED, emptyCards, 0, 0, 0, 0, 0);
 
         Set<PlayerDTO> players = new LinkedHashSet<>();
         players.add(me);
