@@ -7,7 +7,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.input.KeyCode;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.adsl.client.AppCoordinator;
@@ -38,7 +37,7 @@ public class LobbyScreen extends GUIScreen {
     private int gameId;
     private List<String> players;
     private final int totalPlayers;
-    private FloatingLog floatingLog;
+    private final FloatingLog floatingLog;
 
     public LobbyScreen(AppCoordinator coordinator,
                        String username,
@@ -57,12 +56,13 @@ public class LobbyScreen extends GUIScreen {
             throw new RuntimeException("Failed to load lobby.fxml", e);
         }
         refresh();
-        installKeyboardNav();
-        applyTheme(this.root);
 
-        floatingLog = new FloatingLog("Lobby log");
+        floatingLog = new FloatingLog();
         logBox.getChildren().setAll(floatingLog.getFloatingNode());
         rootStack.getChildren().add(floatingLog.getFullPanel());
+
+        installKeyboardNav();
+        applyTheme(this.root);
     }
 
     private void refresh() {
@@ -74,7 +74,7 @@ public class LobbyScreen extends GUIScreen {
     }
 
     /**
-     * Arrow-key navigation limited to the two action buttons. The players list
+     * Arrow-key navigation limited to the action buttons and the floating log. The players list
      * is display-only and stays out of traversal. On entry, focus rests on the
      * (non-button) root so no outline shows; the first arrow press selects Start
      * Game (white outline via the {@code .button:focused} theme rule), and from
@@ -98,6 +98,7 @@ public class LobbyScreen extends GUIScreen {
         startButton.setOnKeyPressed(e -> {
             switch (e.getCode()) {
                 case RIGHT -> { leaveButton.requestFocus(); e.consume(); }
+                case DOWN  -> { floatingLog.getToggleButton().requestFocus(); e.consume(); }
                 default    -> { /* ignore */ }
             }
         });
@@ -105,7 +106,16 @@ public class LobbyScreen extends GUIScreen {
         leaveButton.setOnKeyPressed(e -> {
             switch (e.getCode()) {
                 case LEFT  -> { startButton.requestFocus(); e.consume(); }
+                case DOWN  -> { floatingLog.getToggleButton().requestFocus(); e.consume(); }
                 default    -> { /* ignore */ }
+            }
+        });
+
+        floatingLog.getToggleButton().setOnKeyPressed(e -> {
+            switch (e.getCode()) {
+                case UP, LEFT -> { startButton.requestFocus(); e.consume(); }
+                case RIGHT    -> { leaveButton.requestFocus(); e.consume(); }
+                default       -> { /* ignore */ }
             }
         });
     }

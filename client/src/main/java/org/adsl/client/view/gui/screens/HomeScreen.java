@@ -16,7 +16,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -55,14 +54,10 @@ public class HomeScreen extends GUIScreen {
     private List<Integer> activeGames;
     private Map<Integer, List<String>> gamePlayers;
     private Map<Integer, Integer> gameCapacity;
-    private FloatingLog floatingLog;
+    private final FloatingLog floatingLog;
     private List<Image> rulesPages;
     private int rulesPageIndex = 0;
     private StackPane rulesOverlay;
-
-    public HomeScreen(AppCoordinator coordinator, String username, List<Integer> activeGames) {
-        this(coordinator, username, activeGames, Collections.emptyMap(), Collections.emptyMap());
-    }
 
     public HomeScreen(AppCoordinator coordinator, String username, List<Integer> activeGames,
                       Map<Integer, List<String>> gamePlayers, Map<Integer, Integer> gameCapacity) {
@@ -85,9 +80,38 @@ public class HomeScreen extends GUIScreen {
         applyTheme(this.root);
         setupRulesButton();
 
-        floatingLog = new FloatingLog("Home log");
+        floatingLog = new FloatingLog();
         logBox.getChildren().setAll(floatingLog.getFloatingNode());
         rootStack.getChildren().add(floatingLog.getFullPanel());
+
+        // Navigation from joinButton and logoutButton to the log toggle button
+        javafx.event.EventHandler<javafx.scene.input.KeyEvent> bottomDown = e -> {
+            if (e.getCode() == KeyCode.DOWN) {
+                floatingLog.getToggleButton().requestFocus();
+                e.consume();
+            }
+        };
+        if (joinButton != null) joinButton.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, bottomDown);
+        if (logoutButton != null) logoutButton.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, bottomDown);
+
+        // Navigation from the log toggle button back to the main buttons/list
+        floatingLog.getToggleButton().addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, e -> {
+            if (e.getCode() == KeyCode.UP) {
+                if (logoutButton != null) logoutButton.requestFocus();
+                else if (joinButton != null) joinButton.requestFocus();
+                else {
+                    gamesList.requestFocus();
+                    if (!gamesList.getItems().isEmpty()) {
+                        gamesList.getSelectionModel().selectLast();
+                    }
+                }
+                e.consume();
+            } else if (e.getCode() == KeyCode.LEFT) {
+                if (logoutButton != null) logoutButton.requestFocus();
+                else if (joinButton != null) joinButton.requestFocus();
+                e.consume();
+            }
+        });
     }
 
     private void setupGamesList() {
@@ -119,7 +143,7 @@ public class HomeScreen extends GUIScreen {
             "rgba(60,40,120,0.38)",
             "rgba(30,90,50,0.38)"
         };
-        String bg = bgColors[Math.max(0, Math.min(capacity - 2, bgColors.length - 1))];
+        String bg = bgColors[Math.clamp(capacity - 2, 0, bgColors.length - 1)];
 
         HBox card = new HBox(10);
         card.setAlignment(Pos.CENTER_LEFT);
@@ -136,11 +160,11 @@ public class HomeScreen extends GUIScreen {
         // Player slot dots
         HBox slots = new HBox(4);
         slots.setAlignment(Pos.CENTER_LEFT);
-        for (int i = 0; i < players.size(); i++) {
+        for (String player : players) {
             Label p = new Label("●"); // filled circle
             p.setStyle("-fx-text-fill: #FDF3D3; -fx-font-size: 14px;");
             p.setFont(ImageCatalog.chalkFont(14));
-            Tooltip.install(p, new Tooltip(players.get(i)));
+            Tooltip.install(p, new Tooltip(player));
             slots.getChildren().add(p);
         }
         for (int i = 0; i < free; i++) {
@@ -283,7 +307,7 @@ public class HomeScreen extends GUIScreen {
         clip.heightProperty().bind(rulesOverlay.heightProperty());
         rulesOverlay.setClip(clip);
 
-        ImageView iv = new ImageView(rulesPages.get(0));
+        ImageView iv = new ImageView(rulesPages.getFirst());
         iv.setPreserveRatio(true);
         iv.fitWidthProperty().bind(rulesOverlay.widthProperty().multiply(0.88));
         iv.fitHeightProperty().bind(rulesOverlay.heightProperty().multiply(0.88));

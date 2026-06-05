@@ -23,7 +23,6 @@ import java.util.List;
  * the same card style. The list scrolls only when it would overflow the
  * available vertical space. Once open it stays open until the user closes it
  * with the ✕ chip — clicking elsewhere does not collapse it.
- *
  * Wire it by adding {@link #getFloatingNode()} as a child of the log container.
  * {@link #getFullPanel()} is kept for backward compatibility and is a no-op.
  */
@@ -49,8 +48,13 @@ public final class FloatingLog {
 
     private boolean expanded = false;
     private boolean scrollCapBound = false;
+    private Runnable onToggleCallback;
 
-    public FloatingLog(String title) {
+    public void setOnToggle(Runnable callback) {
+        this.onToggleCallback = callback;
+    }
+
+    public FloatingLog() {
         floating = new VBox(2);
         floating.setAlignment(Pos.BOTTOM_RIGHT);
         floating.setMaxWidth(MAX_W);
@@ -61,13 +65,21 @@ public final class FloatingLog {
         StackPane.setAlignment(floating, Pos.BOTTOM_RIGHT);
 
         // Collapsed state: a gold chat-style toggle (reuses the shared ".button"
-        // style so it matches the other gold toggles). Not focus-traversable so
-        // it never steals keyboard focus from the in-game arrow navigation.
+        // style so it matches the other gold toggles).
         toggleButton = new Button();
         toggleButton.setGraphic(chatIcon());
-        toggleButton.setFocusTraversable(false);
+        toggleButton.setFocusTraversable(true);
         toggleButton.setStyle("-fx-padding: 6;");
         toggleButton.setOnAction(_ -> expand());
+
+        // Collapse on ESCAPE key
+        floating.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, e -> {
+            if (e.getCode() == javafx.scene.input.KeyCode.ESCAPE && expanded) {
+                collapse();
+                toggleButton.requestFocus();
+                e.consume();
+            }
+        });
 
         // Backward-compat no-op node (no longer shown).
         fullPanel = new StackPane();
@@ -107,6 +119,7 @@ public final class FloatingLog {
 
     public VBox getFloatingNode() { return floating; }
     public StackPane getFullPanel() { return fullPanel; }
+    public Button getToggleButton() { return toggleButton; }
 
     /**
      * Replaces the shared transcript with {@code entries} (server-authoritative,
@@ -146,6 +159,7 @@ public final class FloatingLog {
         applyScrollCap();
         bindScrollCapToHeight();
         Platform.runLater(() -> expandedScroll.setVvalue(1.0));
+        if (onToggleCallback != null) onToggleCallback.run();
     }
 
     /** Closes the log. Only ever called from the ✕ chip — clicking elsewhere keeps it open. */
@@ -153,6 +167,7 @@ public final class FloatingLog {
         expanded = false;
         floating.setMaxHeight(COLLAPSED_MAX_H);
         refresh();
+        if (onToggleCallback != null) onToggleCallback.run();
     }
 
     /** Cap scroll viewport to available vertical space so the bar appears only on overflow. */
@@ -166,7 +181,7 @@ public final class FloatingLog {
     private void bindScrollCapToHeight() {
         Scene scene = floating.getScene();
         if (scene == null || scrollCapBound) return;
-        scene.heightProperty().addListener((o, a, b) -> { if (expanded) applyScrollCap(); });
+        scene.heightProperty().addListener((_, _, _) -> { if (expanded) applyScrollCap(); });
         scrollCapBound = true;
     }
 
@@ -179,11 +194,11 @@ public final class FloatingLog {
     private void refillExpanded() {
         expandedMessages.getChildren().clear();
         for (String s : history) {
-            expandedMessages.getChildren().add(card(s, 1.0));
+            expandedMessages.getChildren().add(card(s));
         }
     }
 
-    private Label card(String text, double opacity) {
+    private Label card(String text) {
         Label entry = new Label(text);
         entry.setWrapText(true);
         entry.setMaxWidth(MAX_W - 20);
@@ -191,7 +206,6 @@ public final class FloatingLog {
         entry.setStyle("-fx-text-fill: #f5deb3; -fx-font-size: 13px;"
                 + " -fx-background-color: rgba(0,0,0,0.40); -fx-padding: 5 12 5 12;"
                 + " -fx-background-radius: 8;");
-        entry.setOpacity(opacity);
         return entry;
     }
 

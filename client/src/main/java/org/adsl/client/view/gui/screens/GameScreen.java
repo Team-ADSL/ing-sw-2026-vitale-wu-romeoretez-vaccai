@@ -1,7 +1,6 @@
 package org.adsl.client.view.gui.screens;
 
 import javafx.animation.PauseTransition;
-import javafx.animation.ScaleTransition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -68,12 +67,10 @@ import java.util.Set;
 
 /**
  * Game screen — minimal, centered, responsive.
- *
  * Cards float without containers, rounded corners; hover scales up; selected
  * cards stay scaled with a white glow. Offer-track tiles are flush (no gap)
  * so they compose a continuous image. Card rows scale dynamically so every
  * row stays single-line at any window size.
- *
  * The game log sits bottom-right, showing only the most recent messages with
  * a fade-up gradient; clicking it opens a full-chat panel.
  */
@@ -91,8 +88,6 @@ public class GameScreen extends GUIScreen {
     private static final double REF_BOARD_H = 820.0;
     private static final double TILE_ASPECT  = 1.65;
     private static final double TILE_MAX_W   = 80.0;
-    private static final double TILE_MIN_W   = 42.0;
-    private static final Duration ANIM       = Duration.millis(140);
     private static final double CHIP_WIDTH   = 50;
     private static final double CHIP_WIDTH_SM = 40;
     private static final double SELF_TOTEM   = 36;
@@ -131,7 +126,6 @@ public class GameScreen extends GUIScreen {
     private static final double ORDER_CELL_X   = 0.5;
     // Totem width relative to tile width (≈ the measured cell rect width 201px).
     private static final double ORDER_TOTEM_W_FRAC = 201.0 / ORDER_TILE_W;
-    private static final double OFFER_ROW_SPACING  = 14.0;
     // Per-player-count vertical cell-center fractions (index = players − 2).
     private static final double[][] ORDER_CELL_Y = {
         { 298.0 / ORDER_TILE_H, 462.0 / ORDER_TILE_H },
@@ -209,7 +203,7 @@ public class GameScreen extends GUIScreen {
     private List<String> playerOrder;
     private final FloatingLog floatingLog;
     /** Scaled board group; stored as a field so applyBoardScale can translate it. */
-    private Group boardGroup;
+    private final Group boardGroup;
     /** Hand nodes (HBox/VBox with cards only) of all currently-expanded panels.
      *  Rebuilt each renderOpponentPanels. Opacity is applied here, not on the
      *  whole panel, so buttons and headers stay fully opaque. */
@@ -234,7 +228,7 @@ public class GameScreen extends GUIScreen {
     /**
      * Shared debounce timer for resize-driven re-renders. Each resize listener
      * resets it; the actual {@link #renderBoard()} fires only once the window
-     * has been still for {@link #RESIZE_DEBOUNCE_MS}, avoiding hundreds of full
+     * has been still for {@code RESIZE_DEBOUNCE_MS}, avoiding hundreds of full
      * board rebuilds per second while dragging the window edge.
      */
     private static final double RESIZE_DEBOUNCE_MS = 90;
@@ -313,7 +307,10 @@ public class GameScreen extends GUIScreen {
         rootStack.getChildren().add(overlayPane);
         StackPane.setAlignment(overlayPane, Pos.CENTER);
 
-        floatingLog = new FloatingLog("Game log");
+        floatingLog = new FloatingLog();
+        markNav(floatingLog.getToggleButton(), "LOG", "BUTTON", floatingLog.getToggleButton()::fire);
+        floatingLog.setOnToggle(this::refreshNav);
+
         if (logBox != null) {
             logBox.getChildren().setAll(floatingLog.getFloatingNode());
             logBox.setPickOnBounds(false);
@@ -343,7 +340,7 @@ public class GameScreen extends GUIScreen {
         Region bgLayer = new Region();
         bgLayer.setBackground(new Background(bgImage));
         bgLayer.setMouseTransparent(true);
-        rootStack.getChildren().add(0, bgLayer);
+        rootStack.getChildren().addFirst(bgLayer);
 
         // Dark tint above the image to improve contrast/readability of the board.
         Region tint = new Region();
@@ -620,10 +617,6 @@ public class GameScreen extends GUIScreen {
         List<CardDTO> top = game.board().topRow();
         List<CardDTO> bot = game.board().lowRow();
         List<OfferTileDTO> off = game.board().offerTrack();
-
-        int topN = (int) top.stream().filter(java.util.Objects::nonNull).count();
-        int botN = (int) bot.stream().filter(java.util.Objects::nonNull).count();
-        int offN = off.size();
 
         // One card size for EVERY card (top row, bottom row, hands): size the
         // most-constrained single-line card row, so cards never differ in size.
@@ -932,9 +925,6 @@ public class GameScreen extends GUIScreen {
         double expandedW = topSlot
                 ? Math.max(basePanelW, cardsWidth + navReserved + 28)
                 : basePanelW;
-        double cardAvail = topSlot
-                ? expandedW - 28 - navReserved
-                : basePanelW - 28;
 
         VBox panel = new VBox(6);
         panel.getStyleClass().add("panel");
@@ -964,7 +954,8 @@ public class GameScreen extends GUIScreen {
             col.setAlignment(Pos.CENTER);
             col.setVisible(false);
             col.setManaged(false);
-            populateOpponentHandColumn(col, panel, p, cardW, allCards);
+            col.setMaxWidth(OPP_HAND_W * 2 + HAND_GAP + 28);
+            populateOpponentHandColumn(col, p, cardW, allCards);
             hand = col;
         }
 
@@ -997,8 +988,9 @@ public class GameScreen extends GUIScreen {
                 expandedOpponents.add(p.name());
                 if (topSlot) {
                     populateOpponentHandRow((HBox) hand, panel, p, cardW, allCards);
-                } else {
-                    populateOpponentHandColumn((VBox) hand, panel, p, cardW, allCards);
+                }
+                if (hand instanceof VBox) {
+                    populateOpponentHandColumn((VBox) hand, p, cardW, allCards);
                 }
                 Platform.runLater(() -> fitExpandedPanel(panel, topSlot));
                 // Only the card hand fades — toggle, name, chips stay fully opaque.
@@ -1135,7 +1127,7 @@ public class GameScreen extends GUIScreen {
      * as a 4×2 grid (4 rows × 2 columns), with ▲/▼ arrows above/below when
      * pagination is active. Used for LEFT/RIGHT slot opponents.
      */
-    private void populateOpponentHandColumn(VBox container, VBox panel, PlayerDTO p,
+    private void populateOpponentHandColumn(VBox container, PlayerDTO p,
                                              double cardW, List<CardDTO> allCards) {
         int total = allCards.size();
         boolean paginated = total > OPP_HAND_PER_PAGE;
@@ -1156,7 +1148,7 @@ public class GameScreen extends GUIScreen {
         if (hasPrev) {
             container.getChildren().add(buildOppNavButton("▲", () -> {
                 opponentHandPages.put(p.name(), page - 1);
-                populateOpponentHandColumn(container, panel, p, cardW, allCards);
+                populateOpponentHandColumn(container, p, cardW, allCards);
             }, "OPP_NAV:" + p.name() + ":PREV"));
         }
         if (total == 0) {
@@ -1167,7 +1159,7 @@ public class GameScreen extends GUIScreen {
         if (hasNext) {
             container.getChildren().add(buildOppNavButton("▼", () -> {
                 opponentHandPages.put(p.name(), page + 1);
-                populateOpponentHandColumn(container, panel, p, cardW, allCards);
+                populateOpponentHandColumn(container, p, cardW, allCards);
             }, "OPP_NAV:" + p.name() + ":NEXT"));
         }
         // Side panels keep SIDE_PANEL_W; height grows automatically with content.
@@ -1200,14 +1192,7 @@ public class GameScreen extends GUIScreen {
 
     // ── Hand cards view (used by both self and opponents) ────────────────────
 
-    private int countHandCards(PlayerDTO p) {
-        if (p.cards() == null) return 0;
-        int n = 0;
-        for (Set<CardDTO> set : p.cards().values()) {
-            if (set != null) n += set.size();
-        }
-        return n;
-    }
+
 
     /** Flattens the player's hand to a single list in CardType enum order. */
     private List<CardDTO> collectHand(PlayerDTO p) {
@@ -1313,10 +1298,10 @@ public class GameScreen extends GUIScreen {
         if (clickable) {
             cell.setCursor(Cursor.HAND);
             cell.setOnMouseEntered(_ -> {
-                if (!selectedMoves.contains(new Move(idx, row))) cell.setEffect(selectedGlow());;
+                if (!selectedMoves.contains(new Move(idx, row))) cell.setEffect(selectedGlow());
             });
             cell.setOnMouseExited(_ -> {
-                if (!selectedMoves.contains(new Move(idx, row))) cell.setEffect(null);;
+                if (!selectedMoves.contains(new Move(idx, row))) cell.setEffect(null);
             });
             cell.setOnMouseClicked(_ -> onCardClicked(row, idx, card, cell));
             markNav(cell, "CARD:" + row.name() + ":" + idx, "CARD", () -> onCardClicked(row, idx, card, cell));
@@ -1444,7 +1429,6 @@ public class GameScreen extends GUIScreen {
         if (cells == null) return;
         double[] ys = ORDER_CELL_Y[n - 2];
         double totemW = tileW * ORDER_TOTEM_W_FRAC;
-        double totemH = totemW * (TOTEM3D_H / TOTEM3D_W);
 
         double rectW = tileW * (186.0 / ORDER_TILE_W);
         double rectH = tileH * (96.0 / ORDER_TILE_H);
@@ -1488,7 +1472,6 @@ public class GameScreen extends GUIScreen {
      * offer-tile height so it sits in line.
      */
     private void renderBuildingDecks(double tileH) {
-        if (buildingDecks == null) return;
         buildingDecks.getChildren().clear();
         if (game == null || game.board() == null || tileH <= 0) return;
 
@@ -1499,8 +1482,7 @@ public class GameScreen extends GUIScreen {
         HBox.setMargin(buildingDecks, new Insets(0, 0, 0, 18));
 
         int size = remaining.size();
-        double deckH = tileH;
-        double deckW = deckH / CARD_ASPECT;
+        double deckW = tileH / CARD_ASPECT;
         for (int i = 0; i < size; i++) {
             if (!Boolean.TRUE.equals(remaining.get(i))) continue;
             final int era = (4 - size) + i;
@@ -1508,10 +1490,10 @@ public class GameScreen extends GUIScreen {
             ImageView back = safeImageView(() -> ImageCatalog.cardBack(CardType.BUILDINGS, era, false));
             if (back == null) continue;
             back.setFitWidth(deckW);
-            back.setFitHeight(deckH);
+            back.setFitHeight(tileH);
             back.setPreserveRatio(false);
             // Round the corners like the board cards (arc = 12% of width).
-            Rectangle clip = new Rectangle(deckW, deckH);
+            Rectangle clip = new Rectangle(deckW, tileH);
             clip.setArcWidth(deckW * 0.12);
             clip.setArcHeight(deckW * 0.12);
             back.setClip(clip);
@@ -1534,17 +1516,16 @@ public class GameScreen extends GUIScreen {
             deckPane.setMaxSize(0, 0);
             return;
         }
-        double deckH = tileH;
-        double deckW = deckH / CARD_ASPECT;
-        deckPane.setMinSize(deckW, deckH);
-        deckPane.setPrefSize(deckW, deckH);
-        deckPane.setMaxSize(deckW, deckH);
+        double deckW = tileH / CARD_ASPECT;
+        deckPane.setMinSize(deckW, tileH);
+        deckPane.setPrefSize(deckW, tileH);
+        deckPane.setMaxSize(deckW, tileH);
         ImageView back = safeImageView(() -> ImageCatalog.deckCardBack(era));
         if (back == null) return;
         back.setFitWidth(deckW);
-        back.setFitHeight(deckH);
+        back.setFitHeight(tileH);
         back.setPreserveRatio(false);
-        Rectangle clip = new Rectangle(deckW, deckH);
+        Rectangle clip = new Rectangle(deckW, tileH);
         clip.setArcWidth(deckW * 0.12);
         clip.setArcHeight(deckW * 0.12);
         back.setClip(clip);
@@ -1555,8 +1536,7 @@ public class GameScreen extends GUIScreen {
 
     /** Soft offset shadow that makes a single card-back read as a small pile. */
     private static DropShadow deckShadow() {
-        DropShadow s = new DropShadow(6, 3, 3, Color.rgb(0, 0, 0, 0.55));
-        return s;
+        return new DropShadow(6, 3, 3, Color.rgb(0, 0, 0, 0.55));
     }
 
     private static DropShadow selectedGlow() {
@@ -1813,33 +1793,35 @@ public class GameScreen extends GUIScreen {
         if (kind == null) return;
 
         if (focused) {
-            if (kind.equals("CARD")) {
-                node.setEffect(selectedGlow());
-            } else if (kind.equals("TILE")) {
-                Rectangle r = (Rectangle) node.getProperties().get("hoverRect");
-                if (r != null) r.setVisible(true);
-            } else if (kind.equals("BUTTON")) {
-                if (!node.getProperties().containsKey("navBaseStyle")) {
-                    node.getProperties().put("navBaseStyle", node.getStyle());
+            switch (kind) {
+                case "CARD" -> node.setEffect(selectedGlow());
+                case "TILE" -> {
+                    Rectangle r = (Rectangle) node.getProperties().get("hoverRect");
+                    if (r != null) r.setVisible(true);
                 }
-                String baseStyle = (String) node.getProperties().get("navBaseStyle");
-                if (baseStyle == null) baseStyle = "";
-                node.setStyle(baseStyle + (baseStyle.endsWith(";") || baseStyle.isEmpty() ? "" : ";") + " -fx-border-color: white; -fx-border-width: 2; -fx-border-radius: 4;");
+                case "BUTTON" -> {
+                    if (!node.getProperties().containsKey("navBaseStyle")) {
+                        node.getProperties().put("navBaseStyle", node.getStyle());
+                    }
+                    String baseStyle = (String) node.getProperties().get("navBaseStyle");
+                    if (baseStyle == null) baseStyle = "";
+                    node.setStyle(baseStyle + (baseStyle.endsWith(";") || baseStyle.isEmpty() ? "" : ";") + " -fx-border-color: white; -fx-border-width: 2; -fx-border-radius: 4;");
+                }
             }
         } else {
-            if (kind.equals("CARD")) {
-                Boolean sel = (Boolean) node.getProperties().get("navSelected");
-                if (Boolean.TRUE.equals(sel)) {
-                    node.setEffect(selectedGlow());
-                } else {
-                    node.setEffect(null);
+            switch (kind) {
+                case "CARD" -> {
+                    Boolean sel = (Boolean) node.getProperties().get("navSelected");
+                    node.setEffect(Boolean.TRUE.equals(sel) ? selectedGlow() : null);
                 }
-            } else if (kind.equals("TILE")) {
-                Rectangle r = (Rectangle) node.getProperties().get("hoverRect");
-                if (r != null) r.setVisible(false);
-            } else if (kind.equals("BUTTON")) {
-                if (node.getProperties().containsKey("navBaseStyle")) {
-                    node.setStyle((String) node.getProperties().get("navBaseStyle"));
+                case "TILE" -> {
+                    Rectangle r = (Rectangle) node.getProperties().get("hoverRect");
+                    if (r != null) r.setVisible(false);
+                }
+                case "BUTTON" -> {
+                    if (node.getProperties().containsKey("navBaseStyle")) {
+                        node.setStyle((String) node.getProperties().get("navBaseStyle"));
+                    }
                 }
             }
         }
@@ -1940,11 +1922,10 @@ public class GameScreen extends GUIScreen {
             double dirX = nx - cx;
             double dirY = ny - cy;
 
-            boolean valid = false;
-            if (dx > 0 && dirX > 10) valid = true;
-            if (dx < 0 && dirX < -10) valid = true;
-            if (dy > 0 && dirY > 10) valid = true;
-            if (dy < 0 && dirY < -10) valid = true;
+            boolean valid = (dx > 0 && dirX > 10)
+                    || (dx < 0 && dirX < -10)
+                    || (dy > 0 && dirY > 10)
+                    || (dy < 0 && dirY < -10);
 
             if (valid) {
                 double dist;
