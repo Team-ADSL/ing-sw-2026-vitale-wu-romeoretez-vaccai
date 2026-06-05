@@ -46,7 +46,7 @@
                     <HBox fx:id="buildingDecks" alignment="CENTER" spacing="14"/>
                 </HBox>
                 <HBox fx:id="bottomRow"  alignment="CENTER" spacing="8"/>
-                <HBox spacing="14" alignment="BASELINE_CENTER">
+                <HBox spacing="14" alignment="CENTER">
                     <TextFlow fx:id="hintLabel" textAlignment="CENTER"/>
                     <Button fx:id="confirmButton" text="Confirm Selection" onAction="#onSendMove"
                             style="-fx-font-size: 11px; -fx-padding: 3 12 3 12; -fx-background-radius: 8;"/>
