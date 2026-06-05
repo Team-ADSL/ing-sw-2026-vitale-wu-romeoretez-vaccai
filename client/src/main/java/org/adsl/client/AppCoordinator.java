@@ -40,6 +40,15 @@ public class AppCoordinator implements ResponseVisitor{
      */
     private static final long DISPATCH_MIN_DELAY_MS = 1200L;
 
+    /**
+     * Longer hold for the orange event-resolution overlay
+     * ({@link ServerResponse#isEventOverlay()}): it stays on screen until the
+     * next response replaces it, so this is how long players get to read the
+     * per-player food/PP deltas. Wider than {@link #DISPATCH_MIN_DELAY_MS}
+     * because up to five players' changes may need reading at once.
+     */
+    private static final long EVENT_DISPATCH_DELAY_MS = 3000L;
+
     private final GameUI gameUI;
     private final ServerConnection serverConnection;
     private ScheduledExecutorService pingScheduler;
@@ -133,12 +142,15 @@ public class AppCoordinator implements ResponseVisitor{
             return;
         }
 
+        // The gap reserved after this dispatch is how long this response stays on
+        // screen before the next one. Event overlays hold longer than the rest.
+        long holdMs = serverResponse.isEventOverlay() ? EVENT_DISPATCH_DELAY_MS : DISPATCH_MIN_DELAY_MS;
         long delayMs;
         synchronized (pacerLock) {
             long now = System.currentTimeMillis();
             long scheduled = Math.max(now, nextDispatchAtMs);
             delayMs = scheduled - now;
-            nextDispatchAtMs = scheduled + DISPATCH_MIN_DELAY_MS;
+            nextDispatchAtMs = scheduled + holdMs;
         }
 
         if (delayMs <= 0) {
