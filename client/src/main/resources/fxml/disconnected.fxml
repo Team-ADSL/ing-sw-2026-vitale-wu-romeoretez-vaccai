@@ -8,8 +8,8 @@
 
 <StackPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
            style="-fx-background-color: transparent;">
-    <padding><Insets top="28" right="28" bottom="28" left="28"/></padding>
-    <VBox alignment="CENTER" spacing="14" maxWidth="440" maxHeight="-Infinity" styleClass="panel">
+    <VBox alignment="CENTER" spacing="14" maxWidth="440" maxHeight="-Infinity" styleClass="panel"
+          StackPane.alignment="CENTER">
         <padding><Insets top="28" right="36" bottom="28" left="36"/></padding>
         <Label text="Disconnected" style="-fx-font-size: 28px; -fx-text-fill: #D92938;"/>
         <Label fx:id="messageLabel" wrapText="true" style="-fx-font-size: 14px; -fx-text-fill: #FDF3D3;"/>

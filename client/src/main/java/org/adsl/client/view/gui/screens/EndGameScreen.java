@@ -1,9 +1,11 @@
 package org.adsl.client.view.gui.screens;
 
+import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -42,7 +44,10 @@ public class EndGameScreen extends GUIScreen {
     @FXML private Label noDbAlert;
     @FXML private Label errorLabel;
 
-    private FloatingLog floatingLog;
+    @FXML private Button backHomeButton;
+    @FXML private Button exitButton;
+
+    private final FloatingLog floatingLog;
 
     public EndGameScreen(AppCoordinator coordinator, String username,
                          List<MatchResult> results, List<DBRecord> records, String message) {
@@ -58,10 +63,50 @@ public class EndGameScreen extends GUIScreen {
         wireRecordsTable(records, message);
         applyTheme(this.root);
 
-        floatingLog = new FloatingLog("Endgame log");
+        floatingLog = new FloatingLog();
         if (this.root instanceof StackPane sp) {
             sp.getChildren().add(floatingLog.getFloatingNode());
         }
+        installKeyboardNav();
+    }
+
+    private void installKeyboardNav() {
+        if (this.root instanceof StackPane sp) {
+            sp.setFocusTraversable(true);
+            sp.sceneProperty().addListener((_, _, scene) -> {
+                if (scene != null) Platform.runLater(backHomeButton::requestFocus);
+            });
+            sp.setOnKeyPressed(e -> {
+                switch (e.getCode()) {
+                    case LEFT, RIGHT, UP, DOWN -> { backHomeButton.requestFocus(); e.consume(); }
+                    default -> { /* ignore */ }
+                }
+            });
+        }
+
+        backHomeButton.setOnKeyPressed(e -> {
+            switch (e.getCode()) {
+                case RIGHT -> { exitButton.requestFocus(); e.consume(); }
+                case DOWN  -> { floatingLog.getToggleButton().requestFocus(); e.consume(); }
+                default    -> { /* ignore */ }
+            }
+        });
+
+        exitButton.setOnKeyPressed(e -> {
+            switch (e.getCode()) {
+                case LEFT  -> { backHomeButton.requestFocus(); e.consume(); }
+                case DOWN  -> { floatingLog.getToggleButton().requestFocus(); e.consume(); }
+                default    -> { /* ignore */ }
+            }
+        });
+
+        floatingLog.getToggleButton().setOnKeyPressed(e -> {
+            switch (e.getCode()) {
+                case UP, LEFT -> { backHomeButton.requestFocus(); e.consume(); }
+                case RIGHT    -> { exitButton.requestFocus(); e.consume(); }
+                default       -> { /* ignore */ }
+            }
+        });
     }
 
     private void wireMatchTable(List<MatchResult> results) {

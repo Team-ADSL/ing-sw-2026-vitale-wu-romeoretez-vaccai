@@ -1,7 +1,6 @@
 package org.adsl.client.view.gui.screens;
 
 import javafx.animation.PauseTransition;
-import javafx.animation.ScaleTransition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -70,12 +69,10 @@ import java.util.Set;
 
 /**
  * Game screen — minimal, centered, responsive.
- *
  * Cards float without containers, rounded corners; hover scales up; selected
  * cards stay scaled with a white glow. Offer-track tiles are flush (no gap)
  * so they compose a continuous image. Card rows scale dynamically so every
  * row stays single-line at any window size.
- *
  * The game log sits bottom-right, showing only the most recent messages with
  * a fade-up gradient; clicking it opens a full-chat panel.
  */
@@ -93,8 +90,6 @@ public class GameScreen extends GUIScreen {
     private static final double REF_BOARD_H = 820.0;
     private static final double TILE_ASPECT  = 1.65;
     private static final double TILE_MAX_W   = 80.0;
-    private static final double TILE_MIN_W   = 42.0;
-    private static final Duration ANIM       = Duration.millis(140);
     private static final double CHIP_WIDTH   = 50;
     private static final double CHIP_WIDTH_SM = 40;
     private static final double SELF_TOTEM   = 36;
@@ -148,7 +143,6 @@ public class GameScreen extends GUIScreen {
     private static final double ORDER_CELL_X   = 0.5;
     // Totem width relative to tile width (≈ the measured cell rect width 201px).
     private static final double ORDER_TOTEM_W_FRAC = 201.0 / ORDER_TILE_W;
-    private static final double OFFER_ROW_SPACING  = 14.0;
     // Per-player-count vertical cell-center fractions (index = players − 2).
     private static final double[][] ORDER_CELL_Y = {
         { 298.0 / ORDER_TILE_H, 462.0 / ORDER_TILE_H },
@@ -223,6 +217,10 @@ public class GameScreen extends GUIScreen {
     /** Scaled board group; stored as a field so applyBoardScale can translate it. */
     private Group boardGroup;
 
+    private List<Image> rulesPages;
+    private int rulesPageIndex = 0;
+    private StackPane rulesOverlay;
+
     // ── Keyboard navigation (spatial) ────────────────────────────────────────
     // Rebuilt each render: stable key → the active node it points to. Only
     // elements that are actually actionable in the current phase are added, so
@@ -239,7 +237,7 @@ public class GameScreen extends GUIScreen {
     /**
      * Shared debounce timer for resize-driven re-renders. Each resize listener
      * resets it; the actual {@link #renderBoard()} fires only once the window
-     * has been still for {@link #RESIZE_DEBOUNCE_MS}, avoiding hundreds of full
+     * has been still for {@code RESIZE_DEBOUNCE_MS}, avoiding hundreds of full
      * board rebuilds per second while dragging the window edge.
      */
     private static final double RESIZE_DEBOUNCE_MS = 90;
@@ -323,7 +321,10 @@ public class GameScreen extends GUIScreen {
         rootStack.getChildren().add(overlayPane);
         StackPane.setAlignment(overlayPane, Pos.CENTER);
 
-        floatingLog = new FloatingLog("Game log");
+        floatingLog = new FloatingLog();
+        markNav(floatingLog.getToggleButton(), "LOG", "BUTTON", floatingLog.getToggleButton()::fire);
+        floatingLog.setOnToggle(this::refreshNav);
+
         if (logBox != null) {
             logBox.getChildren().setAll(floatingLog.getFloatingNode());
             logBox.setPickOnBounds(false);
@@ -332,6 +333,7 @@ public class GameScreen extends GUIScreen {
         }
         rootStack.getChildren().add(floatingLog.getFullPanel());
 
+        setupRulesButton();
         resolveMoveCounts();
         renderBoard();
     }
@@ -353,7 +355,7 @@ public class GameScreen extends GUIScreen {
         Region bgLayer = new Region();
         bgLayer.setBackground(new Background(bgImage));
         bgLayer.setMouseTransparent(true);
-        rootStack.getChildren().add(0, bgLayer);
+        rootStack.getChildren().addFirst(bgLayer);
 
         // Dark tint above the image to improve contrast/readability of the board.
         Region tint = new Region();
@@ -630,10 +632,6 @@ public class GameScreen extends GUIScreen {
         List<CardDTO> top = game.board().topRow();
         List<CardDTO> bot = game.board().lowRow();
         List<OfferTileDTO> off = game.board().offerTrack();
-
-        int topN = (int) top.stream().filter(java.util.Objects::nonNull).count();
-        int botN = (int) bot.stream().filter(java.util.Objects::nonNull).count();
-        int offN = off.size();
 
         // One card size for EVERY card (top row, bottom row, hands): size the
         // most-constrained single-line card row, so cards never differ in size.
@@ -1157,10 +1155,10 @@ public class GameScreen extends GUIScreen {
         if (clickable) {
             cell.setCursor(Cursor.HAND);
             cell.setOnMouseEntered(_ -> {
-                if (!selectedMoves.contains(new Move(idx, row))) cell.setEffect(selectedGlow());;
+                if (!selectedMoves.contains(new Move(idx, row))) cell.setEffect(selectedGlow());
             });
             cell.setOnMouseExited(_ -> {
-                if (!selectedMoves.contains(new Move(idx, row))) cell.setEffect(null);;
+                if (!selectedMoves.contains(new Move(idx, row))) cell.setEffect(null);
             });
             cell.setOnMouseClicked(_ -> onCardClicked(row, idx, card, cell));
             markNav(cell, "CARD:" + row.name() + ":" + idx, "CARD", () -> onCardClicked(row, idx, card, cell));
@@ -1288,7 +1286,6 @@ public class GameScreen extends GUIScreen {
         if (cells == null) return;
         double[] ys = ORDER_CELL_Y[n - 2];
         double totemW = tileW * ORDER_TOTEM_W_FRAC;
-        double totemH = totemW * (TOTEM3D_H / TOTEM3D_W);
 
         double rectW = tileW * (186.0 / ORDER_TILE_W);
         double rectH = tileH * (96.0 / ORDER_TILE_H);
@@ -1332,7 +1329,6 @@ public class GameScreen extends GUIScreen {
      * offer-tile height so it sits in line.
      */
     private void renderBuildingDecks(double tileH) {
-        if (buildingDecks == null) return;
         buildingDecks.getChildren().clear();
         if (game == null || game.board() == null || tileH <= 0) return;
 
@@ -1343,8 +1339,7 @@ public class GameScreen extends GUIScreen {
         HBox.setMargin(buildingDecks, new Insets(0, 0, 0, 18));
 
         int size = remaining.size();
-        double deckH = tileH;
-        double deckW = deckH / CARD_ASPECT;
+        double deckW = tileH / CARD_ASPECT;
         for (int i = 0; i < size; i++) {
             if (!Boolean.TRUE.equals(remaining.get(i))) continue;
             final int era = (4 - size) + i;
@@ -1352,10 +1347,10 @@ public class GameScreen extends GUIScreen {
             ImageView back = safeImageView(() -> ImageCatalog.cardBack(CardType.BUILDINGS, era, false));
             if (back == null) continue;
             back.setFitWidth(deckW);
-            back.setFitHeight(deckH);
+            back.setFitHeight(tileH);
             back.setPreserveRatio(false);
             // Round the corners like the board cards (arc = 12% of width).
-            Rectangle clip = new Rectangle(deckW, deckH);
+            Rectangle clip = new Rectangle(deckW, tileH);
             clip.setArcWidth(deckW * 0.12);
             clip.setArcHeight(deckW * 0.12);
             back.setClip(clip);
@@ -1378,17 +1373,16 @@ public class GameScreen extends GUIScreen {
             deckPane.setMaxSize(0, 0);
             return;
         }
-        double deckH = tileH;
-        double deckW = deckH / CARD_ASPECT;
-        deckPane.setMinSize(deckW, deckH);
-        deckPane.setPrefSize(deckW, deckH);
-        deckPane.setMaxSize(deckW, deckH);
+        double deckW = tileH / CARD_ASPECT;
+        deckPane.setMinSize(deckW, tileH);
+        deckPane.setPrefSize(deckW, tileH);
+        deckPane.setMaxSize(deckW, tileH);
         ImageView back = safeImageView(() -> ImageCatalog.deckCardBack(era));
         if (back == null) return;
         back.setFitWidth(deckW);
-        back.setFitHeight(deckH);
+        back.setFitHeight(tileH);
         back.setPreserveRatio(false);
-        Rectangle clip = new Rectangle(deckW, deckH);
+        Rectangle clip = new Rectangle(deckW, tileH);
         clip.setArcWidth(deckW * 0.12);
         clip.setArcHeight(deckW * 0.12);
         back.setClip(clip);
@@ -1399,8 +1393,7 @@ public class GameScreen extends GUIScreen {
 
     /** Soft offset shadow that makes a single card-back read as a small pile. */
     private static DropShadow deckShadow() {
-        DropShadow s = new DropShadow(6, 3, 3, Color.rgb(0, 0, 0, 0.55));
-        return s;
+        return new DropShadow(6, 3, 3, Color.rgb(0, 0, 0, 0.55));
     }
 
     private static DropShadow selectedGlow() {
@@ -1453,7 +1446,7 @@ public class GameScreen extends GUIScreen {
             int required = upperCount + lowerCount;
             long pickedUpper = selectedMoves.stream().filter(m -> m.row() == Row.UPPER).count();
             long pickedLower = selectedMoves.stream().filter(m -> m.row() == Row.LOWER).count();
-            setMoveHint(upperCount, lowerCount, (int) pickedUpper, (int) pickedLower, selectedMoves.size(), required);
+            setMoveHint(upperCount, lowerCount, (int) pickedUpper, (int) pickedLower);
             confirmButton.setDisable(false);
             markNav(confirmButton, "CONFIRM", "BUTTON", this::onSendMove);
         } else {
@@ -1470,48 +1463,92 @@ public class GameScreen extends GUIScreen {
         hintLabel.getChildren().setAll(t);
     }
 
-    private void setMoveHint(int upper, int lower, int pickedUpper, int pickedLower, int selected, int required) {
-        List<Text> nodes = new ArrayList<>();
+    private void setMoveHint(int upper, int lower, int pickedUpper, int pickedLower) {
+        Color white = Color.web("#FDF3D3");
 
-        boolean upActive = upper > 0 && pickedUpper < upper;
-        boolean downActive = lower > 0 && pickedLower < lower;
+        int upLeft   = upper - pickedUpper;
+        int downLeft = lower - pickedLower;
+        boolean upGrey   = upLeft <= 0;
+        boolean downGrey = downLeft <= 0;
 
-        Color orange = Color.web("#F2B035");
-        Color white  = Color.web("#FDF3D3");
-        Color dim    = Color.web("#FDF3D3", 0.35);
+        ImageView upArrow = arrowIcon("/assets/general/arrow_up.png", upGrey);
+        ImageView upCount = countGlyph(upLeft, "up", upGrey);
 
-        Text upArrow = new Text("⬆");
-        upArrow.setFont(Font.font(22));
-        upArrow.setFill(upActive ? orange : (upper == 0 ? dim : white));
+        ImageView downArrow = arrowIcon("/assets/general/arrow_down.png", downGrey);
+        ImageView downCount = countGlyph(downLeft, "down", downGrey);
 
-        Text upCount = new Text(" " + (upper - pickedUpper) + "   ");
-        upCount.setFont(Font.font(15));
-        upCount.setFill(upActive ? orange : (upper == 0 ? dim : white));
+        // HBox (not the raw TextFlow flow) so arrows and the number glyphs share
+        // a common vertical center instead of being aligned on the text baseline,
+        // which dropped the arrows below the digits.
+        HBox row = new HBox(4, upArrow, upCount, gap(12), downArrow, downCount, gap(12));
+        row.setAlignment(Pos.CENTER);
+        row.setTranslateY(9.0);
 
-        Text downArrow = new Text("⬇");
-        downArrow.setFont(Font.font(22));
-        downArrow.setFill(downActive ? orange : (lower == 0 ? dim : white));
-
-        Text downCount = new Text(" " + (lower - pickedLower) + "   ");
-        downCount.setFont(Font.font(15));
-        downCount.setFill(downActive ? orange : (lower == 0 ? dim : white));
-
-        Text sep = new Text("│   ");
-        sep.setFont(Font.font(13));
-        sep.setFill(Color.web("#FDF3D3", 0.45));
-
-        Text selText = new Text(selected + " / " + required + " selected");
-        selText.setFont(Font.font(13));
-        selText.setFill(white);
-
-        nodes.add(upArrow);
-        nodes.add(upCount);
-        nodes.add(downArrow);
-        nodes.add(downCount);
-        nodes.add(sep);
-        nodes.add(selText);
-        hintLabel.getChildren().setAll(nodes);
+        hintLabel.getChildren().setAll(row);
         hintLabel.setTextAlignment(TextAlignment.CENTER);
+    }
+
+    /** Fixed-width invisible spacer for the move-hint row. */
+    private Node gap(double w) {
+        Region r = new Region();
+        r.setMinWidth(w);
+        r.setPrefWidth(w);
+        r.setMaxWidth(w);
+        return r;
+    }
+
+    /** PNGs are baked at this oversampling; the ImageView downscales by it. */
+    private static final double COUNT_GLYPH_SCALE = 2.0;
+
+    /**
+     * Move-count label as a pre-baked PNG from
+     * {@code /assets/move_counts/<variant>/<n>.png} (variant: up | down).
+     * The numbers are rendered offline by {@code tools/CountGlyphGenerator}
+     * (ChristmasChalk font, white outer outline, round joins) so there is zero
+     * runtime rasterisation — the earlier live {@link Node#snapshot} froze the
+     * window while warming the cache. {@link ImageCatalog#load} caches the decode.
+     * If {@code grey} is true, we apply a greyscale filter in the GUI.
+     */
+    private ImageView countGlyph(int value, String variant, boolean grey) {
+        String filename;
+        if (value < 0) {
+            int clamped = Math.max(-20, value);
+            filename = String.valueOf(clamped);
+        } else {
+            int clamped = Math.min(2, value);
+            filename = String.valueOf(clamped);
+        }
+        Image img = ImageCatalog.load("/assets/move_counts/" + variant + "/" + filename + ".png");
+        ImageView iv = new ImageView(img);
+        iv.setFitHeight(img.getHeight() / COUNT_GLYPH_SCALE);
+        iv.setPreserveRatio(true);
+        iv.setSmooth(true);
+        if (grey) {
+            ColorAdjust desaturate = new ColorAdjust();
+            desaturate.setSaturation(-1);
+            desaturate.setBrightness(-0.15);
+            iv.setEffect(desaturate);
+            iv.setOpacity(0.5);
+        }
+        return iv;
+    }
+
+    /**
+     * Arrow icon for the move hint. {@code grey} desaturates it to greyscale
+     * (used when its move count is 0, so the inactive arrow reads as dim).
+     */
+    private ImageView arrowIcon(String path, boolean grey) {
+        ImageView iv = new ImageView(ImageCatalog.load(path));
+        iv.setFitHeight(24);
+        iv.setPreserveRatio(true);
+        if (grey) {
+            ColorAdjust desaturate = new ColorAdjust();
+            desaturate.setSaturation(-1);
+            desaturate.setBrightness(-0.15);
+            iv.setEffect(desaturate);
+            iv.setOpacity(0.5);
+        }
+        return iv;
     }
 
     private String waitingHint() {
@@ -1606,33 +1643,35 @@ public class GameScreen extends GUIScreen {
         if (kind == null) return;
 
         if (focused) {
-            if (kind.equals("CARD")) {
-                node.setEffect(selectedGlow());
-            } else if (kind.equals("TILE")) {
-                Rectangle r = (Rectangle) node.getProperties().get("hoverRect");
-                if (r != null) r.setVisible(true);
-            } else if (kind.equals("BUTTON")) {
-                if (!node.getProperties().containsKey("navBaseStyle")) {
-                    node.getProperties().put("navBaseStyle", node.getStyle());
+            switch (kind) {
+                case "CARD" -> node.setEffect(selectedGlow());
+                case "TILE" -> {
+                    Rectangle r = (Rectangle) node.getProperties().get("hoverRect");
+                    if (r != null) r.setVisible(true);
                 }
-                String baseStyle = (String) node.getProperties().get("navBaseStyle");
-                if (baseStyle == null) baseStyle = "";
-                node.setStyle(baseStyle + (baseStyle.endsWith(";") || baseStyle.isEmpty() ? "" : ";") + " -fx-border-color: white; -fx-border-width: 2; -fx-border-radius: 4;");
+                case "BUTTON" -> {
+                    if (!node.getProperties().containsKey("navBaseStyle")) {
+                        node.getProperties().put("navBaseStyle", node.getStyle());
+                    }
+                    String baseStyle = (String) node.getProperties().get("navBaseStyle");
+                    if (baseStyle == null) baseStyle = "";
+                    node.setStyle(baseStyle + (baseStyle.endsWith(";") || baseStyle.isEmpty() ? "" : ";") + " -fx-border-color: white; -fx-border-width: 2; -fx-border-radius: 4;");
+                }
             }
         } else {
-            if (kind.equals("CARD")) {
-                Boolean sel = (Boolean) node.getProperties().get("navSelected");
-                if (Boolean.TRUE.equals(sel)) {
-                    node.setEffect(selectedGlow());
-                } else {
-                    node.setEffect(null);
+            switch (kind) {
+                case "CARD" -> {
+                    Boolean sel = (Boolean) node.getProperties().get("navSelected");
+                    node.setEffect(Boolean.TRUE.equals(sel) ? selectedGlow() : null);
                 }
-            } else if (kind.equals("TILE")) {
-                Rectangle r = (Rectangle) node.getProperties().get("hoverRect");
-                if (r != null) r.setVisible(false);
-            } else if (kind.equals("BUTTON")) {
-                if (node.getProperties().containsKey("navBaseStyle")) {
-                    node.setStyle((String) node.getProperties().get("navBaseStyle"));
+                case "TILE" -> {
+                    Rectangle r = (Rectangle) node.getProperties().get("hoverRect");
+                    if (r != null) r.setVisible(false);
+                }
+                case "BUTTON" -> {
+                    if (node.getProperties().containsKey("navBaseStyle")) {
+                        node.setStyle((String) node.getProperties().get("navBaseStyle"));
+                    }
                 }
             }
         }
@@ -1733,11 +1772,10 @@ public class GameScreen extends GUIScreen {
             double dirX = nx - cx;
             double dirY = ny - cy;
 
-            boolean valid = false;
-            if (dx > 0 && dirX > 10) valid = true;
-            if (dx < 0 && dirX < -10) valid = true;
-            if (dy > 0 && dirY > 10) valid = true;
-            if (dy < 0 && dirY < -10) valid = true;
+            boolean valid = (dx > 0 && dirX > 10)
+                    || (dx < 0 && dirX < -10)
+                    || (dy > 0 && dirY > 10)
+                    || (dy < 0 && dirY < -10);
 
             if (valid) {
                 double dist;
@@ -1754,6 +1792,82 @@ public class GameScreen extends GUIScreen {
             }
         }
         return best;
+    }
+
+    // ── Rules overlay ────────────────────────────────────────────────────────
+
+    private void setupRulesButton() {
+        Button btn = new Button("?");
+        btn.setStyle(
+            "-fx-font-size: 18px; -fx-font-weight: bold;" +
+            "-fx-min-width: 40px; -fx-min-height: 40px;" +
+            "-fx-max-width: 40px; -fx-max-height: 40px;" +
+            "-fx-background-radius: 20; -fx-padding: 0;"
+        );
+        btn.setOnAction(_ -> openRulesOverlay());
+        StackPane.setAlignment(btn, Pos.BOTTOM_LEFT);
+        StackPane.setMargin(btn, new Insets(0, 0, 14, 14));
+        rootStack.getChildren().add(btn);
+    }
+
+    private void openRulesOverlay() {
+        if (rulesPages == null) rulesPages = ImageCatalog.rulesPages();
+        if (rulesPages.isEmpty()) return;
+
+        rulesPageIndex = 0;
+        rulesOverlay = new StackPane();
+        rulesOverlay.setStyle("-fx-background-color: rgba(0,0,0,0.88);");
+
+        Rectangle clip = new Rectangle();
+        clip.widthProperty().bind(rulesOverlay.widthProperty());
+        clip.heightProperty().bind(rulesOverlay.heightProperty());
+        rulesOverlay.setClip(clip);
+
+        ImageView iv = new ImageView(rulesPages.get(0));
+        iv.setPreserveRatio(true);
+        iv.fitWidthProperty().bind(rulesOverlay.widthProperty().multiply(0.88));
+        iv.fitHeightProperty().bind(rulesOverlay.heightProperty().multiply(0.88));
+
+        Button prev = new Button("◀");
+        Button next = new Button("▶");
+        Button close = new Button("✕");
+        close.setStyle("-fx-font-size: 14px; -fx-min-width: 34px; -fx-min-height: 34px;" +
+                       "-fx-max-width: 34px; -fx-max-height: 34px; -fx-background-radius: 17; -fx-padding: 0;");
+
+        Label counter = new Label("1 / " + rulesPages.size());
+        counter.setStyle("-fx-text-fill: #FDF3D3; -fx-font-size: 14px;");
+
+        prev.setOnAction(_ -> {
+            if (rulesPageIndex > 0) {
+                rulesPageIndex--;
+                iv.setImage(rulesPages.get(rulesPageIndex));
+                counter.setText((rulesPageIndex + 1) + " / " + rulesPages.size());
+            }
+        });
+        next.setOnAction(_ -> {
+            if (rulesPageIndex < rulesPages.size() - 1) {
+                rulesPageIndex++;
+                iv.setImage(rulesPages.get(rulesPageIndex));
+                counter.setText((rulesPageIndex + 1) + " / " + rulesPages.size());
+            }
+        });
+        close.setOnAction(_ -> rootStack.getChildren().remove(rulesOverlay));
+        rulesOverlay.setOnMouseClicked(e -> {
+            if (e.getTarget() == rulesOverlay) rootStack.getChildren().remove(rulesOverlay);
+        });
+
+        HBox nav = new HBox(16, prev, counter, next);
+        nav.setAlignment(Pos.CENTER);
+
+        VBox content = new VBox(12, iv, nav);
+        content.setAlignment(Pos.CENTER);
+        content.setPickOnBounds(false);
+
+        StackPane.setAlignment(close, Pos.TOP_RIGHT);
+        StackPane.setMargin(close, new Insets(12, 12, 0, 0));
+
+        rulesOverlay.getChildren().addAll(content, close);
+        rootStack.getChildren().add(rulesOverlay);
     }
 
 }

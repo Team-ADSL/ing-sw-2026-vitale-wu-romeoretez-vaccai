@@ -50,7 +50,7 @@ public final class FloatingLog {
     private boolean expanded = false;
     private boolean scrollCapBound = false;
 
-    public FloatingLog(String title) {
+    public FloatingLog() {
         floating = new VBox(2);
         floating.setAlignment(Pos.BOTTOM_RIGHT);
         floating.setMaxWidth(MAX_W);
@@ -107,6 +107,7 @@ public final class FloatingLog {
 
     public VBox getFloatingNode() { return floating; }
     public StackPane getFullPanel() { return fullPanel; }
+    public Button getToggleButton() { return toggleButton; }
 
     /**
      * Replaces the shared transcript with {@code entries} (server-authoritative,
@@ -146,6 +147,7 @@ public final class FloatingLog {
         applyScrollCap();
         bindScrollCapToHeight();
         Platform.runLater(() -> expandedScroll.setVvalue(1.0));
+        if (onToggleCallback != null) onToggleCallback.run();
     }
 
     /** Closes the log. Only ever called from the ✕ chip — clicking elsewhere keeps it open. */
@@ -153,6 +155,7 @@ public final class FloatingLog {
         expanded = false;
         floating.setMaxHeight(COLLAPSED_MAX_H);
         refresh();
+        if (onToggleCallback != null) onToggleCallback.run();
     }
 
     /** Cap scroll viewport to available vertical space so the bar appears only on overflow. */
@@ -179,11 +182,11 @@ public final class FloatingLog {
     private void refillExpanded() {
         expandedMessages.getChildren().clear();
         for (String s : history) {
-            expandedMessages.getChildren().add(card(s, 1.0));
+            expandedMessages.getChildren().add(card(s));
         }
     }
 
-    private Label card(String text, double opacity) {
+    private Label card(String text) {
         Label entry = new Label(text);
         entry.setWrapText(true);
         entry.setMaxWidth(MAX_W - 20);
@@ -191,7 +194,6 @@ public final class FloatingLog {
         entry.setStyle("-fx-text-fill: #f5deb3; -fx-font-size: 13px;"
                 + " -fx-background-color: rgba(0,0,0,0.40); -fx-padding: 5 12 5 12;"
                 + " -fx-background-radius: 8;");
-        entry.setOpacity(opacity);
         return entry;
     }
 
