@@ -168,11 +168,34 @@ public abstract class GUIScreen extends Screen<GUIScreen> {
         installButtonHover(root);
     }
 
-    // Hover colour feedback is handled entirely by CSS (.button:hover in theme.css).
-    // No programmatic scale is applied — scaling via setScaleX/Y shifts the visual
-    // centre of nearby elements even though layoutBounds are unchanged, causing
-    // perceived layout jitter especially in narrow VBox-based screens.
-    private static void installButtonHover(Parent node) { /* no-op */ }
+    private static void installButtonHover(Parent node) {
+        for (Node child : node.getChildrenUnmodifiable()) {
+            if (child instanceof Button b) {
+                applyButtonHover(b);
+            } else if (child instanceof Parent p) {
+                installButtonHover(p);
+            }
+        }
+    }
+
+    private static void applyButtonHover(Button b) {
+        if (b.getOnMouseEntered() != null) return;
+        final String base = b.getStyle() == null ? "" : b.getStyle();
+        // Add defaults only for properties not already set — preserves custom padding/radius on special buttons
+        String pad    = base.contains("-fx-padding")           ? "" : "-fx-padding: 8 22 8 22; ";
+        String radius = base.contains("-fx-background-radius") ? "" : "-fx-background-radius: 12; ";
+        String cursor = base.contains("-fx-cursor")            ? "" : "-fx-cursor: hand; ";
+        String effect = base.contains("-fx-effect")            ? "" : "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45), 6, 0.25, 0, 2); ";
+        final String fixed = pad + radius + cursor + effect + "-fx-background-insets: 0; -fx-scale-x: 1; -fx-scale-y: 1;";
+        final String idle  = base + " -fx-background-color: #F2B035; -fx-text-fill: #1a0808; "  + fixed;
+        final String hov   = base + " -fx-background-color: #F25835; -fx-text-fill: #FDF3D3; " + fixed;
+        final String press = base + " -fx-background-color: #8C1636; -fx-text-fill: #FDF3D3; " + fixed;
+        b.setStyle(idle);
+        b.setOnMouseEntered(_ -> { if (!b.isDisabled()) b.setStyle(hov); });
+        b.setOnMouseExited(_  -> { if (!b.isDisabled()) b.setStyle(idle); });
+        b.setOnMousePressed(_ -> { if (!b.isDisabled()) b.setStyle(press); });
+        b.setOnMouseReleased(_ -> { if (!b.isDisabled()) b.setStyle(b.isHover() ? hov : idle); });
+    }
 
     private static void applyChalkFonts(Parent node) {
         for (Node child : node.getChildrenUnmodifiable()) {
@@ -189,25 +212,30 @@ public abstract class GUIScreen extends Screen<GUIScreen> {
     private static void setFont(Label node){
         Font f = fontFor(node, extractFontSize(node.getStyle(), 15.0));
         node.setFont(f);
-        pinFontFamily(node, f.getFamily());
+        pinFontFamily(node, f.getFamily(), f.getSize());
     }
     private static void setFont(Button node){
         Font f = fontFor(node, extractFontSize(node.getStyle(), 16.0));
         node.setFont(f);
-        pinFontFamily(node, f.getFamily());
+        pinFontFamily(node, f.getFamily(), f.getSize());
     }
     private static void setFont(TextField node){
         Font f = fontFor(node, extractFontSize(node.getStyle(), 15.0));
         node.setFont(f);
-        pinFontFamily(node, f.getFamily());
+        pinFontFamily(node, f.getFamily(), f.getSize());
     }
 
-    /** Pins font-family into the inline style so CSS layout pass cannot override setFont(). */
-    private static void pinFontFamily(Node node, String family) {
+    /** Pins font-family and font-size into the inline style so CSS re-application
+     *  triggered by setStyle(press/hov) cannot override the sizes set by setFont(). */
+    private static void pinFontFamily(Node node, String family, double size) {
         String s = node.getStyle() != null ? node.getStyle() : "";
         if (!s.contains("-fx-font-family")) {
-            node.setStyle(s + "; -fx-font-family: '" + family + "';");
+            s = s + "; -fx-font-family: '" + family + "';";
         }
+        if (!s.contains("-fx-font-size")) {
+            s = s + " -fx-font-size: " + (int) Math.round(size) + "px;";
+        }
+        node.setStyle(s);
     }
     private static void setFont(Pane node){
         applyChalkFonts(node);

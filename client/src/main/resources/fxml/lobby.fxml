@@ -32,5 +32,6 @@
                style="-fx-text-fill: #F2B035; -fx-font-size: 17px; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.9), 5, 0.5, 0, 0); -fx-text-alignment: center;" wrapText="true"/>
     </VBox>
 
-    <VBox fx:id="logBox" pickOnBounds="false" StackPane.alignment="BOTTOM_RIGHT"/>
+    <VBox fx:id="logBox" pickOnBounds="false" alignment="BOTTOM_RIGHT"
+          maxWidth="420" maxHeight="300" StackPane.alignment="BOTTOM_RIGHT"/>
 </StackPane>
