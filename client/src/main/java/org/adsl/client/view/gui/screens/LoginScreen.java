@@ -66,6 +66,8 @@ public class LoginScreen extends GUIScreen {
             if (scene != null) Platform.runLater(usernameField::requestFocus);
         });
 
+        // ENTER in the field submits directly (TextField's native action event).
+        usernameField.setOnAction(_ -> onLogin());
         usernameField.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.DOWN) {
                 loginButton.requestFocus();

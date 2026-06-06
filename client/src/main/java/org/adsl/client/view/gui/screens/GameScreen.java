@@ -977,8 +977,11 @@ public class GameScreen extends GUIScreen {
         StackPane.setAlignment(xn, Pos.BOTTOM_RIGHT);
         cell.getChildren().add(xn);
 
-        // Clicking an icon drills into this player's cards of that type (toggle).
+        // Clicking an icon drills into this player's cards of that type (toggle);
+        // hovering lights it up white like a selected board card.
         cell.setCursor(Cursor.HAND);
+        cell.setOnMouseEntered(_ -> cell.setEffect(selectedGlow()));
+        cell.setOnMouseExited(_ -> cell.setEffect(null));
         cell.setOnMouseClicked(_ -> { openDeck.put(p.name(), type); renderBoard(); });
 
         return cell;
