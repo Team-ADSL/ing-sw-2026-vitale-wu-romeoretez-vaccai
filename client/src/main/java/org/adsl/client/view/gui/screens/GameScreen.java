@@ -1594,7 +1594,7 @@ public class GameScreen extends GUIScreen {
             int required = upperCount + lowerCount;
             long pickedUpper = selectedMoves.stream().filter(m -> m.row() == Row.UPPER).count();
             long pickedLower = selectedMoves.stream().filter(m -> m.row() == Row.LOWER).count();
-            setMoveHint(upperCount, lowerCount, (int) pickedUpper, (int) pickedLower, selectedMoves.size(), required);
+            setMoveHint(upperCount, lowerCount, (int) pickedUpper, (int) pickedLower);
             confirmButton.setDisable(false);
             markNav(confirmButton, "CONFIRM", "BUTTON", this::onSendMove);
         } else {
@@ -1611,7 +1611,7 @@ public class GameScreen extends GUIScreen {
         hintLabel.getChildren().setAll(t);
     }
 
-    private void setMoveHint(int upper, int lower, int pickedUpper, int pickedLower, int selected, int required) {
+    private void setMoveHint(int upper, int lower, int pickedUpper, int pickedLower) {
         Color white = Color.web("#FDF3D3");
 
         int upLeft   = upper - pickedUpper;
@@ -1625,19 +1625,12 @@ public class GameScreen extends GUIScreen {
         ImageView downArrow = arrowIcon("/assets/general/arrow_down.png", downGrey);
         ImageView downCount = countGlyph(downLeft, "down", downGrey);
 
-        Text sep = new Text("│");
-        sep.setFont(Font.font(13));
-        sep.setFill(Color.web("#FDF3D3", 0.45));
-
-        Text selText = new Text(selected + " / " + required + " selected");
-        selText.setFont(Font.font(13));
-        selText.setFill(white);
-
         // HBox (not the raw TextFlow flow) so arrows and the number glyphs share
         // a common vertical center instead of being aligned on the text baseline,
         // which dropped the arrows below the digits.
-        HBox row = new HBox(4, upArrow, upCount, gap(12), downArrow, downCount, gap(12), sep, gap(6), selText);
+        HBox row = new HBox(4, upArrow, upCount, gap(12), downArrow, downCount, gap(12));
         row.setAlignment(Pos.CENTER);
+        row.setTranslateY(9.0);
 
         hintLabel.getChildren().setAll(row);
         hintLabel.setTextAlignment(TextAlignment.CENTER);
