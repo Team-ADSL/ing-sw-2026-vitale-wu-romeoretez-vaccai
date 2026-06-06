@@ -48,11 +48,8 @@ public final class FloatingLog {
 
     private boolean expanded = false;
     private boolean scrollCapBound = false;
+    /** Run after every expand/collapse so the host (e.g. GameScreen) can react. */
     private Runnable onToggleCallback;
-
-    public void setOnToggle(Runnable callback) {
-        this.onToggleCallback = callback;
-    }
 
     public FloatingLog() {
         floating = new VBox(2);
@@ -120,6 +117,9 @@ public final class FloatingLog {
     public VBox getFloatingNode() { return floating; }
     public StackPane getFullPanel() { return fullPanel; }
     public Button getToggleButton() { return toggleButton; }
+
+    /** Registers a callback fired after each expand/collapse (open-state change). */
+    public void setOnToggle(Runnable callback) { this.onToggleCallback = callback; }
 
     /**
      * Replaces the shared transcript with {@code entries} (server-authoritative,
