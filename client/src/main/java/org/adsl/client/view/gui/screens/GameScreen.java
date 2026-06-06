@@ -1307,6 +1307,17 @@ public class GameScreen extends GUIScreen {
             rect.setLayoutY(cy - rectH / 2.0);
             orderTilePane.getChildren().add(rect);
         }
+
+        // Collect the colored rectangles (not the background ImageView) so hover
+        // can fade them out to reveal the order-tile content underneath.
+        List<javafx.scene.shape.Rectangle> totemRects = orderTilePane.getChildren().stream()
+                .filter(c -> c instanceof javafx.scene.shape.Rectangle)
+                .map(c -> (javafx.scene.shape.Rectangle) c)
+                .toList();
+        if (!totemRects.isEmpty()) {
+            orderTilePane.setOnMouseEntered(_ -> totemRects.forEach(r -> r.setOpacity(0.15)));
+            orderTilePane.setOnMouseExited(_  -> totemRects.forEach(r -> r.setOpacity(1.0)));
+        }
     }
 
     private void sizeOrderTile(double w, double h) {
@@ -1456,36 +1467,64 @@ public class GameScreen extends GUIScreen {
         }
     }
 
+    private static final String MOVE_HINT_ID = "__moveHintRow";
+
     private void setHint(String text) {
+        restoreHintLabel();
         Text t = new Text(text);
         t.setFill(Color.web("#FDF3D3"));
         t.setFont(Font.font(13));
         hintLabel.getChildren().setAll(t);
     }
 
-    private void setMoveHint(int upper, int lower, int pickedUpper, int pickedLower) {
-        Color white = Color.web("#FDF3D3");
+    /**
+     * Restores the TextFlow to visible and removes any injected move-hint HBox
+     * from its parent. Called before every plain-text hint.
+     */
+    private void restoreHintLabel() {
+        if (hintLabel == null) return;
+        if (hintLabel.getParent() instanceof HBox hintRow) {
+            hintRow.getChildren().removeIf(n -> MOVE_HINT_ID.equals(n.getId()));
+            // confirmButton may have been inside the combined box — put it back
+            if (!hintRow.getChildren().contains(confirmButton)) {
+                hintRow.getChildren().add(confirmButton);
+            }
+        }
+        hintLabel.setVisible(true);
+        hintLabel.setManaged(true);
+    }
 
+    private void setMoveHint(int upper, int lower, int pickedUpper, int pickedLower) {
         int upLeft   = upper - pickedUpper;
         int downLeft = lower - pickedLower;
         boolean upGrey   = upLeft <= 0;
         boolean downGrey = downLeft <= 0;
 
-        ImageView upArrow = arrowIcon("/assets/general/arrow_up.png", upGrey);
-        ImageView upCount = countGlyph(upLeft, "up", upGrey);
-
+        ImageView upArrow   = arrowIcon("/assets/general/arrow_up.png",   upGrey);
+        ImageView upCount   = countGlyph(upLeft,   "up",   upGrey);
         ImageView downArrow = arrowIcon("/assets/general/arrow_down.png", downGrey);
         ImageView downCount = countGlyph(downLeft, "down", downGrey);
 
-        // HBox (not the raw TextFlow flow) so arrows and the number glyphs share
-        // a common vertical center instead of being aligned on the text baseline,
-        // which dropped the arrows below the digits.
-        HBox row = new HBox(4, upArrow, upCount, gap(12), downArrow, downCount, gap(12));
-        row.setAlignment(Pos.CENTER);
-        row.setTranslateY(9.0);
+        HBox arrowRow = new HBox(4, upArrow, upCount, gap(12), downArrow, downCount);
+        arrowRow.setAlignment(Pos.CENTER);
 
-        hintLabel.getChildren().setAll(row);
-        hintLabel.setTextAlignment(TextAlignment.CENTER);
+        if (hintLabel != null && hintLabel.getParent() instanceof HBox hintRow) {
+            hintRow.getChildren().removeIf(n -> MOVE_HINT_ID.equals(n.getId()));
+            hintLabel.setVisible(false);
+            hintLabel.setManaged(false);
+            // Pull confirmButton out of hintRow and place it alongside the arrows
+            // inside a single centered container that grows to fill available space.
+            // This keeps the two elements together instead of being pushed to
+            // opposite ends by HBox layout.
+            hintRow.getChildren().remove(confirmButton);
+            HBox combined = new HBox(16, arrowRow, confirmButton);
+            combined.setAlignment(Pos.CENTER);
+            combined.setId(MOVE_HINT_ID);
+            HBox.setHgrow(combined, javafx.scene.layout.Priority.ALWAYS);
+            hintRow.getChildren().add(0, combined);
+        } else {
+            hintLabel.getChildren().setAll(arrowRow);
+        }
     }
 
     /** Fixed-width invisible spacer for the move-hint row. */
@@ -1510,17 +1549,10 @@ public class GameScreen extends GUIScreen {
      * If {@code grey} is true, we apply a greyscale filter in the GUI.
      */
     private ImageView countGlyph(int value, String variant, boolean grey) {
-        String filename;
-        if (value < 0) {
-            int clamped = Math.max(-20, value);
-            filename = String.valueOf(clamped);
-        } else {
-            int clamped = Math.min(2, value);
-            filename = String.valueOf(clamped);
-        }
-        Image img = ImageCatalog.load("/assets/move_counts/" + variant + "/" + filename + ".png");
+        int clamped = Math.max(0, Math.min(2, value));
+        Image img = ImageCatalog.load("/assets/move_counts/" + variant + "/" + clamped + ".png");
         ImageView iv = new ImageView(img);
-        iv.setFitHeight(img.getHeight() / COUNT_GLYPH_SCALE);
+        iv.setFitHeight(24);   // fixed — matches arrowIcon height so the row never shifts
         iv.setPreserveRatio(true);
         iv.setSmooth(true);
         if (grey) {
