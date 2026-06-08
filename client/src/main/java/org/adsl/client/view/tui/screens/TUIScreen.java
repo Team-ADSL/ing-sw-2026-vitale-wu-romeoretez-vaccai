@@ -33,6 +33,8 @@ public abstract class TUIScreen extends Screen<TUIScreen> implements InputEventV
     protected boolean toRender;
     /** When true, the game-log overlay window is rendered on top of the screen. */
     protected boolean showLog = false;
+    /** How many wrapped lines to scroll back from the bottom (0 = latest). */
+    protected int logScrollOffset = 0;
 
     private static final int LOG_PREVIEW_COUNT = 3;
     private static final int LOG_PREVIEW_WIDTH = 52;
@@ -190,6 +192,19 @@ public abstract class TUIScreen extends Screen<TUIScreen> implements InputEventV
      */
     protected void toggleLog() {
         showLog = !showLog;
+        if (showLog) logScrollOffset = 0;  // always open at bottom (latest)
+    }
+
+    /** Scroll the log window up by one line (towards older messages). */
+    protected void logScrollUp() {
+        // logScrollOffset grows as we go further back in history
+        // max is clamped in drawLogWindow
+        logScrollOffset++;
+    }
+
+    /** Scroll the log window down by one line (towards newer messages). */
+    protected void logScrollDown() {
+        logScrollOffset = Math.max(0, logScrollOffset - 1);
     }
 
     /**
@@ -250,21 +265,37 @@ public abstract class TUIScreen extends Screen<TUIScreen> implements InputEventV
             tg.putString(x, y + r, "│" + " ".repeat(w - 2) + "│");
         }
 
-        tg.setForegroundColor(TuiColor.YELLOW);
-        tg.putString(x + 2, y, " GAME LOG (M to close) ");
-
         List<String> all = TuiGameLog.INSTANCE.all();
         int innerW = w - 4;
         int innerH = h - 2;
         List<String> wrapped = wrapAll(all, innerW);
-        int from = Math.max(0, wrapped.size() - innerH);
+
+        // clamp scroll offset so we can't scroll past the beginning
+        int maxOffset = Math.max(0, wrapped.size() - innerH);
+        if (logScrollOffset > maxOffset) logScrollOffset = maxOffset;
+
+        int from = Math.max(0, wrapped.size() - innerH - logScrollOffset);
+        int to   = Math.min(wrapped.size(), from + innerH);
+
+        // Title — always static, scroll hint is in the bottom controls bar
+        tg.setForegroundColor(TuiColor.YELLOW);
+        tg.putString(x + 2, y, " GAME LOG ");
 
         tg.setForegroundColor(TuiColor.WHITE);
         int lineY = y + 1;
-        for (int i = from; i < wrapped.size(); i++) {
+        for (int i = from; i < to; i++) {
             tg.putString(x + 2, lineY, padRight(wrapped.get(i), innerW));
             lineY++;
-            if (lineY >= y + h - 1) break;
+        }
+
+        // Scroll position indicator on right border (▲ / ▼ arrows)
+        if (logScrollOffset > 0) {
+            tg.setForegroundColor(TuiColor.CYAN);
+            tg.putString(x + w - 1, y + 1, "▲");
+        }
+        if (logScrollOffset < maxOffset) {
+            tg.setForegroundColor(TuiColor.CYAN);
+            tg.putString(x + w - 1, y + h - 2, "▼");
         }
 
         if (all.isEmpty()) {
