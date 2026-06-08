@@ -1327,7 +1327,7 @@ public class GameScreen extends TUIScreen {
 
     private void drawLegend(TuiTextGraphics tg, TuiSize sz) {
         int w = 38;
-        int h = 13;
+        int h = 14;
         int x = sz.getColumns() - w - 2;
         int y = 1;
 
@@ -1353,6 +1353,7 @@ public class GameScreen extends TUIScreen {
             {"🛡️", "Immunity"},
             {"🏁", "End-game PP bonus"},
             {"🌈", "Set collection bonus"},
+            {"🧍", "Character card"},
             {"I II III", "Card Era"},
         };
 
