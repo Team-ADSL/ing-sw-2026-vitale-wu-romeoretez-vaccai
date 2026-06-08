@@ -997,7 +997,7 @@ public class GameScreen extends TUIScreen {
     private static void appendBuildingsChunks(List<SummaryChunk> out, PlayerDTO p) {
         Set<CardDTO> buildings = cardsOf(p, CardType.BUILDINGS);
         if (buildings.isEmpty()) return;
-        out.add(new SummaryChunk(SEP + " BUILDINGS: ", true));
+        out.add(new SummaryChunk(SEP + " BUILDINGS: ", false));
         StringBuilder body = new StringBuilder();
         boolean first = true;
         for (CardDTO c : buildings) {
