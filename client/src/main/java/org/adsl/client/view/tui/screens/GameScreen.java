@@ -412,6 +412,7 @@ public class GameScreen extends TUIScreen {
 
     @Override
     public TUIScreen visit(NavigateLeftEvent e) {
+        if (showLog) return this;
         if (showDecks) {
             deckScrollLeft();
             return this;
@@ -434,6 +435,7 @@ public class GameScreen extends TUIScreen {
 
     @Override
     public TUIScreen visit(NavigateRightEvent e) {
+        if (showLog) return this;
         if (showDecks) {
             deckScrollRight();
             return this;
@@ -460,6 +462,7 @@ public class GameScreen extends TUIScreen {
 
     @Override
     public TUIScreen visit(NavigateUpEvent e) {
+        if (showLog) { logScrollUp(); return this; }
         if (showDecks) {
             deckPlayerPrev();
             return this;
@@ -481,6 +484,7 @@ public class GameScreen extends TUIScreen {
 
     @Override
     public TUIScreen visit(NavigateDownEvent e) {
+        if (showLog) { logScrollDown(); return this; }
         if (showDecks) {
             deckPlayerNext();
             return this;
@@ -667,7 +671,9 @@ public class GameScreen extends TUIScreen {
         }
 
         String hint;
-        if (showDecks) {
+        if (showLog) {
+            hint = "↑ ↓ Scroll log   M Close log";
+        } else if (showDecks) {
             hint = "↑ ↓ Player   A/D Scroll   Q/E Jump ends   C Close decks   L Legend   M Log";
         } else {
             hint = switch (subState) {
@@ -997,7 +1003,7 @@ public class GameScreen extends TUIScreen {
     private static void appendBuildingsChunks(List<SummaryChunk> out, PlayerDTO p) {
         Set<CardDTO> buildings = cardsOf(p, CardType.BUILDINGS);
         if (buildings.isEmpty()) return;
-        out.add(new SummaryChunk(SEP + " BUILDINGS: ", true));
+        out.add(new SummaryChunk(SEP + " BUILDINGS: ", false));
         StringBuilder body = new StringBuilder();
         boolean first = true;
         for (CardDTO c : buildings) {
@@ -1327,7 +1333,7 @@ public class GameScreen extends TUIScreen {
 
     private void drawLegend(TuiTextGraphics tg, TuiSize sz) {
         int w = 38;
-        int h = 13;
+        int h = 14;
         int x = sz.getColumns() - w - 2;
         int y = 1;
 
@@ -1353,6 +1359,7 @@ public class GameScreen extends TUIScreen {
             {"🛡️", "Immunity"},
             {"🏁", "End-game PP bonus"},
             {"🌈", "Set collection bonus"},
+            {"🧍", "Character card"},
             {"I II III", "Card Era"},
         };
 
