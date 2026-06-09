@@ -1,13 +1,16 @@
 package org.adsl.server.model.cards.buildings;
 
 import org.adsl.server.model.cards.Card;
+import org.adsl.server.model.cards.characters.Inventor;
 import org.adsl.shared.enums.CardType;
+import org.adsl.shared.enums.Icon;
 import org.adsl.shared.enums.Trigger;
 import org.adsl.server.model.cards.buildings.utils.BuildingEffect;
 import org.adsl.server.model.Player;
 import org.adsl.shared.model.CardToken;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Building that reacts each time the owner draws a card ({@link Trigger#DRAWING}).
@@ -73,11 +76,19 @@ public class SinceBuilt extends Building {
                     }
 
                 } else if (buildingEffect == BuildingEffect.COUPLE_INVENTOR) {
-                    int numInventor = characterInUse.get(CardType.INVENTOR).size();
-                    if(numInventor == 2){
+                    Map<Icon, List<Card>> grouping = characterInUse.get(CardType.INVENTOR).stream()
+                            .collect(Collectors.groupingBy(c -> ((Inventor) c).getIcon()));
+                    Optional<Icon> coupleWithSameIcon = grouping.entrySet().stream()
+                            .filter(entry -> entry.getValue().size() >= 2)
+                            .map(Map.Entry::getKey)
+                            .findFirst();
+
+                    coupleWithSameIcon.ifPresent(icon -> {
+                        List<Card> couple = grouping.get(icon).subList(0, 2);
                         p.changeFood(3);
-                        characterInUse = new HashMap<>();
-                    }
+
+                        couple.forEach(characterInUse.get(CardType.INVENTOR)::remove);
+                    });
                 }
             }
         }

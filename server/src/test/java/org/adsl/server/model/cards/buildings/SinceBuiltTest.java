@@ -104,7 +104,20 @@ public class SinceBuiltTest {
     }
 
     @Test
-    void testCoupleInventor_twoInventors_awards3Food() {
+    void testCoupleInventor_twoInventorsSameIcon_awards3Food() {
+        SinceBuilt building = new SinceBuilt("sb", 5, 3, Trigger.DRAWING, 1, null, BuildingEffect.COUPLE_INVENTOR);
+
+        player.setLastPick(new Inventor("i1", Icon.BOAT, 1, null));
+        building.activeEffect(Set.of(player), Trigger.DRAWING);
+
+        player.setLastPick(new Inventor("i2", Icon.BOAT, 1, null));
+        building.activeEffect(Set.of(player), Trigger.DRAWING);
+
+        assertEquals(3, player.getFood());
+    }
+
+    @Test
+    void testCoupleInventor_twoInventorsDifferentIcon_noFoodAwarded() {
         SinceBuilt building = new SinceBuilt("sb", 5, 3, Trigger.DRAWING, 1, null, BuildingEffect.COUPLE_INVENTOR);
 
         player.setLastPick(new Inventor("i1", Icon.BOAT, 1, null));
@@ -113,7 +126,7 @@ public class SinceBuiltTest {
         player.setLastPick(new Inventor("i2", Icon.ROPE, 1, null));
         building.activeEffect(Set.of(player), Trigger.DRAWING);
 
-        assertEquals(3, player.getFood());
+        assertEquals(0, player.getFood());
     }
 
     @Test
