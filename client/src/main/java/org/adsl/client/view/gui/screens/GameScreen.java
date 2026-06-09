@@ -220,6 +220,7 @@ public class GameScreen extends GUIScreen {
     private List<Image> rulesPages;
     private int rulesPageIndex = 0;
     private StackPane rulesOverlay;
+    private StackPane summaryCardOverlay;
 
     // ── Keyboard navigation (spatial) ────────────────────────────────────────
     // Rebuilt each render: stable key → the active node it points to. Only
@@ -334,6 +335,7 @@ public class GameScreen extends GUIScreen {
         rootStack.getChildren().add(floatingLog.getFullPanel());
 
         setupRulesButton();
+        setupSummaryCardButton();
         resolveMoveCounts();
         renderBoard();
     }
@@ -1903,6 +1905,71 @@ public class GameScreen extends GUIScreen {
 
         rulesOverlay.getChildren().addAll(content, close);
         rootStack.getChildren().add(rulesOverlay);
+    }
+
+    // ── Summary card overlay ──────────────────────────────────────────────────
+
+    private void setupSummaryCardButton() {
+        Button btn = new Button("SC");
+        btn.setStyle(
+            "-fx-font-size: 13px; -fx-font-weight: bold;" +
+            "-fx-min-width: 40px; -fx-min-height: 40px;" +
+            "-fx-max-width: 40px; -fx-max-height: 40px;" +
+            "-fx-background-radius: 20; -fx-padding: 0;"
+        );
+        btn.setOnAction(_ -> toggleSummaryCard());
+        StackPane.setAlignment(btn, Pos.BOTTOM_LEFT);
+        StackPane.setMargin(btn, new Insets(0, 0, 14, 62));
+        rootStack.getChildren().add(btn);
+    }
+
+    private void toggleSummaryCard() {
+        if (summaryCardOverlay != null && rootStack.getChildren().contains(summaryCardOverlay)) {
+            // Toggle off
+            rootStack.getChildren().remove(summaryCardOverlay);
+            summaryCardOverlay = null;
+            return;
+        }
+
+        // Build the card display
+        Image img = safeImage(() -> new Image(
+                getClass().getResourceAsStream("/assets/cards_front_cropped/summary_card.png")));
+
+        // Small size: visible but compact, sitting just above the SC button
+        double cardW = 130.0;
+        double cardH = cardW * CARD_ASPECT;
+
+        // cardPane added directly to rootStack — no wrapper StackPane, which would
+        // expand to fill the whole screen and push the card to the centre.
+        summaryCardOverlay = new StackPane();
+        summaryCardOverlay.setMinSize(cardW, cardH);
+        summaryCardOverlay.setPrefSize(cardW, cardH);
+        summaryCardOverlay.setMaxSize(cardW, cardH);
+        summaryCardOverlay.setMouseTransparent(true);
+
+        if (img != null) {
+            ImageView iv = new ImageView(img);
+            iv.setFitWidth(cardW);
+            iv.setFitHeight(cardH);
+            iv.setPreserveRatio(false);
+            // Rounded corners — same formula as every other game card
+            Rectangle clip = new Rectangle(cardW, cardH);
+            clip.setArcWidth(cardW * 0.12);
+            clip.setArcHeight(cardW * 0.12);
+            iv.setClip(clip);
+            summaryCardOverlay.getChildren().add(iv);
+        } else {
+            Label fb = new Label("Summary Card");
+            fb.setStyle("-fx-text-fill: #f5deb3; -fx-background-color: #3a2410;"
+                    + " -fx-background-radius: 8; -fx-padding: 8; -fx-font-size: 13px;");
+            summaryCardOverlay.getChildren().add(fb);
+        }
+
+        // Anchor bottom-left, just above the SC button (button bottom=14 + height=40 + gap=8 = 62)
+        StackPane.setAlignment(summaryCardOverlay, Pos.BOTTOM_LEFT);
+        StackPane.setMargin(summaryCardOverlay, new Insets(0, 0, 62, 14));
+
+        rootStack.getChildren().add(summaryCardOverlay);
     }
 
 }
