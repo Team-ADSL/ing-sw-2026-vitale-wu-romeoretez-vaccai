@@ -4,8 +4,41 @@ import time
 import json
 import threading
 import queue
+import socket
 
-from socket_client_utils import CustomArgumentParser, connect_socket
+class CustomArgumentParser(argparse.ArgumentParser):
+    """Common parser to handle error messages and usage examples."""
+    def __init__(self, example_usage, **kwargs):
+        self.example_usage = example_usage
+        super().__init__(**kwargs)
+
+    def error(self, message):
+        sys.stderr.write(f"Error: {message}\n\n")
+        sys.stderr.write("Correct usage example:\n")
+        sys.stderr.write(f"  {self.example_usage}\n")
+        sys.exit(2)
+
+def connect_socket(host, port, sock_id):
+    """Creates, connects and checks for an initial banner."""
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        sock.connect((host, port))
+        print(f"Socket {sock_id} connecting to server ({host}:{port})")
+        
+        sock.settimeout(1.0)
+        try:
+            banner = sock.recv(4096)
+            if banner:
+                print(f"Connection response: {banner.decode('utf-8').strip()}")
+        except socket.timeout:
+            pass
+        
+        sock.settimeout(None)
+        print("-" * 40)
+        return sock
+    except Exception as e:
+        print(f"Unable to connect socket {sock_id}: {e}")
+        return None
 
 def listener_thread(sock, player_name, msg_queue):
     """
