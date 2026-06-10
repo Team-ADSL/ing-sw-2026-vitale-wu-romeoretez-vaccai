@@ -220,7 +220,7 @@ public class GameScreen extends GUIScreen {
     private List<Image> rulesPages;
     private int rulesPageIndex = 0;
     private StackPane rulesOverlay;
-    private StackPane summaryCardOverlay;
+    private Node summaryCardOverlay;
 
     // ── Keyboard navigation (spatial) ────────────────────────────────────────
     // Rebuilt each render: stable key → the active node it points to. Only
@@ -1931,39 +1931,61 @@ public class GameScreen extends GUIScreen {
             return;
         }
 
-        // Build the card display
-        Image img = safeImage(() -> new Image(
-                getClass().getResourceAsStream("/assets/cards_front_cropped/summary_card.png")));
+        final int[] index = {0};
+        final String[] cardPaths = {
+                "/assets/cards_front_cropped/summary_card.png",
+                "/assets/cards_back_cropped/summary_card.png"
+        };
 
         // Small size: visible but compact, sitting just above the SC button
         double cardW = 130.0;
         double cardH = cardW * CARD_ASPECT;
 
-        // cardPane added directly to rootStack — no wrapper StackPane, which would
-        // expand to fill the whole screen and push the card to the centre.
-        summaryCardOverlay = new StackPane();
-        summaryCardOverlay.setMinSize(cardW, cardH);
-        summaryCardOverlay.setPrefSize(cardW, cardH);
-        summaryCardOverlay.setMaxSize(cardW, cardH);
-        summaryCardOverlay.setMouseTransparent(true);
+        ImageView iv = new ImageView();
+        iv.setFitWidth(cardW);
+        iv.setFitHeight(cardH);
+        iv.setPreserveRatio(false);
+        Rectangle clip = new Rectangle(cardW, cardH);
+        clip.setArcWidth(cardW * 0.12);
+        clip.setArcHeight(cardW * 0.12);
+        iv.setClip(clip);
 
-        if (img != null) {
-            ImageView iv = new ImageView(img);
-            iv.setFitWidth(cardW);
-            iv.setFitHeight(cardH);
-            iv.setPreserveRatio(false);
-            // Rounded corners — same formula as every other game card
-            Rectangle clip = new Rectangle(cardW, cardH);
-            clip.setArcWidth(cardW * 0.12);
-            clip.setArcHeight(cardW * 0.12);
-            iv.setClip(clip);
-            summaryCardOverlay.getChildren().add(iv);
-        } else {
-            Label fb = new Label("Summary Card");
-            fb.setStyle("-fx-text-fill: #f5deb3; -fx-background-color: #3a2410;"
-                    + " -fx-background-radius: 8; -fx-padding: 8; -fx-font-size: 13px;");
-            summaryCardOverlay.getChildren().add(fb);
-        }
+        Label fb = new Label("Summary Card");
+        fb.setStyle("-fx-text-fill: #f5deb3; -fx-background-color: #3a2410;"
+                + " -fx-background-radius: 8; -fx-padding: 8; -fx-font-size: 13px;");
+        fb.setVisible(false);
+
+        StackPane cardPane = new StackPane(iv, fb);
+        cardPane.setMinSize(cardW, cardH);
+        cardPane.setMaxSize(cardW, cardH);
+
+        Runnable updateImage = () -> {
+            Image img = safeImage(() -> new Image(getClass().getResourceAsStream(cardPaths[index[0]])));
+            if (img != null) {
+                iv.setImage(img);
+                iv.setVisible(true);
+                fb.setVisible(false);
+            } else {
+                iv.setVisible(false);
+                fb.setVisible(true);
+            }
+        };
+        updateImage.run();
+
+        Button nextBtn = new Button("▶");
+        nextBtn.setFocusTraversable(false);
+        nextBtn.setStyle("-fx-font-size: 14px; -fx-padding: 6 10; -fx-background-radius: 15;");
+        nextBtn.setOnAction(_ -> {
+            index[0] = (index[0] + 1) % cardPaths.length;
+            updateImage.run();
+        });
+
+        HBox container = new HBox(8, cardPane, nextBtn);
+        container.setAlignment(Pos.CENTER_LEFT);
+        container.setPickOnBounds(false);
+        container.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+
+        summaryCardOverlay = container;
 
         // Anchor bottom-left, just above the SC button (button bottom=14 + height=40 + gap=8 = 62)
         StackPane.setAlignment(summaryCardOverlay, Pos.BOTTOM_LEFT);

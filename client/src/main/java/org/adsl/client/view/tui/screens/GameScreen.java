@@ -81,6 +81,13 @@ public class GameScreen extends TUIScreen {
     private volatile String overlayTitle = null;
     private volatile String overlayLog = null;
 
+    // Rules overlay
+    private boolean showRules = false;
+    private int rulesPageIndex = 0;
+    private int rulesScrollOffset = 0;
+    /** Lazily loaded; null until first R press. Each element is the text of one page. */
+    private List<String> rulesPages = null;
+
     public GameScreen(TuiTerminal terminal,
             AppCoordinator coordinator,
             String username,
@@ -112,6 +119,10 @@ public class GameScreen extends TUIScreen {
 
         if (showLegend) {
             drawLegend(tg, sz);
+        }
+
+        if (showRules) {
+            drawRulesWindow(tg, sz);
         }
 
         if (showLog) {
@@ -212,7 +223,9 @@ public class GameScreen extends TUIScreen {
     @Override
     public TUIScreen visit(CharInputEvent e) {
         char c = e.getCharacter();
-        if (c == 'l' || c == 'L') {
+        if (c == 'r' || c == 'R') {
+            toggleRules();
+        } else if (c == 'l' || c == 'L') {
             showLegend = !showLegend;
         } else if (c == 'm' || c == 'M') {
             toggleLog();
@@ -413,6 +426,14 @@ public class GameScreen extends TUIScreen {
     @Override
     public TUIScreen visit(NavigateLeftEvent e) {
         if (showLog) return this;
+        // When rules overlay is open, ← goes to previous page.
+        if (showRules) {
+            if (rulesPageIndex > 0) {
+                rulesPageIndex--;
+                rulesScrollOffset = 0;
+            }
+            return this;
+        }
         if (showDecks) {
             deckScrollLeft();
             return this;
@@ -436,6 +457,14 @@ public class GameScreen extends TUIScreen {
     @Override
     public TUIScreen visit(NavigateRightEvent e) {
         if (showLog) return this;
+        // When rules overlay is open, → goes to next page.
+        if (showRules) {
+            if (rulesPages != null && rulesPageIndex < rulesPages.size() - 1) {
+                rulesPageIndex++;
+                rulesScrollOffset = 0;
+            }
+            return this;
+        }
         if (showDecks) {
             deckScrollRight();
             return this;
@@ -463,6 +492,7 @@ public class GameScreen extends TUIScreen {
     @Override
     public TUIScreen visit(NavigateUpEvent e) {
         if (showLog) { logScrollUp(); return this; }
+        if (showRules) { rulesScrollOffset = Math.max(0, rulesScrollOffset - 1); return this; }
         if (showDecks) {
             deckPlayerPrev();
             return this;
@@ -485,6 +515,7 @@ public class GameScreen extends TUIScreen {
     @Override
     public TUIScreen visit(NavigateDownEvent e) {
         if (showLog) { logScrollDown(); return this; }
+        if (showRules) { rulesScrollOffset++; return this; }
         if (showDecks) {
             deckPlayerNext();
             return this;
@@ -671,19 +702,29 @@ public class GameScreen extends TUIScreen {
         }
 
         String hint;
-        if (showLog) {
+        if (showRules) {
+            int w = Math.min(160, Math.max(40, cols * 92 / 100));
+            int h = Math.min(60, Math.max(14, sz.getRows() * 85 / 100));
+            int innerH = h - 6;
+            String pageText = rulesPages.get(Math.min(rulesPageIndex, rulesPages.size() - 1));
+            if (wrapText(pageText, w - 4).size() > innerH) {
+                hint = "R Close rules   ← Prev page   → Next page   ↑ ↓ Scroll text";
+            } else {
+                hint = "R Close rules   ← Prev page   → Next page";
+            }
+        } else if (showLog) {
             hint = "↑ ↓ Scroll log   M Close log";
         } else if (showDecks) {
-            hint = "↑ ↓ Player   A/D Scroll   Q/E Jump ends   C Close decks   L Legend   M Log";
+            hint = "↑ ↓ Player   A/D Scroll   Q/E Jump ends   C Close decks   L Legend   M Log   R Rules";
         } else {
             hint = switch (subState) {
-                case MY_TURN_TOTEM -> "← → Offer tiles   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   ENTER Place totem   C Decks   L Legend   M Log";
+                case MY_TURN_TOTEM -> "← → Offer tiles   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   ENTER Place totem   C Decks   L Legend   M Log   R Rules";
                 case MY_TURN_CARDS -> String.format(
-                        "← → Navigate   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   SPACE Select (%d/%d)   ENTER Confirm   C Decks   L Legend   M Log",
+                        "← → Navigate   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   SPACE Select (%d/%d)   ENTER Confirm   C Decks   L Legend   M Log   R Rules",
                         selectedMoves.size(), upperCount + lowerCount);
-                case WAITING_SERVER -> "Waiting for server...   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   C Decks   L Legend   M Log";
-                case NOT_MY_TURN -> waitingHint() + "   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   C Decks   L Legend   M Log";
-                default -> "C Decks   L Legend   M Log";
+                case WAITING_SERVER -> "Waiting for server...   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   C Decks   L Legend   M Log   R Rules";
+                case NOT_MY_TURN -> waitingHint() + "   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   C Decks   L Legend   M Log   R Rules";
+                default -> "C Decks   L Legend   M Log   R Rules";
             };
         }
         drawControls(tg, sz, hint);
@@ -1381,5 +1422,173 @@ public class GameScreen extends TUIScreen {
             if (lineY >= y + h - 1) break;
         }
         tg.setBackgroundColor(TuiColor.BLACK);
+    }
+
+    // ── Rules overlay ─────────────────────────────────────────────────────────
+
+    /**
+     * Toggles the rules overlay. Pages are loaded lazily from
+     * {@code /assets/rules/rules} (shipped in the jar under the assets target
+     * path). The file uses {@code --- PAGE N of 8: ... ---} separators to split
+     * sections; everything between two separators is one page.
+     */
+    private void toggleRules() {
+        if (showRules) {
+            showRules = false;
+            return;
+        }
+        if (rulesPages == null) {
+            rulesPages = loadRulesPages();
+        }
+        rulesPageIndex = 0;
+        showRules = true;
+    }
+
+    /** Reads the rules file and splits it into pages on the separator lines. */
+    private List<String> loadRulesPages() {
+        List<String> pages = new ArrayList<>();
+        try {
+            var stream = getClass().getResourceAsStream("/assets/rules/rules");
+            if (stream == null) {
+                pages.add("(Rules file not found.)");
+                return pages;
+            }
+            String full = new String(stream.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            // Split on separator lines that look like: "--- PAGE N of M: ... ---"
+            String[] parts = full.split("(?m)^---\\s+PAGE\\s+\\d+.*?---\\s*$");
+            for (String part : parts) {
+                String trimmed = part.strip();
+                if (!trimmed.isEmpty()) pages.add(trimmed);
+            }
+            if (pages.isEmpty()) pages.add(full.strip());
+        } catch (Exception ex) {
+            pages.add("(Error loading rules: " + ex.getMessage() + ")");
+        }
+        return pages;
+    }
+
+    /**
+     * Draws the rules overlay as a large centered box (≈88% wide, ≈80% tall).
+     * The current page text is word-wrapped to fit the inner width. The board
+     * is still visible on the edges behind the overlay.
+     */
+    private void drawRulesWindow(TuiTextGraphics tg, TuiSize sz) {
+        if (rulesPages == null || rulesPages.isEmpty()) return;
+
+        int cols = sz.getColumns();
+        int rows = sz.getRows();
+
+        // Panel dimensions — large but not fullscreen so the board shows on edges.
+        // Capped at 160 width and 60 height to avoid huge empty spaces but allow fullscreen text.
+        int w = Math.min(160, Math.max(40, cols * 80 / 100));
+        int h = Math.min(60, Math.max(14, rows * 75 / 100));
+        int x = (cols - w) / 2;
+        int y = (rows - h) / 2;
+
+        // Draw panel background (fill with spaces to erase board content).
+        tg.setBackgroundColor(TuiColor.BLACK);
+        tg.setForegroundColor(TuiColor.WHITE);
+        for (int r = y; r < y + h && r < rows; r++) {
+            tg.putString(x, r, " ".repeat(w));
+        }
+
+        // Box border in cyan.
+        tg.setForegroundColor(TuiColor.CYAN);
+        String hbar = "─".repeat(w - 2);
+        tg.putString(x,         y,         "┌" + hbar + "┐");
+        tg.putString(x,         y + h - 1, "└" + hbar + "┘");
+        for (int r = y + 1; r < y + h - 1; r++) {
+            tg.putString(x,         r, "│");
+            tg.putString(x + w - 1, r, "│");
+        }
+
+        // ── Title bar on row y+1: yellow background, black text ──────────────
+        int pageNum   = rulesPageIndex + 1;
+        int pageTotal = rulesPages.size();
+        String titleLeft  = "  MESOS RULES  —  page " + pageNum + " of " + pageTotal + "  ";
+        String titleRight = "  ← prev   → next  ";
+        int fillLen = w - 2 - titleLeft.length() - titleRight.length();
+        String titleRow = titleLeft + " ".repeat(Math.max(0, fillLen)) + titleRight;
+        if (titleRow.length() > w - 2) titleRow = titleRow.substring(0, w - 2);
+        tg.setBackgroundColor(TuiColor.YELLOW);
+        tg.setForegroundColor(TuiColor.BLACK);
+        tg.putString(x + 1, y + 1, titleRow);
+        tg.setBackgroundColor(TuiColor.BLACK);
+
+        // ── Separator on row y+2 ──────────────────────────────────────────────
+        tg.setForegroundColor(TuiColor.CYAN);
+        tg.putString(x, y + 2, "├" + "─".repeat(w - 2) + "┤");
+
+        // ── Inner text area: rows y+3 to y+h-3, hint on y+h-2 ───────────────
+        int innerW = w - 4;
+        int innerH = h - 6;  // top + titlebar + separator + hintrow + bottom = 5 fixed rows
+        int textX  = x + 2;
+        int textY  = y + 3;
+
+        String pageText = rulesPages.get(Math.min(rulesPageIndex, rulesPages.size() - 1));
+        List<String> lines = wrapText(pageText, innerW);
+
+        int maxScroll = Math.max(0, lines.size() - innerH);
+        rulesScrollOffset = Math.min(rulesScrollOffset, maxScroll);
+
+        // Render content lines; section headers (ALL-CAPS) in orange, body in white.
+        int lineY = textY;
+        for (int i = rulesScrollOffset; i < lines.size() && lineY < textY + innerH; i++, lineY++) {
+            String line = lines.get(i);
+            boolean isHeader = !line.isEmpty()
+                    && line.equals(line.toUpperCase())
+                    && line.matches("[A-Z0-9 /\\-()&,:!?'🌟🧍🏠🍖🏁]+")
+                    && !line.matches("^[0-9].*");  // numbered building items stay white
+            boolean isSubHeader = !line.isEmpty()
+                    && line.equals(line.toUpperCase())
+                    && line.matches("[ A-Z\\[\\]]+");  // numbered building items stay white
+            if (isSubHeader) {
+                tg.setForegroundColor(TuiColor.YELLOW);
+            } else if (isHeader) {
+                tg.setForegroundColor(TuiColor.ORANGE);
+            } else {
+                tg.setForegroundColor(TuiColor.WHITE);
+            }
+            tg.putString(textX, lineY, padRight(line, innerW));
+        }
+        // Bottom hint line inside the box.
+        String closeHint = " R to close ";
+        tg.setForegroundColor(TuiColor.CYAN);
+        tg.putString(x + 2, y + h - 2, closeHint);
+
+        tg.setForegroundColor(TuiColor.WHITE);
+        tg.setBackgroundColor(TuiColor.BLACK);
+    }
+
+    /**
+     * Word-wraps {@code text} to at most {@code maxW} visible characters per line.
+     * Preserves intentional blank lines (paragraph breaks) and treats CRLF/LF uniformly.
+     */
+    private static List<String> wrapText(String text, int maxW) {
+        List<String> result = new ArrayList<>();
+        if (text == null || text.isEmpty()) return result;
+        String normalized = text.replace("\r\n", "\n").replace("\r", "\n");
+        for (String paragraph : normalized.split("\n")) {
+            if (paragraph.isBlank()) {
+                result.add("");  // preserve blank separator lines
+                continue;
+            }
+            // Simple greedy wrap.
+            String[] words = paragraph.split(" ");
+            StringBuilder current = new StringBuilder();
+            for (String word : words) {
+                if (word.isEmpty()) continue;
+                if (current.length() == 0) {
+                    current.append(word);
+                } else if (current.length() + 1 + word.length() <= maxW) {
+                    current.append(' ').append(word);
+                } else {
+                    result.add(current.toString());
+                    current = new StringBuilder(word);
+                }
+            }
+            if (current.length() > 0) result.add(current.toString());
+        }
+        return result;
     }
 }
