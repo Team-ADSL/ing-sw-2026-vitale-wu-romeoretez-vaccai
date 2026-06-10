@@ -703,8 +703,8 @@ public class GameScreen extends TUIScreen {
 
         String hint;
         if (showRules) {
-            int w = Math.min(160, Math.max(40, cols * 92 / 100));
-            int h = Math.min(60, Math.max(14, sz.getRows() * 85 / 100));
+            int w = Math.min(160, Math.max(40, cols * 80 / 100));
+            int h = Math.min(43, Math.max(14, sz.getRows() * 75 / 100));
             int innerH = h - 6;
             String pageText = rulesPages.get(Math.min(rulesPageIndex, rulesPages.size() - 1));
             if (wrapText(pageText, w - 4).size() > innerH) {
@@ -1427,9 +1427,10 @@ public class GameScreen extends TUIScreen {
     // ── Rules overlay ─────────────────────────────────────────────────────────
 
     /**
-     * Toggles the rules overlay. Pages are loaded lazily from
-     * {@code /assets/rules/rules} (shipped in the jar under the assets target
-     * path). The file uses {@code --- PAGE N of 8: ... ---} separators to split
+     * Loads the raw text of the game rules from the embedded classpath resource
+     * {@code /assets/rules/tui_textual_rules} (shipped in the jar under the assets target
+     * directory). The text is cached so it's only loaded once per session. The file uses
+     * {@code --- PAGE N of 8: ... ---} separators to split
      * sections; everything between two separators is one page.
      */
     private void toggleRules() {
@@ -1448,7 +1449,7 @@ public class GameScreen extends TUIScreen {
     private List<String> loadRulesPages() {
         List<String> pages = new ArrayList<>();
         try {
-            var stream = getClass().getResourceAsStream("/assets/rules/rules");
+            var stream = getClass().getResourceAsStream("/assets/rules/tui_textual_rules");
             if (stream == null) {
                 pages.add("(Rules file not found.)");
                 return pages;
@@ -1479,9 +1480,9 @@ public class GameScreen extends TUIScreen {
         int rows = sz.getRows();
 
         // Panel dimensions — large but not fullscreen so the board shows on edges.
-        // Capped at 160 width and 60 height to avoid huge empty spaces but allow fullscreen text.
+        // Capped at 160 width and 43 height to avoid huge empty spaces but allow fullscreen text.
         int w = Math.min(160, Math.max(40, cols * 80 / 100));
-        int h = Math.min(60, Math.max(14, rows * 75 / 100));
+        int h = Math.min(43, Math.max(14, rows * 75 / 100));
         int x = (cols - w) / 2;
         int y = (rows - h) / 2;
 
@@ -1552,9 +1553,10 @@ public class GameScreen extends TUIScreen {
             tg.putString(textX, lineY, padRight(line, innerW));
         }
         // Bottom hint line inside the box.
-        String closeHint = " R to close ";
-        tg.setForegroundColor(TuiColor.CYAN);
-        tg.putString(x + 2, y + h - 2, closeHint);
+        if (rulesScrollOffset < maxScroll) {
+            tg.setForegroundColor(TuiColor.DARK_GRAY);
+            tg.putString(x + 2, y + h - 2, " ... ");
+        }
 
         tg.setForegroundColor(TuiColor.WHITE);
         tg.setBackgroundColor(TuiColor.BLACK);
@@ -1565,30 +1567,28 @@ public class GameScreen extends TUIScreen {
      * Preserves intentional blank lines (paragraph breaks) and treats CRLF/LF uniformly.
      */
     private static List<String> wrapText(String text, int maxW) {
+        if (text == null || text.isBlank()) return List.of();
         List<String> result = new ArrayList<>();
-        if (text == null || text.isEmpty()) return result;
-        String normalized = text.replace("\r\n", "\n").replace("\r", "\n");
-        for (String paragraph : normalized.split("\n")) {
+        text.lines().forEach(paragraph -> {
             if (paragraph.isBlank()) {
-                result.add("");  // preserve blank separator lines
-                continue;
+                result.add("");
+                return;
             }
-            // Simple greedy wrap.
-            String[] words = paragraph.split(" ");
             StringBuilder current = new StringBuilder();
-            for (String word : words) {
+            for (String word : paragraph.split("\\s+")) {
                 if (word.isEmpty()) continue;
-                if (current.length() == 0) {
+                if (current.isEmpty()) {
                     current.append(word);
                 } else if (current.length() + 1 + word.length() <= maxW) {
                     current.append(' ').append(word);
                 } else {
                     result.add(current.toString());
-                    current = new StringBuilder(word);
+                    current.setLength(0);
+                    current.append(word);
                 }
             }
-            if (current.length() > 0) result.add(current.toString());
-        }
+            if (!current.isEmpty()) result.add(current.toString());
+        });
         return result;
     }
 }
