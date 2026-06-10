@@ -220,7 +220,7 @@ public class GameScreen extends GUIScreen {
     private List<Image> rulesPages;
     private int rulesPageIndex = 0;
     private StackPane rulesOverlay;
-    private StackPane summaryCardOverlay;
+    private Node summaryCardOverlay;
 
     // ── Keyboard navigation (spatial) ────────────────────────────────────────
     // Rebuilt each render: stable key → the active node it points to. Only
@@ -1941,11 +1941,6 @@ public class GameScreen extends GUIScreen {
         double cardW = 130.0;
         double cardH = cardW * CARD_ASPECT;
 
-        summaryCardOverlay = new StackPane();
-        summaryCardOverlay.setPickOnBounds(false);
-        // Force the StackPane to shrink to its content so it can be aligned correctly by the parent
-        summaryCardOverlay.setMaxSize(javafx.scene.layout.Region.USE_PREF_SIZE, javafx.scene.layout.Region.USE_PREF_SIZE);
-
         ImageView iv = new ImageView();
         iv.setFitWidth(cardW);
         iv.setFitHeight(cardH);
@@ -1988,8 +1983,9 @@ public class GameScreen extends GUIScreen {
         HBox container = new HBox(8, cardPane, nextBtn);
         container.setAlignment(Pos.CENTER_LEFT);
         container.setPickOnBounds(false);
+        container.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
 
-        summaryCardOverlay.getChildren().add(container);
+        summaryCardOverlay = container;
 
         // Anchor bottom-left, just above the SC button (button bottom=14 + height=40 + gap=8 = 62)
         StackPane.setAlignment(summaryCardOverlay, Pos.BOTTOM_LEFT);
