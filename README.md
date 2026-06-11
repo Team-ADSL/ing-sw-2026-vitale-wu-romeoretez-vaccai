@@ -86,6 +86,13 @@ java -jar server/target/mesos-server.jar 8080 1099 ./saved
 > The two ports must be different and in the range 1024–65535.
 > The server starts both a Socket listener and an RMI registry.
 
+> [!IMPORTANT]
+> **Running on a remote server (Non-local RMI setup)**:
+> If the server is running on a remote machine and you want clients to connect via RMI from outside, Java RMI requires you to specify the server's public/reachable IP address via the `java.rmi.server.hostname` system property. Otherwise, clients will fail to connect:
+> ```bash
+> java -Djava.rmi.server.hostname=<server-ip> -jar server/target/mesos-server.jar 8080 1099 ./saved
+> ```
+
 ---
 
 ### 2. Start a Socket Client
@@ -509,6 +516,28 @@ java -jar server/target/mesos-server.jar <socket-port> <rmi-port> <recover-dir>
   $env:DB_PASSWORD="your_password"
   java -jar server/target/mesos-server.jar <socket-port> <rmi-port> <recover-dir>
   ```
+
+**Remote Server Execution (Non-local RMI)**:
+When running on a remote server, specify the reachable server IP using the `-Djava.rmi.server.hostname` property:
+* **Without Database**:
+  ```bash
+  java -Djava.rmi.server.hostname=<server-ip> -jar server/target/mesos-server.jar <socket-port> <rmi-port> <recover-dir>
+  ```
+* **With Database Support**:
+  * **macOS / Linux**:
+    ```bash
+    DB_PASSWORD="your_password" java -Djava.rmi.server.hostname=<server-ip> -jar server/target/mesos-server.jar <socket-port> <rmi-port> <recover-dir>
+    ```
+  * **Windows (Command Prompt)**:
+    ```cmd
+    set DB_PASSWORD=your_password
+    java -Djava.rmi.server.hostname=<server-ip> -jar server/target/mesos-server.jar <socket-port> <rmi-port> <recover-dir>
+    ```
+  * **Windows (PowerShell)**:
+    ```powershell
+    $env:DB_PASSWORD="your_password"
+    java -Djava.rmi.server.hostname=<server-ip> -jar server/target/mesos-server.jar <socket-port> <rmi-port> <recover-dir>
+    ```
 
 ### 3. Client App (Manual Startup)
 
