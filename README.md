@@ -1,14 +1,37 @@
 # MESOS — Software Engineering Project 2026
 
+![Java Version](https://img.shields.io/badge/Java-25-orange.svg)
+![Maven](https://img.shields.io/badge/Maven-3.8%2B-blue.svg)
+![Build](https://img.shields.io/badge/Build-passing-brightgreen.svg)
+
 **Team:** Vitale · Wu · Romeo-Retez · Vaccai
+
+---
+
+## Table of Contents
+1. [Prerequisites](#prerequisites)
+2. [Build](#build)
+3. [Running the Application](#running-the-application)
+   - [Start the Server](#1-start-the-server)
+   - [Start a Socket Client](#2-start-a-socket-client)
+   - [Start an RMI Client](#3-start-an-rmi-client)
+   - [Start a GUI Client (JavaFX)](#4-start-a-gui-client-javafx)
+   - [Client Options Reference](#client-options-reference)
+4. [Typical Local Session](#typical-local-session)
+5. [Quick Start Scripts](#quick-start-scripts-toolsstart)
+6. [Database & Leaderboard Setup](#database--leaderboard-setup)
+7. [Resiliency & Game Persistence](#resiliency--game-persistence)
+8. [Python Testers](#python-testers)
+9. [Javadoc](#javadoc)
+10. [Full Command Reference](#full-command-reference)
 
 ---
 
 ## Prerequisites
 
-- Java 17+
-- Maven 3.8+ (to build)
-- Python 3.8+ (for testers)
+- **Java 25+** (the project compiles and targets Java 25 via Maven release properties)
+- **Maven 3.8+** (to build)
+- **Python 3.8+** (for testers)
 
 ---
 
@@ -59,6 +82,7 @@ java -jar server/target/mesos-server.jar <socket-port> <rmi-port> <recover-direc
 java -jar server/target/mesos-server.jar 8080 1099 ./saved
 ```
 
+> [!NOTE]
 > The two ports must be different and in the range 1024–65535.
 > The server starts both a Socket listener and an RMI registry.
 
@@ -122,6 +146,7 @@ java -jar client/target/mesos-client.jar --client --socket --gui 127.0.0.1 8080
 java -jar client/target/mesos-client.jar --client --rmi    --gui 127.0.0.1 1099
 ```
 
+> [!TIP]
 > Java 25 may print warnings about native access and `sun.misc.Unsafe`; they
 > come from JavaFX itself and can be silenced by appending
 > `--enable-native-access=ALL-UNNAMED` (cosmetic only — the jar runs fine
@@ -176,62 +201,62 @@ Terminal 4 (socket client, GUI):
 
 ---
 
-## Quick Start Scripts (`tools/start`)
+## Quick Start Script (`tools/start/run`)
 
-The `tools/start/` folder contains scripts that automate launching a full local session — server + two clients (one Socket, one RMI) — with a single command from the IntelliJ terminal.
+The `tools/start/` folder contains a centralized, cross-platform launcher script that automates starting a full local session — server + any number of clients — using a single command.
 
-There are four scripts per platform:
+The script runs on **Python 3** (a project prerequisite). For convenience, shell wrappers are provided:
+* **Windows**: `tools\start\run.bat`
+* **macOS/Linux**: `./tools/start/run.sh`
 
-| Script | Build | Interface |
-|--------|-------|-----------|
-| `run_tui`        | yes | TUI (terminal) |
-| `run_gui`        | yes | GUI (JavaFX)   |
-| `run_tui_nobuild`| no  | TUI (terminal) |
-| `run_gui_nobuild`| no  | GUI (JavaFX)   |
-
-The `_nobuild` variants skip the Maven build step and fail immediately if `server/target/mesos-server.jar` or `client/target/mesos-client.jar` is missing.
-
-### macOS
-
-**From IntelliJ:** right-click the script in the Project panel → **Run**.
-
-Alternatively, from the IntelliJ terminal:
+### Usage & Arguments
 
 ```bash
-./tools/start/macos/run_tui.sh          # build + TUI session
+# Windows
+tools\start\run.bat [options]
 ```
 ```bash
-./tools/start/macos/run_gui.sh          # build + GUI session
-```
-```bash
-./tools/start/macos/run_tui_nobuild.sh  # TUI session (skip build)
-```
-```bash
-./tools/start/macos/run_gui_nobuild.sh  # GUI session (skip build)
+# macOS/Linux
+./tools/start/run.sh [options]
 ```
 
-Each script builds the project (unless `_nobuild`), starts the server in a new Terminal window, waits for it to be ready on port 8080, then opens two client windows.
+| Argument | Type | Default | Description |
+|----------|------|---------|-------------|
+| `--tui [count]` | `int` (optional) | `0` | Number of TUI clients to launch. Specifying `--tui` alone launches `1`. |
+| `--gui [count]` | `int` (optional) | `0` | Number of GUI clients to launch. Specifying `--gui` alone launches `1`. |
+| `--clean` | - | - | Kills active server instances and deletes the `./saved` folder before starting. |
+| `--nobuild` | - | - | Skips the Maven compilation step (`mvn package`) to launch faster. |
 
-### Windows
+> [!IMPORTANT]
+> The total number of players (`tui` + `gui`) must be between **2 and 5**. 
+> If no clients are specified, the launcher defaults to **1 TUI and 1 GUI client** (2 players).
 
-**From IntelliJ:** right-click the script in the Project panel → **Run**.
+### Examples
 
-Alternatively, from the IntelliJ terminal:
+* **Launch 2 TUI clients (compiling first)**:
+  ```bash
+  tools\start\run.bat --tui 2
+  ```
 
-```
-tools\start\windows\run_tui.bat          # build + TUI session
-```
-```
-tools\start\windows\run_gui.bat          # build + GUI session
-```
-```
-tools\start\windows\run_tui_nobuild.bat  # TUI session (skip build)
-```
-```
-tools\start\windows\run_gui_nobuild.bat  # GUI session (skip build)
-```
+* **Launch 3 GUI clients, skipping compilation and cleaning old saves**:
+  ```bash
+  tools\start\run.bat --gui 3 --clean --nobuild
+  ```
 
-Each script builds the project (unless `_nobuild`), opens a new `cmd` window for the server, waits for it to be ready on port 8080, then opens two more `cmd` windows for the clients.
+* **Launch a custom mixed session with 2 TUI and 3 GUI clients (total 5 players)**:
+  ```bash
+  tools\start\run.bat --tui 2 --gui 3
+  ```
+
+* **Launch a default 2-player session (equivalent to `--tui 1 --gui 1`)**:
+  ```bash
+  tools\start\run.bat
+  ```
+
+> [!NOTE]
+> - By default, clients alternate connection protocols: player 1 uses Socket, player 2 uses RMI, player 3 Socket, and so on.
+> - The launcher automatically waits for the server to be fully ready on port 8080 before opening the client windows.
+> - If you receive a `Permission denied` error on macOS/Linux for `run.sh`, run `chmod +x tools/start/run.sh` first.
 
 ---
 
@@ -240,6 +265,7 @@ Each script builds the project (unless `_nobuild`), opens a new `cmd` window for
 The testers live in `tools/testers/`. They need only the Python standard
 library — no extra dependencies.
 
+> [!IMPORTANT]
 > **Where to run from — no `cd` needed.**
 > Stay in the **repository root** (the folder that contains `pom.xml` and the
 > `tools/` directory) and type the full path to the script directly:
@@ -297,7 +323,67 @@ This logs in as Alice and Bob, joins game `1`, and automatically plays 5 rounds 
 python3 tools/testers/socket_auto_plays.py -g 1 -p1 Alice -p2 Bob -r 5 -H 192.168.1.10 -P 8080
 ```
 
+> [!WARNING]
 > Make sure the server is running and the game with the given ID exists before launching the script.
+
+---
+
+## Database & Leaderboard Setup
+
+The project includes an **all-time global leaderboard** functionality that persists players' match results. This runs on a **MySQL** server.
+
+### 1. Requirements & Fallback
+If the server cannot connect to the database (e.g. because the MySQL service is down or credentials are missing), it will **gracefully fall back** to an in-memory repository (`NoGameDAO`). 
+- In this fallback mode, matches will run fine, but they won't be saved in the database, and the overall leaderboard will be unavailable.
+
+### 2. Configuration
+The database connection settings are hardcoded in [DatabaseConfig.java](file:///C:/Users/Lorenzo/IdeaProjects/ing-sw-2026-vitale-wu-romeoretez-vaccai/server/src/main/java/org/adsl/server/db/DatabaseConfig.java):
+* **Host:** `localhost`
+* **Port:** `3306`
+* **Database Name:** `game_leaderboard` (automatically created by the server)
+* **User:** `root`
+* **Password:** Read from the `DB_PASSWORD` environment variable.
+
+### 3. Running with Database Support
+1. Make sure a MySQL server is running locally on port `3306`.
+2. Define the `DB_PASSWORD` environment variable with your MySQL root password:
+   * **macOS/Linux:**
+     ```bash
+     export DB_PASSWORD="your_password"
+     java -jar server/target/mesos-server.jar 8080 1099 ./saved
+     ```
+   * **Windows (Command Prompt):**
+     ```cmd
+     set DB_PASSWORD=your_password
+     java -jar server/target/mesos-server.jar 8080 1099 ./saved
+     ```
+   * **Windows (PowerShell):**
+     ```powershell
+     $env:DB_PASSWORD="your_password"
+     java -jar server/target/mesos-server.jar 8080 1099 ./saved
+     ```
+   * **IntelliJ IDEA:** Open the Server Run Configuration and add `DB_PASSWORD=your_password` in the *Environment variables* field.
+
+---
+
+## Resiliency & Game Persistence
+
+The server features robust connection recovery and crash-resiliency mechanisms.
+
+### 1. Game Auto-Saving
+The server automatically persists all active game states as serialized `.ser` files in the specified recovery directory (e.g. `./saved` or `./saves`).
+
+### 2. Server Crash Recovery
+If the server crashes or restarts:
+1. On startup, it recovers all unfinished games from the serialization folder.
+2. The game enters a `RecoverState` (suspended).
+3. Players can relaunch their clients and attempt to join again using the **exact same nickname**.
+4. Once all active players of that game have reconnected, the server automatically replays the game transcript, restores each client's state, and resumes the match.
+
+### 3. Disconnection & Timeout Detection
+* The server runs a background timeout checker that pings connected clients.
+* If a client fails to ping within **20 seconds** (default threshold, checked every **5 seconds**), the server flags the player as disconnected.
+* Disconnected players can reconnect to their ongoing match at any time using their nickname.
 
 ---
 
@@ -390,21 +476,74 @@ If you have already generated the docs and want to set a persistent link:
 
 ## Full Command Reference
 
+### 1. Launcher Script (Recommended)
+
+**Windows**:
+```cmd
+tools\start\run.bat [--tui <count>] [--gui <count>] [--clean] [--nobuild]
 ```
+**macOS / Linux**:
+```bash
+./tools/start/run.sh [--tui <count>] [--gui <count>] [--clean] [--nobuild]
+```
+
+### 2. Server App
+
+**Without Database (Fallback Mode)**:
+```bash
 java -jar server/target/mesos-server.jar <socket-port> <rmi-port> <recover-dir>
 ```
+
+**With Database Support**:
+* **macOS / Linux**:
+  ```bash
+  DB_PASSWORD="your_password" java -jar server/target/mesos-server.jar <socket-port> <rmi-port> <recover-dir>
+  ```
+* **Windows (Command Prompt)**:
+  ```cmd
+  set DB_PASSWORD=your_password
+  java -jar server/target/mesos-server.jar <socket-port> <rmi-port> <recover-dir>
+  ```
+* **Windows (PowerShell)**:
+  ```powershell
+  $env:DB_PASSWORD="your_password"
+  java -jar server/target/mesos-server.jar <socket-port> <rmi-port> <recover-dir>
+  ```
+
+### 3. Client App (Manual Startup)
+
+**TUI over Socket**:
+```bash
+java -jar client/target/mesos-client.jar --client --socket --tui <server-ip> <socket-port>
 ```
-java -jar client/target/mesos-client.jar --client  --socket  --tui  <ip> <port>
+**GUI over Socket**:
+```bash
+java -jar client/target/mesos-client.jar --client --socket --gui <server-ip> <socket-port>
 ```
+**TUI over RMI**:
+```bash
+java -jar client/target/mesos-client.jar --client --rmi --tui <server-ip> <rmi-port>
 ```
-java -jar client/target/mesos-client.jar --client  --socket  --gui  <ip> <port>
+**GUI over RMI**:
+```bash
+java -jar client/target/mesos-client.jar --client --rmi --gui <server-ip> <rmi-port>
 ```
+
+### 4. Client App (In-Process Test Modes)
+
+```bash
+java -jar client/target/mesos-client.jar --test-tui
+java -jar client/target/mesos-client.jar --test-gui
+java -jar client/target/mesos-client.jar --test-server-connection
 ```
-java -jar client/target/mesos-client.jar --client  --rmi     --tui  <ip> <port>
+
+### 5. Python Testers
+
+**macOS / Linux**:
+```bash
+python3 tools/testers/socket_auto_plays.py -g <id> -p1 <name> -p2 <name> -r <rounds> [-H <ip>] [-P <port>]
 ```
-```
-java -jar client/target/mesos-client.jar --client  --rmi     --gui  <ip> <port>
-```
-```
-python3 tools/testers/socket_auto_plays.py -g <id> -p1 <name> -p2 <name> -r <round> [-H <ip>] [-P <port>]
+**Windows**:
+```cmd
+python tools\testers\socket_auto_plays.py -g <id> -p1 <name> -p2 <name> -r <rounds> [-H <ip>] [-P <port>]
 ```
