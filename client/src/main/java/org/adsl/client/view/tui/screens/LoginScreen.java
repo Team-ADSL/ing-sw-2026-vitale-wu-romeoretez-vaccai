@@ -35,7 +35,7 @@ import java.io.IOException;
  */
 public class LoginScreen extends TUIScreen {
 
-    private static final int MAX_USERNAME_LENGTH = 20;
+    private static final int MAX_USERNAME_LENGTH = 30;
 
     private static final int FIELD_TEXT  = 0;
     private static final int FIELD_LOGIN = 1;
@@ -85,13 +85,14 @@ public class LoginScreen extends TUIScreen {
         int x0 = Math.max(0, (cols - boxWidth) / 2);
         int y0 = Math.max(0, (rows - boxHeight) / 2);
 
-        drawBox(tg, x0, y0, boxWidth, boxHeight, " MESOS – Login ");
+        drawBox(tg, x0, y0, boxWidth, boxHeight, " MESOS LOGIN ");
 
         int innerX = x0 + 2;
         int row = y0 + 2;
 
         tg.setForegroundColor(TuiColor.YELLOW);
-        tg.putString(innerX, row++, "MESOS  –  Ancient Tribe Strategy");
+        String subtitle = "MESOS  –  Ancient Tribe Strategy";
+        tg.putString(x0 + Math.max(1, (boxWidth - subtitle.length()) / 2), row++, subtitle);
         tg.setForegroundColor(TuiColor.WHITE);
         row++;
 
@@ -107,19 +108,23 @@ public class LoginScreen extends TUIScreen {
             row++;
         }
 
-        tg.putString(innerX, row++, "Enter your username:");
+        String promptMsg = "Enter your username:";
+        tg.putString(x0 + Math.max(1, (boxWidth - promptMsg.length()) / 2), row++, promptMsg);
 
         // Text input field: drawn as [............] with the typed text.
         int fieldWidth = MAX_USERNAME_LENGTH + 2;
         if (focus == FIELD_TEXT) {
             tg.setForegroundColor(TuiColor.YELLOW);
         }
-        tg.putString(innerX, row, "[" + padField(typed.toString(), MAX_USERNAME_LENGTH) + "]");
+        String fieldStr = "[" + padField(typed.toString(), MAX_USERNAME_LENGTH) + "]";
+        tg.putString(x0 + Math.max(1, (boxWidth - fieldWidth) / 2), row, fieldStr);
         tg.setForegroundColor(TuiColor.WHITE);
         row += 2;
 
-        drawButton(tg, innerX,                   row, "  Login  ",            focus == FIELD_LOGIN);
-        drawButton(tg, innerX + 14,              row, "  Close Application  ", focus == FIELD_EXIT);
+        int buttonsWidth = 9 + 2 + 21;
+        int buttonsX = x0 + Math.max(1, (boxWidth - buttonsWidth) / 2);
+        drawButton(tg, buttonsX,                   row, "  Login  ",            focus == FIELD_LOGIN);
+        drawButton(tg, buttonsX + 11,              row, "  Close Application  ", focus == FIELD_EXIT);
 
         row = y0 + boxHeight - 2;
         tg.setForegroundColor(TuiColor.CYAN);
@@ -238,8 +243,10 @@ public class LoginScreen extends TUIScreen {
         }
         if (title != null && !title.isEmpty()) {
             int tx = x + Math.max(1, (w - title.length()) / 2);
-            tg.setForegroundColor(TuiColor.YELLOW);
+            tg.setBackgroundColor(TuiColor.YELLOW);
+            tg.setForegroundColor(TuiColor.BLACK);
             tg.putString(tx, y, title);
+            tg.setBackgroundColor(TuiColor.BLACK);
             tg.setForegroundColor(TuiColor.WHITE);
         }
     }
@@ -260,7 +267,10 @@ public class LoginScreen extends TUIScreen {
     private static String padField(String text, int width) {
         if (text == null) text = "";
         if (text.length() >= width) return text.substring(0, width);
-        return text + " ".repeat(width - text.length());
+        int totalSpaces = width - text.length();
+        int leftSpaces = totalSpaces / 2;
+        int rightSpaces = totalSpaces - leftSpaces;
+        return " ".repeat(leftSpaces) + text + " ".repeat(rightSpaces);
     }
 
     private static String truncate(String s, int max) {

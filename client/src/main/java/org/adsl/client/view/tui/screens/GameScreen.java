@@ -66,6 +66,7 @@ public class GameScreen extends TUIScreen {
 
     // Legend overlay
     private boolean showLegend = false;
+    private boolean showSummaryCard = false;
 
     // Deck inspector overlay (C key): shows one player's full deck as card boxes
     // in the bottom area. ↑/↓ switch player, A/D scroll, Q/E jump to ends.
@@ -85,7 +86,6 @@ public class GameScreen extends TUIScreen {
     private boolean showRules = false;
     private int rulesPageIndex = 0;
     private int rulesScrollOffset = 0;
-    /** Lazily loaded; null until first R press. Each element is the text of one page. */
     private List<String> rulesPages = null;
 
     public GameScreen(TuiTerminal terminal,
@@ -123,6 +123,8 @@ public class GameScreen extends TUIScreen {
 
         if (showRules) {
             drawRulesWindow(tg, sz);
+        } else if (showSummaryCard) {
+            drawSummaryCardWindow(tg, sz);
         }
 
         if (showLog) {
@@ -225,6 +227,8 @@ public class GameScreen extends TUIScreen {
         char c = e.getCharacter();
         if (c == 'r' || c == 'R') {
             toggleRules();
+        } else if (c == 's' || c == 'S') {
+            toggleSummaryCard();
         } else if (c == 'l' || c == 'L') {
             showLegend = !showLegend;
         } else if (c == 'm' || c == 'M') {
@@ -712,19 +716,21 @@ public class GameScreen extends TUIScreen {
             } else {
                 hint = "R Close rules   ← Prev page   → Next page";
             }
+        } else if (showSummaryCard) {
+            hint = "S Close SC";
         } else if (showLog) {
             hint = "↑ ↓ Scroll log   M Close log";
         } else if (showDecks) {
-            hint = "↑ ↓ Player   A/D Scroll   Q/E Jump ends   C Close decks   L Legend   M Log   R Rules";
+            hint = "↑ ↓ Player   A/D Scroll   Q/E Jump ends   C Close decks   L Legend   M Log   R Rules   S SC";
         } else {
             hint = switch (subState) {
-                case MY_TURN_TOTEM -> "← → Offer tiles   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   ENTER Place totem   C Decks   L Legend   M Log   R Rules";
+                case MY_TURN_TOTEM -> "← → Offer tiles   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   ENTER Place totem   C Decks   L Legend   M Log   R Rules   S SC";
                 case MY_TURN_CARDS -> String.format(
-                        "← → Navigate   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   SPACE Select (%d/%d)   ENTER Confirm   C Decks   L Legend   M Log   R Rules",
+                        "← → Navigate   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   SPACE Select (%d/%d)   ENTER Confirm   C Decks   L Legend   M Log   R Rules   S SC",
                         selectedMoves.size(), upperCount + lowerCount);
-                case WAITING_SERVER -> "Waiting for server...   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   C Decks   L Legend   M Log   R Rules";
-                case NOT_MY_TURN -> waitingHint() + "   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   C Decks   L Legend   M Log   R Rules";
-                default -> "C Decks   L Legend   M Log   R Rules";
+                case WAITING_SERVER -> "Waiting for server...   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   C Decks   L Legend   M Log   R Rules   S SC";
+                case NOT_MY_TURN -> waitingHint() + "   ↑ ↓ Switch rows   A/D Scroll   Q/E Jump ends   C Decks   L Legend   M Log   R Rules   S SC";
+                default -> "C Decks   L Legend   M Log   R Rules   S SC";
             };
         }
         drawControls(tg, sz, hint);
@@ -1442,7 +1448,17 @@ public class GameScreen extends TUIScreen {
             rulesPages = loadRulesPages();
         }
         rulesPageIndex = 0;
+        showSummaryCard = false;
         showRules = true;
+    }
+
+    private void toggleSummaryCard() {
+        if (showSummaryCard) {
+            showSummaryCard = false;
+        } else {
+            showRules = false;
+            showSummaryCard = true;
+        }
     }
 
     /** Reads the rules file and splits it into pages on the separator lines. */
@@ -1522,7 +1538,7 @@ public class GameScreen extends TUIScreen {
 
         // ── Inner text area: rows y+3 to y+h-3, hint on y+h-2 ───────────────
         int innerW = w - 4;
-        int innerH = h - 6;  // top + titlebar + separator + hintrow + bottom = 5 fixed rows
+        int innerH = h - 5;  // top + titlebar + separator + hintrow + bottom = 5 fixed rows
         int textX  = x + 2;
         int textY  = y + 3;
 
@@ -1560,6 +1576,113 @@ public class GameScreen extends TUIScreen {
 
         tg.setForegroundColor(TuiColor.WHITE);
         tg.setBackgroundColor(TuiColor.BLACK);
+    }
+
+    private void drawSummaryCardWindow(TuiTextGraphics tg, TuiSize sz) {
+        int cols = sz.getColumns();
+        int rows = sz.getRows();
+
+        int w = 55;
+        int h = 28;
+        int x = Math.max(0, (cols - w) / 2);
+        int y = Math.max(0, (rows - h) / 2);
+
+        tg.setBackgroundColor(TuiColor.BLACK);
+        tg.setForegroundColor(TuiColor.WHITE);
+        for (int r = y; r < y + h && r < rows; r++) {
+            tg.putString(x, r, " ".repeat(w));
+        }
+
+        tg.setForegroundColor(TuiColor.CYAN);
+        String hbar = "─".repeat(w - 2);
+        tg.putString(x, y, "┌" + hbar + "┐");
+        tg.putString(x, y + h - 1, "└" + hbar + "┘");
+        for (int r = y + 1; r < y + h - 1; r++) {
+            tg.putString(x, r, "│");
+            tg.putString(x + w - 1, r, "│");
+        }
+
+        tg.setBackgroundColor(TuiColor.YELLOW);
+        tg.setForegroundColor(TuiColor.BLACK);
+        String title = "  SUMMARY CARD  ";
+        int fillLen = w - 2 - title.length();
+        String titleRow = " ".repeat(fillLen / 2) + title + " ".repeat(fillLen - fillLen / 2);
+        tg.putString(x + 1, y + 1, titleRow);
+        tg.setBackgroundColor(TuiColor.BLACK);
+
+        tg.setForegroundColor(TuiColor.CYAN);
+        tg.putString(x, y + 2, "├" + "─".repeat(w - 2) + "┤");
+
+        int midX = x + w / 2;
+        for (int r = y + 3; r < y + h - 1; r++) {
+            tg.putString(midX, r, "│");
+        }
+        tg.putString(midX, y + 2, "┬");
+        tg.putString(midX, y + h - 1, "┴");
+
+        int colW = (w - 3) / 2;
+        String evTitle = "EVENTS";
+        String egTitle = "END GAME " + org.adsl.client.view.tui.CardTokens.toEmoji(CardToken.ENDGAME);
+
+        tg.setBackgroundColor(TuiColor.MAGENTA);
+        tg.setForegroundColor(TuiColor.WHITE);
+        tg.putString(x + 1 + (colW - evTitle.length()) / 2, y + 3, evTitle);
+        
+        tg.setBackgroundColor(TuiColor.RED);
+        tg.setForegroundColor(TuiColor.WHITE);
+        tg.putString(midX + 1 + (colW - visualWidth(egTitle)) / 2, y + 3, egTitle);
+        
+        tg.setBackgroundColor(TuiColor.BLACK);
+        tg.setForegroundColor(TuiColor.WHITE);
+
+        int boxW = 22;
+        int boxH = 5;
+        int startY = y + 4;
+
+        // MATRICE TESTI SINISTRA (EVENTS) - [box][riga]
+        String[][] leftTexts = {
+                {"HUNT(HNT)", "↓ ↓ ↓", "1🍖+N🌟 x HUN"},
+                {"SUSTENANCE(SUS)", "↓ ↓ ↓", "-1🍖/N🌟 x 🧍"},
+                {"SHAMANIC RITUAL(RIT)", "↓ ↓ ↓", ">★:N🌟 | <★:-N🌟"},
+                {"CAVE PAINTINGS(PAI)", "↓ ↓ ↓", ">A:+N🌟xA|<A:-N🌟"}
+        };
+
+        // MATRICE TESTI DESTRA (END GAME) - [box][riga]
+        String[][] rightTexts = {
+                {"", "BLD: SUM🌟", ""}, // Box 1
+                {"", "INV: 🌟 = INV x ICON", ""}, // Box 2
+                {"", "ART: 10🌟 X 2ART", ""}, // Box 3
+                {"", "BUI: 🏁 + SUM🌟", ""}  // Box 4
+        };
+
+        int leftX = x + 1 + (colW - boxW) / 2;
+        int rightX = midX + 1 + (colW - boxW) / 2;
+
+        for (int i = 0; i < 4; i++) {
+            int boxY = startY + i * (boxH + 1);
+            if (boxY + boxH > y + h - 1) break;
+
+            drawCardBox(tg, leftX, boxY, boxW, boxH, leftTexts[i][0], leftTexts[i][1], leftTexts[i][2]);
+            drawCardBox(tg, rightX, boxY, boxW, boxH, rightTexts[i][0], rightTexts[i][1], rightTexts[i][2]);
+        }
+    }
+
+    private void drawCardBox(TuiTextGraphics tg, int x, int y, int w, int h, String line1, String line2, String line3) {
+        tg.setForegroundColor(TuiColor.DARK_GRAY);
+        String hbar = "─".repeat(w - 2);
+        tg.putString(x, y, "┌" + hbar + "┐");
+        tg.putString(x, y + h - 1, "└" + hbar + "┘");
+        for (int r = y + 1; r < y + h - 1; r++) {
+            tg.putString(x, r, "│");
+            tg.putString(x + w - 1, r, "│");
+        }
+        
+        // Stampa testi all'interno del box se non vuoti
+        tg.setForegroundColor(TuiColor.WHITE);
+        int innerW = w - 2;
+        if (!line1.isEmpty()) tg.putString(x + 1, y + 1, padRight(padLeft(line1, (innerW + visualWidth(line1)) / 2), innerW));
+        if (!line2.isEmpty()) tg.putString(x + 1, y + 2, padRight(padLeft(line2, (innerW + visualWidth(line2)) / 2), innerW));
+        if (!line3.isEmpty()) tg.putString(x + 1, y + 3, padRight(padLeft(line3, (innerW + visualWidth(line3)) / 2), innerW));
     }
 
     /**
