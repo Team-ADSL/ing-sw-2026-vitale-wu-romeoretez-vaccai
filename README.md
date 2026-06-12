@@ -10,20 +10,21 @@
 
 ## Table of Contents
 1. [Prerequisites](#prerequisites)
-2. [Build](#build)
-3. [Running the Application](#running-the-application)
+2. [Implementation](#implementation)
+3. [Build](#build)
+4. [Running the Application](#running-the-application)
    - [Start the Server](#1-start-the-server)
    - [Start a Socket Client](#2-start-a-socket-client)
    - [Start an RMI Client](#3-start-an-rmi-client)
    - [Start a GUI Client (JavaFX)](#4-start-a-gui-client-javafx)
    - [Client Options Reference](#client-options-reference)
-4. [Typical Local Session](#typical-local-session)
-5. [Quick Start Scripts](#quick-start-scripts-toolsstart)
-6. [Database & Leaderboard Setup](#database--leaderboard-setup)
-7. [Resiliency & Game Persistence](#resiliency--game-persistence)
-8. [Python Testers](#python-testers)
-9. [Javadoc](#javadoc)
-10. [Full Command Reference](#full-command-reference)
+5. [Typical Local Session](#typical-local-session)
+6. [Quick Start Scripts](#quick-start-scripts-toolsstart)
+7. [Database & Leaderboard Setup](#database--leaderboard-setup)
+8. [Resiliency & Game Persistence](#resiliency--game-persistence)
+9. [Python Testers](#python-testers)
+10. [Javadoc](#javadoc)
+11. [Full Command Reference](#full-command-reference)
 
 ---
 
@@ -32,6 +33,26 @@
 - **Java 25+** (the project compiles and targets Java 25 via Maven release properties)
 - **Maven 3.8+** (to build)
 - **Python 3.8+** (for testers)
+
+---
+
+## Implementation
+| Requisiti Soddisfatti | Check |
+|-----------------------|-------|
+| Complete rules | 🟢 |
+| Socket | 🟢 |
+| RMI | 🟢 |
+| TUI | 🟢 |
+| GUI | 🟢 |
+| Leaderboard DB | 🟢 |
+| Multiple games | 🟢 |
+| Resiliency to disconnections | 🟡 |
+| Persistence | 🟢 |
+
+> [!NOTE]
+> The functionality `Resiliency to disconnections` has been implemented in a different way:
+> if a player crash from a game it will enter the state `RecoverState` 
+> (see also [Resiliency & Game Persistence]).
 
 ---
 
@@ -292,18 +313,17 @@ Automates two players over Socket to fast-forward a game by a given number of ro
 macOS / Linux:
 
 ```bash
-python3 tools/testers/socket_auto_plays.py -g <game-id> -p1 <player1-name> -p2 <player2-name> -r <rounds>
+python3 tools/testers/socket_auto_plays.py -p1 <player1-name> -p2 <player2-name> -r <rounds>
 ```
 
 Windows:
 
 ```
-python tools\testers\socket_auto_plays.py -g <game-id> -p1 <player1-name> -p2 <player2-name> -r <rounds>
+python tools\testers\socket_auto_plays.py -p1 <player1-name> -p2 <player2-name> -r <rounds>
 ```
 
 | Flag | Required | Description                                        |
 |------|----------|----------------------------------------------------|
-| `-g` | yes      | Game ID to join                                    |
 | `-p1`| yes      | Username of Player 1                               |
 | `-p2`| yes      | Username of Player 2                               |
 | `-r` | yes      | Number of rounds to advance from the current round |
@@ -313,25 +333,25 @@ python tools\testers\socket_auto_plays.py -g <game-id> -p1 <player1-name> -p2 <p
 **Example** (from repo root):
 
 ```bash
-python3 tools/testers/socket_auto_plays.py -g 1 -p1 Alice -p2 Bob -r 5
+python3 tools/testers/socket_auto_plays.py -p1 Alice -p2 Bob -r 5
 ```
 
 On Windows:
 
 ```
-python tools\testers\socket_auto_plays.py -g 1 -p1 Alice -p2 Bob -r 5
+python tools\testers\socket_auto_plays.py -p1 Alice -p2 Bob -r 5
 ```
 
-This logs in as Alice and Bob, joins game `1`, and automatically plays 5 rounds from the current one.
+This logs in as Alice and Bob and automatically plays 5 rounds from the current one.
 
 **Remote server example:**
 
 ```bash
-python3 tools/testers/socket_auto_plays.py -g 1 -p1 Alice -p2 Bob -r 5 -H 192.168.1.10 -P 8080
+python3 tools/testers/socket_auto_plays.py -p1 Alice -p2 Bob -r 5 -H 192.168.1.10 -P 8080
 ```
 
 > [!WARNING]
-> Make sure the server is running and the game with the given ID exists before launching the script.
+> Make sure the server is running and the players was playing a game (only them) before launching the script.
 
 ---
 
