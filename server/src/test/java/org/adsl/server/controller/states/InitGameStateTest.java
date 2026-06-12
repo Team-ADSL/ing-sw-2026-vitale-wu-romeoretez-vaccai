@@ -135,6 +135,46 @@ public class InitGameStateTest {
     }
 
     // ──────────────────────────────────────────────
+    // TEST ON ENTRY - STARTING FOOD BONUS
+    // ──────────────────────────────────────────────
+
+    @Test
+    void testOnEntry_5players_grantsStartingFoodBonusByOrderPosition() {
+        for (int i = 0; i < 5; i++) {
+            game.getPlayers().add(new org.adsl.server.model.Player("P" + i));
+        }
+
+        state.onEntry();
+
+        int[] expectedBonus = {2, 3, 3, 4, 4};
+        for (int i = 0; i < 5; i++) {
+            int position = i;
+            game.getBoard().orderTile().getPlayerAt(position)
+                    .ifPresentOrElse(
+                            p -> assertEquals(expectedBonus[position], p.getFood(),
+                                    "Player at order position " + position + " should receive food bonus " + expectedBonus[position]),
+                            () -> fail("No player at order position " + position)
+                    );
+        }
+    }
+
+    @Test
+    void testOnEntry_alreadyInitialized_skipsFoodBonus() {
+        for (int i = 0; i < 5; i++) {
+            game.getPlayers().add(new org.adsl.server.model.Player("P" + i));
+        }
+        initBoardForGame(game, 5);
+        game.getBoard().orderTile().placePlayersRandom(game.getPlayers());
+        game.setInitialized(true);
+
+        state.onEntry();
+
+        for (org.adsl.server.model.Player p : game.getPlayers()) {
+            assertEquals(0, p.getFood(), "Food bonus should not be granted again on a recovered game");
+        }
+    }
+
+    // ──────────────────────────────────────────────
     // HELPERS
     // ──────────────────────────────────────────────
 

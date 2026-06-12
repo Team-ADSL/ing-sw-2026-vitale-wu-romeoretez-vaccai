@@ -3,6 +3,8 @@ package org.adsl.server.controller.states;
 import org.adsl.server.controller.GameController;
 import org.adsl.shared.exceptions.ServerException;
 import org.adsl.server.model.Player;
+import org.adsl.server.model.cards.buildings.EndGame;
+import org.adsl.server.model.cards.buildings.utils.BuildingEffect;
 import org.adsl.server.model.cards.characters.Artist;
 import org.adsl.server.model.cards.characters.Builder;
 import org.adsl.server.model.cards.characters.Inventor;
@@ -98,6 +100,21 @@ public class EndGameStateTest {
         state.onEntry();
 
         assertEquals(5, player.getPp(), "Builder PP must be added to the player's score");
+    }
+
+    @Test
+    void testOnEntry_endBuilderMultiplierBuilding_doublesBuilderPP() throws ServerException {
+        Player player = new Player("Alice");
+        Builder builder = new Builder("b1", 0, 5, 1, null);
+        player.getCards().get(CardType.BUILDER).add(builder);
+        EndGame multiplierBuilding = new EndGame("eg", 5, 3, 1, null, BuildingEffect.END_BUILDER_MULTIPLIER);
+        player.getCards().get(CardType.BUILDINGS).add(multiplierBuilding);
+        fakeGame.getPlayers().add(player);
+
+        state.onEntry();
+
+        assertEquals(15, player.getPp(),
+                "Builder PP (5) * multiplier (2) = 10, plus the building's own end-game PP (5) = 15");
     }
 
     // ──────────────────────────────────────────────

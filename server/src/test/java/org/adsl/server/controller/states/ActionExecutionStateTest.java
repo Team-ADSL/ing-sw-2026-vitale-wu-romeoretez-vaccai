@@ -8,6 +8,7 @@ import org.adsl.server.model.Game;
 import org.adsl.server.model.Player;
 import org.adsl.server.model.board.*;
 import org.adsl.server.network.VirtualClient;
+import org.adsl.shared.enums.Phase;
 import org.adsl.shared.enums.Row;
 import org.adsl.shared.exceptions.ServerException;
 import org.adsl.shared.enums.Totem;
@@ -162,5 +163,136 @@ public class ActionExecutionStateTest {
         game.setCurrentPlayer(null);
         ControllerState next = state.onEntry();
         assertSame(state, next);
+    }
+
+    // ──────────────────────────────────────────────
+    // TEST VISIT MOVE REQUEST - EXECUTION
+    // ──────────────────────────────────────────────
+
+    @Test
+    void testVisitMoveRequest_validPick_placesTotemAndRemovesFromOfferTrack() throws Exception {
+        game.getBoard().topRow().add(new org.adsl.server.model.game.FakeCard());
+        TestVirtualClient client = new TestVirtualClient(serverController, "p1");
+        Set<Move> moves = Set.of(new Move(0, Row.UPPER));
+        MoveRequest req = new MoveRequest(moves);
+
+        state.visit(req, client);
+
+        assertTrue(orderTile.getPlayerAt(0).isPresent());
+        assertSame(p1, orderTile.getPlayerAt(0).get());
+        assertTrue(offerTrack.getTileAt(0).getPlayer().isEmpty());
+    }
+
+    @Test
+    void testVisitMoveRequest_validPick_transitionsToExtraMoveWhenAllPlayersActed() throws Exception {
+        game.getBoard().topRow().add(new org.adsl.server.model.game.FakeCard());
+        TestVirtualClient client = new TestVirtualClient(serverController, "p1");
+        Set<Move> moves = Set.of(new Move(0, Row.UPPER));
+        MoveRequest req = new MoveRequest(moves);
+
+        state.visit(req, client);
+
+        assertInstanceOf(ExtraMoveState.class, state.getNextState());
+        assertEquals(Phase.EXTRA_MOVE, game.getPhase());
+    }
+
+    @Test
+    void testVisitMoveRequest_orderCellBonus_grantsExtraFood() throws Exception {
+        ArrayList<OrderCell> cells = new ArrayList<>();
+        cells.add(new OrderCell(null, 2, false));
+        cells.add(new OrderCell(null, 0, false));
+        OrderTile bonusOrderTile = new OrderTile("order_tile_2p", cells);
+
+        Board board = new Board(
+                new CardRow(3, 3), new CardRow(6, 6), offerTrack, bonusOrderTile,
+                new ArrayList<>(), new Deck(new ArrayList<>())
+        );
+        game.setBoard(board);
+        game.getBoard().topRow().add(new org.adsl.server.model.game.FakeCard());
+
+        int foodBefore = p1.getFood();
+        TestVirtualClient client = new TestVirtualClient(serverController, "p1");
+        state.visit(new MoveRequest(Set.of(new Move(0, Row.UPPER))), client);
+
+        assertEquals(foodBefore + 2, p1.getFood());
+    }
+
+    @Test
+    void testVisitMoveRequest_orderCellMalus_noFood_losesTwoPP() throws Exception {
+        ArrayList<OrderCell> cells = new ArrayList<>();
+        cells.add(new OrderCell(null, 0, true));
+        cells.add(new OrderCell(null, 0, false));
+        OrderTile malusOrderTile = new OrderTile("order_tile_2p", cells);
+
+        Board board = new Board(
+                new CardRow(3, 3), new CardRow(6, 6), offerTrack, malusOrderTile,
+                new ArrayList<>(), new Deck(new ArrayList<>())
+        );
+        game.setBoard(board);
+        game.getBoard().topRow().add(new org.adsl.server.model.game.FakeCard());
+
+        assertEquals(0, p1.getFood());
+        int ppBefore = p1.getPp();
+        TestVirtualClient client = new TestVirtualClient(serverController, "p1");
+        state.visit(new MoveRequest(Set.of(new Move(0, Row.UPPER))), client);
+
+        assertEquals(ppBefore - 2, p1.getPp());
+        assertEquals(0, p1.getFood());
+    }
+
+    @Test
+    void testVisitMoveRequest_orderCellMalus_withFood_losesOneFood() throws Exception {
+        ArrayList<OrderCell> cells = new ArrayList<>();
+        cells.add(new OrderCell(null, 0, true));
+        cells.add(new OrderCell(null, 0, false));
+        OrderTile malusOrderTile = new OrderTile("order_tile_2p", cells);
+
+        Board board = new Board(
+                new CardRow(3, 3), new CardRow(6, 6), offerTrack, malusOrderTile,
+                new ArrayList<>(), new Deck(new ArrayList<>())
+        );
+        game.setBoard(board);
+        game.getBoard().topRow().add(new org.adsl.server.model.game.FakeCard());
+        p1.changeFood(5);
+
+        int ppBefore = p1.getPp();
+        TestVirtualClient client = new TestVirtualClient(serverController, "p1");
+        state.visit(new MoveRequest(Set.of(new Move(0, Row.UPPER))), client);
+
+        assertEquals(ppBefore, p1.getPp());
+        assertEquals(4, p1.getFood());
+    }
+
+    // ──────────────────────────────────────────────
+    // TEST CALC NEXT STATE - FOOD GIVING TILE
+    // ──────────────────────────────────────────────
+
+    @Test
+    void testCalcNextState_givesFoodTile_autoGrantsThreeFoodAndPlacesTotem() {
+        Map<Row, Integer> movesGivesFood = new EnumMap<>(Row.class);
+        movesGivesFood.put(Row.UPPER, 0); movesGivesFood.put(Row.LOWER, 0);
+
+        ArrayList<OfferTile> tiles = new ArrayList<>();
+        tiles.add(new OfferTile("offer_tile_5p", p1, movesGivesFood, true));
+
+        ArrayList<OrderCell> cells = new ArrayList<>();
+        cells.add(new OrderCell(null, 0, false));
+        OrderTile foodOrderTile = new OrderTile("order_tile_2p", cells);
+
+        OfferTrack foodOfferTrack = new OfferTrack(tiles);
+        Board board = new Board(
+                new CardRow(3, 3), new CardRow(6, 6), foodOfferTrack, foodOrderTile,
+                new ArrayList<>(), new Deck(new ArrayList<>())
+        );
+        game.setBoard(board);
+        game.setCurrentPlayer(null);
+
+        int foodBefore = p1.getFood();
+        ControllerState next = state.calcNextState();
+
+        assertEquals(foodBefore + 3, p1.getFood());
+        assertTrue(foodOfferTrack.getTileAt(0).getPlayer().isEmpty());
+        assertTrue(foodOrderTile.getPlayerAt(0).isPresent());
+        assertInstanceOf(ExtraMoveState.class, next);
     }
 }

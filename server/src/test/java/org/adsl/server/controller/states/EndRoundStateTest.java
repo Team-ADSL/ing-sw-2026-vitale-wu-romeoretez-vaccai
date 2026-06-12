@@ -110,4 +110,85 @@ public class EndRoundStateTest {
         }
         assertTrue(found, "Sentinel card from top row should appear in low row after EndRound");
     }
+
+    // ──────────────────────────────────────────────
+    // TEST ON ENTRY - ERA TRANSITION
+    // ──────────────────────────────────────────────
+
+    @Test
+    void testOnEntry_deckCrossesEraBoundary_advancesEra() {
+        Set<Card> era1 = new HashSet<>();
+        era1.add(fakeCard(1));
+        era1.add(fakeCard(1));
+        Set<Card> era2 = new HashSet<>();
+        era2.add(fakeCard(2));
+        ArrayList<Set<Card>> deckCards = new ArrayList<>(List.of(era1, era2));
+        Deck deck = Deck.createDeck(deckCards);
+
+        Board board = new Board(2, 2, 2, 2,
+                new OfferTrack(new ArrayList<>()),
+                new OrderTile("order_tile_5p", new ArrayList<>()),
+                deck);
+        game.setBoard(board);
+
+        assertEquals(1, game.getEra());
+        endRoundState.onEntry();
+        assertEquals(2, game.getEra());
+    }
+
+    @Test
+    void testOnEntry_deckDoesNotCrossEraBoundary_eraUnchanged() {
+        Set<Card> era1 = new HashSet<>();
+        era1.add(fakeCard(1));
+        era1.add(fakeCard(1));
+        era1.add(fakeCard(1));
+        ArrayList<Set<Card>> deckCards = new ArrayList<>(List.of(era1));
+        Deck deck = Deck.createDeck(deckCards);
+
+        Board board = new Board(2, 2, 2, 2,
+                new OfferTrack(new ArrayList<>()),
+                new OrderTile("order_tile_5p", new ArrayList<>()),
+                deck);
+        game.setBoard(board);
+
+        endRoundState.onEntry();
+        assertEquals(1, game.getEra());
+    }
+
+    @Test
+    void testOnEntry_eraTransitionToEra3_clearsLowRowBuildingsAndRefillsFromRemaining() {
+        Set<Card> era2tribe = new HashSet<>();
+        era2tribe.add(fakeCard(2));
+        era2tribe.add(fakeCard(2));
+        Set<Card> era3tribe = new HashSet<>();
+        era3tribe.add(fakeCard(3));
+        ArrayList<Set<Card>> deckCards = new ArrayList<>(List.of(era2tribe, era3tribe));
+        Deck deck = Deck.createDeck(deckCards);
+
+        Board board = new Board(3, 2, 3, 2,
+                new OfferTrack(new ArrayList<>()),
+                new OrderTile("order_tile_5p", new ArrayList<>()),
+                deck);
+
+        Card oldLowBuilding = fakeCard(1);
+        board.lowRow().addBuildings(Set.of(oldLowBuilding));
+        Card topBuilding = fakeCard(2);
+        board.topRow().addBuildings(Set.of(topBuilding));
+        Card era3Building = fakeCard(3);
+        board.remainingBuildings().add(new HashSet<>(Set.of(era3Building)));
+
+        Game g = new Game(1, 5, 1, 2, new HashSet<>(), null, board, Phase.EVENTS_EXECUTION);
+        GameController controller = new GameController(loader, new FakeGamePersistenceManager(), new FakeGameDAO());
+        EndRoundState localState = new EndRoundState(g, controller);
+
+        localState.onEntry();
+
+        assertEquals(3, g.getEra());
+        assertFalse(g.getBoard().lowRow().getBuildings().contains(oldLowBuilding),
+                "Era-1 building leftover in low row must be discarded entering Era III");
+        assertTrue(g.getBoard().lowRow().getBuildings().contains(topBuilding),
+                "Top-row building must move to low row on era transition");
+        assertTrue(g.getBoard().topRow().getBuildings().contains(era3Building),
+                "Top row must be refilled with the new era's buildings");
+    }
 }
