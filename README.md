@@ -591,9 +591,9 @@ java -jar client/target/mesos-client.jar --test-gui
 
 **macOS / Linux**:
 ```bash
-python3 tools/testers/socket_auto_plays.py -g <id> -p1 <name> -p2 <name> -r <rounds> [-H <ip>] [-P <port>]
+python3 tools/testers/socket_auto_plays.py -p1 <name> -p2 <name> -r <rounds> [-H <ip>] [-P <port>]
 ```
 **Windows**:
 ```cmd
-python tools\testers\socket_auto_plays.py -g <id> -p1 <name> -p2 <name> -r <rounds> [-H <ip>] [-P <port>]
+python tools\testers\socket_auto_plays.py -p1 <name> -p2 <name> -r <rounds> [-H <ip>] [-P <port>]
 ```
