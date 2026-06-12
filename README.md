@@ -49,6 +49,9 @@
 | Resiliency to disconnections | 🟡 |
 | Persistence | 🟢 |
 
+Legend:
+🟢 Completed | 🟡 Partial implementation | 🔴 Not implemented
+
 > [!NOTE]
 > The functionality `Resiliency to disconnections` has been implemented in a different way:
 > if a player crash from a game it will enter the state `RecoverState` 
