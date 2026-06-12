@@ -19,14 +19,32 @@ import java.util.stream.Collectors;
 public class OfferTrack implements Serializable {
     private final ArrayList<OfferTile> offerQueue;
 
+    /**
+     * Creates an offer track backed by the given ordered list of tiles.
+     *
+     * @param offerQueue the offer tiles, in track order
+     */
     public OfferTrack(ArrayList<OfferTile> offerQueue) {
         this.offerQueue = offerQueue;
     }
 
+    /**
+     * Places {@code p}'s totem on the offer tile at {@code arrayIndex}, declaring
+     * the action they intend to perform this turn.
+     *
+     * @param p          the player placing their totem
+     * @param arrayIndex index of the tile in the track
+     */
     public void placeInOfferTile(Player p, int arrayIndex){
         offerQueue.get(arrayIndex).setPlayer(p);
     }
 
+    /**
+     * Removes {@code player}'s totem from whichever tile they currently occupy,
+     * if any. Used when a player leaves the game or before re-placing their totem.
+     *
+     * @param player the player whose totem should be removed
+     */
     public void removePlayer(Player player){
         for (OfferTile offerTile : offerQueue) {
             Optional<Player> cellPlayer = offerTile.getPlayer();
@@ -46,6 +64,11 @@ public class OfferTrack implements Serializable {
         return offerQueue.size();
     }
 
+    /**
+     * Converts this track to its DTO representation for sending to clients.
+     *
+     * @return the offer tiles' DTOs, in track order
+     */
     public ArrayList<OfferTileDTO> createDTO(){
         return (ArrayList<OfferTileDTO>) offerQueue.stream()
                 .map(OfferTile::createDTO)

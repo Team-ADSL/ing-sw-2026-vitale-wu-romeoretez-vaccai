@@ -16,6 +16,10 @@ import java.io.IOException;
  */
 public class ConnectingScreen extends TUIScreen {
 
+    /**
+     * @param terminal    the TUI terminal used for rendering
+     * @param coordinator the coordinator used to (re)connect to the server
+     */
     public ConnectingScreen(TuiTerminal terminal, AppCoordinator coordinator) {
         super(terminal, coordinator);
     }

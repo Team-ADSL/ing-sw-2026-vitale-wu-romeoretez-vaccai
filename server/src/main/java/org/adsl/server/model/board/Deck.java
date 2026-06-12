@@ -13,20 +13,37 @@ import java.util.Set;
  * shuffled at creation time.
  */
 public record Deck(ArrayList<Card> cards) implements Serializable {
+    /** Creates an empty deck. */
     public Deck() {
         this(new ArrayList<>());
     }
 
+    /**
+     * Appends a single card to the bottom of the deck.
+     *
+     * @param card the card to add
+     */
     public void addTailCard(Card card) {
         cards().addLast(card);
     }
 
+    /**
+     * Appends a list of cards to the bottom of the deck, preserving their order.
+     *
+     * @param cards the cards to add
+     */
     public void addTailCards(ArrayList<Card> cards) {
         for (Card c : cards) {
             addTailCard(c);
         }
     }
 
+    /**
+     * Removes and returns the top card of the deck.
+     *
+     * @return the card that was on top
+     * @throws NoSuchElementException if the deck is empty
+     */
     public Card drawCard() {
         return cards.removeFirst();
     }
@@ -61,6 +78,11 @@ public record Deck(ArrayList<Card> cards) implements Serializable {
         return cards.getFirst().getEra() != currentEra;
     }
 
+    /**
+     * Returns {@code true} if no cards remain in the deck.
+     *
+     * @return {@code true} if the deck is empty
+     */
     public boolean isEmpty() {
         return cards.isEmpty();
     }

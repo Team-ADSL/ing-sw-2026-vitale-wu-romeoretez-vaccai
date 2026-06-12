@@ -9,10 +9,18 @@ import org.adsl.client.view.tui.screens.TUIScreen;
 public class CharInputEvent extends InputEvent {
     private final char character;
 
+    /**
+     * Creates a printable-character input event.
+     *
+     * @param character the character that was typed
+     */
     public CharInputEvent(char character) {
         this.character = character;
     }
 
+    /**
+     * @return the character that was typed
+     */
     public char getCharacter() { return character; }
 
     @Override

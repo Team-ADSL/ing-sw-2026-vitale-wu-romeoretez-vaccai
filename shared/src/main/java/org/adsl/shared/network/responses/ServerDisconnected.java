@@ -8,6 +8,12 @@ import org.adsl.shared.exceptions.InvalidResponseException;
  * return to the connection screen on receipt.
  */
 public class ServerDisconnected extends ServerResponse{
+    /**
+     * Dispatches this response to {@link ResponseVisitor#visit(ServerDisconnected)}.
+     *
+     * @param visitor the visitor that will handle this response
+     * @throws InvalidResponseException if the visitor cannot process this response
+     */
     @Override
     public void accept(ResponseVisitor visitor) throws InvalidResponseException {
         visitor.visit(this);

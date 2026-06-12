@@ -65,6 +65,10 @@ public class AppCoordinator implements ResponseVisitor{
 
     private final AtomicBoolean disconnected = new AtomicBoolean(false);
 
+    /**
+     * @param gameUI           the active UI to forward server updates to
+     * @param serverConnection the transport used to send requests to the server
+     */
     public AppCoordinator(GameUI gameUI, ServerConnection serverConnection) {
         this.gameUI = gameUI;
         this.serverConnection = serverConnection;
@@ -76,11 +80,26 @@ public class AppCoordinator implements ResponseVisitor{
         });
     }
 
+    /**
+     * Stores the server address used by {@link #reconnect()}.
+     *
+     * @param ip   server hostname or IP address
+     * @param port server port
+     */
     public void setConnectionParams(String ip, int port) {
         this.lastIp = ip;
         this.lastPort = port;
     }
 
+    /**
+     * Starts a background task that periodically pings the server and
+     * triggers {@link GameUI#onServerDisconnected()} if no response is seen
+     * within {@code serverTimeoutMs}.
+     *
+     * @param pingRatioMs     interval between pings, in milliseconds
+     * @param serverTimeoutMs maximum time since the last server activity before
+     *                        the connection is considered lost, in milliseconds
+     */
     public void startPingScheduler(int pingRatioMs, long serverTimeoutMs) {
         this.lastPingRatioMs = pingRatioMs;
         this.lastServerTimeoutMs = serverTimeoutMs;
@@ -116,6 +135,7 @@ public class AppCoordinator implements ResponseVisitor{
         }, pingRatioMs, pingRatioMs, TimeUnit.MILLISECONDS);
     }
 
+    /** Stops the background ping scheduler, if running. */
     public void stopPingScheduler() {
         if (pingScheduler != null) {
             pingScheduler.shutdownNow();
@@ -133,6 +153,14 @@ public class AppCoordinator implements ResponseVisitor{
         gameUI.shutdown();
     }
 
+    /**
+     * Entry point for responses received from the network layer. Heartbeats
+     * are forwarded immediately; other responses are paced (see
+     * {@link #DISPATCH_MIN_DELAY_MS}, {@link #EVENT_DISPATCH_DELAY_MS}) so the
+     * UI has time to display each one.
+     *
+     * @param serverResponse the response received from the server
+     */
     public void handleServerResponse(ServerResponse serverResponse){
         lastServerPing = System.currentTimeMillis();
         // Heartbeats (ping) are kept out of the pacer: they are not user-visible
@@ -217,6 +245,12 @@ public class AppCoordinator implements ResponseVisitor{
         gameUI.onGameLogRestore(response.getHistory());
     }
 
+    /**
+     * Re-establishes the connection to the last known server address and
+     * restarts the ping scheduler.
+     *
+     * @throws Exception if the connection attempt fails
+     */
     public void reconnect() throws Exception {
         stopPingScheduler();
         try { serverConnection.disconnect(); } catch (Exception ignored) {}
@@ -226,42 +260,108 @@ public class AppCoordinator implements ResponseVisitor{
     }
 
     // Creating and forwarding ClientRequest to the Server
+
+    /**
+     * Sends the initial connection request to the server.
+     *
+     * @throws Exception if sending the request fails
+     */
     public void connectRequest() throws Exception {
         ClientRequest clientRequest = new ClientConnection();
         serverConnection.sendRequest(clientRequest);
     }
+
+    /**
+     * Sends a login request for the given username.
+     *
+     * @param username the username to log in with
+     * @throws Exception if sending the request fails
+     */
     public void createLoginRequest(String username) throws Exception {
         ClientRequest clientRequest = new LoginRequest(username);
         serverConnection.sendRequest(clientRequest);
     }
+
+    /**
+     * Sends a logout request, returning the player to the login state.
+     *
+     * @throws Exception if sending the request fails
+     */
     public void createLogoutRequest() throws Exception {
         ClientRequest clientRequest = new LogoutRequest();
         serverConnection.sendRequest(clientRequest);
     }
+
+    /**
+     * Sends a request to leave the current lobby.
+     *
+     * @throws Exception if sending the request fails
+     */
     public void createExitLobbyRequest() throws Exception {
         ClientRequest clientRequest = new ExitLobbyRequest();
         serverConnection.sendRequest(clientRequest);
     }
+
+    /**
+     * Sends a request to create a new game.
+     *
+     * @param numPlayer number of players the new game should support
+     * @throws Exception if sending the request fails
+     */
     public void createGameRequest(int numPlayer) throws Exception {
         ClientRequest clientRequest = new CreateGameRequest(numPlayer);
         serverConnection.sendRequest(clientRequest);
     }
+
+    /**
+     * Sends a request to join an existing game.
+     *
+     * @param gameId ID of the game to join
+     * @throws Exception if sending the request fails
+     */
     public void enterGameRequest(int gameId) throws Exception {
         ClientRequest clientRequest = new EnterGameRequest(gameId);
         serverConnection.sendRequest(clientRequest);
     }
+
+    /**
+     * Sends a request to start the current game.
+     *
+     * @throws Exception if sending the request fails
+     */
     public void startGameRequest() throws Exception {
         ClientRequest clientRequest = new StartGameRequest();
         serverConnection.sendRequest(clientRequest);
     }
+
+    /**
+     * Sends a request to pick a totem during the totem-picking phase.
+     *
+     * @param totem the chosen totem
+     * @throws Exception if sending the request fails
+     */
     public void createTotemPickingRequest(Totem totem) throws Exception {
         ClientRequest clientRequest = new TotemPickingRequest(totem);
         serverConnection.sendRequest(clientRequest);
     }
+
+    /**
+     * Sends the set of moves the player wants to perform this turn.
+     *
+     * @param moves the moves to submit
+     * @throws Exception if sending the request fails
+     */
     public void makeMoveRequest(Set<Move> moves) throws Exception {
         ClientRequest clientRequest = new MoveRequest(moves);
         serverConnection.sendRequest(clientRequest);
     }
+
+    /**
+     * Notifies the server of a clean disconnection and tears down the local
+     * connection. Idempotent: subsequent calls are no-ops.
+     *
+     * @throws Exception if sending the disconnect notification fails
+     */
     public void disconnect() throws Exception {
         // Idempotent: X-button path (GUI.shutdown cleanup thread) and JVM
         // shutdown hook (ClientApp) can both reach this; second call is a no-op
@@ -284,6 +384,11 @@ public class AppCoordinator implements ResponseVisitor{
             }
         }
     }
+    /**
+     * Sends a request to exit the current game.
+     *
+     * @throws Exception if sending the request fails
+     */
     public void createExitGameRequest() throws Exception {
         ClientRequest clientRequest = new ExitGameRequest();
         serverConnection.sendRequest(clientRequest);

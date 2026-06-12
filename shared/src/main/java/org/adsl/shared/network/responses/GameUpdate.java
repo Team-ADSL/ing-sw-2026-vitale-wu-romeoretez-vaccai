@@ -13,16 +13,32 @@ import org.adsl.shared.model.GameDTO;
 public class GameUpdate extends ServerResponse{
     private final GameDTO game;
 
+    /**
+     * Creates a response carrying a full game-state snapshot.
+     *
+     * @param game the current game state
+     */
     @JsonCreator
     public GameUpdate(@JsonProperty("game") GameDTO game) {
         this.game = game;
     }
 
+    /**
+     * Dispatches this response to {@link ResponseVisitor#visit(GameUpdate)}.
+     *
+     * @param visitor the visitor that will handle this response
+     * @throws InvalidResponseException if the visitor cannot process this response
+     */
     @Override
     public void accept(ResponseVisitor visitor) throws InvalidResponseException {
         visitor.visit(this);
     }
 
+    /**
+     * Returns the full game-state snapshot carried by this response.
+     *
+     * @return the current game state
+     */
     public GameDTO getGame() {
         return game;
     }

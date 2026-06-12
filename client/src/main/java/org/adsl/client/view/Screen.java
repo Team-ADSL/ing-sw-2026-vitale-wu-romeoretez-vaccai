@@ -21,6 +21,9 @@ public abstract class Screen<S extends Screen<S>> implements EventVisitor<S> {
     protected final AppCoordinator appCoordinator;
     protected String error;
 
+    /**
+     * @param appCoordinator coordinator used to send requests to the server
+     */
     public Screen(AppCoordinator appCoordinator){
         this.appCoordinator = appCoordinator;
         this.error = null;
@@ -37,12 +40,19 @@ public abstract class Screen<S extends Screen<S>> implements EventVisitor<S> {
         return false;
     }
 
+    /** @return the login screen to show in response to {@code e} */
     public abstract S createLoginScreen(LoginNeededEvent e, AppCoordinator appCoordinator);
+    /** @return the home screen to show in response to {@code e} */
     public abstract S createHomeScreen(HomeUpdateEvent e, AppCoordinator appCoordinator);
+    /** @return the lobby screen to show in response to {@code e} */
     public abstract S createLobbyScreen(LobbyUpdateEvent e, AppCoordinator appCoordinator);
+    /** @return the totem-picking screen to show in response to {@code e} */
     public abstract S createTotemPickingScreen(TotemAvailableEvent e, AppCoordinator appCoordinator);
+    /** @return the in-game screen to show in response to {@code e} */
     public abstract S createGameScreen(GameUpdateEvent e, AppCoordinator appCoordinator);
+    /** @return the end-game results screen to show in response to {@code e} */
     public abstract S createEndGameScreen(EndGameEvent e, AppCoordinator appCoordinator);
+    /** @return the disconnected screen to show in response to {@code e} */
     public abstract S createDisconnectedScreen(DisconnectedEvent e, AppCoordinator appCoordinator);
 
     @Override
@@ -81,6 +91,7 @@ public abstract class Screen<S extends Screen<S>> implements EventVisitor<S> {
         return getThis();
     }
 
+    /** @return this screen, typed as {@code S} (workaround for unchecked {@code this} casts in generic self-types) */
     public abstract S getThis();
 
     @Override

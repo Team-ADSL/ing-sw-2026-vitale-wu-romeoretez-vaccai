@@ -36,6 +36,12 @@ public class TUI extends GameUI {
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
+    /**
+     * Initializes the terminal, shows the connecting screen, requests a
+     * connection to the server and runs the main event loop until exit.
+     * On any unhandled exception, shows a fatal error screen, then shuts
+     * down the terminal and exits the JVM.
+     */
     @Override
     public void start() {
         try {
@@ -51,6 +57,11 @@ public class TUI extends GameUI {
         }
     }
 
+    /**
+     * Stops the main loop and closes the terminal, restoring the original
+     * shell state. Safe to call even if {@link #start()} failed before the
+     * terminal was created.
+     */
     @Override
     public void shutdown() {
         System.out.println("[TUI] Shutdown initiated.");
@@ -149,6 +160,12 @@ public class TUI extends GameUI {
 
     // ── GameUI callbacks (network thread) ────────────────────────────────────
 
+    /**
+     * Enqueues a server event for processing on the main loop thread.
+     * Called from the network callback thread.
+     *
+     * @param event the server event to dispatch
+     */
     @Override
     public void dispatch(ServerEvent event){
         eventQueue.add(event);

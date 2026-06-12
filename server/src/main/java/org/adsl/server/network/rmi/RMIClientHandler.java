@@ -21,6 +21,14 @@ public class RMIClientHandler extends VirtualClient {
     private final RemoteClientStub clientStub;
     private final RemoteServerServiceImpl serverService;
 
+    /**
+     * Creates a handler for an RMI-connected client.
+     *
+     * @param serverController controller used to dispatch requests from this client
+     * @param clientStub       remote callback used to push responses to the client
+     * @param serverService    RMI endpoint that owns the client registry, used to
+     *                          unregister this client on disconnection
+     */
     public RMIClientHandler(ServerController serverController, RemoteClientStub clientStub,
                             RemoteServerServiceImpl serverService) {
         super(serverController);

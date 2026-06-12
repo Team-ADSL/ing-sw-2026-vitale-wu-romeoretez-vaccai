@@ -26,6 +26,14 @@ public class EndGameScreen extends TUIScreen {
     private final List<DBRecord> records;
     private final String message;
 
+    /**
+     * @param terminal    the TUI terminal used for rendering
+     * @param coordinator the coordinator used to send requests to the server
+     * @param username    the current player's username
+     * @param results     per-player results for this match, or {@code null} if the game ended before it started
+     * @param records     overall leaderboard records from the database, or {@code null}/empty if unavailable
+     * @param message     optional message shown when {@code records} is unavailable
+     */
     public EndGameScreen(TuiTerminal terminal, AppCoordinator coordinator, String username,
                          List<MatchResult> results, List<DBRecord> records, String message) {
         super(terminal, coordinator, username);

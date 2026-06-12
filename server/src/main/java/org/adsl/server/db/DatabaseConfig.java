@@ -21,14 +21,26 @@ public class DatabaseConfig {
 
     static final         String PASSWORD = System.getenv("DB_PASSWORD");
 
+    /**
+     * JDBC URL without a target database, used to connect before the
+     * {@code game_leaderboard} database exists (e.g. for schema creation).
+     */
     public static final String URL_NO_DB =
             "jdbc:mysql://" + HOST + ":" + PORT +
                     "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
 
+    /** JDBC URL pointing directly at the {@code game_leaderboard} database. */
     public static final String URL =
             "jdbc:mysql://" + HOST + ":" + PORT + "/" + DB_NAME +
                     "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
 
+    /**
+     * Opens a new JDBC connection to the {@code game_leaderboard} database
+     * using {@link #URL}, {@link #USER}, and the password from {@code DB_PASSWORD}.
+     *
+     * @return an open {@link Connection} to the leaderboard database
+     * @throws SQLException if {@code DB_PASSWORD} is not set, or the connection fails
+     */
     public static Connection getConnection() throws SQLException {
         if (PASSWORD == null) {
             throw new SQLException("[SECURITY FATAL] Variabile d'ambiente 'DB_PASSWORD' non trovata. Impossibile connettersi al database.");

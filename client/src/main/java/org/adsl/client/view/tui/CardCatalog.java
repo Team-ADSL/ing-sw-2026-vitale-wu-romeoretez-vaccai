@@ -14,7 +14,13 @@ public final class CardCatalog {
 
     private CardCatalog() {}
 
-    /** Infers CardType from a card ID based on its prefix. */
+    /**
+     * Infers the {@link CardType} from a card ID based on its prefix.
+     *
+     * @param id the card ID (e.g. "hunter_01"), may be {@code null}
+     * @return the inferred card type, {@code CardType.BUILDINGS} as the
+     *         default for unrecognized prefixes, or {@code null} if {@code id} is {@code null}
+     */
     public static CardType typeFromId(String id) {
         if (id == null) return null;
         // Order matters: check longer prefixes first to avoid partial matches
@@ -31,7 +37,12 @@ public final class CardCatalog {
         return CardType.BUILDINGS;
     }
 
-    /** Short display label for a card type (fits in an 8-char card slot). */
+    /**
+     * Short display label for a card type (fits in an 8-char card slot).
+     *
+     * @param type the card type, may be {@code null}
+     * @return a short label, or {@code "UNKNOWN"} if {@code type} is {@code null}
+     */
     public static String typeLabel(CardType type) {
         if (type == null) return "UNKNOWN";
         return switch (type) {
@@ -49,7 +60,11 @@ public final class CardCatalog {
         };
     }
 
-    /** Whether a card type is an event card. */
+    /**
+     * @param type the card type, may be {@code null}
+     * @return {@code true} if {@code type} is one of the event card types
+     *         (hunt, sustenance, shamanic ritual, cave paintings)
+     */
     public static boolean isEvent(CardType type) {
         if (type == null) return false;
         return type == CardType.HUNT
@@ -58,13 +73,23 @@ public final class CardCatalog {
                 || type == CardType.CAVE_PAINTINGS;
     }
 
-    /** Whether a card type is a character card. */
+    /**
+     * @param type the card type, may be {@code null}
+     * @return {@code true} if {@code type} is a character card, i.e. neither
+     *         an event card (see {@link #isEvent}) nor {@code CardType.BUILDINGS}
+     */
     public static boolean isCharacter(CardType type) {
         if (type == null) return false;
         return !isEvent(type) && type != CardType.BUILDINGS;
     }
 
-    /** Single-character symbol for a card type, used in compact tribe display. */
+    /**
+     * Single-character symbol for a card type, used in compact tribe display.
+     *
+     * @param type the card type, may be {@code null}
+     * @return a one-character symbol, {@code "?"} if {@code type} is
+     *         {@code null}, or {@code null} for event card types (which have no symbol)
+     */
     public static String typeSymbol(CardType type) {
         if (type == null) return "?";
         return switch (type) {
@@ -79,7 +104,12 @@ public final class CardCatalog {
         };
     }
 
-    /** ANSI color name for a totem (for display labels only). */
+    /**
+     * Display name for a totem color (for labels only).
+     *
+     * @param totem the totem, may be {@code null}
+     * @return the totem's color name, or {@code "---"} if {@code totem} is {@code null}
+     */
     public static String totemLabel(Totem totem) {
         if (totem == null) return "---";
         return switch (totem) {

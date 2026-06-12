@@ -27,6 +27,18 @@ public class SinceBuilt extends Building {
     private final BuildingEffect buildingEffect;
     private Map<CardType, Set<Card>> characterInUse;
 
+    /**
+     * Creates a SinceBuilt building card with a fresh, empty tracking map
+     * (one empty set per character type) for cards drawn after acquisition.
+     *
+     * @param id             unique card identifier
+     * @param endGamePP      prestige points scored at end-game for owning this building
+     * @param cost           food cost to acquire this building
+     * @param trigger        unused, reserved for future configuration of the activation trigger
+     * @param era            the era this card belongs to (1-3)
+     * @param numPlayers     minimum number of players required for this card to be in play, or {@code null} if always included
+     * @param buildingEffect which tracking effect this card applies (see {@link BuildingEffect})
+     */
     public SinceBuilt(String id, int endGamePP, int cost, Trigger trigger,
                       int era, Integer numPlayers, BuildingEffect buildingEffect) {
         super(id, endGamePP, cost, era, numPlayers);
@@ -40,6 +52,19 @@ public class SinceBuilt extends Building {
         this.buildingEffect = buildingEffect;
     }
 
+    /**
+     * Creates a SinceBuilt building card with a pre-populated tracking map,
+     * e.g. when restoring state from a saved game.
+     *
+     * @param id             unique card identifier
+     * @param endGamePP      prestige points scored at end-game for owning this building
+     * @param cost           food cost to acquire this building
+     * @param trigger        unused, reserved for future configuration of the activation trigger
+     * @param characterInUse the existing map of character cards tracked since this building was built
+     * @param era            the era this card belongs to (1-3)
+     * @param numPlayers     minimum number of players required for this card to be in play, or {@code null} if always included
+     * @param buildingEffect which tracking effect this card applies (see {@link BuildingEffect})
+     */
     public SinceBuilt(String id, int endGamePP, int cost, Trigger trigger, Map<CardType, Set<Card>> characterInUse,
                       int era, Integer numPlayers, BuildingEffect buildingEffect) {
         super(id, endGamePP, cost, era, numPlayers);
@@ -47,6 +72,21 @@ public class SinceBuilt extends Building {
         this.buildingEffect = buildingEffect;
     }
 
+    /**
+     * When the owner draws a card ({@link Trigger#DRAWING}), records the last
+     * drawn character in {@code characterInUse} and checks the configured
+     * {@link BuildingEffect}:
+     * <ul>
+     *   <li>{@code FOOD_COMPLETE_SET} – if the owner now has at least one card of
+     *       every character type, grants 5 food and removes one card from each
+     *       type's tracked set (resetting the "set" progress).</li>
+     *   <li>{@code COUPLE_INVENTOR} – if two tracked Inventors share the same icon,
+     *       grants 3 food and removes that pair from tracking.</li>
+     * </ul>
+     *
+     * @param players the affected players (expects a singleton containing the owner)
+     * @param t       the trigger that fired
+     */
     @Override
     public void activeEffect(Set<Player> players, Trigger t) {
         if(t == Trigger.DRAWING){

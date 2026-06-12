@@ -23,6 +23,11 @@ public class LobbyState extends ControllerState {
     private boolean readyToStart;
     private final String host;
 
+    /**
+     * @param game    the game model owning the lobby
+     * @param context the {@link GameController} that will own this state
+     * @param host    the username of the player allowed to start the game
+     */
     public LobbyState(Game game, GameController context, String host) {
         super(game, context);
         this.host = host;
@@ -63,6 +68,20 @@ public class LobbyState extends ControllerState {
         playerExit(virtualClient);
     }
 
+    /**
+     * Removes the player associated with {@code virtualClient} from the lobby,
+     * shared by {@code ExitLobbyRequest} and {@code ClientDisconnected} handling.
+     * <p>
+     * If the lobby becomes empty the game is ended with no results. If the host
+     * leaves, every remaining player is evicted and a
+     * {@link HostDisconnectedException} is thrown so {@code ServerController}
+     * can discard this game. Otherwise the remaining players are notified.
+     * </p>
+     *
+     * @param virtualClient the client leaving the lobby
+     * @throws ServerException if the client has no username or is not in this game
+     * @throws HostDisconnectedException if the host left the lobby
+     */
     public void playerExit(VirtualClient virtualClient){
         if(virtualClient.getClientUsername().isEmpty()){
             throw new ServerException("[LOBBY] Virtual client has no username associated.");
@@ -106,6 +125,10 @@ public class LobbyState extends ControllerState {
         setNextState(calcNextState());
     }
 
+    /**
+     * @return a new {@link TotemPickingState} if the host has started the game
+     *         with all seats filled, otherwise {@code this}
+     */
     @Override
     public ControllerState calcNextState() {
         if(readyToStart){

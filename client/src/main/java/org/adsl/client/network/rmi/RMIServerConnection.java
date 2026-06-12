@@ -21,6 +21,16 @@ public class RMIServerConnection implements ServerConnection {
     private AppCoordinator appCoordinator;
     private boolean disconnected = false;
 
+    /**
+     * Looks up the {@code "GameServer"} remote object in the RMI registry at
+     * {@code ip:port}, exports a {@link RemoteClientStubImpl} as the callback
+     * object for incoming responses, and registers it with the server.
+     *
+     * @param ip   host name or IP address of the RMI registry
+     * @param port port the RMI registry is listening on
+     * @throws Exception if the registry lookup, stub export, or server-side
+     *                    {@code connect} call fails
+     */
     @Override
     public void connect(String ip, int port) throws Exception {
         Registry registry = LocateRegistry.getRegistry(ip, port);
@@ -29,11 +39,26 @@ public class RMIServerConnection implements ServerConnection {
         serverStub.connect(clientStub);
     }
 
+    /**
+     * Forwards a client request to the server, passing this client's callback
+     * stub so the server knows where to send the corresponding response.
+     *
+     * @param request the request to send
+     * @throws Exception if the remote call fails
+     */
     @Override
     public void sendRequest(ClientRequest request) throws Exception {
         serverStub.sendRequest(request, clientStub);
     }
 
+    /**
+     * Notifies the server of this client's disconnection and unexports the
+     * local callback stub. Safe to call multiple times: only the first call
+     * performs any work.
+     *
+     * @throws Exception never thrown directly; errors during disconnection
+     *                    are caught and logged
+     */
     @Override
     public synchronized void disconnect() throws Exception {
         // Idempotent: shutdown paths (GUI X-button cleanup + JVM shutdown hook)
@@ -61,6 +86,12 @@ public class RMIServerConnection implements ServerConnection {
     }
 
 
+    /**
+     * Sets the coordinator that will receive server responses delivered to
+     * the RMI callback stub.
+     *
+     * @param appCoordinator the coordinator to notify of incoming responses
+     */
     @Override
     public void setAppCoordinator(AppCoordinator appCoordinator) {
         this.appCoordinator = appCoordinator;

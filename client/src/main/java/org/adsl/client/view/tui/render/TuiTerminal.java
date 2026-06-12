@@ -38,6 +38,13 @@ public class TuiTerminal {
     private final Attributes savedAttributes;
     private boolean closed = false;
 
+    /**
+     * Opens the system terminal in raw mode, switches to the alternate screen
+     * buffer and hides the cursor. Call {@link #close()} to restore the
+     * original terminal state.
+     *
+     * @throws IOException if the underlying JLine terminal cannot be created
+     */
     public TuiTerminal() throws IOException {
         this.terminal = TerminalBuilder.builder()
                 .system(true)
@@ -92,6 +99,10 @@ public class TuiTerminal {
         m.bind(op, ansi);
     }
 
+    /**
+     * @return the current terminal dimensions, falling back to 80x24 if the
+     *         terminal reports zero (can happen before the first resize signal)
+     */
     public TuiSize getTerminalSize() {
         int cols = terminal.getWidth();
         int rows = terminal.getHeight();
@@ -102,15 +113,18 @@ public class TuiTerminal {
         return new TuiSize(cols, rows);
     }
 
+    /** Queues a screen-clear command into the frame buffer. */
     public void clear() {
         buffer.append(AnsiCodes.RESET);
         buffer.append(AnsiCodes.CLEAR_SCREEN);
     }
 
+    /** @return a new {@link TuiTextGraphics} writing into this terminal's frame buffer */
     public TuiTextGraphics newTextGraphics() {
         return new TuiTextGraphics(buffer);
     }
 
+    /** Writes the accumulated frame buffer to the terminal in one I/O burst, then clears it. */
     public void refresh() {
         if (buffer.length() == 0) return;
         writer.write(buffer.toString());
@@ -121,6 +135,11 @@ public class TuiTerminal {
     /**
      * Reads one semantic key with up to {@code timeoutMillis} of waiting.
      * Returns {@code null} on timeout (no input available).
+     *
+     * @param timeoutMillis maximum time to wait for a keypress, in milliseconds
+     * @return the decoded {@link Key}, or {@code null} if no input arrived in time
+     *         or the input could not be decoded into a meaningful key
+     * @throws IOException if reading from the terminal fails
      */
     public Key pollInput(long timeoutMillis) throws IOException {
         int peek = bindingReader.peekCharacter(timeoutMillis);
@@ -146,11 +165,20 @@ public class TuiTerminal {
         };
     }
 
-    /** Convenience: poll with a short timeout, suitable for the main loop. */
+    /**
+     * Convenience: poll with a short timeout, suitable for the main loop.
+     *
+     * @return the decoded {@link Key}, or {@code null} if no input is pending
+     * @throws IOException if reading from the terminal fails
+     */
     public Key pollInput() throws IOException {
         return pollInput(20L);
     }
 
+    /**
+     * Restores the original terminal attributes, leaves the alternate screen
+     * buffer and shows the cursor again. Safe to call multiple times.
+     */
     public synchronized void close() {
         if (closed) return;
         closed = true;

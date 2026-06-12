@@ -7,6 +7,11 @@ package org.adsl.shared.exceptions;
  * ordinary disconnections.
  */
 public class HostDisconnectedException extends ServerException {
+    /**
+     * Creates the exception with a message describing the host disconnection.
+     *
+     * @param message description of the host disconnection event
+     */
     public HostDisconnectedException(String message) {
         super(message);
     }

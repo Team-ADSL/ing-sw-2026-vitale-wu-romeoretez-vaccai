@@ -41,6 +41,12 @@ public abstract class VirtualClient implements GameObserver, HomeObserver, EndGa
     private boolean isConnected;
     private volatile long lastPing;
 
+    /**
+     * Creates a new virtual client bound to the given controller, marking it as
+     * connected and recording the current time as the last ping.
+     *
+     * @param serverController controller used to dispatch requests from this client
+     */
     public VirtualClient(ServerController serverController){
         this.serverController = serverController;
         this.clientUsername = null;
@@ -49,12 +55,23 @@ public abstract class VirtualClient implements GameObserver, HomeObserver, EndGa
         this.lastPing = System.currentTimeMillis();
     }
 
+    /**
+     * Forwards a request from this client to the {@link ServerController}, unless
+     * the client has already disconnected.
+     *
+     * @param req the request received from this client
+     */
     public void processRequest(ClientRequest req){
         if(isConnected){
             serverController.handleClientRequest(req, this);
         }
     }
 
+    /**
+     * Marks this client as disconnected (if not already) and notifies the
+     * {@link ServerController} via a {@link ClientDisconnected} request so it can
+     * clean up game/lobby state for this client.
+     */
     public void handleDisconnection() {
         if(isConnected){
             setConnected(false);
@@ -66,6 +83,11 @@ public abstract class VirtualClient implements GameObserver, HomeObserver, EndGa
         }
     }
 
+    /**
+     * Called when a new transport connection is established. Sends a
+     * {@link ClientConnection} request to the controller so it can start
+     * tracking this client (e.g. send the home screen state).
+     */
     public void handleConnection() {
         System.out.println("[NETWORK] New connection established.");
         ClientConnection connection = new ClientConnection();
@@ -73,6 +95,8 @@ public abstract class VirtualClient implements GameObserver, HomeObserver, EndGa
     }
 
     // Creating and forwarding ServerResponse to the Client
+
+    /** Sends a {@link LoginNeeded} response, prompting this client to log in. */
     public void sendLoginNeededResponse(){
         ServerResponse serverResponse = new LoginNeeded();
         this.sendResponse(serverResponse);
@@ -164,6 +188,11 @@ public abstract class VirtualClient implements GameObserver, HomeObserver, EndGa
         this.sendResponse(serverResponse);
     }
 
+    /**
+     * Sends an {@link ErrorResponse} with the given message to this client.
+     *
+     * @param error error message to display to the client
+     */
     public void sendErrorMessage(String error){
         ServerResponse serverResponse = new ErrorResponse(error);
         System.out.println("[SENDING] Home update:" + serverResponse + " to: " + getClientUsername());
@@ -178,6 +207,7 @@ public abstract class VirtualClient implements GameObserver, HomeObserver, EndGa
         this.sendResponse(serverResponse);
     }
 
+    /** Sends a {@link ServerPing} to this client to check it is still alive. */
     public void sendPing(){
         ServerResponse serverResponse = new ServerPing();
         this.sendResponse(serverResponse);
@@ -196,28 +226,36 @@ public abstract class VirtualClient implements GameObserver, HomeObserver, EndGa
      */
     public abstract void closeConnection();
 
+    /** @return the username of this client, or empty if not yet logged in */
     public Optional<String> getClientUsername() {
         return Optional.ofNullable(clientUsername);
     }
+    /** @return the ID of the game this client is currently in, or empty if none */
     public Optional<Integer> getGameId() {
         return Optional.ofNullable(gameId);
     }
+    /** @return the timestamp (millis since epoch) of the last received ping */
     public long getLastPing() {
         return lastPing;
     }
+    /** @return {@code true} if this client is still considered connected */
     public boolean isConnected() {
         return isConnected;
     }
 
+    /** @param gameId ID of the game this client is now in, or {@code null} if none */
     public void setGameId(Integer gameId) {
         this.gameId = gameId;
     }
+    /** @param clientUsername username to associate with this client */
     public void setClientUsername(String clientUsername) {
         this.clientUsername = clientUsername;
     }
+    /** @param connected new connection status for this client */
     public void setConnected(boolean connected) {
         isConnected = connected;
     }
+    /** Updates {@link #getLastPing()} to the current time. */
     public void updateLastPing() {
         this.lastPing = System.currentTimeMillis();
     }

@@ -23,6 +23,12 @@ public class SerialGamePersistenceManager implements GamePersistenceManager{
 
     private final String saveDirectory;
 
+    /**
+     * Creates a manager that stores game snapshots under {@code saveDirectory},
+     * creating the directory if it does not already exist.
+     *
+     * @param saveDirectory path of the directory used to store {@code .ser} files
+     */
     public SerialGamePersistenceManager(String saveDirectory) {
         this.saveDirectory = saveDirectory;
         ensureDirectoryExists();
@@ -36,6 +42,15 @@ public class SerialGamePersistenceManager implements GamePersistenceManager{
         }
     }
 
+    /**
+     * Serialises the entire {@link Game} object to {@code game_<id>.ser},
+     * overwriting any previous snapshot for that game. Called as a
+     * {@link org.adsl.server.model.GameObserver} callback every time the game
+     * model changes (i.e. on each move), so the on-disk state always reflects
+     * the latest game state and can be used to recover after a crash.
+     *
+     * @param game the updated game model to persist
+     */
     @Override
     public void updateGame(Game game) {
         String fileName = saveDirectory + File.separator + "game_" + game.getGameId() + ".ser";
@@ -52,6 +67,14 @@ public class SerialGamePersistenceManager implements GamePersistenceManager{
         }
     }
 
+    /**
+     * Reads every {@code .ser} file in {@code saveDirectory} and deserialises it
+     * back into a {@link Game}. Files that fail to deserialise (e.g. corrupted)
+     * are skipped and logged, not thrown.
+     *
+     * @return list of recovered games (empty if the directory has no {@code .ser} files)
+     * @throws Exception if reading the directory itself fails
+     */
     @Override
     public List<Game> recoverGames() throws Exception {
         List<Game> recoveredGames = new ArrayList<>();
@@ -80,6 +103,13 @@ public class SerialGamePersistenceManager implements GamePersistenceManager{
         return recoveredGames;
     }
 
+    /**
+     * Deletes the {@code game_<id>.ser} snapshot file, if it exists. Called once
+     * the game ends or is cancelled, since it no longer needs to be recoverable.
+     *
+     * @param gameId the game whose snapshot should be removed
+     * @throws Exception never thrown directly; I/O errors are caught and logged
+     */
     @Override
     public void removeGame(int gameId) throws Exception {
         String fileName = saveDirectory + File.separator + "game_" + gameId + ".ser";
@@ -91,9 +121,24 @@ public class SerialGamePersistenceManager implements GamePersistenceManager{
     }
 
     // Need to save only game status update
+    /**
+     * No-op: lobby roster changes (before the game starts) are not part of the
+     * recoverable game state and are not persisted.
+     *
+     * @param gameId            the game identifier (unused)
+     * @param players           current lobby players (unused)
+     * @param numPlayersAllowed maximum players for this game (unused)
+     */
     @Override
     public void updateLobby(int gameId, List<String> players, int numPlayersAllowed) {}
 
+    /**
+     * No-op: totem-selection progress is not part of the recoverable game state
+     * and is not persisted.
+     *
+     * @param totemsAvailable totems not yet chosen (unused)
+     * @param message         log message (unused)
+     */
     @Override
     public void updateTotemAvailable(List<Totem> totemsAvailable, String message) {}
 }

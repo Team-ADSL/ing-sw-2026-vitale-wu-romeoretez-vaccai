@@ -36,6 +36,11 @@ public class DisconnectedScreen extends TUIScreen {
     private int focus = FIELD_RECONNECT;
     private String localError;
 
+    /**
+     * @param terminal    the TUI terminal used for rendering
+     * @param coordinator the coordinator used to attempt reconnection
+     * @param message     optional server-supplied disconnect reason shown to the user
+     */
     public DisconnectedScreen(TuiTerminal terminal,
                               AppCoordinator coordinator,
                               String message) {

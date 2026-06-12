@@ -28,10 +28,29 @@ public interface HomeObserver {
         updateHome(activeGames);
     }
 
+    /**
+     * Called when the list of open games changes, including per-game player
+     * lists and capacities. Default implementation delegates to
+     * {@link #updateHome(List)}, ignoring the extra details.
+     *
+     * @param activeGames  current list of open game IDs
+     * @param gamePlayers  map from game ID to the usernames of joined players
+     * @param gameCapacity map from game ID to the maximum number of players allowed
+     */
     default void updateHome(List<Integer> activeGames, Map<Integer, List<String>> gamePlayers, Map<Integer, Integer> gameCapacity) {
         updateHome(activeGames);
     }
 
+    /**
+     * Called when the list of open games changes, including per-game player
+     * lists, capacities, and an optional log message. Default implementation
+     * delegates to {@link #updateHome(List, String)}, ignoring the extra details.
+     *
+     * @param activeGames  current list of open game IDs
+     * @param gamePlayers  map from game ID to the usernames of joined players
+     * @param gameCapacity map from game ID to the maximum number of players allowed
+     * @param message      optional message to display in the client log
+     */
     default void updateHome(List<Integer> activeGames, Map<Integer, List<String>> gamePlayers, Map<Integer, Integer> gameCapacity, String message) {
         updateHome(activeGames, message);
     }

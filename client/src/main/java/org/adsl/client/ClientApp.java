@@ -26,6 +26,12 @@ public final class ClientApp {
 
     private ClientApp() {}
 
+    /**
+     * Parses command-line arguments and starts the client in the requested mode.
+     * Exits the JVM with status 1 if the arguments are invalid.
+     *
+     * @param args command-line arguments (see class Javadoc for usage)
+     */
     static void main(String[] args) {
         if (args.length == 0) {
             printUsageAndExit("Mode missing.");
@@ -67,6 +73,7 @@ public final class ClientApp {
         }
     }
 
+    /** Starts the TUI wired to an in-process {@link FakeServerConnection} for local testing. */
     private static void startTestTui() {
         System.out.println("[BUILDING] Starting MESOS in test mode (TUI + in-process fake server)...");
         TUI tui = new TUI();
@@ -79,6 +86,7 @@ public final class ClientApp {
         tui.start();
     }
 
+    /** Starts the GUI wired to an in-process {@link FakeServerConnection} for local testing. */
     private static void startTestGui() {
         System.out.println("[BUILDING] Starting MESOS in test mode (GUI + in-process fake server)...");
         GUI gui = new GUI();
@@ -91,6 +99,16 @@ public final class ClientApp {
         gui.start();
     }
 
+    /**
+     * Builds the chosen UI and network connection, connects to the server,
+     * starts the ping scheduler and the UI, and registers a shutdown hook
+     * to disconnect cleanly on JVM exit.
+     *
+     * @param connectionType {@code "--socket"} or {@code "--rmi"}
+     * @param uiType         {@code "--tui"} or {@code "--gui"}
+     * @param ipAddress      server hostname or IP address
+     * @param port           server port
+     */
     private static void startClient(String connectionType, String uiType, String ipAddress, int port) {
         System.out.println("Starting Client...");
         System.out.println("- Network: " + connectionType.replace("--", "").toUpperCase());
@@ -127,6 +145,12 @@ public final class ClientApp {
         }
     }
 
+    /**
+     * Prints {@code errorMessage} and the usage text to the console, then
+     * exits the JVM with status 1.
+     *
+     * @param errorMessage description of what was wrong with the arguments
+     */
     private static void printUsageAndExit(String errorMessage) {
         System.err.println("ERROR: " + errorMessage + "\n");
         System.out.println("=== USAGE ===");

@@ -32,6 +32,13 @@ public class ExtraMoveState extends ControllerState {
     super(game, context);
   }
 
+  /**
+   * Evaluates end-of-round building effects and either selects the lone
+   * player with an extra-move bonus as current player, or skips straight to
+   * {@link EventsState} if no player has the bonus.
+   *
+   * @return the next state, computed via {@link #calcNextState()}
+   */
   @Override
   public ControllerState onEntry() {
     setNextState(calcNextState());
@@ -39,6 +46,17 @@ public class ExtraMoveState extends ControllerState {
     return getNextState();
   }
 
+  /**
+   * Handles the extra-move player's choice: either pass with an empty move set
+   * (transitioning straight to {@link EventsState}) or pick exactly one card
+   * from the upper row.
+   *
+   * @param req           the move request, containing 0 or 1 moves
+   * @param virtualClient the client sending the request
+   * @throws ServerException if it is not the client's turn, more than one move
+   *                          is submitted, the move does not target the upper
+   *                          row, or the selected card cannot be drawn
+   */
   @Override
   public void visit(MoveRequest req, VirtualClient virtualClient) throws ServerException {
     Player reqPlayer = controlIfPlayerTurn(virtualClient);
@@ -71,6 +89,14 @@ public class ExtraMoveState extends ControllerState {
     }
   }
 
+  /**
+   * Applies the chosen card pick: removes the card from the top row, applies
+   * its drawing effect and any drawing-triggered building effects, pays its
+   * food cost, and transitions to {@link EventsState}.
+   *
+   * @param move the validated move targeting the chosen card in the top row
+   * @param p    the player picking the extra card
+   */
   public void execute(Move move, Player p) {
     CardRow selectedRow = getGame().getBoard().topRow();
     Card selectedCard = selectedRow.pickCardAt(move.rowIndex());
@@ -104,6 +130,14 @@ public class ExtraMoveState extends ControllerState {
     getGame().sendUpdateGame(log);
   }
 
+  /**
+   * Applies end-of-round building effects for every player, then checks which
+   * (at most one) player has an extra-move bonus.
+   *
+   * @return a {@link RecoverState} if a player disconnected; {@code this} with
+   *         the bonus-holding player set as current if one exists; otherwise a
+   *         new {@link EventsState}
+   */
   @Override
   public ControllerState calcNextState() {
     if (isToStop()) {

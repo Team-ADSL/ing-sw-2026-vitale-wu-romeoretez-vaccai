@@ -40,6 +40,15 @@ public class Game implements Serializable {
     private transient List<GameObserver> gameObservers;
     private transient List<EndGameObserver> endGameObservers;
 
+    /**
+     * Creates a new, uninitialised game. The board is set up later by
+     * {@code InitGameState} (signalled via {@code isInitialized = false}),
+     * the match starts at round 1, era 1, with no players, current player,
+     * or phase yet assigned.
+     *
+     * @param gameId    unique identifier of this game session
+     * @param numPlayer maximum number of players allowed in this game
+     */
     // For initial istantiation
     public Game(int gameId, int numPlayer) {
         this.gameId = gameId;
@@ -56,6 +65,21 @@ public class Game implements Serializable {
         endGameObservers = new ArrayList<>();
     }
 
+    /**
+     * Reconstructs a game from persisted state after a server crash or restart.
+     * Sets {@code isInitialized} to {@code true} so {@code InitGameState} skips
+     * board setup. Observer lists start empty and must be repopulated via
+     * {@link #setupTransientAttributes()} and {@link #addVirtualClient(VirtualClient)}.
+     *
+     * @param gameId        unique identifier of this game session
+     * @param numPlayer     maximum number of players allowed in this game
+     * @param round         the round the game was on when persisted
+     * @param era           the era the game was on when persisted
+     * @param players       the players in the match
+     * @param currentPlayer the player whose turn it was, or {@code null}
+     * @param board         the persisted board state
+     * @param phase         the phase the game was in when persisted
+     */
     // For recover after crash
     public Game(int gameId, int numPlayer, int round, int era, Set<Player> players, Player currentPlayer,
                 Board board, Phase phase) {

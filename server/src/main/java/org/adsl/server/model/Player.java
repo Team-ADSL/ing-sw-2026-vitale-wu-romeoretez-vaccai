@@ -41,6 +41,13 @@ public class Player implements Serializable {
     private transient boolean isActive;
     private transient BuildingBonus buildingBonus;
 
+    /**
+     * Creates a new player with default starting state: zero food, zero
+     * prestige points, no totem colour, an empty hand for each {@link CardType},
+     * and marked as active.
+     *
+     * @param name the player's username
+     */
     public Player(String name) {
         this.name = name;
         this.food = 0;
@@ -60,6 +67,17 @@ public class Player implements Serializable {
         this.cards.put(CardType.BUILDINGS, new HashSet<>());
     }
 
+    /**
+     * Reconstructs a player from persisted state. Used only by deserialisers
+     * recovering a game; new players should use {@link #Player(String)}.
+     * The player is initially marked inactive until reconnected.
+     *
+     * @param name  the player's username
+     * @param food  current food tokens
+     * @param pp    current prestige points
+     * @param color the player's chosen totem colour, or {@code null} if not yet chosen
+     * @param cards the player's hand, grouped by {@link CardType}
+     */
     public Player(String name, int food, int pp, Totem color, Map<CardType, Set<Card>> cards) {
         this.name = name;
         this.food = food;
@@ -104,9 +122,22 @@ public class Player implements Serializable {
         buildingBonus = new BuildingBonus();
     }
 
+    /**
+     * Adjusts the player's prestige points by the given delta (positive to gain,
+     * negative to lose).
+     *
+     * @param pp the amount to add to the current prestige points
+     */
     public void changePP(int pp){
         this.pp +=  pp;
     }
+
+    /**
+     * Adjusts the player's food count by the given delta (positive to gain,
+     * negative to spend).
+     *
+     * @param food the amount to add to the current food count
+     */
     public void changeFood(int food){
         this.food += food;
     }

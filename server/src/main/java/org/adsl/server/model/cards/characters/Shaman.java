@@ -16,6 +16,14 @@ public class Shaman extends Character {
 
     private final int starNum;
 
+    /**
+     * Creates a Shaman character card.
+     *
+     * @param id         unique card identifier
+     * @param starNum    number of shaman stars this card contributes during the {@code ShamanicRitual} event
+     * @param era        the era this card belongs to (1-3)
+     * @param numPlayers minimum number of players required for this card to be in play, or {@code null} if always included
+     */
     public Shaman(String id, int starNum, int era, Integer numPlayers) {
         super(id, era, numPlayers);
         this.starNum = starNum;

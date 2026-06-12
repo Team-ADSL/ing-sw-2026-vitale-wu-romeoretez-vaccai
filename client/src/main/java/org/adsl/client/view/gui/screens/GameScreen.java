@@ -481,6 +481,13 @@ public class GameScreen extends GUIScreen {
 
     // ── Input ────────────────────────────────────────────────────────────────
 
+    /**
+     * Handles the "Confirm" button click (or its keyboard-nav equivalent).
+     * Sends the currently selected card picks to the server as a move
+     * request during {@code ACTION_EXECUTION} or {@code EXTRA_MOVE}. Shows
+     * an error in {@link #errorLabel} if it isn't the player's turn, the
+     * phase doesn't allow confirming, or the request fails.
+     */
     @FXML
     private void onSendMove() {
         if (!isMyTurn()) {

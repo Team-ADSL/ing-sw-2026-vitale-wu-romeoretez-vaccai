@@ -12,9 +12,13 @@ public final class ExitScreen extends TUIScreen {
         super();
     }
 
+    /** No-op: this screen is never actually drawn. */
     @Override
     public void render() {}
 
+    /**
+     * @return always {@code true}, signalling the TUI main loop to stop
+     */
     @Override
     public boolean isExit() {
         return true;

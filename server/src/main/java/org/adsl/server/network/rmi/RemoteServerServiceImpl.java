@@ -31,6 +31,12 @@ public class RemoteServerServiceImpl extends UnicastRemoteObject implements Remo
     private final Map<RemoteClientStub, RMIClientHandler> clients;
     private final ExecutorService threadPool;
 
+    /**
+     * Exports this object as an RMI remote object. The server controller must
+     * be set afterwards via {@link #setServerController}.
+     *
+     * @throws RemoteException if the RMI export fails
+     */
     public RemoteServerServiceImpl() throws RemoteException {
         super();
         this.serverController = null;
@@ -38,6 +44,14 @@ public class RemoteServerServiceImpl extends UnicastRemoteObject implements Remo
         this.threadPool = Executors.newCachedThreadPool();
     }
 
+    /**
+     * Registers a new RMI client, creating a {@link RMIClientHandler} for it and
+     * asynchronously running {@link RMIClientHandler#handleConnection()} on the
+     * shared thread pool.
+     *
+     * @param clientCallback remote stub used to push responses to this client
+     * @throws RemoteException if the RMI call fails
+     */
     @Override
     public void connect(RemoteClientStub clientCallback) throws RemoteException {
         System.out.println("New client connected with RMI.");
@@ -49,6 +63,15 @@ public class RemoteServerServiceImpl extends UnicastRemoteObject implements Remo
         });
     }
 
+    /**
+     * Forwards a request from an already-registered client to its
+     * {@link RMIClientHandler}, processed asynchronously on the shared thread pool.
+     * If the client is not registered, the request is dropped and an error is logged.
+     *
+     * @param request    the request sent by the client
+     * @param clientStub remote stub identifying the sending client
+     * @throws RemoteException if the RMI call fails
+     */
     @Override
     public void sendRequest(ClientRequest request, RemoteClientStub clientStub) throws RemoteException {
         RMIClientHandler handler = clients.get(clientStub);
@@ -63,6 +86,13 @@ public class RemoteServerServiceImpl extends UnicastRemoteObject implements Remo
         }
     }
 
+    /**
+     * Notifies the {@link RMIClientHandler} for the given client that it has
+     * disconnected, processed asynchronously on the shared thread pool.
+     * If the client is not registered, an error is logged.
+     *
+     * @param clientStub remote stub identifying the disconnecting client
+     */
     @Override
     public void disconnect(RemoteClientStub clientStub) {
         RMIClientHandler handler = clients.get(clientStub);
@@ -76,6 +106,13 @@ public class RemoteServerServiceImpl extends UnicastRemoteObject implements Remo
         }
     }
 
+    /**
+     * Unregisters a client, removing its {@link RMIClientHandler} from the
+     * registry. Called by {@link RMIClientHandler#closeConnection()}.
+     * If the client is not registered, an error is logged.
+     *
+     * @param clientStub remote stub identifying the client to remove
+     */
     public void remove(RemoteClientStub clientStub){
         RMIClientHandler handler = clients.get(clientStub);
         if (handler != null) {
@@ -85,6 +122,11 @@ public class RemoteServerServiceImpl extends UnicastRemoteObject implements Remo
         }
     }
 
+    /**
+     * Sets the controller used to dispatch requests from clients connected via RMI.
+     *
+     * @param serverController the server controller instance
+     */
     public void setServerController(ServerController serverController) {
         this.serverController = serverController;
     }

@@ -19,10 +19,24 @@ import java.util.List;
 public class SqlGameDAO implements GameDAO{
     private ConnectionProvider connectionProvider;
 
+    /**
+     * Creates a SQL-backed DAO using the given connection provider.
+     *
+     * @param connectionProvider source of database connections (allows swapping
+     *                            the data source in tests)
+     */
     public SqlGameDAO(ConnectionProvider connectionProvider){
         this.connectionProvider = connectionProvider;
     }
 
+    /**
+     * Inserts a new, empty row into {@code matches} (used when a lobby is
+     * created, before the number of players is known) and returns its
+     * generated ID.
+     *
+     * @return the auto-generated match ID
+     * @throws SQLException if the insert fails or no ID is generated
+     */
     // Game creation for the lobby before starting (the number of player is unknown)
     public int createMatch() throws SQLException {
         String sql = "INSERT INTO matches () VALUES ()";
@@ -41,6 +55,14 @@ public class SqlGameDAO implements GameDAO{
         }
     }
 
+    /**
+     * Deletes the {@code matches} row with the given ID. Used when all players
+     * leave the lobby before the game ever starts, so the empty match row is
+     * not left behind.
+     *
+     * @param gameId the match ID to delete
+     * @throws SQLException if the delete fails or no matching row exists
+     */
     // For game created but where all player quit the lobby before starting
     public void deleteMatch(int gameId) throws SQLException {
         String sql = "DELETE FROM matches WHERE id = ?";
@@ -57,6 +79,19 @@ public class SqlGameDAO implements GameDAO{
         }
     }
 
+    /**
+     * Finalises a match: stamps {@code matches} with the current timestamp and
+     * player count, then upserts each player into {@code players} and inserts
+     * their score into {@code results}. Called once when the game ends. The
+     * whole operation runs in a single transaction and is rolled back if any
+     * step fails.
+     *
+     * @param gameId      the match ID created by {@link #createMatch()}
+     * @param playerCount number of players who participated
+     * @param nicknames   player nicknames, in the same order as {@code scores}
+     * @param scores      final prestige-point totals, in the same order as {@code nicknames}
+     * @throws SQLException if any step fails; the transaction is rolled back first
+     */
     public void saveMatch(int gameId, int playerCount,
                                  List<String> nicknames,
                                  List<Integer> scores) throws SQLException {
@@ -115,6 +150,16 @@ public class SqlGameDAO implements GameDAO{
         }
     }
 
+    /**
+     * Computes the all-time leaderboard for matches with exactly
+     * {@code playerCount} players: sums each player's scores across those
+     * matches, orders them descending, and assigns a dense rank (ties share a
+     * rank, the next distinct score continues from the row count so far).
+     *
+     * @param playerCount filter for matches with this exact number of players
+     * @return ranked list of {@link DBRecord}s, ordered by total score descending
+     * @throws SQLException if the query fails
+     */
     public List<DBRecord> getLeaderboard(int playerCount) throws SQLException {
         String sql = """
             SELECT
@@ -162,6 +207,12 @@ public class SqlGameDAO implements GameDAO{
         return leaderboard;
     }
 
+    /**
+     * No-op: the SQL implementation derives match IDs from the database's
+     * auto-increment column, so no in-memory counter is needed.
+     *
+     * @param i max index among the recovered games (unused)
+     */
     @Override
     public void setInitialCounter(int i) {}
 }

@@ -35,6 +35,15 @@ public class ActionExecutionState extends ControllerState {
     super(game, context);
   }
 
+  /**
+   * If no current player is set, selects the player on the first occupied
+   * offer tile (in offer-track order) as the current player and recomputes
+   * the next state. Offer tiles that grant food automatically (handled in
+   * {@link #calcNextState()}) may cause an immediate further transition.
+   *
+   * @return {@code this}, since this is a manual state waiting for the
+   *         current player's {@link MoveRequest}
+   */
   @Override
   public ControllerState onEntry() throws ServerException {
     if (getGame().getCurrentPlayer().isEmpty()) {
@@ -52,6 +61,23 @@ public class ActionExecutionState extends ControllerState {
     return this;
   }
 
+  /**
+   * Validates and executes the current player's card picks for their offer
+   * tile.
+   * <p>
+   * The number of cards picked from the upper/lower row must match the offer
+   * tile's allowed move counts, clamped to how many cards in that row can
+   * actually be drawn (e.g. some cards require a specific player condition).
+   * Each picked card's cost is checked against the player's food, simulating
+   * sequential payment so that earlier picks can fund later ones.
+   * </p>
+   *
+   * @param req           the move request describing which cards to pick
+   * @param virtualClient the client sending the request
+   * @throws ServerException if it is not the client's turn, the number of
+   *                          upper/lower picks is outside the allowed range,
+   *                          or a selected card cannot be drawn/afforded
+   */
   @Override
   public void visit(MoveRequest req, VirtualClient virtualClient) throws ServerException {
     Player reqPlayer = controlIfPlayerTurn(virtualClient);
@@ -229,6 +255,13 @@ public class ActionExecutionState extends ControllerState {
     return logs;
   }
 
+  /**
+   * @return a {@link RecoverState} if a player disconnected; otherwise, if any
+   *         offer tile still has a waiting player, {@code this} with that
+   *         player as current (food-granting tiles are resolved automatically
+   *         and recursed past); if all offer tiles are empty, a new
+   *         {@link ExtraMoveState}
+   */
   @Override
   public ControllerState calcNextState() {
     if (isToStop()) {

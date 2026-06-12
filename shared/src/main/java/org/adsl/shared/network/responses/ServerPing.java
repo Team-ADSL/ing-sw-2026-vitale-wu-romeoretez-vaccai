@@ -9,11 +9,21 @@ import org.adsl.shared.exceptions.InvalidResponseException;
  * dispatcher bypasses the visual-pacing queue for this message.
  */
 public class ServerPing extends ServerResponse{
+    /**
+     * Dispatches this response to {@link ResponseVisitor#visit(ServerPing)}.
+     *
+     * @param visitor the visitor that will handle this response
+     * @throws InvalidResponseException if the visitor cannot process this response
+     */
     @Override
     public void accept(ResponseVisitor visitor) throws InvalidResponseException {
         visitor.visit(this);
     }
 
+    /**
+     * Overridden to return {@code true}, marking this response as a heartbeat
+     * so the client dispatcher bypasses the visual-pacing queue for it.
+     */
     @Override
     @JsonIgnore
     public boolean isHeartbeat() {

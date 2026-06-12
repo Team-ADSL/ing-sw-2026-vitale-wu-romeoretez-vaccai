@@ -6,6 +6,12 @@ import org.adsl.shared.exceptions.ServerException;
 
 import java.io.Serializable;
 
+/**
+ * Abstract base for all requests sent from client to server over the network.
+ * Serialised to JSON via Jackson using the {@code "type"} discriminator field.
+ * The visitor pattern ({@link #accept}) dispatches each subtype to the correct
+ * handler in {@link RequestVisitor} without instanceof checks.
+ */
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
         include = JsonTypeInfo.As.PROPERTY,
@@ -25,12 +31,6 @@ import java.io.Serializable;
         @JsonSubTypes.Type(value = ExitGameRequest.class, name = "EXIT_GAME"),
         @JsonSubTypes.Type(value = TotemPickingRequest.class, name = "TOTEM_PICKING"),
 })
-/**
- * Abstract base for all requests sent from client to server over the network.
- * Serialised to JSON via Jackson using the {@code "type"} discriminator field.
- * The visitor pattern ({@link #accept}) dispatches each subtype to the correct
- * handler in {@link RequestVisitor} without instanceof checks.
- */
 public abstract class ClientRequest implements Serializable {
 
     /**

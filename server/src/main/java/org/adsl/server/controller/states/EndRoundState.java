@@ -28,6 +28,13 @@ public class EndRoundState extends ControllerState {
     /** Mesos has exactly three eras; advancing past era 3 is invalid. */
     private static final int MAX_ERA = 3;
 
+    /**
+     * Shifts the top row into the lower row, refills the top row from the
+     * deck, handles era transitions (swapping building decks when the deck
+     * crosses an era boundary), and advances the round counter.
+     *
+     * @return the next state, computed via {@link #calcNextState()}
+     */
     @Override
     public ControllerState onEntry() {
         CardRow lowRow = getGame().getBoard().lowRow();
@@ -77,6 +84,9 @@ public class EndRoundState extends ControllerState {
         return getNextState();
     }
 
+    /**
+     * @return a new {@link TotemPlacementState}, always entered after board maintenance
+     */
     @Override
     public ControllerState calcNextState() {
         getGame().setPhase(Phase.TOTEM_PLACEMENT);

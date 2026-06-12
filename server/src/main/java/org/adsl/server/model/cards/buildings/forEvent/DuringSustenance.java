@@ -18,11 +18,32 @@ import java.util.Set;
 public class DuringSustenance extends DuringEvent {
     private final CardType typeMultiplier;
 
+    /**
+     * Creates a Sustenance-related building.
+     *
+     * @param id             unique card identifier
+     * @param endGamePP      end-game PP awarded by this building
+     * @param cost           food cost to acquire this building
+     * @param era            era this card belongs to
+     * @param numPlayers     number of players in the match
+     * @param typeMultiplier character {@link CardType} whose count determines the
+     *                       food discount (e.g. {@code HUNTER}, {@code SHAMAN})
+     */
     public DuringSustenance(String id, int endGamePP, int cost, int era, Integer numPlayers, CardType typeMultiplier) {
         super(id, endGamePP, cost, era, numPlayers);
         this.typeMultiplier = typeMultiplier;
     }
 
+    /**
+     * Sets the owner's Sustenance food discount, when the trigger is
+     * {@link Trigger#SUSTENANCE}, to the number of cards the owner has of type
+     * {@code typeMultiplier}. {@code players} is expected to contain exactly the
+     * owning player (see {@link DuringEvent#activeEffect}); other triggers are
+     * ignored.
+     *
+     * @param players singleton set containing the building's owner
+     * @param t       the trigger that fired
+     */
     @Override
     public void execute(Set<Player> players, Trigger t) {
         if (t != Trigger.SUSTENANCE) {
@@ -36,6 +57,9 @@ public class DuringSustenance extends DuringEvent {
         p.getBuildingBonus().setSustenanceDiscount(p.getCards().get(typeMultiplier).size());
     }
 
+    /**
+     * @return the character {@link CardType} used to compute the Sustenance discount
+     */
     public CardType getTypeMultiplier() {
         return typeMultiplier;
     }

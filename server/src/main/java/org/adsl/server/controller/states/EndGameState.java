@@ -32,6 +32,15 @@ public class EndGameState extends ControllerState {
         super(game, context);
     }
 
+    /**
+     * Applies end-game building effects, tallies builder/inventor/artist/building
+     * bonuses for each player, persists the match via {@link GameDAO}, and
+     * broadcasts final results and the leaderboard.
+     *
+     * @return {@code null}, signalling that the game is over and the
+     *         controller should be discarded
+     * @throws ServerException if the match could not be saved to the database
+     */
     @Override
     public ControllerState onEntry() throws ServerException {
         Set<Player> players = getGame().getPlayers();

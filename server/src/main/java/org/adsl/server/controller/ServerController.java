@@ -437,7 +437,8 @@ public class ServerController implements RequestVisitor<VirtualClient>, EndGameO
     }
 
     /**
-     * @return maxValue from the recovered games
+     * @return the highest game ID currently tracked by this controller, or
+     *         {@code 0} if there are no games
      */
     public int getMaxGameId(){
         return games.keySet().stream()

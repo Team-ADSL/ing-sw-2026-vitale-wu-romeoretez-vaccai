@@ -22,10 +22,26 @@ public abstract class DuringEvent extends Building {
             Trigger.HUNT,
             Trigger.CAVE_PAINTINGS);
 
+    /**
+     * Creates an event-related building.
+     *
+     * @param id         unique card identifier
+     * @param endGamePP  end-game PP awarded by this building
+     * @param cost       food cost to acquire this building
+     * @param era        era this card belongs to
+     * @param numPlayers number of players in the match
+     */
     public DuringEvent(String id, int endGamePP, int cost, int era, Integer numPlayers) {
         super(id, endGamePP, cost, era, numPlayers);
     }
 
+    /**
+     * Forwards to {@link #execute} only if {@code t} is one of the four event
+     * triggers; ignores all other triggers (e.g. building-placement triggers).
+     *
+     * @param players the players affected
+     * @param t       the trigger that fired
+     */
     @Override
     public void activeEffect(Set<Player> players, Trigger t) {
         if (eventTriggers.contains(t)) {

@@ -36,6 +36,14 @@ public class HomeScreen extends TUIScreen {
     private int cursor = 0;
     private int scrollOffset = 0;
 
+    /**
+     * @param terminal     the TUI terminal used for rendering
+     * @param coordinator  the coordinator used to send create/join/logout requests
+     * @param username     the current player's username
+     * @param activeGames  ids of games currently open for joining, or {@code null} if none
+     * @param gamePlayers  per-game list of player names already joined, or {@code null}
+     * @param gameCapacity per-game maximum number of players, or {@code null}
+     */
     public HomeScreen(TuiTerminal terminal,
                       AppCoordinator coordinator,
                       String username,

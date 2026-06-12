@@ -22,6 +22,13 @@ public class RecoverState extends ControllerState {
         super(game, context);
     }
 
+    /**
+     * Notifies connected clients of the lobby state and clears the stop flag
+     * so the state machine keeps waiting for reconnections.
+     *
+     * @return {@code this}, since this is a manual state waiting for
+     *         {@link EnterGameRequest}s
+     */
     @Override
     public ControllerState onEntry(){
         getGame().sendUpdateLobby();
@@ -29,6 +36,15 @@ public class RecoverState extends ControllerState {
         return this;
     }
 
+    /**
+     * Reactivates a previously disconnected player, replays the accumulated
+     * game log to their client, and recomputes the next state.
+     *
+     * @param req           the reconnection request
+     * @param virtualClient the reconnecting client
+     * @throws ServerException if the client has no username, is not a player
+     *                          in this game, or is already marked active
+     */
     @Override
     public void visit(EnterGameRequest req, VirtualClient virtualClient) throws ServerException {
         if(virtualClient.getClientUsername().isEmpty()){
@@ -55,6 +71,10 @@ public class RecoverState extends ControllerState {
         setNextState(calcNextState());
     }
 
+    /**
+     * @return the state reconstructed by {@link StateFactory#recover} if every
+     *         expected player has reconnected, otherwise {@code this}
+     */
     @Override
     public ControllerState calcNextState() {
         int activePlayers = (int)getGame().getPlayers().stream()

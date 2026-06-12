@@ -25,6 +25,14 @@ public class LobbyScreen extends TUIScreen {
     private List<String> players;
     private final int totalPlayers;
 
+    /**
+     * @param terminal     the TUI terminal used for rendering
+     * @param coordinator  the coordinator used to send start/exit-lobby requests
+     * @param username     the current player's username
+     * @param gameId       id of the game/lobby being displayed
+     * @param players      usernames of players currently in the lobby, or {@code null}
+     * @param totalPlayers number of players required to start, or 0 if unknown
+     */
     public LobbyScreen(TuiTerminal terminal,
                        AppCoordinator coordinator,
                        String username,

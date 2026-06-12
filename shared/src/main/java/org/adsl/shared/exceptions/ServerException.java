@@ -7,6 +7,11 @@ package org.adsl.shared.exceptions;
  * an {@code ErrorResponse}.
  */
 public class ServerException extends RuntimeException {
+    /**
+     * Creates the exception with a message describing the invalid request.
+     *
+     * @param message description of why the request cannot be fulfilled
+     */
     public ServerException(String message) {
         super(message);
     }

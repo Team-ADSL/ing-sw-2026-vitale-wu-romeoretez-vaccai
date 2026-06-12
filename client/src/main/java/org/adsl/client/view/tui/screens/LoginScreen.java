@@ -49,10 +49,20 @@ public class LoginScreen extends TUIScreen {
     private boolean submitted = false;
     private String localValidation;
 
+    /**
+     * @param terminal    the TUI terminal used for rendering
+     * @param coordinator the coordinator used to send the login request
+     */
     public LoginScreen(TuiTerminal terminal, AppCoordinator coordinator) {
         this(terminal, coordinator, null);
     }
 
+    /**
+     * @param terminal    the TUI terminal used for rendering
+     * @param coordinator the coordinator used to send the login request
+     * @param initialError error message to show on first render (e.g. after a failed
+     *                      login attempt), or {@code null} if none
+     */
     public LoginScreen(TuiTerminal terminal,
                        AppCoordinator coordinator,
                        String initialError) {

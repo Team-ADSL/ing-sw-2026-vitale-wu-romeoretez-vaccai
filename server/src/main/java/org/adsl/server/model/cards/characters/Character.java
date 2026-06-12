@@ -13,10 +13,23 @@ import java.util.Set;
  */
 public abstract class Character extends Card {
 
+    /**
+     * Creates a character card.
+     *
+     * @param id         unique card identifier
+     * @param era        the era this card belongs to (1-3)
+     * @param numPlayers minimum number of players required for this card to be in play, or {@code null} if always included
+     */
     public Character (String id, int era, Integer numPlayers){
         super(id, era, numPlayers);
     }
 
+    /**
+     * Character cards have no food cost and are always drawable.
+     *
+     * @param p the player attempting to draw (ignored)
+     * @return always {@code true}
+     */
     @Override
     public boolean canBeDrawn(Player p) {
         return true;

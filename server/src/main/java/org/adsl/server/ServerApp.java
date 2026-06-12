@@ -31,6 +31,11 @@ public final class ServerApp {
     /**
      * Application entry point. Parses and validates the three required arguments
      * then delegates to {@link #startServer}.
+     * <p>
+     * If the arguments are missing, not valid integers, out of range, or the
+     * two ports collide, {@link #printUsageAndExit} prints an error and usage
+     * message and terminates the process with exit code 1.
+     * </p>
      *
      * @param args {@code <socket-port> <rmi-port> <recover-directory>}
      */
@@ -60,6 +65,15 @@ public final class ServerApp {
         startServer(socketPort, rmiPort, saveDirectory);
     }
 
+    /**
+     * Wires up and starts all server components: the database (or a no-op DAO
+     * if unavailable), the socket and RMI listeners, game recovery, and the
+     * timeout checker. Registers a shutdown hook for graceful cleanup.
+     *
+     * @param socketPort       TCP port for the socket server
+     * @param rmiPort          port for the RMI registry
+     * @param recoverDirectory directory used to persist/recover game state
+     */
     private static void startServer(int socketPort, int rmiPort, String recoverDirectory) {
         System.out.println("Starting server...");
         try {
@@ -107,6 +121,12 @@ public final class ServerApp {
         }
     }
 
+    /**
+     * Prints the given error message followed by a usage message to standard
+     * error/output, then terminates the process with exit code 1.
+     *
+     * @param errorMessage description of the invalid argument(s)
+     */
     private static void printUsageAndExit(String errorMessage) {
         System.err.println("ERROR: " + errorMessage + "\n");
         System.out.println("=== USAGE ===");

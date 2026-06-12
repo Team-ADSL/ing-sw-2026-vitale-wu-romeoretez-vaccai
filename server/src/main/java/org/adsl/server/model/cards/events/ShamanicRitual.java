@@ -24,6 +24,16 @@ public class ShamanicRitual extends Event {
     private final int lostPP;
     private final int gainedPP;
 
+    /**
+     * Creates a Shamanic Ritual event card.
+     *
+     * @param id         unique card identifier
+     * @param lostPP     PP lost by the player(s) with the fewest shaman stars
+     * @param gainedPP   PP gained by the player(s) with the most shaman stars
+     * @param isFinal    {@code true} if this is the era-3/round-10 copy of the event
+     * @param era        era this card belongs to
+     * @param numPlayers number of players in the match
+     */
     public ShamanicRitual (String id, int lostPP, int gainedPP, boolean isFinal,
                        int era, Integer numPlayers) {
         super(id, isFinal, era, numPlayers);
@@ -31,11 +41,33 @@ public class ShamanicRitual extends Event {
         this.gainedPP = gainedPP;
     }
 
+    /**
+     * Adds this card to the {@link CardType#SHAMANIC_RITUAL} set, if present in
+     * {@code cards}.
+     *
+     * @param cards the deck/board map of cards keyed by type
+     */
     @Override
     public void insert(Map<CardType, Set<Card>> cards) {
         if(cards.containsKey(CardType.SHAMANIC_RITUAL)) cards.get(CardType.SHAMANIC_RITUAL).add(this);
     }
 
+    /**
+     * Resolves the Shamanic Ritual event when {@code t} is
+     * {@link Trigger#EVENT_EXECUTION}. First activates any {@code DuringRitual}
+     * building for every player (via {@link #activateBuildings}), then computes
+     * each player's total shaman-star count (sum of {@link Shaman#getStarNum()}
+     * plus {@link BuildingBonus#getExtraStars()}). If all players are tied, no PP
+     * changes occur. Otherwise, the player(s) with the most stars gain
+     * {@code gainedPP} PP (doubled if the player is alone at the top and owns a
+     * {@code RITUAL_DOUBLE_PP} {@code DuringRitual} building), and the player(s)
+     * with the fewest stars lose {@code lostPP} PP unless immune via
+     * {@code DuringRitual} ({@code RITUAL_IMMUNITY}). Each player's
+     * {@code BuildingBonus} is reset at the end of processing.
+     *
+     * @param players the players affected by the event
+     * @param t       the trigger that fired; only {@link Trigger#EVENT_EXECUTION} is handled
+     */
     @Override
     public void activeEffect(Set<Player> players, Trigger t) {
         if (t == Trigger.EVENT_EXECUTION) {

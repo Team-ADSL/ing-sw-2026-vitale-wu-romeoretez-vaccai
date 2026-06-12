@@ -27,6 +27,12 @@ public class EventsState extends ControllerState {
     super(game, context);
   }
 
+  /**
+   * Resolves all lower-row events, and on round 10 also the upper-row events,
+   * then transitions to the next phase.
+   *
+   * @return the next state, computed via {@link #calcNextState()}
+   */
   @Override
   public ControllerState onEntry() {
     ArrayList<Card> cardsLower = getGame().getBoard().lowRow().getTribeCards();
@@ -100,6 +106,10 @@ public class EventsState extends ControllerState {
     };
   }
 
+  /**
+   * @return a new {@link EndRoundState} if the game has not reached the final
+   *         round, otherwise a new {@link EndGameState}
+   */
   @Override
   public ControllerState calcNextState() {
     if (getGame().getRound() != 10) {

@@ -17,6 +17,15 @@ public class Builder extends Character {
     private final int discount;
     private final int pp;
 
+    /**
+     * Creates a Builder character card.
+     *
+     * @param id         unique card identifier
+     * @param discount   food discount applied to building costs while this card is in hand
+     * @param pp         prestige points contributed at end-game
+     * @param era        the era this card belongs to (1-3)
+     * @param numPlayers minimum number of players required for this card to be in play, or {@code null} if always included
+     */
     public Builder(String id, int discount, int pp, int era, Integer numPlayers) {
         super(id, era, numPlayers);
         this.discount = discount;

@@ -23,11 +23,35 @@ import java.util.Set;
 public class DuringRitual extends DuringEvent {
     private final BuildingEffect buildingEffect;
 
+    /**
+     * Creates a Shamanic Ritual-related building.
+     *
+     * @param id             unique card identifier
+     * @param endGamePP      end-game PP awarded by this building
+     * @param cost           food cost to acquire this building
+     * @param era            era this card belongs to
+     * @param numPlayers     number of players in the match
+     * @param buildingEffect which ritual modifier this building applies
+     *                       ({@code RITUAL_IMMUNITY}, {@code RITUAL_STARS_BONUS},
+     *                       or {@code RITUAL_DOUBLE_PP})
+     */
     public DuringRitual(String id, int endGamePP, int cost, int era, Integer numPlayers, BuildingEffect buildingEffect) {
         super(id, endGamePP, cost, era, numPlayers);
         this.buildingEffect = buildingEffect;
     }
 
+    /**
+     * Applies this building's {@link BuildingEffect} to the owner's
+     * {@code BuildingBonus} when the trigger is {@link Trigger#SHAMANIC_RITUAL}:
+     * grants ritual PP-loss immunity, +3 virtual shaman stars, or doubles PP
+     * gained if the owner wins the ritual alone, depending on
+     * {@code buildingEffect}. {@code players} is expected to contain exactly the
+     * owning player (see {@link DuringEvent#activeEffect}); other triggers are
+     * ignored.
+     *
+     * @param players singleton set containing the building's owner
+     * @param t       the trigger that fired
+     */
     @Override
     public void execute(Set<Player> players, Trigger t) {
         if (t != Trigger.SHAMANIC_RITUAL) {

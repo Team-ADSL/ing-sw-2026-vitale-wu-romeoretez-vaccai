@@ -38,22 +38,48 @@ public abstract class ServerResponse implements Serializable {
     @JsonProperty("message")
     private String message;
 
+    /**
+     * Creates a response with no log message.
+     */
     protected ServerResponse() {
         this.message = null;
     }
 
+    /**
+     * Creates a response carrying a log-line message.
+     *
+     * @param message the log-line string shown in the client game log
+     */
     protected ServerResponse(String message) {
         this.message = message;
     }
 
+    /**
+     * Returns the log-line message associated with this response, if any.
+     *
+     * @return the message string, or {@code null} if none was set
+     */
     public String getMessage() {
         return message;
     }
 
+    /**
+     * Sets the log-line message associated with this response.
+     *
+     * @param message the message string to attach to this response
+     */
     public void setMessage(String message) {
         this.message = message;
     }
 
+    /**
+     * Dispatches this response to the matching {@link ResponseVisitor} method,
+     * implementing the visitor pattern that routes each subtype to the correct
+     * client-side handler.
+     *
+     * @param visitor the visitor that will handle this response
+     * @throws InvalidResponseException if the visitor cannot process this response
+     */
     public abstract void accept(ResponseVisitor visitor) throws InvalidResponseException;
 
     /**

@@ -21,6 +21,12 @@ public class TuiTextGraphics {
         this.out = out;
     }
 
+    /**
+     * Sets the foreground color for subsequent {@link #putString} calls.
+     * Emits the ANSI code only when the color actually changes.
+     *
+     * @param color the new foreground color, or {@code null} for {@link TuiColor#DEFAULT}
+     */
     public void setForegroundColor(TuiColor color) {
         if (color == null) color = TuiColor.DEFAULT;
         if (color != fg) {
@@ -29,6 +35,12 @@ public class TuiTextGraphics {
         }
     }
 
+    /**
+     * Sets the background color for subsequent {@link #putString} calls.
+     * Emits the ANSI code only when the color actually changes.
+     *
+     * @param color the new background color, or {@code null} for {@link TuiColor#DEFAULT}
+     */
     public void setBackgroundColor(TuiColor color) {
         if (color == null) color = TuiColor.DEFAULT;
         if (color != bg) {
@@ -39,7 +51,12 @@ public class TuiTextGraphics {
 
     /**
      * Writes {@code text} starting at column {@code col}, row {@code row}
-     * (both 0-based, matching the legacy Lanterna API).
+     * (both 0-based, matching the legacy Lanterna API). Does nothing if
+     * {@code text} is {@code null} or empty.
+     *
+     * @param col  0-based column to start writing at
+     * @param row  0-based row to write to
+     * @param text the text to write
      */
     public void putString(int col, int row, String text) {
         if (text == null || text.isEmpty()) return;

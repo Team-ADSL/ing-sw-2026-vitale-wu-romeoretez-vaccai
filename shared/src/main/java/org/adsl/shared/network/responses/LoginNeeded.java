@@ -8,6 +8,12 @@ import org.adsl.shared.exceptions.InvalidResponseException;
  * other request is accepted.
  */
 public class LoginNeeded extends ServerResponse{
+    /**
+     * Dispatches this response to {@link ResponseVisitor#visit(LoginNeeded)}.
+     *
+     * @param visitor the visitor that will handle this response
+     * @throws InvalidResponseException if the visitor cannot process this response
+     */
     @Override
     public void accept(ResponseVisitor visitor) throws InvalidResponseException {
         visitor.visit(this);

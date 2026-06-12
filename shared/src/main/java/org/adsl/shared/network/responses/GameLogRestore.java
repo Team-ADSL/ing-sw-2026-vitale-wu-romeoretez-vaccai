@@ -17,16 +17,32 @@ import java.util.List;
 public class GameLogRestore extends ServerResponse {
     private final List<String> history;
 
+    /**
+     * Creates a response carrying the full server-side game-log transcript.
+     *
+     * @param history ordered list of log-line strings making up the transcript
+     */
     @JsonCreator
     public GameLogRestore(@JsonProperty("history") List<String> history) {
         this.history = history;
     }
 
+    /**
+     * Dispatches this response to {@link ResponseVisitor#visit(GameLogRestore)}.
+     *
+     * @param visitor the visitor that will handle this response
+     * @throws InvalidResponseException if the visitor cannot process this response
+     */
     @Override
     public void accept(ResponseVisitor visitor) throws InvalidResponseException {
         visitor.visit(this);
     }
 
+    /**
+     * Returns the full game-log transcript to restore on the client.
+     *
+     * @return the ordered list of log-line strings
+     */
     public List<String> getHistory() {
         return history;
     }

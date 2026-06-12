@@ -36,6 +36,15 @@ public class InitGameState extends ControllerState {
         super(game, context);
     }
 
+    /**
+     * Builds the {@link Board} (rows, decks, order tile) from the loaded
+     * configuration, places players on the order tile in random order, grants
+     * each player their starting food bonus based on order position, and marks
+     * the game as initialised. Skipped if the game was recovered already
+     * initialised.
+     *
+     * @return the next state, computed via {@link #calcNextState()}
+     */
     @Override
     public ControllerState onEntry(){
         if(getGame().isInitialized()){
@@ -78,12 +87,19 @@ public class InitGameState extends ControllerState {
         return getNextState();
     }
 
+    /**
+     * @return a new {@link TotemPlacementState}, always entered after board setup
+     */
     @Override
     public ControllerState calcNextState() {
         getGame().setPhase(Phase.TOTEM_PLACEMENT);
         return new TotemPlacementState(getGame(), getContext());
     }
 
+    /**
+     * @param gameSettings the settings for the current player count
+     * @return the largest building-deck size across the three eras
+     */
     public int maxBuildings(GameSettings gameSettings){
         return Stream.of(
                         gameSettings.numBuildingEra1(),
@@ -94,6 +110,14 @@ public class InitGameState extends ControllerState {
                 .orElse(0);
     }
 
+    /**
+     * Draws cards from the deck into the lower row until it reaches
+     * {@code targetSize} or the deck runs out. Cards that cannot be drawn
+     * (e.g. requiring a player presence) are placed in the top row instead and
+     * do not count towards {@code targetSize}.
+     *
+     * @param targetSize desired number of tribe cards in the lower row
+     */
     public void fillLowRow(int targetSize){
         int cardsDrawn = 0;
 
@@ -116,6 +140,12 @@ public class InitGameState extends ControllerState {
         }
     }
 
+    /**
+     * Draws cards from the deck to fill empty slots in the top row up to
+     * {@code targetSize}, stopping early if the deck runs out.
+     *
+     * @param targetSize desired number of tribe cards in the top row
+     */
     public void fillTopRow(int targetSize){
         CardRow topRow = getGame().getBoard().topRow();
         Deck deck = getGame().getBoard().deck();
@@ -131,6 +161,15 @@ public class InitGameState extends ControllerState {
         }
     }
 
+    /**
+     * Splits the full set of {@code buildings} into three per-era decks
+     * (shuffled and trimmed to the configured size), places the era-1 deck face
+     * up in the top row, and keeps the era-2 and era-3 decks for later refills.
+     *
+     * @param buildings    all building cards available for this player count
+     * @param numPlayers   number of players in the game
+     * @param gameSettings settings controlling how many buildings per era are used
+     */
     public void makeBuildingDecks(Set<Building> buildings, int numPlayers, GameSettings gameSettings) {
         int[] eraCounts = {gameSettings.numBuildingEra1(), gameSettings.numBuildingEra2(), gameSettings.numBuildingEra3()};
         Map<Integer, List<Building>> buildingsByEra = buildings.stream()

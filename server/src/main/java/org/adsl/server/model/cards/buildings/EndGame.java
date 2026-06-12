@@ -21,11 +21,29 @@ import java.util.Set;
 public class EndGame extends Building {
     private final BuildingEffect buildingEffect;
 
+    /**
+     * Creates an EndGame building card.
+     *
+     * @param id             unique card identifier
+     * @param endGamePP      prestige points scored at end-game for owning this building
+     * @param cost           food cost to acquire this building
+     * @param era            the era this card belongs to (1-3)
+     * @param numPlayers     minimum number of players required for this card to be in play, or {@code null} if always included
+     * @param buildingEffect which end-game effect this card applies (see {@link BuildingEffect})
+     */
     public EndGame(String id, int endGamePP, int cost, int era, Integer numPlayers, BuildingEffect buildingEffect) {
         super(id, endGamePP, cost, era, numPlayers);
         this.buildingEffect = buildingEffect;
     }
 
+    /**
+     * At end-game ({@link Trigger#END_GAME}), applies the configured {@link BuildingEffect}:
+     * doubles building PP via {@code BuildingBonus}, grants 6 PP per card in the
+     * owner's smallest non-building card-type group, or grants a flat 25 PP.
+     *
+     * @param players the affected players (expects a singleton containing the owner)
+     * @param t       the trigger that fired
+     */
     @Override
     public void activeEffect(Set<Player> players, Trigger t) {
         if(t == Trigger.END_GAME){

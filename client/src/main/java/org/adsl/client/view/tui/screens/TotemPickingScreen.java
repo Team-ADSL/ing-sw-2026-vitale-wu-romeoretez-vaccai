@@ -29,6 +29,12 @@ public class TotemPickingScreen extends TUIScreen {
     private boolean pendingPick = false;
     private boolean hasPicked = false;
 
+    /**
+     * @param terminal        the TUI terminal used for rendering
+     * @param appCoordinator  the coordinator used to send the totem-picking request
+     * @param username        the current player's username
+     * @param availableTotems totems still free to choose from, or {@code null} if none
+     */
     public TotemPickingScreen(TuiTerminal terminal, AppCoordinator appCoordinator,
                               String username, List<Totem> availableTotems) {
         super(terminal, appCoordinator, username);
@@ -130,6 +136,12 @@ public class TotemPickingScreen extends TUIScreen {
 
     // ── Input events ──────────────────────────────────────────────────────────
 
+    /**
+     * Moves the cursor onto the first available totem if it currently sits on
+     * a taken one.
+     *
+     * @return {@code null} always, staying on this screen
+     */
     @Override
     public TUIScreen onEnter() {
         ensureCursorOnAvailable(1);

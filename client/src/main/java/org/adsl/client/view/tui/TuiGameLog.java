@@ -16,24 +16,37 @@ public final class TuiGameLog {
 
     private TuiGameLog() {}
 
+    /**
+     * Appends a message to the transcript. No-op if {@code text} is
+     * {@code null} or blank.
+     *
+     * @param text the message to append
+     */
     public synchronized void append(String text) {
         if (text == null || text.isBlank()) return;
         history.add(text);
     }
 
+    /**
+     * @param n maximum number of most recent entries to return
+     * @return a copy of the last {@code n} entries (or fewer if the log is shorter)
+     */
     public synchronized List<String> recent(int n) {
         int from = Math.max(0, history.size() - n);
         return new ArrayList<>(history.subList(from, history.size()));
     }
 
+    /** @return a copy of the entire transcript, oldest first */
     public synchronized List<String> all() {
         return new ArrayList<>(history);
     }
 
+    /** @return the number of entries in the transcript */
     public synchronized int size() {
         return history.size();
     }
 
+    /** Removes all entries from the transcript. */
     public synchronized void clear() {
         history.clear();
     }
@@ -41,7 +54,9 @@ public final class TuiGameLog {
     /**
      * Replaces the whole transcript with {@code entries} (server-authoritative,
      * used on reconnect). Replacing rather than appending keeps a same-process
-     * reconnect from duplicating lines.
+     * reconnect from duplicating lines. Null or blank entries are skipped.
+     *
+     * @param entries the authoritative transcript, or {@code null} to just clear the log
      */
     public synchronized void restore(List<String> entries) {
         history.clear();

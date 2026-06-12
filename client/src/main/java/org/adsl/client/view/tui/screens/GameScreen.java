@@ -88,6 +88,12 @@ public class GameScreen extends TUIScreen {
     private int rulesScrollOffset = 0;
     private List<String> rulesPages = null;
 
+    /**
+     * @param terminal    the TUI terminal used for rendering
+     * @param coordinator the coordinator used to send move requests to the server
+     * @param username    the current player's username
+     * @param initialGame the game state to render when this screen is first shown
+     */
     public GameScreen(TuiTerminal terminal,
             AppCoordinator coordinator,
             String username,
@@ -96,6 +102,12 @@ public class GameScreen extends TUIScreen {
         this.game = initialGame;
     }
 
+    /**
+     * Resolves the player's totem and computes the initial turn sub-state
+     * (whose turn it is and what input, if any, is expected).
+     *
+     * @return {@code null} always, staying on this screen
+     */
     @Override
     public TUIScreen onEnter() {
         myTotem = findMyTotem();

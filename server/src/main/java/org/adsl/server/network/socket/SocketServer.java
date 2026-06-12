@@ -25,6 +25,13 @@ public class SocketServer implements Runnable {
     private final int port;
     private ServerSocket serverSocket;
 
+    /**
+     * Creates a socket server bound to the given port. The server controller
+     * must be set afterwards via {@link #setServerController}.
+     *
+     * @param threadPool shared pool used to run client handler threads
+     * @param port       TCP port to listen on
+     */
     public SocketServer(ExecutorService threadPool, int port) {
         this.serverController = null;
         this.threadPool = threadPool;
@@ -53,6 +60,11 @@ public class SocketServer implements Runnable {
         }
     }
 
+    /**
+     * Stops the accept loop and releases resources: closes the
+     * {@link ServerSocket} (causing {@link #run} to exit) and shuts down the
+     * shared thread pool.
+     */
     public void shutdown() {
         this.active = false;
         try {
@@ -69,6 +81,11 @@ public class SocketServer implements Runnable {
         System.out.println("Socket Server successfully stopped.");
     }
 
+    /**
+     * Sets the controller passed to each new {@link SocketClientHandler}.
+     *
+     * @param serverController the server controller instance
+     */
     public void setServerController(ServerController serverController) {
         this.serverController = serverController;
     }

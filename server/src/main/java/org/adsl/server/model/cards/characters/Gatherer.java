@@ -16,6 +16,14 @@ public class Gatherer extends Character {
 
     private final int discount;
 
+    /**
+     * Creates a Gatherer character card.
+     *
+     * @param id         unique card identifier
+     * @param discount   per-character food discount applied during the {@code Sustenance} event
+     * @param era        the era this card belongs to (1-3)
+     * @param numPlayers minimum number of players required for this card to be in play, or {@code null} if always included
+     */
     public Gatherer (String id, int discount, int era, Integer numPlayers) {
         super(id, era, numPlayers);
         this.discount = discount;

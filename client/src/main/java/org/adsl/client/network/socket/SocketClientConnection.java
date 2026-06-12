@@ -26,6 +26,14 @@ public class SocketClientConnection implements ServerConnection {
     private AppCoordinator appCoordinator;
     private volatile boolean isRunning;
 
+    /**
+     * Opens a TCP socket to {@code ip:port} and starts a daemon listener
+     * thread that reads newline-delimited JSON responses from the server.
+     *
+     * @param ip   server host name or IP address
+     * @param port server port to connect to
+     * @throws Exception if the socket cannot be opened
+     */
     @Override
     public void connect(String ip, int port) throws Exception {
         socket = new Socket(ip, port);
@@ -78,12 +86,24 @@ public class SocketClientConnection implements ServerConnection {
         }
     }
 
+    /**
+     * Serializes a request to JSON and writes it as a single line to the
+     * server socket.
+     *
+     * @param request the request to send
+     * @throws Exception if serialization or writing to the socket fails
+     */
     @Override
     public void sendRequest(ClientRequest request) throws Exception {
         String jsonRequest = JsonMessageHandler.serializeClientRequest(request);
         out.println(jsonRequest);
     }
 
+    /**
+     * Stops the listener thread and closes the socket and its streams.
+     *
+     * @throws Exception if closing the underlying resources fails
+     */
     @Override
     public void disconnect() throws Exception {
         isRunning = false;
@@ -98,6 +118,11 @@ public class SocketClientConnection implements ServerConnection {
         }
     }
 
+    /**
+     * Sets the coordinator that will receive responses read from the socket.
+     *
+     * @param appCoordinator the coordinator to notify of incoming responses
+     */
     @Override
     public void setAppCoordinator(AppCoordinator appCoordinator) {
         this.appCoordinator = appCoordinator;

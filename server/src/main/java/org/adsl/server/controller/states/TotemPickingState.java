@@ -35,6 +35,14 @@ public class TotemPickingState extends ControllerState {
         super(game, context);
     }
 
+    /**
+     * Computes which totems are still available (accounting for players that
+     * may already have a colour set after recovery), broadcasts the available
+     * list, and persists the game.
+     *
+     * @return the next state, computed via {@link #calcNextState()}
+     * @throws ServerException never thrown directly, declared for override compatibility
+     */
     @Override
     public ControllerState onEntry() throws ServerException {
         Set<Totem> totemInUse = getGame().getPlayers().stream()
@@ -52,6 +60,15 @@ public class TotemPickingState extends ControllerState {
         return getNextState();
     }
 
+    /**
+     * Assigns the requested totem to the requesting player.
+     *
+     * @param req           the totem picking request
+     * @param virtualClient the client sending the request
+     * @throws ServerException if the client has no username, is not in this
+     *                          game, has already picked a totem, or the
+     *                          requested totem is no longer available
+     */
     @Override
     public void visit(TotemPickingRequest req, VirtualClient virtualClient) throws ServerException {
         if(virtualClient.getClientUsername().isEmpty()){
@@ -83,6 +100,11 @@ public class TotemPickingState extends ControllerState {
         getContext().getPersistenceManager().updateGame(getGame());
     }
 
+    /**
+     * @return a {@link RecoverState} if a player disconnected during picking,
+     *         a new {@link InitGameState} if every player has picked a totem,
+     *         otherwise {@code this}
+     */
     @Override
     public ControllerState calcNextState(){
         if (isToStop()) {

@@ -34,8 +34,8 @@ public class StateFactory {
     /**
      * Creates the {@link ControllerState} that corresponds to the phase stored
      * in {@code game}. Throws {@link NullPointerException} if the game's phase
-     * has no registered mapping (e.g. {@code LOBBY} or {@code TOTEM_PICKING},
-     * which are not recoverable mid-session).
+     * has no registered mapping (only {@code LOBBY}, which is not recoverable
+     * mid-session since the game has not started yet).
      *
      * @param game    the recovered game model
      * @param context the {@link GameController} that will own the new state

@@ -19,16 +19,45 @@ public class Sustenance extends Event {
 
     private final int lostPP;
 
+    /**
+     * Creates a Sustenance event card.
+     *
+     * @param id         unique card identifier
+     * @param lostPP     PP lost per character card that cannot be fed
+     * @param isFinal    {@code true} if this is the era-3/round-10 copy of the event
+     * @param era        era this card belongs to
+     * @param numPlayers number of players in the match
+     */
     public Sustenance(String id, int lostPP, boolean isFinal, int era, Integer numPlayers) {
         super(id, isFinal, era, numPlayers);
         this.lostPP = lostPP;
     }
 
+    /**
+     * Adds this card to the {@link CardType#SUSTENANCE} set, if present in
+     * {@code cards}.
+     *
+     * @param cards the deck/board map of cards keyed by type
+     */
     @Override
     public void insert(Map<CardType, Set<Card>> cards) {
         if(cards.containsKey(CardType.SUSTENANCE)) cards.get(CardType.SUSTENANCE).add(this);
     }
 
+    /**
+     * Resolves the Sustenance event for each player when {@code t} is
+     * {@link Trigger#EVENT_EXECUTION}. First activates any {@code DuringSustenance}
+     * building (via {@link #activateBuildings}), then computes the food cost as
+     * the total number of character cards (all cards except buildings) minus a
+     * discount (3 food per {@code Gatherer} card plus
+     * {@link BuildingBonus#getSustenanceDiscount()}). The player pays as much of
+     * that cost as their food allows; for each unit of cost left unpaid, the
+     * player loses {@code lostPP} PP instead. The per-player
+     * {@code BuildingBonus} is reset at the end of processing.
+     *
+     * @param players the players affected by the event
+     * @param t       the trigger that fired; only {@link Trigger#EVENT_EXECUTION} is handled
+     */
     @Override
     public void activeEffect(Set<Player> players, Trigger t) {
         if (t == Trigger.EVENT_EXECUTION) {

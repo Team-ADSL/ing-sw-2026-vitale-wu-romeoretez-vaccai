@@ -27,6 +27,12 @@ public class SocketClientHandler extends VirtualClient implements Runnable {
     private BufferedReader in;
     private PrintWriter out;
 
+    /**
+     * Creates a handler for a socket-connected client.
+     *
+     * @param socket           the accepted client socket
+     * @param serverController controller used to dispatch requests from this client
+     */
     public SocketClientHandler(Socket socket, ServerController serverController) {
         super(serverController);
         this.socket = socket;

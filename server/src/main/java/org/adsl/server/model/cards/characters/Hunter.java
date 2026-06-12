@@ -19,6 +19,15 @@ public class Hunter extends Character {
 
     private final boolean extraFood;
 
+    /**
+     * Creates a Hunter character card.
+     *
+     * @param id         unique card identifier
+     * @param extraFood  if {@code true}, drawing this card grants the owner immediate
+     *                   food equal to their total Hunter count (see {@link #activeEffect})
+     * @param era        the era this card belongs to (1-3)
+     * @param numPlayers minimum number of players required for this card to be in play, or {@code null} if always included
+     */
     public Hunter (String id, boolean extraFood, int era, Integer numPlayers) {
         super(id, era, numPlayers);
         this.extraFood = extraFood;
@@ -29,7 +38,15 @@ public class Hunter extends Character {
         if(cards.containsKey(CardType.HUNTER)) cards.get(CardType.HUNTER).add(this);
     }
 
-    // NOTE: to call after inserting in player's deck
+    /**
+     * If {@code extraFood} is set and the card was just drawn ({@link Trigger#DRAWING}),
+     * grants the owner food equal to their current Hunter count plus one. Must be
+     * called after this card has already been inserted into the player's hand so the
+     * count includes itself.
+     *
+     * @param players the affected players (expects a singleton containing the owner)
+     * @param t       the trigger that fired
+     */
     @Override
     public void activeEffect(Set<Player> players, Trigger t) {
         if(t == Trigger.DRAWING && extraFood){

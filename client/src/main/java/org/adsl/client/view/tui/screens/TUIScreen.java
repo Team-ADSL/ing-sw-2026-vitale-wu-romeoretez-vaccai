@@ -39,6 +39,13 @@ public abstract class TUIScreen extends Screen<TUIScreen> implements InputEventV
     private static final int LOG_PREVIEW_COUNT = 3;
     private static final int LOG_PREVIEW_WIDTH = 52;
 
+    /**
+     * Creates a screen bound to the given terminal, coordinator and logged-in user.
+     *
+     * @param terminal      the TUI terminal used for rendering
+     * @param appCoordinator the coordinator used to send requests to the server
+     * @param username      the current player's username, or {@code null} if not yet known
+     */
     protected TUIScreen(TuiTerminal terminal,
             AppCoordinator appCoordinator,
             String username) {
@@ -48,11 +55,22 @@ public abstract class TUIScreen extends Screen<TUIScreen> implements InputEventV
         super(appCoordinator);
     }
 
+    /**
+     * Creates a screen with no username yet (e.g. before login).
+     *
+     * @param terminal   the TUI terminal used for rendering
+     * @param coordinator the coordinator used to send requests to the server
+     */
     protected TUIScreen(TuiTerminal terminal,
             AppCoordinator coordinator) {
         this(terminal, coordinator, null);
     }
 
+    /**
+     * Creates a screen with no coordinator or username yet.
+     *
+     * @param terminal the TUI terminal used for rendering
+     */
     protected TUIScreen(TuiTerminal terminal) {
         this(terminal, null, null);
     }
@@ -152,6 +170,14 @@ public abstract class TUIScreen extends Screen<TUIScreen> implements InputEventV
 
     // ── Lifecycle / framework hooks ──────────────────────────────────────────
 
+    /**
+     * Processes a server event: appends any user-facing message to the game log,
+     * dispatches the event to this screen's visitor methods, and marks the result
+     * for re-rendering.
+     *
+     * @param event the event received from the server
+     * @return the screen to display next (may be {@code this} or a new screen instance)
+     */
     public TUIScreen handleEvent(ServerEvent event) {
         captureLogMessage(event);
         TUIScreen newScreen = event.accept(this);
@@ -332,16 +358,31 @@ public abstract class TUIScreen extends Screen<TUIScreen> implements InputEventV
         return out;
     }
 
+    /**
+     * Processes a keyboard input event by dispatching it to this screen's visitor
+     * methods and marks the result for re-rendering.
+     *
+     * @param event the input event produced by the TUI key reader
+     * @return the screen to display next (may be {@code this} or a new screen instance)
+     */
     public TUIScreen handleEvent(InputEvent event) {
         TUIScreen newScreen = event.accept(this);
         setToRender(true);
         return newScreen;
     }
 
+    /**
+     * @return {@code true} if the TUI main loop should call {@link #render()} again
+     */
     public boolean isToRender() {
         return toRender;
     }
 
+    /**
+     * Marks whether the screen needs to be redrawn on the next loop iteration.
+     *
+     * @param value {@code true} to request a re-render, {@code false} once rendered
+     */
     public void setToRender(boolean value) {
         this.toRender = value;
     }
@@ -350,10 +391,18 @@ public abstract class TUIScreen extends Screen<TUIScreen> implements InputEventV
      * Called once when the TUI transitions to this screen.
      * Returns {@code null} to stay on this screen, or a new {@link TUIScreen}
      * instance to redirect immediately (e.g. back navigation, exit).
+     *
+     * @return {@code null} to remain on this screen, or a replacement screen
+     * @throws Exception if setup work (e.g. a server request) fails
      */
     public TUIScreen onEnter() throws Exception {
         return null;
     }
 
+    /**
+     * Draws the current state of this screen to the terminal.
+     *
+     * @throws IOException if writing to the terminal fails
+     */
     public abstract void render() throws IOException;
 }

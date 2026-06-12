@@ -15,10 +15,29 @@ import java.util.Set;
  * and applied in {@code Hunt.activeEffect()}.
  */
 public class DuringHunt extends DuringEvent {
+    /**
+     * Creates a Hunt-related building.
+     *
+     * @param id         unique card identifier
+     * @param endGamePP  end-game PP awarded by this building
+     * @param cost       food cost to acquire this building
+     * @param era        era this card belongs to
+     * @param numPlayers number of players in the match
+     */
     public DuringHunt(String id, int endGamePP, int cost, int era, Integer numPlayers) {
         super(id, endGamePP, cost, era, numPlayers);
     }
 
+    /**
+     * Sets the owner's {@code huntEventBonus} flag when the trigger is
+     * {@link Trigger#HUNT}, so {@code Hunt.activeEffect()} grants the extra
+     * +1 food/+1 PP per Hunter. {@code players} is expected to contain exactly
+     * the owning player (see {@link DuringEvent#activeEffect}); other triggers
+     * are ignored.
+     *
+     * @param players singleton set containing the building's owner
+     * @param t       the trigger that fired
+     */
     @Override
     public void execute(Set<Player> players, Trigger t) {
         if (t != Trigger.HUNT) {

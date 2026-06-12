@@ -59,7 +59,14 @@ public final class CardTokens {
         Map.entry(CardToken.PAINTINGS,  "PAI")
     );
 
-    /** Replaces all tokens with emoji (or plain text for type tokens). */
+    /**
+     * Replaces all recognized card tokens in {@code s} with their emoji (or
+     * plain-text label for type tokens), and rewrites {@code [FOOD_COST]N}
+     * markers as {@code +N🍖}.
+     *
+     * @param s the raw string containing card tokens, may be {@code null}
+     * @return the string with tokens replaced, or {@code null} if {@code s} is {@code null}
+     */
     public static String toEmoji(String s) {
         if (s == null) return null;
         String result = applyFoodCost(s);
@@ -69,7 +76,14 @@ public final class CardTokens {
         return result;
     }
 
-    /** Abbreviates type tokens to 3 chars, then replaces remaining tokens with emoji. */
+    /**
+     * Abbreviates card-type tokens to 3 characters, then applies
+     * {@link #toEmoji} to replace the remaining tokens. Used for compact
+     * effect descriptions.
+     *
+     * @param s the raw string containing card tokens, may be {@code null}
+     * @return the abbreviated and emoji-replaced string, or {@code null} if {@code s} is {@code null}
+     */
     public static String toEffectLabel(String s) {
         if (s == null) return null;
         String result = s;

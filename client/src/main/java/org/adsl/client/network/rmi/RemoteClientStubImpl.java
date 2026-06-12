@@ -21,6 +21,14 @@ public class RemoteClientStubImpl extends UnicastRemoteObject implements RemoteC
     private final transient AppCoordinator coordinator;
     private final ExecutorService threadPool;
 
+    /**
+     * Exports this object as a remote callback stub and prepares its
+     * response-dispatch executor.
+     *
+     * @param coordinator the coordinator that will handle responses pushed
+     *                     by the server
+     * @throws RemoteException if exporting the remote object fails
+     */
     public RemoteClientStubImpl(AppCoordinator coordinator) throws RemoteException {
         super();
         this.coordinator = coordinator;
@@ -33,10 +41,21 @@ public class RemoteClientStubImpl extends UnicastRemoteObject implements RemoteC
         });
     }
 
+    /**
+     * Called remotely by the server to deliver a response. The response is
+     * handed off to the dispatch executor so this RMI call returns
+     * immediately and responses are processed in order on a single thread.
+     *
+     * @param response the server response to deliver to the coordinator
+     */
     public void sendResponse(ServerResponse response){
         threadPool.submit(() -> coordinator.handleServerResponse(response));
     }
 
+    /**
+     * Stops the response-dispatch executor, discarding any pending or
+     * in-flight dispatch tasks.
+     */
     public void shutdown() {
         threadPool.shutdownNow();
     }

@@ -6,6 +6,11 @@ package org.adsl.shared.exceptions;
  * (e.g. a {@code GameUpdate} arriving while still on the home screen).
  */
 public class InvalidResponseException extends RuntimeException {
+    /**
+     * Creates the exception with a message describing why the response is invalid.
+     *
+     * @param message description of the invalid response
+     */
     public InvalidResponseException(String message) {
         super(message);
     }

@@ -23,6 +23,15 @@ public class GameEnded extends ServerResponse {
     private final List<DBRecord> records;
     private final List<MatchResult> results;
 
+    /**
+     * Creates a response signalling that the game has ended.
+     *
+     * @param records all-time leaderboard fetched from the database after saving
+     *                the match, empty if the server runs without a DBMS, or
+     *                {@code null} if the game ended before it started
+     * @param results per-player final scores used to render the end-game screen,
+     *                or {@code null} if the game ended before it started
+     */
     @JsonCreator
     public GameEnded(@JsonProperty("records") List<DBRecord> records,
                      @JsonProperty("results") List<MatchResult> results) {
@@ -30,14 +39,33 @@ public class GameEnded extends ServerResponse {
         this.records = records;
     }
 
+    /**
+     * Dispatches this response to {@link ResponseVisitor#visit(GameEnded)}.
+     *
+     * @param visitor the visitor that will handle this response
+     * @throws InvalidResponseException if the visitor cannot process this response
+     */
     @Override
     public void accept(ResponseVisitor visitor) throws InvalidResponseException {
         visitor.visit(this);
     }
 
+    /**
+     * Returns the all-time leaderboard fetched from the database after saving
+     * the match.
+     *
+     * @return the leaderboard records, possibly empty, or {@code null} if the
+     *         game ended before it started
+     */
     public List<DBRecord> getRecords() {
         return records;
     }
+
+    /**
+     * Returns the per-player final scores for the end-game screen.
+     *
+     * @return the match results, or {@code null} if the game ended before it started
+     */
     public List<MatchResult> getResults() {
         return results;
     }
