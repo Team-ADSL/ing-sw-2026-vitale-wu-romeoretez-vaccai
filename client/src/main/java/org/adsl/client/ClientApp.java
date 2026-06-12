@@ -21,13 +21,12 @@ import java.net.Socket;
  *   java -jar mesos-client.jar --client <socket|rmi> <tui|gui> <ip> <port>
  *   java -jar mesos-client.jar --test-tui
  *   java -jar mesos-client.jar --test-gui
- *   java -jar mesos-client.jar --test-server-connection
  */
 public final class ClientApp {
 
     private ClientApp() {}
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         if (args.length == 0) {
             printUsageAndExit("Mode missing.");
         }
@@ -36,7 +35,6 @@ public final class ClientApp {
         switch (mode) {
             case "--test-tui" -> startTestTui();
             case "--test-gui" -> startTestGui();
-            case "--test-server-connection" -> startClientTester();
             case "--client" -> {
                 if (args.length != 5) {
                     printUsageAndExit("Invalid client's parameter or missing.");
@@ -93,22 +91,6 @@ public final class ClientApp {
         gui.start();
     }
 
-    private static void startClientTester() {
-        String ip = "127.0.0.1";
-        int port = 8080;
-        System.out.println("Trying connection at " + ip + ":" + port + "...");
-        try (Socket socket = new Socket(ip, port);
-             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream())) {
-            out.flush();
-            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-            System.out.println("Connection established.");
-            Object response = in.readObject();
-            System.out.println("Received from server: " + response.getClass().getSimpleName());
-        } catch (Exception e) {
-            System.err.println("Connection error: " + e.getMessage());
-        }
-    }
-
     private static void startClient(String connectionType, String uiType, String ipAddress, int port) {
         System.out.println("Starting Client...");
         System.out.println("- Network: " + connectionType.replace("--", "").toUpperCase());
@@ -157,7 +139,6 @@ public final class ClientApp {
         System.out.println("\nIn-process test modes:");
         System.out.println("java -jar mesos-client.jar --test-tui");
         System.out.println("java -jar mesos-client.jar --test-gui");
-        System.out.println("java -jar mesos-client.jar --test-server-connection");
         System.exit(1);
     }
 }

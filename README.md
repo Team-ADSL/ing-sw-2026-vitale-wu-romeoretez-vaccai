@@ -52,7 +52,7 @@
 > [!NOTE]
 > The functionality `Resiliency to disconnections` has been implemented in a different way:
 > if a player crash from a game it will enter the state `RecoverState` 
-> (see also [Resiliency & Game Persistence]).
+> (see also [Resiliency & Game Persistence](#resiliency--game-persistence)).
 
 ---
 
@@ -200,7 +200,6 @@ The client jar also supports in-process test modes (no real server required):
 ```bash
 java -jar client/target/mesos-client.jar --test-tui
 java -jar client/target/mesos-client.jar --test-gui
-java -jar client/target/mesos-client.jar --test-server-connection
 ```
 
 ---
@@ -351,7 +350,7 @@ python3 tools/testers/socket_auto_plays.py -p1 Alice -p2 Bob -r 5 -H 192.168.1.1
 ```
 
 > [!WARNING]
-> Make sure the server is running and the players was playing a game (only them) before launching the script.
+> Make sure the server is running and the players were playing a game (only them) before launching the script.
 
 ---
 
@@ -583,7 +582,6 @@ java -jar client/target/mesos-client.jar --client --rmi --gui <server-ip> <rmi-p
 ```bash
 java -jar client/target/mesos-client.jar --test-tui
 java -jar client/target/mesos-client.jar --test-gui
-java -jar client/target/mesos-client.jar --test-server-connection
 ```
 
 ### 5. Python Testers
