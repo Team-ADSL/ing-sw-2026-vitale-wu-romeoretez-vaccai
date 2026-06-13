@@ -1411,15 +1411,15 @@ public class GameScreen extends TUIScreen {
         String[][] entries = {
             {"─── SYMBOLS ───────────────────────"},
             {"🌟", "Prestige Points (PP)"},
-            {"★", "Shaman ritual stars"},
+            {"★", " Shaman ritual stars"},
             {"💰", "Food cost"},
             {"🍖", "Extra food on pick"},
             {"🗿", "Totem symbol"},
-            {"🛡️", "Immunity"},
+            {"🛡️", " Immunity"},
             {"🏁", "End-game PP bonus"},
             {"🌈", "Set collection bonus"},
             {"🧍", "Character card"},
-            {"I II III", "Card Era"},
+            {" I II III", "Card Era"},
         };
 
         tg.setForegroundColor(TuiColor.WHITE);
