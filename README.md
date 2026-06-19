@@ -14,17 +14,12 @@
 3. [Build](#build)
 4. [Running the Application](#running-the-application)
    - [Start the Server](#1-start-the-server)
-   - [Start a Socket Client](#2-start-a-socket-client)
-   - [Start an RMI Client](#3-start-an-rmi-client)
-   - [Start a GUI Client (JavaFX)](#4-start-a-gui-client-javafx)
-   - [Client Options Reference](#client-options-reference)
-5. [Typical Local Session](#typical-local-session)
-6. [Quick Start Scripts](#quick-start-scripts-toolsstart)
-7. [Database & Leaderboard Setup](#database--leaderboard-setup)
-8. [Resiliency & Game Persistence](#resiliency--game-persistence)
-9. [Python Testers](#python-testers)
-10. [Javadoc](#javadoc)
-11. [Full Command Reference](#full-command-reference)
+   - [Start a Client](#2-start-a-client)
+5. [Database & Leaderboard Setup](#database--leaderboard-setup)
+6. [Resiliency & Game Persistence](#resiliency--game-persistence)
+7. [Python Testers](#python-testers)
+8. [Javadoc](#javadoc)
+9. [Full Command Reference](#full-command-reference)
 
 ---
 
@@ -119,84 +114,30 @@ java -jar server/target/mesos-server.jar 8080 1099 ./saved
 
 ---
 
-### 2. Start a Socket Client
+### 2. Start a Client
 
 Open a **new terminal** and run:
 
 ```bash
-java -jar client/target/mesos-client.jar --client --socket --tui <server-ip> <socket-port>
-```
-
-**Example (local machine):**
-
-```bash
-java -jar client/target/mesos-client.jar --client --socket --tui 127.0.0.1 8080
-```
-
----
-
-### 3. Start an RMI Client
-
-Open a **new terminal** and run:
-
-```bash
-java -jar client/target/mesos-client.jar --client --rmi --tui <server-ip> <rmi-port>
-```
-
-**Example (local machine):**
-
-```bash
-java -jar client/target/mesos-client.jar --client --rmi --tui 127.0.0.1 1099
-```
-
----
-
-### 4. Start a GUI Client (JavaFX)
-
-The GUI client uses JavaFX 21 and is bundled inside the client jar
-(`win`, `linux`, `mac`, `mac-aarch64` natives are all included).
-
-Over Socket:
-
-```bash
-java -jar client/target/mesos-client.jar --client --socket --gui <server-ip> <socket-port>
-```
-
-Over RMI:
-
-```bash
-java -jar client/target/mesos-client.jar --client --rmi --gui <server-ip> <rmi-port>
-```
-
-**Examples (local machine):**
-
-```bash
-java -jar client/target/mesos-client.jar --client --socket --gui 127.0.0.1 8080
-```
-```bash
-java -jar client/target/mesos-client.jar --client --rmi    --gui 127.0.0.1 1099
-```
-
-> [!TIP]
-> Java 25 may print warnings about native access and `sun.misc.Unsafe`; they
-> come from JavaFX itself and can be silenced by appending
-> `--enable-native-access=ALL-UNNAMED` (cosmetic only — the jar runs fine
-> without it).
-
----
-
-### Client Options Reference
-
-```
 java -jar client/target/mesos-client.jar --client <connection> <interface> <server-ip> <port>
 ```
 
-| Argument       | Options              | Description                         |
-|----------------|----------------------|-------------------------------------|
-| `<connection>` | `--socket` / `--rmi` | Network protocol to use             |
+| Argument       | Options              | Description                            |
+|----------------|----------------------|----------------------------------------|
+| `<connection>` | `--socket` / `--rmi` | Network protocol to use                |
 | `<interface>`  | `--tui` / `--gui`    | UI mode (TUI = terminal, GUI = JavaFX) |
-| `<server-ip>`  | e.g. `127.0.0.1`     | IP address of the server            |
-| `<port>`       | e.g. `8080` / `1099` | Port matching the chosen protocol   |
+| `<server-ip>`  | e.g. `127.0.0.1`     | IP address of the server               |
+| `<port>`       | e.g. `8080` / `1099` | Port matching the chosen protocol (use the socket port for `--socket`, the RMI port for `--rmi`) |
+
+**Command matrix** (local-machine examples, default ports `8080` socket / `1099` RMI):
+
+| Connection | Interface | Command                                                                          |
+|------------|-----------|----------------------------------------------------------------------------------|
+| Socket     | TUI       | `java -jar client/target/mesos-client.jar --client --socket --tui 127.0.0.1 8080` |
+| Socket     | GUI       | `java -jar client/target/mesos-client.jar --client --socket --gui 127.0.0.1 8080` |
+| RMI        | TUI       | `java -jar client/target/mesos-client.jar --client --rmi --tui 127.0.0.1 1099`    |
+| RMI        | GUI       | `java -jar client/target/mesos-client.jar --client --rmi --gui 127.0.0.1 1099`    |
+
 
 The client jar also supports in-process test modes (no real server required):
 
@@ -204,89 +145,6 @@ The client jar also supports in-process test modes (no real server required):
 java -jar client/target/mesos-client.jar --test-tui
 java -jar client/target/mesos-client.jar --test-gui
 ```
-
----
-
-## Typical Local Session
-
-Terminal 1 (server):
-```
-  java -jar server/target/mesos-server.jar 8080 1099 ./saved
-```
-Terminal 2 (socket client, TUI):
-
-```
-  java -jar client/target/mesos-client.jar --client --socket --tui 127.0.0.1 8080
-```
-Terminal 3 (rmi client, TUI):
-
-```
-  java -jar client/target/mesos-client.jar --client --rmi --tui 127.0.0.1 1099
-```
-Terminal 4 (socket client, GUI):
-
-```
-  java -jar client/target/mesos-client.jar --client --socket --gui 127.0.0.1 8080
-```
-
----
-
-## Quick Start Script (`tools/start/run`)
-
-The `tools/start/` folder contains a centralized, cross-platform launcher script that automates starting a full local session — server + any number of clients — using a single command.
-
-The script runs on **Python 3** (a project prerequisite). For convenience, shell wrappers are provided:
-* **Windows**: `tools\start\run.bat`
-* **macOS/Linux**: `./tools/start/run.sh`
-
-### Usage & Arguments
-
-```bash
-# Windows
-tools\start\run.bat [options]
-```
-```bash
-# macOS/Linux
-./tools/start/run.sh [options]
-```
-
-| Argument | Type | Default | Description |
-|----------|------|---------|-------------|
-| `--tui [count]` | `int` (optional) | `0` | Number of TUI clients to launch. Specifying `--tui` alone launches `1`. |
-| `--gui [count]` | `int` (optional) | `0` | Number of GUI clients to launch. Specifying `--gui` alone launches `1`. |
-| `--clean` | - | - | Kills active server instances and deletes the `./saved` folder before starting. |
-| `--nobuild` | - | - | Skips the Maven compilation step (`mvn package`) to launch faster. |
-
-> [!IMPORTANT]
-> The total number of players (`tui` + `gui`) must be between **2 and 5**. 
-> If no clients are specified, the launcher defaults to **1 TUI and 1 GUI client** (2 players).
-
-### Examples
-
-* **Launch 2 TUI clients (compiling first)**:
-  ```bash
-  tools\start\run.bat --tui 2
-  ```
-
-* **Launch 3 GUI clients, skipping compilation and cleaning old saves**:
-  ```bash
-  tools\start\run.bat --gui 3 --clean --nobuild
-  ```
-
-* **Launch a custom mixed session with 2 TUI and 3 GUI clients (total 5 players)**:
-  ```bash
-  tools\start\run.bat --tui 2 --gui 3
-  ```
-
-* **Launch a default 2-player session (equivalent to `--tui 1 --gui 1`)**:
-  ```bash
-  tools\start\run.bat
-  ```
-
-> [!NOTE]
-> - By default, clients alternate connection protocols: player 1 uses Socket, player 2 uses RMI, player 3 Socket, and so on.
-> - The launcher automatically waits for the server to be fully ready on port 8080 before opening the client windows.
-> - If you receive a `Permission denied` error on macOS/Linux for `run.sh`, run `chmod +x tools/start/run.sh` first.
 
 ---
 
@@ -505,18 +363,7 @@ If you have already generated the docs and want to set a persistent link:
 
 ## Full Command Reference
 
-### 1. Launcher Script (Recommended)
-
-**Windows**:
-```cmd
-tools\start\run.bat [--tui <count>] [--gui <count>] [--clean] [--nobuild]
-```
-**macOS / Linux**:
-```bash
-./tools/start/run.sh [--tui <count>] [--gui <count>] [--clean] [--nobuild]
-```
-
-### 2. Server App
+### 1. Server App
 
 **Without Database (Fallback Mode)**:
 ```bash
@@ -561,7 +408,7 @@ When running on a remote server, specify the reachable server IP using the `-Dja
     java -Djava.rmi.server.hostname=<server-ip> -jar server/target/mesos-server.jar <socket-port> <rmi-port> <recover-dir>
     ```
 
-### 3. Client App (Manual Startup)
+### 2. Client App (Manual Startup)
 
 **TUI over Socket**:
 ```bash
@@ -580,14 +427,14 @@ java -jar client/target/mesos-client.jar --client --rmi --tui <server-ip> <rmi-p
 java -jar client/target/mesos-client.jar --client --rmi --gui <server-ip> <rmi-port>
 ```
 
-### 4. Client App (In-Process Test Modes)
+### 3. Client App (In-Process Test Modes)
 
 ```bash
 java -jar client/target/mesos-client.jar --test-tui
 java -jar client/target/mesos-client.jar --test-gui
 ```
 
-### 5. Python Testers
+### 4. Python Testers
 
 **macOS / Linux**:
 ```bash
