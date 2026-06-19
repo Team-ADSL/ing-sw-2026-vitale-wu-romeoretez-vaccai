@@ -34,12 +34,12 @@
         </right>
 
         <center>
-            <VBox fx:id="centerBox" alignment="CENTER" spacing="8">
+            <VBox alignment="CENTER" spacing="8">
                 <padding><Insets top="6" right="8" bottom="6" left="8"/></padding>
                 <Label fx:id="headerLabel" style="-fx-font-size: 13px; -fx-text-fill: #FDF3D3;"/>
                 <Label fx:id="phaseLabel"  style="-fx-font-size: 10px; -fx-text-fill: #F2B035;"/>
                 <HBox fx:id="topRow"     alignment="CENTER" spacing="8"/>
-                <HBox fx:id="offerRow"   alignment="CENTER" spacing="14">
+                <HBox alignment="CENTER" spacing="14">
                     <Pane fx:id="deckPane"/>
                     <Pane fx:id="orderTilePane"/>
                     <HBox fx:id="offerTrack" alignment="CENTER" spacing="0"/>

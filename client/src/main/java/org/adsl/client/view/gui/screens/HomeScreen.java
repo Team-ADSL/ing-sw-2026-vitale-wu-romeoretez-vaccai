@@ -47,8 +47,6 @@ public class HomeScreen extends GUIScreen {
     @FXML private Button create3Button;
     @FXML private Button create4Button;
     @FXML private Button create5Button;
-    @FXML private Button joinButton;
-    @FXML private Button logoutButton;
     @FXML private VBox logBox;
 
     private List<Integer> activeGames;
@@ -76,42 +74,11 @@ public class HomeScreen extends GUIScreen {
         setupGamesList();
         installListKeyboardNav();
         decorateCreateButtons();
-        setupButtonNav();
         applyTheme(this.root);
         setupRulesButton();
 
         floatingLog = new FloatingLog();
         logBox.getChildren().setAll(floatingLog.getFloatingNode());
-        rootStack.getChildren().add(floatingLog.getFullPanel());
-
-        // Navigation from joinButton and logoutButton to the log toggle button
-        javafx.event.EventHandler<javafx.scene.input.KeyEvent> bottomDown = e -> {
-            if (e.getCode() == KeyCode.DOWN) {
-                floatingLog.getToggleButton().requestFocus();
-                e.consume();
-            }
-        };
-        if (joinButton != null) joinButton.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, bottomDown);
-        if (logoutButton != null) logoutButton.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, bottomDown);
-
-        // Navigation from the log toggle button back to the main buttons/list
-        floatingLog.getToggleButton().addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, e -> {
-            if (e.getCode() == KeyCode.UP) {
-                if (logoutButton != null) logoutButton.requestFocus();
-                else if (joinButton != null) joinButton.requestFocus();
-                else {
-                    gamesList.requestFocus();
-                    if (!gamesList.getItems().isEmpty()) {
-                        gamesList.getSelectionModel().selectLast();
-                    }
-                }
-                e.consume();
-            } else if (e.getCode() == KeyCode.LEFT) {
-                if (logoutButton != null) logoutButton.requestFocus();
-                else if (joinButton != null) joinButton.requestFocus();
-                e.consume();
-            }
-        });
     }
 
     private void setupGamesList() {
@@ -196,59 +163,11 @@ public class HomeScreen extends GUIScreen {
 
     private void installListKeyboardNav() {
         gamesList.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, e -> {
-            KeyCode code = e.getCode();
-            if (code == KeyCode.ENTER) {
+            if (e.getCode() == KeyCode.ENTER) {
                 onJoinSelected();
                 e.consume();
-                return;
-            }
-            if (code == KeyCode.DOWN) {
-                int sel = gamesList.getSelectionModel().getSelectedIndex();
-                int last = gamesList.getItems().size() - 1;
-                if (sel >= last && joinButton != null) {
-                    gamesList.getSelectionModel().clearSelection();
-                    joinButton.requestFocus();
-                    e.consume();
-                }
-            } else if (code == KeyCode.UP) {
-                int sel = gamesList.getSelectionModel().getSelectedIndex();
-                if (sel <= 0) {
-                    gamesList.getSelectionModel().clearSelection();
-                    if (create2Button != null) {
-                        create2Button.requestFocus();
-                        e.consume();
-                    }
-                }
             }
         });
-    }
-
-    private void setupButtonNav() {
-        javafx.event.EventHandler<javafx.scene.input.KeyEvent> topDown = e -> {
-            if (e.getCode() == KeyCode.DOWN) {
-                gamesList.requestFocus();
-                if (!gamesList.getItems().isEmpty()) {
-                    gamesList.getSelectionModel().selectFirst();
-                }
-                e.consume();
-            }
-        };
-        if (create2Button != null) create2Button.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, topDown);
-        if (create3Button != null) create3Button.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, topDown);
-        if (create4Button != null) create4Button.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, topDown);
-        if (create5Button != null) create5Button.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, topDown);
-
-        javafx.event.EventHandler<javafx.scene.input.KeyEvent> bottomUp = e -> {
-            if (e.getCode() == KeyCode.UP) {
-                gamesList.requestFocus();
-                if (!gamesList.getItems().isEmpty()) {
-                    gamesList.getSelectionModel().selectLast();
-                }
-                e.consume();
-            }
-        };
-        if (joinButton != null) joinButton.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, bottomUp);
-        if (logoutButton != null) logoutButton.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, bottomUp);
     }
 
     /**

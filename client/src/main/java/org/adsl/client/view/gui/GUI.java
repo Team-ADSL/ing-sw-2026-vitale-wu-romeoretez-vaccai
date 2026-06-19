@@ -143,16 +143,15 @@ public class GUI extends GameUI {
     // ── Keyboard activation (ENTER presses the focused button) ───────────────
 
     /**
-     * Makes ENTER activate the keyboard-focused button on every screen, so the
-     * arrow-navigation model is consistent: arrows move the highlight, ENTER
-     * presses it. Registered as a bubbling handler so it runs <em>after</em> any
-     * screen-level key handler — screens that give ENTER a dedicated meaning
-     * (totem/card confirm in GameScreen and TotemPickingScreen, the games list in
-     * HomeScreen, the per-button handlers in LoginScreen) consume the event
-     * first, so this fires only where ENTER would otherwise be dead (e.g. the
-     * Lobby start/leave buttons, the Home create/join buttons). In the
-     * select-then-confirm screens the focus owner is the root pane, never a
-     * button, so this never collides with SPACE-selects / ENTER-confirms.
+     * Makes ENTER activate the Tab-focused button on every screen. Registered as
+     * a bubbling handler so it runs <em>after</em> any screen-level key handler —
+     * screens that give ENTER a dedicated meaning (totem/card confirm in
+     * GameScreen and TotemPickingScreen, the games list in HomeScreen, the
+     * per-button handlers in LoginScreen) consume the event first, so this fires
+     * only where ENTER would otherwise be dead (e.g. the Lobby start/leave
+     * buttons, the Home create/join buttons). In the select-then-confirm screens
+     * the focus owner is the root pane, never a button, so this never collides
+     * with the ENTER-confirms.
      */
     private void installEnterActivatesButton(Scene scene) {
         scene.addEventHandler(KeyEvent.KEY_PRESSED, e -> {
@@ -169,7 +168,7 @@ public class GUI extends GameUI {
 
     /**
      * Shows the focus ring on buttons only when navigation is keyboard-driven
-     * (Tab, arrows). Mouse clicks never trigger the ring.
+     * (Tab). Mouse clicks never trigger the ring.
      */
     private void installFocusVisibleBehavior(Scene scene) {
         scene.addEventFilter(MouseEvent.MOUSE_PRESSED, _ -> {
@@ -179,8 +178,7 @@ public class GUI extends GameUI {
         });
         scene.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
             KeyCode code = e.getCode();
-            if (code == KeyCode.TAB || code == KeyCode.UP || code == KeyCode.DOWN
-                    || code == KeyCode.LEFT || code == KeyCode.RIGHT) {
+            if (code == KeyCode.TAB) {
                 keyboardNavMode = true;
             }
         });

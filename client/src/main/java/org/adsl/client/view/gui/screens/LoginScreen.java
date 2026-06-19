@@ -52,13 +52,12 @@ public class LoginScreen extends GUIScreen {
     }
 
     /**
-     * Arrow-key navigation mirroring HomeScreen. The username field starts
-     * focused (cursor ready to type); the first arrow press moves focus onto a
-     * button, which the {@code .button:focused} theme rule outlines in white.
-     * Layout is: usernameField on top, then [Login | Close] side by side.
-     *   field  DOWN  → Login
-     *   Login  UP    → field, RIGHT → Close, ENTER → submit
-     *   Close  UP    → field, LEFT  → Login, ENTER → close
+     * Focuses the username field on entry and wires ENTER to the relevant
+     * action on each control. Arrow-key navigation has been removed; the GUI is
+     * driven by mouse, with ENTER activating the focused control.
+     *   field  ENTER → submit
+     *   Login  ENTER → submit
+     *   Close  ENTER → close
      */
     private void installKeyboardNav() {
         // Focus the username field as soon as the screen is shown.
@@ -68,29 +67,13 @@ public class LoginScreen extends GUIScreen {
 
         // ENTER in the field submits directly (TextField's native action event).
         usernameField.setOnAction(_ -> onLogin());
-        usernameField.setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.DOWN) {
-                loginButton.requestFocus();
-                e.consume();
-            }
-        });
 
         loginButton.setOnKeyPressed(e -> {
-            switch (e.getCode()) {
-                case UP    -> { usernameField.requestFocus(); e.consume(); }
-                case RIGHT -> { exitButton.requestFocus();    e.consume(); }
-                case ENTER -> { onLogin();                    e.consume(); }
-                default    -> { /* ignore */ }
-            }
+            if (e.getCode() == KeyCode.ENTER) { onLogin(); e.consume(); }
         });
 
         exitButton.setOnKeyPressed(e -> {
-            switch (e.getCode()) {
-                case UP   -> { usernameField.requestFocus(); e.consume(); }
-                case LEFT -> { loginButton.requestFocus();   e.consume(); }
-                case ENTER -> { onExit();                    e.consume(); }
-                default   -> { /* ignore */ }
-            }
+            if (e.getCode() == KeyCode.ENTER) { onExit(); e.consume(); }
         });
     }
 
