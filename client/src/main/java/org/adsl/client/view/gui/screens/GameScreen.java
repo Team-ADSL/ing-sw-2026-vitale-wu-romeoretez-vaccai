@@ -42,6 +42,7 @@ import org.adsl.client.serverEvents.ErrorEvent;
 import org.adsl.client.serverEvents.EventsTriggeredEvent;
 import org.adsl.client.serverEvents.GameUpdateEvent;
 import org.adsl.client.view.gui.ChalkBadge;
+import org.adsl.client.view.gui.GlyphStrip;
 import org.adsl.client.view.gui.Chip;
 import org.adsl.client.view.gui.FloatingLog;
 import org.adsl.client.view.gui.ImageCatalog;
@@ -952,7 +953,7 @@ public class GameScreen extends GUIScreen {
             }
             case INVENTOR -> {
                 // Top-right: number of unique inventor icons (explained on hover).
-                ImageView uniq = ChalkBadge.number(String.valueOf(p.inventorUniqueIcons()),
+                Node uniq = ChalkBadge.number(String.valueOf(p.inventorUniqueIcons()),
                         DECK_COUNT_FONT, Color.WHITE, Color.BLACK, DECK_COUNT_STROKE);
                 StackPane.setAlignment(uniq, Pos.TOP_RIGHT);
                 Tooltip.install(uniq, new Tooltip("Number of unique icons"));
@@ -963,7 +964,7 @@ public class GameScreen extends GUIScreen {
 
         // Bottom-right of every icon: how many cards of this type the player holds.
         int count = (p.cards() == null || p.cards().get(type) == null) ? 0 : p.cards().get(type).size();
-        ImageView xn = ChalkBadge.number("x" + count, DECK_COUNT_FONT, Color.WHITE, Color.BLACK, DECK_COUNT_STROKE);
+        Node xn = ChalkBadge.number("x" + count, DECK_COUNT_FONT, Color.WHITE, Color.BLACK, DECK_COUNT_STROKE);
         StackPane.setAlignment(xn, Pos.BOTTOM_RIGHT);
         cell.getChildren().add(xn);
 
@@ -998,7 +999,7 @@ public class GameScreen extends GUIScreen {
             iv.setPreserveRatio(false);
             sp.getChildren().add(iv);
         }
-        ImageView num = ChalkBadge.number(text, fontSize, ink, null, 0);
+        Node num = ChalkBadge.number(text, fontSize, ink, null, 0);
         StackPane.setAlignment(num, Pos.CENTER);
         num.setTranslateX((cx - nativeW / 2.0) * (dispW / nativeW));
         num.setTranslateY((cy - nativeH / 2.0) * (dispH / nativeH));
@@ -1457,9 +1458,9 @@ public class GameScreen extends GUIScreen {
         boolean downGrey = downLeft <= 0;
 
         ImageView upArrow   = arrowIcon("/assets/general/arrow_up.png",   upGrey);
-        ImageView upCount   = countGlyph(upLeft,   "up",   upGrey);
+        Node      upCount   = countGlyph(upLeft,   GlyphStrip.Style.MOVE_UP,   upGrey);
         ImageView downArrow = arrowIcon("/assets/general/arrow_down.png", downGrey);
-        ImageView downCount = countGlyph(downLeft, "down", downGrey);
+        Node      downCount = countGlyph(downLeft, GlyphStrip.Style.MOVE_DOWN, downGrey);
 
         HBox arrowRow = new HBox(4, upArrow, upCount, gap(12), downArrow, downCount);
         arrowRow.setAlignment(Pos.CENTER);
@@ -1492,33 +1493,28 @@ public class GameScreen extends GUIScreen {
         return r;
     }
 
-    /** PNGs are baked at this oversampling; the ImageView downscales by it. */
-    private static final double COUNT_GLYPH_SCALE = 2.0;
+    /** Move-count glyphs are sized to this height so the row matches the arrow icons. */
+    private static final double COUNT_GLYPH_HEIGHT = 24.0;
 
     /**
-     * Move-count label as a pre-baked PNG from
-     * {@code /assets/move_counts/<variant>/<n>.png} (variant: up | down).
-     * The numbers are rendered offline by {@code tools/CountGlyphGenerator}
-     * (ChristmasChalk font, white outer outline, round joins) so there is zero
-     * runtime rasterisation — the earlier live {@link Node#snapshot} froze the
-     * window while warming the cache. {@link ImageCatalog#load} caches the decode.
-     * If {@code grey} is true, we apply a greyscale filter in the GUI.
+     * Move-count label composed from the {@code move_counts/<up|down>} glyph PNGs
+     * by {@link GlyphStrip} (ChristmasChalk, coloured fill + white outline, baked
+     * offline by {@code tools/GlyphAtlasGenerator}) so there is zero runtime
+     * rasterisation. Any value is supported — single digits are composed side by
+     * side, so the count is no longer capped. If {@code grey} is true we apply a
+     * greyscale filter in the GUI.
      */
-    private ImageView countGlyph(int value, String variant, boolean grey) {
-        int clamped = Math.max(0, Math.min(2, value));
-        Image img = ImageCatalog.load("/assets/move_counts/" + variant + "/" + clamped + ".png");
-        ImageView iv = new ImageView(img);
-        iv.setFitHeight(24);   // fixed — matches arrowIcon height so the row never shifts
-        iv.setPreserveRatio(true);
-        iv.setSmooth(true);
+    private Node countGlyph(int value, GlyphStrip.Style style, boolean grey) {
+        Node node = GlyphStrip.build(String.valueOf(value), style, null, COUNT_GLYPH_HEIGHT);
+        if (node == null) node = new Group(); // assets missing — render nothing rather than crash
         if (grey) {
             ColorAdjust desaturate = new ColorAdjust();
             desaturate.setSaturation(-1);
             desaturate.setBrightness(-0.15);
-            iv.setEffect(desaturate);
-            iv.setOpacity(0.5);
+            node.setEffect(desaturate);
+            node.setOpacity(0.5);
         }
-        return iv;
+        return node;
     }
 
     /**
