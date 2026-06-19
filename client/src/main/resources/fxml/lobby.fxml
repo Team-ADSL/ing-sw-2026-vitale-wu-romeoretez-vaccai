@@ -7,7 +7,7 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<StackPane fx:id="rootStack" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+<StackPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
            style="-fx-background-color: transparent;">
 
     <VBox alignment="TOP_CENTER" spacing="14">
@@ -22,8 +22,8 @@
             <Label text="Players in lobby" style="-fx-font-size: 15px; -fx-text-fill: #F2B035;"/>
             <ListView fx:id="playersList" maxWidth="Infinity" VBox.vgrow="ALWAYS"/>
             <HBox spacing="10" alignment="CENTER">
-                <Button fx:id="startButton" text="Start Game" onAction="#onStart"/>
-                <Button fx:id="leaveButton" text="Leave Lobby" onAction="#onLeave"/>
+                <Button text="Start Game" onAction="#onStart"/>
+                <Button text="Leave Lobby" onAction="#onLeave"/>
             </HBox>
         </VBox>
 

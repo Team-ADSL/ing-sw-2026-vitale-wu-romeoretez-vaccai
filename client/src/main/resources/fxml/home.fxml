@@ -34,8 +34,8 @@
             <Label text="Join an active game" style="-fx-font-size: 15px; -fx-text-fill: #F2B035;"/>
             <ListView fx:id="gamesList" maxWidth="Infinity" VBox.vgrow="ALWAYS"/>
             <HBox spacing="10" alignment="CENTER">
-                <Button fx:id="joinButton" text="Join Selected" onAction="#onJoinSelected"/>
-                <Button fx:id="logoutButton" text="Logout" onAction="#onLogout"/>
+                <Button text="Join Selected" onAction="#onJoinSelected"/>
+                <Button text="Logout" onAction="#onLogout"/>
             </HBox>
         </VBox>
 

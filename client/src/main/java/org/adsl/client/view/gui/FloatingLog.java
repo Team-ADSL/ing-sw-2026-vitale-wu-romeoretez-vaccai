@@ -24,7 +24,6 @@ import java.util.List;
  * available vertical space. Once open it stays open until the user closes it
  * with the ✕ chip — clicking elsewhere does not collapse it.
  * Wire it by adding {@link #getFloatingNode()} as a child of the log container.
- * {@link #getFullPanel()} is kept for backward compatibility and is a no-op.
  */
 public final class FloatingLog {
 
@@ -40,7 +39,6 @@ public final class FloatingLog {
     private static final List<String> history = new ArrayList<>();
     private static FloatingLog active;
     private final VBox floating;
-    private final StackPane fullPanel;
     private final Button toggleButton;
     private final VBox expandedBody;
     private final VBox expandedMessages;
@@ -78,11 +76,6 @@ public final class FloatingLog {
             }
         });
 
-        // Backward-compat no-op node (no longer shown).
-        fullPanel = new StackPane();
-        fullPanel.setVisible(false);
-        fullPanel.setMouseTransparent(true);
-
         // Expanded in-place body: scrollable stack of message cards + close chip.
         expandedMessages = new VBox(2);
         expandedMessages.setAlignment(Pos.BOTTOM_RIGHT);
@@ -115,7 +108,6 @@ public final class FloatingLog {
     }
 
     public VBox getFloatingNode() { return floating; }
-    public StackPane getFullPanel() { return fullPanel; }
     public Button getToggleButton() { return toggleButton; }
 
     /** Registers a callback fired after each expand/collapse (open-state change). */

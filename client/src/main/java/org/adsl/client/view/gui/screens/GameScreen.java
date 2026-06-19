@@ -4,7 +4,6 @@ import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -22,7 +21,6 @@ import javafx.scene.effect.ColorAdjust;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundImage;
 import javafx.scene.layout.BackgroundPosition;
@@ -116,9 +114,8 @@ public class GameScreen extends GUIScreen {
     private static final double DECK_COUNT_FONT   = 14.5;          // xN counts + inventor number
     private static final double DECK_COUNT_STROKE = 1.1;
     // Drill-down card widths shown when an icon toggle is open.
-    private static final double DECK_CARD_W_H     = 62.0;          // TOP (cards in a row)
-    private static final double DECK_CARD_W_SELF  = 100.0;         // self (large, plenty of room)
-    private static final double DECK_CARD_W_V     = 68.0;          // LEFT / RIGHT (cards in 2-col pairs)
+    private static final double DECK_CARD_W_SELF  = 100.0;        // self (large)
+    private static final double DECK_CARD_W_OPP   = 62.0;         // opponents (smaller)
     private static final Color  BUILDER_INK  = Color.web("#541620");
     private static final Color  GATHERER_INK = Color.web("#f57a13");
     private static final Color  SHAMAN_INK   = Color.web("#9a445d");
@@ -175,11 +172,9 @@ public class GameScreen extends GUIScreen {
 
     @FXML private StackPane  rootStack;
     @FXML private BorderPane rootPane;
-    @FXML private VBox       centerBox;
     @FXML private Label      headerLabel;
     @FXML private Label      phaseLabel;
     @FXML private HBox       topRow;
-    @FXML private HBox       offerRow;
     @FXML private Pane       deckPane;
     @FXML private Pane       orderTilePane;
     @FXML private HBox       offerTrack;
@@ -221,15 +216,6 @@ public class GameScreen extends GUIScreen {
     private int rulesPageIndex = 0;
     private StackPane rulesOverlay;
     private Node summaryCardOverlay;
-
-    // ── Keyboard navigation (spatial) ────────────────────────────────────────
-    // Rebuilt each render: stable key → the active node it points to. Only
-    // elements that are actually actionable in the current phase are added, so
-    // the arrows never land on inert cards/tiles. navKey survives a re-render so
-    // the cursor stays put across board updates.
-    private final java.util.Map<String, Node> navIndex = new java.util.LinkedHashMap<>();
-    private String navKey = null;
-    private Node navFocusedNode = null;
 
     private StackPane overlayPane;
     private Label overlayTitle;
@@ -315,16 +301,12 @@ public class GameScreen extends GUIScreen {
         resizeDebounce.setOnFinished(_ -> renderBoard());
         rootStack.widthProperty().addListener((_, _, _) -> resizeDebounce.playFromStart());
         rootStack.heightProperty().addListener((_, _, _) -> resizeDebounce.playFromStart());
-        rootStack.setFocusTraversable(true);
-        rootStack.setOnKeyPressed(e -> { if (handleNavKey(e.getCode())) e.consume(); });
 
         buildEventsOverlay();
         rootStack.getChildren().add(overlayPane);
         StackPane.setAlignment(overlayPane, Pos.CENTER);
 
         floatingLog = new FloatingLog();
-        markNav(floatingLog.getToggleButton(), "LOG", "BUTTON", floatingLog.getToggleButton()::fire);
-        floatingLog.setOnToggle(this::refreshNav);
 
         if (logBox != null) {
             logBox.getChildren().setAll(floatingLog.getFloatingNode());
@@ -332,7 +314,6 @@ public class GameScreen extends GUIScreen {
         } else {
             rootStack.getChildren().add(floatingLog.getFloatingNode());
         }
-        rootStack.getChildren().add(floatingLog.getFullPanel());
 
         setupRulesButton();
         setupSummaryCardButton();
@@ -529,10 +510,8 @@ public class GameScreen extends GUIScreen {
             selectedMoves.remove(m);
         }
         pane.setEffect(selectedMoves.contains(m) ? selectedGlow() : null);
-        pane.getProperties().put("navSelected", selectedMoves.contains(m));
         errorLabel.setText("");
         renderHintAndConfirm();
-        Platform.runLater(this::refreshNav);
     }
 
     private void onOfferTileClicked(int idx, OfferTileDTO tile) {
@@ -665,7 +644,7 @@ public class GameScreen extends GUIScreen {
         // Defer until the new content has been laid out so prefWidth/prefHeight
         // reflect it, then scale the whole board to fit the window and rebuild
         // the keyboard-navigation index against the freshly-built nodes.
-        Platform.runLater(() -> { applyBoardScale(); refreshNav(); });
+        Platform.runLater(this::applyBoardScale);
     }
 
     /**
@@ -748,13 +727,6 @@ public class GameScreen extends GUIScreen {
         return left;
     }
 
-    /** Compact textual identity used while an opponent drill-down is open: "Name: x food; y pp". */
-    private Label buildCompactHeader(PlayerDTO p) {
-        Label l = new Label(p.name() + ": " + p.food() + " food; " + p.pp() + " pp");
-        l.setStyle("-fx-text-fill: #f5deb3; -fx-font-size: 12px; -fx-font-weight: bold;");
-        return l;
-    }
-
     // ── Opponent panels (sides) ──────────────────────────────────────────────
 
     private enum Slot { LEFT, TOP, RIGHT }
@@ -806,10 +778,14 @@ public class GameScreen extends GUIScreen {
         int count = Math.min(slots.size(), opponents.size());
         for (int i = 0; i < count; i++) {
             Slot slot = slots.get(i);
-            Node panel = buildOpponentPanel(opponents.get(i), slot);
+            PlayerDTO opp = opponents.get(i);
+            // When a side opponent's deck is open the panel mirrors the (wide) self
+            // layout, so the narrow LR cap is lifted for that render to avoid clipping.
+            boolean open = openDeck.containsKey(opp.name());
+            Node panel = buildOpponentPanel(opp, slot);
             switch (slot) {
-                case LEFT  -> leftPlayersBox.getChildren().add(panel);
-                case RIGHT -> rightPlayersBox.getChildren().add(panel);
+                case LEFT  -> { leftPlayersBox.setMaxWidth(open ? Region.USE_COMPUTED_SIZE : LR_PANEL_W + 40); leftPlayersBox.getChildren().add(panel); }
+                case RIGHT -> { rightPlayersBox.setMaxWidth(open ? Region.USE_COMPUTED_SIZE : LR_PANEL_W + 40); rightPlayersBox.getChildren().add(panel); }
                 case TOP   -> topPlayersBox.getChildren().add(panel);
             }
         }
@@ -870,27 +846,32 @@ public class GameScreen extends GUIScreen {
 
     private Node buildOpponentPanel(PlayerDTO p, Slot slot) {
         boolean topSlot = (slot == Slot.TOP);
+        boolean open = openDeck.containsKey(p.name());
+
         VBox panel = new VBox(6);
         panel.getStyleClass().add("panel");
         panel.setPadding(new Insets(8, 10, 8, 10));
         panel.setAlignment(Pos.TOP_CENTER);
 
-        if (openDeck.containsKey(p.name())) {
-            // Drill-down: compact header (top-left) and the back button (top-right)
-            // share one row; the chosen type's cards sit below (TOP = row,
-            // LEFT/RIGHT = vertical pairs).
-            Region spacer = new Region();
-            HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
-            HBox topBar = new HBox(6, buildCompactHeader(p), spacer, buildDeckBackButton(p.name(), 13));
-            topBar.setAlignment(Pos.CENTER_LEFT);
-            panel.getChildren().addAll(topBar, buildDeckCardsBox(p, openDeck.get(p.name()), !topSlot));
+        if (open) {
+            // Drill-down: identity (totem + name + food/pp) on the LEFT in opponent
+            // sizing, that type's cards (smaller than the self panel) in the middle,
+            // back button on the right — all inside the usual panel background.
+            HBox cardsRow = new HBox(DECK_ICON_GAP);
+            cardsRow.setAlignment(Pos.CENTER_LEFT);
+            cardsRow.getChildren().addAll(deckCardNodes(p, openDeck.get(p.name()), DECK_CARD_W_OPP));
+            HBox content = new HBox(8, buildOpponentHeader(p, false), cardsRow, buildDeckBackButton(p.name(), 13));
+            content.setAlignment(Pos.CENTER_LEFT);
+            panel.getChildren().add(content);
         } else {
             // Default: full header (totem + chips) + the seven icons.
             panel.getChildren().addAll(buildOpponentHeader(p, topSlot),
                     buildDeckIcons(p, !topSlot, DECK_ICON_W));
         }
 
-        if (!topSlot) {
+        // Narrow cap only for the closed icon view; the open row lays out
+        // horizontally and would be clipped by LR_PANEL_W.
+        if (!topSlot && !open) {
             panel.setPrefWidth(LR_PANEL_W);
             panel.setMaxWidth(LR_PANEL_W);
         }
@@ -1045,31 +1026,6 @@ public class GameScreen extends GUIScreen {
         return nodes;
     }
 
-    /**
-     * The cards-only container for an opponent drill-down (the back button lives
-     * in the header row): {@code vertical=false} (TOP) lays them in a single row;
-     * {@code vertical=true} (LEFT/RIGHT) lays them in vertical pairs (two columns)
-     * to keep the panel narrow.
-     */
-    private Pane buildDeckCardsBox(PlayerDTO p, CardType type, boolean vertical) {
-        double cw = vertical ? DECK_CARD_W_V : DECK_CARD_W_H;
-        List<Node> cardNodes = deckCardNodes(p, type, cw);
-        if (vertical) {
-            GridPane grid = new GridPane();
-            grid.setHgap(DECK_ICON_GAP);
-            grid.setVgap(DECK_ICON_GAP);
-            grid.setAlignment(Pos.CENTER);
-            for (int i = 0; i < cardNodes.size(); i++) {
-                grid.add(cardNodes.get(i), i % DECK_SIDE_COLS, i / DECK_SIDE_COLS);
-            }
-            return grid;
-        }
-        HBox rowBox = new HBox(DECK_ICON_GAP);
-        rowBox.setAlignment(Pos.CENTER);
-        rowBox.getChildren().addAll(cardNodes);
-        return rowBox;
-    }
-
     /** Gold back button that closes the drill-down for {@code playerName}, at the
      *  given font size (the self panel uses a larger one). */
     private Button buildDeckBackButton(String playerName, int fontSize) {
@@ -1173,8 +1129,6 @@ public class GameScreen extends GUIScreen {
                 if (!selectedMoves.contains(new Move(idx, row))) cell.setEffect(null);
             });
             cell.setOnMouseClicked(_ -> onCardClicked(row, idx, card, cell));
-            markNav(cell, "CARD:" + row.name() + ":" + idx, "CARD", () -> onCardClicked(row, idx, card, cell));
-            cell.getProperties().put("navSelected", selected);
         } else {
             cell.setEffect(darken());
         }
@@ -1249,15 +1203,11 @@ public class GameScreen extends GUIScreen {
             hoverRect.setMouseTransparent(true);
             
             cell.getChildren().add(hoverRect);
-            cell.getProperties().put("hoverRect", hoverRect);
 
             cell.setCursor(Cursor.HAND);
             cell.setOnMouseClicked(_ -> onOfferTileClicked(idx, tile));
             cell.setOnMouseEntered(_ -> hoverRect.setVisible(true));
-            cell.setOnMouseExited(_ -> {
-                if (cell != navFocusedNode) hoverRect.setVisible(false);
-            });
-            markNav(cell, "TILE:" + idx, "TILE", () -> onOfferTileClicked(idx, tile));
+            cell.setOnMouseExited(_ -> hoverRect.setVisible(false));
         } else if (!clickable) {
             cell.setEffect(darken());
         }
@@ -1452,30 +1402,24 @@ public class GameScreen extends GUIScreen {
         if (waitingServer) {
             setHint("Waiting for server...");
             confirmButton.setDisable(true);
-            unmarkNav(confirmButton);
             return;
         }
         if (!isMyTurn()) {
             setHint(waitingHint());
             confirmButton.setDisable(true);
-            unmarkNav(confirmButton);
             return;
         }
         if (phase == Phase.TOTEM_PLACEMENT) {
             setHint("Click an offer tile to place your totem.");
             confirmButton.setDisable(true);
-            unmarkNav(confirmButton);
         } else if (phase == Phase.ACTION_EXECUTION || phase == Phase.EXTRA_MOVE) {
-            int required = upperCount + lowerCount;
             long pickedUpper = selectedMoves.stream().filter(m -> m.row() == Row.UPPER).count();
             long pickedLower = selectedMoves.stream().filter(m -> m.row() == Row.LOWER).count();
             setMoveHint(upperCount, lowerCount, (int) pickedUpper, (int) pickedLower);
             confirmButton.setDisable(false);
-            markNav(confirmButton, "CONFIRM", "BUTTON", this::onSendMove);
         } else {
             setHint(waitingHint());
             confirmButton.setDisable(true);
-            unmarkNav(confirmButton);
         }
     }
 
@@ -1635,209 +1579,6 @@ public class GameScreen extends GUIScreen {
         }
         return null;
     }
-    // ── Keyboard Navigation (Spatial) ────────────────────────────────────────
-
-    private void markNav(Node node, String key, String kind, Runnable action) {
-        node.getProperties().put("navKey", key);
-        node.getProperties().put("navKind", kind);
-        node.getProperties().put("navAction", action);
-    }
-
-    private void unmarkNav(Node node) {
-        node.getProperties().remove("navKey");
-        node.getProperties().remove("navKind");
-        node.getProperties().remove("navAction");
-        if (node.getProperties().containsKey("navBaseStyle")) {
-            node.setStyle((String) node.getProperties().get("navBaseStyle"));
-        }
-    }
-
-    private void walkNav(Node n) {
-        if (n.getProperties().containsKey("navKey")) {
-            navIndex.put((String) n.getProperties().get("navKey"), n);
-        }
-        if (n instanceof Parent p) {
-            for (Node child : p.getChildrenUnmodifiable()) {
-                walkNav(child);
-            }
-        }
-    }
-
-    private void refreshNav() {
-        navIndex.clear();
-        walkNav(rootStack);
-
-        if (navKey != null && !navIndex.containsKey(navKey)) {
-            navKey = null;
-            navFocusedNode = null;
-        }
-
-        for (Node n : navIndex.values()) {
-            setNavHighlight(n, false);
-        }
-        if (navKey != null) {
-            navFocusedNode = navIndex.get(navKey);
-            setNavHighlight(navFocusedNode, true);
-        }
-    }
-
-    private void setNavHighlight(Node node, boolean focused) {
-        if (node == null) return;
-        String kind = (String) node.getProperties().get("navKind");
-        if (kind == null) return;
-
-        if (focused) {
-            switch (kind) {
-                case "CARD" -> node.setEffect(selectedGlow());
-                case "TILE" -> {
-                    Rectangle r = (Rectangle) node.getProperties().get("hoverRect");
-                    if (r != null) r.setVisible(true);
-                }
-                case "BUTTON" -> {
-                    if (!node.getProperties().containsKey("navBaseStyle")) {
-                        node.getProperties().put("navBaseStyle", node.getStyle());
-                    }
-                    String baseStyle = (String) node.getProperties().get("navBaseStyle");
-                    if (baseStyle == null) baseStyle = "";
-                    node.setStyle(baseStyle + (baseStyle.endsWith(";") || baseStyle.isEmpty() ? "" : ";") + " -fx-border-color: white; -fx-border-width: 2; -fx-border-radius: 4;");
-                }
-            }
-        } else {
-            switch (kind) {
-                case "CARD" -> {
-                    Boolean sel = (Boolean) node.getProperties().get("navSelected");
-                    node.setEffect(Boolean.TRUE.equals(sel) ? selectedGlow() : null);
-                }
-                case "TILE" -> {
-                    Rectangle r = (Rectangle) node.getProperties().get("hoverRect");
-                    if (r != null) r.setVisible(false);
-                }
-                case "BUTTON" -> {
-                    if (node.getProperties().containsKey("navBaseStyle")) {
-                        node.setStyle((String) node.getProperties().get("navBaseStyle"));
-                    }
-                }
-            }
-        }
-    }
-
-    private boolean handleNavKey(KeyCode code) {
-        if (navIndex.isEmpty()) return false;
-
-        // SPACE selects/deselects the focused card (or activates the focused tile /
-        // page button) — mirrors the TUI's select key.
-        if (code == KeyCode.SPACE) {
-            return runFocusedAction();
-        }
-
-        // ENTER confirms the whole selection when a confirm action is available;
-        // otherwise it activates the focused node (e.g. placing a totem on a tile).
-        if (code == KeyCode.ENTER) {
-            Node confirm = navIndex.get("CONFIRM");
-            if (confirm != null && !confirm.isDisabled()) {
-                onSendMove();
-                return true;
-            }
-            return runFocusedAction();
-        }
-
-        double dx = 0; double dy = 0;
-        if (code == KeyCode.UP) dy = -1;
-        else if (code == KeyCode.DOWN) dy = 1;
-        else if (code == KeyCode.LEFT) dx = -1;
-        else if (code == KeyCode.RIGHT) dx = 1;
-        else return false;
-
-        if (navFocusedNode == null) {
-            navFocusedNode = getLeftmostNode();
-            if (navFocusedNode != null) {
-                navKey = (String) navFocusedNode.getProperties().get("navKey");
-                setNavHighlight(navFocusedNode, true);
-            }
-            return true;
-        }
-
-        Node next = geometricNext(navFocusedNode, dx, dy);
-        if (next != null && next != navFocusedNode) {
-            setNavHighlight(navFocusedNode, false);
-            navFocusedNode = next;
-            navKey = (String) navFocusedNode.getProperties().get("navKey");
-            setNavHighlight(navFocusedNode, true);
-        }
-        return true;
-    }
-
-    /** Runs the navAction of the currently focused node, if any. */
-    private boolean runFocusedAction() {
-        if (navFocusedNode == null) return false;
-        Runnable action = (Runnable) navFocusedNode.getProperties().get("navAction");
-        if (action != null) {
-            action.run();
-            return true;
-        }
-        return false;
-    }
-
-    private Node getLeftmostNode() {
-        Node best = null;
-        double minScore = Double.MAX_VALUE;
-        for (Node n : navIndex.values()) {
-            if (!n.isVisible() || !n.isManaged()) continue;
-            Bounds b = n.localToScene(n.getBoundsInLocal());
-            if (b == null) continue;
-            // score prioritizes top-left items.
-            double score = b.getCenterX() + b.getCenterY();
-            if (score < minScore) {
-                minScore = score;
-                best = n;
-            }
-        }
-        return best;
-    }
-
-    private Node geometricNext(Node current, double dx, double dy) {
-        Bounds curB = current.localToScene(current.getBoundsInLocal());
-        if (curB == null) return null;
-        double cx = curB.getCenterX();
-        double cy = curB.getCenterY();
-
-        Node best = null;
-        double bestDist = Double.MAX_VALUE;
-
-        for (Node n : navIndex.values()) {
-            if (n == current) continue;
-            if (!n.isVisible() || !n.isManaged()) continue;
-
-            Bounds b = n.localToScene(n.getBoundsInLocal());
-            if (b == null) continue;
-            double nx = b.getCenterX();
-            double ny = b.getCenterY();
-
-            double dirX = nx - cx;
-            double dirY = ny - cy;
-
-            boolean valid = (dx > 0 && dirX > 10)
-                    || (dx < 0 && dirX < -10)
-                    || (dy > 0 && dirY > 10)
-                    || (dy < 0 && dirY < -10);
-
-            if (valid) {
-                double dist;
-                if (dx != 0) {
-                    dist = Math.abs(dirX) + 4 * Math.abs(dirY);
-                } else {
-                    dist = Math.abs(dirY) + 4 * Math.abs(dirX);
-                }
-
-                if (dist < bestDist) {
-                    bestDist = dist;
-                    best = n;
-                }
-            }
-        }
-        return best;
-    }
-
     // ── Rules overlay ────────────────────────────────────────────────────────
 
     private void setupRulesButton() {

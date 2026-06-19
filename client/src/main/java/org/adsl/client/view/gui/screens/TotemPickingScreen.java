@@ -48,12 +48,6 @@ public class TotemPickingScreen extends GUIScreen {
     private Button confirmButton;
     private StackPane rootPane;
 
-    /** Which group the keyboard cursor is on. NONE until the first arrow press. */
-    private enum Focus { NONE, TOTEMS, BUTTON }
-    private Focus focus = Focus.NONE;
-    /** Totem currently highlighted by the keyboard cursor (enlarged like hover). */
-    private Totem keyboardTotem = null;
-
     public TotemPickingScreen(AppCoordinator coordinator, String username,
                               List<Totem> availableTotems) {
         super(coordinator, username);
@@ -84,7 +78,7 @@ public class TotemPickingScreen extends GUIScreen {
         playerLabel.setFont(ImageCatalog.chalkFont(34));
         playerLabel.setStyle("-fx-text-fill: #F2B035; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.9), 5, 0.5, 0, 0);");
 
-        statusLabel = new Label("Select a totem (click or SPACE), then confirm with ENTER");
+        statusLabel = new Label("Select a totem (click), then confirm with ENTER");
         statusLabel.setFont(ImageCatalog.chalkFont(24));
         statusLabel.setStyle("-fx-text-fill: #FDF3D3; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.9), 5, 0.5, 0, 0);");
 
@@ -95,10 +89,10 @@ public class TotemPickingScreen extends GUIScreen {
         confirmButton = new Button("C O N F I R M");
         confirmButton.setFont(ImageCatalog.chalkFont(19));
         confirmButton.setFocusTraversable(false);
-        applyConfirmStyle(false, focus == Focus.BUTTON);
+        applyConfirmStyle(false, false);
         confirmButton.setOnAction(e -> onConfirm());
-        confirmButton.setOnMouseEntered(_ -> { if (!confirmButton.isDisabled()) applyConfirmStyle(true, focus == Focus.BUTTON); });
-        confirmButton.setOnMouseExited(_ ->  { if (!confirmButton.isDisabled()) applyConfirmStyle(false, focus == Focus.BUTTON); });
+        confirmButton.setOnMouseEntered(_ -> { if (!confirmButton.isDisabled()) applyConfirmStyle(true, false); });
+        confirmButton.setOnMouseExited(_ ->  { if (!confirmButton.isDisabled()) applyConfirmStyle(false, false); });
 
         errorLabel = new Label("");
         errorLabel.setFont(ImageCatalog.chalkFont(18));
@@ -109,7 +103,9 @@ public class TotemPickingScreen extends GUIScreen {
 
         rootPane = new StackPane(outer);
         rootPane.setFocusTraversable(true);
-        rootPane.setOnKeyPressed(e -> { handleKey(e.getCode()); e.consume(); });
+        rootPane.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ENTER) { onConfirm(); e.consume(); }
+        });
         applyTheme(rootPane);
 
         // Dark overlay matching .panel opacity — sits between bg image and content.
@@ -152,8 +148,7 @@ public class TotemPickingScreen extends GUIScreen {
 
         applyVisuals(container, iv, name, available, selected, ourPick, t);
 
-        boolean kbHighlight = focus == Focus.TOTEMS && keyboardTotem == t && available && !hasPicked;
-        if (selected || kbHighlight) {
+        if (selected) {
             container.setScaleX(HOVER_SCALE);
             container.setScaleY(HOVER_SCALE);
         }
@@ -190,97 +185,15 @@ public class TotemPickingScreen extends GUIScreen {
         }
     }
 
-    // ── Keyboard navigation ─────────────────────────────────────────────────────
-
-    /** Totems still selectable, in display order. */
-    private List<Totem> navTotems() {
-        List<Totem> nav = new ArrayList<>();
-        for (Totem t : ALL_TOTEMS) if (availableTotems.contains(t)) nav.add(t);
-        return nav;
-    }
-
-    private void handleKey(KeyCode code) {
-        if (hasPicked) return;
-        List<Totem> nav = navTotems();
-
-        // ENTER confirms the current selection; SPACE selects/deselects the
-        // highlighted totem — mirrors the TUI's confirm/select split.
-        if (code == KeyCode.ENTER) {
-            onConfirm();
-            return;
-        }
-
-        if (code == KeyCode.SPACE) {
-            if (focus == Focus.NONE) {
-                focus = Focus.TOTEMS;
-                keyboardTotem = nav.isEmpty() ? null : nav.getFirst();
-                populateTotemRow();
-                return;
-            }
-            if (focus == Focus.TOTEMS && keyboardTotem != null) onTotemClicked(keyboardTotem);
-            return;
-        }
-
-        boolean isArrow = code == KeyCode.LEFT || code == KeyCode.RIGHT
-                       || code == KeyCode.UP   || code == KeyCode.DOWN;
-        if (!isArrow) return;
-
-        // First arrow press lands on the leftmost selectable totem.
-        if (focus == Focus.NONE) {
-            focus = Focus.TOTEMS;
-            keyboardTotem = nav.isEmpty() ? null : nav.getFirst();
-            populateTotemRow();
-            return;
-        }
-
-        switch (code) {
-            case LEFT  -> moveTotem(nav, -1);
-            case RIGHT -> moveTotem(nav, +1);
-            case DOWN  -> { if (focus == Focus.TOTEMS) focusButton(); }
-            case UP    -> { if (focus == Focus.BUTTON) focusTotems(nav); }
-            default    -> { /* ignore */ }
-        }
-    }
-
-    private void moveTotem(List<Totem> nav, int delta) {
-        if (focus != Focus.TOTEMS || nav.isEmpty()) return;
-        int idx = nav.indexOf(keyboardTotem);
-        if (idx < 0) idx = 0;
-        idx = Math.max(0, Math.min(nav.size() - 1, idx + delta));
-        keyboardTotem = nav.get(idx);
-        populateTotemRow();
-    }
-
-    private void focusButton() {
-        focus = Focus.BUTTON;
-        populateTotemRow();                       // drops the totem enlargement
-        if (!confirmButton.isDisabled() && confirmButton.isVisible()) applyConfirmStyle(confirmButton.isHover(), true);
-    }
-
-    private void focusTotems(List<Totem> nav) {
-        focus = Focus.TOTEMS;
-        if (keyboardTotem == null || !nav.contains(keyboardTotem))
-            keyboardTotem = nav.isEmpty() ? null : nav.getFirst();
-        applyConfirmStyle(confirmButton.isHover(), false);
-        populateTotemRow();
-    }
-
     // ── Interaction ────────────────────────────────────────────────────────────
 
     private void onTotemClicked(Totem t) {
         if (hasPicked || pendingPick) return;
         selectedTotem = (selectedTotem == t) ? null : t;
-        
-        focus = Focus.TOTEMS;
-        if (selectedTotem != null) {
-            keyboardTotem = selectedTotem;
-        } else {
-            keyboardTotem = t;
-        }
-        
+
         errorLabel.setText("");
         populateTotemRow();
-        
+
         if (rootPane != null) {
             rootPane.requestFocus();
         }
@@ -326,10 +239,10 @@ public class TotemPickingScreen extends GUIScreen {
     public GUIScreen visit(ErrorEvent e) {
         pendingPick = false;
         errorLabel.setText(e.message());
-        statusLabel.setText("Select a totem (click or SPACE), then confirm with ENTER");
+        statusLabel.setText("Select a totem (click), then confirm with ENTER");
         statusLabel.setStyle("-fx-text-fill: #FDF3D3;");
         confirmButton.setDisable(false);
-        applyConfirmStyle(confirmButton.isHover(), focus == Focus.BUTTON);
+        applyConfirmStyle(confirmButton.isHover(), false);
         populateTotemRow();
         return this;
     }
