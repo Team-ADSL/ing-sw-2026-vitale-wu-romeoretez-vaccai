@@ -60,7 +60,7 @@ public final class SummaryCardOverlay {
 
         // Small size: visible but compact, sitting just above the SC button
         double cardW = 130.0;
-        double cardH = cardW * BoardRenderer.CARD_ASPECT;
+        double cardH = cardW * org.adsl.client.view.gui.GuiConstants.CARD_ASPECT;
 
         ImageView iv = new ImageView();
         iv.setFitWidth(cardW);

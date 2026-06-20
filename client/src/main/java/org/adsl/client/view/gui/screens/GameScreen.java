@@ -63,6 +63,7 @@ import java.util.Set;
  * The game log sits bottom-right, showing only the most recent messages with
  * a fade-up gradient; clicking it opens a full-chat panel.
  */
+@SuppressWarnings("unused")
 public class GameScreen extends GUIScreen {
 
     // Layout constants are defined in GuiConstants.
@@ -99,7 +100,7 @@ public class GameScreen extends GUIScreen {
      *  changes (new player or phase) the pending selection is dropped so a past
      *  turn's picks never bleed into a new ACTION_EXECUTION / EXTRA_MOVE turn. */
     private String selectionTurnToken = "none";
-    private final FloatingLog floatingLog;
+    private FloatingLog floatingLog;
     /** Scaled board group; stored as a field so applyBoardScale can translate it. */
     private Group boardGroup;
 
@@ -125,6 +126,7 @@ public class GameScreen extends GUIScreen {
         super(coordinator, username);
         this.game = game;
         this.vm = new GameViewModel(game, username);
+        
         Parent fxmlRoot;
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/game.fxml"));
@@ -134,12 +136,23 @@ public class GameScreen extends GUIScreen {
             throw new RuntimeException("Failed to load game.fxml", e);
         }
         applyTheme(fxmlRoot, false);
-
         this.root = fxmlRoot;
-        // Lay the board out at its natural size inside a Group (which sizes its
-        // child to preferred and ignores the parent's sizing), centered in the
-        // root stack. applyBoardScale() then scales that whole block to fit the
-        // window; the aerial background fills the window behind it (not scaled).
+    }
+
+    @FXML
+    public void initialize() {
+        setupBoardLayout();
+        setupFloatingPanels();
+        setupListeners();
+        initializeRenderers();
+
+        new RulesOverlay(rootStack);
+        new SummaryCardOverlay(rootStack);
+        resolveMoveCounts();
+        renderBoard();
+    }
+
+    private void setupBoardLayout() {
         int boardIdx = rootStack.getChildren().indexOf(rootPane);
         rootStack.getChildren().remove(rootPane);
         boardGroup = new Group(rootPane);
@@ -147,52 +160,43 @@ public class GameScreen extends GUIScreen {
         rootStack.getChildren().add(boardIdx, boardGroup);
         installBackground();
 
-        // Opponent panels are lifted out of the BorderPane (rootPane) into rootStack
-        // so they float as screen-fixed overlays independent of board scale. This
-        // prevents their size from contributing to rootPane.prefWidth/prefHeight, which
-        // would shift the board every time a panel expands or its content changes.
-        rootPane.setTop(null);
-        rootPane.setLeft(null);
-        rootPane.setRight(null);
-        StackPane.setAlignment(topPlayersBox, Pos.TOP_CENTER);
-        topPlayersBox.setPickOnBounds(false);
-        // Side panels start TOP-aligned, pushed down by SIDE_PANEL_TOP so their top
-        // lines up with the central header (only the TOP panels keep the screen-edge
-        // margin). The boxes fill the height; their content top-aligns inside.
-        StackPane.setAlignment(leftPlayersBox, Pos.TOP_LEFT);
-        leftPlayersBox.setPickOnBounds(false);
-        leftPlayersBox.setMaxWidth(PlayerPanelsRenderer.LR_PANEL_W + 40);
-        leftPlayersBox.setPadding(new Insets(SIDE_PANEL_TOP, 6, 8, 14));
-        StackPane.setAlignment(rightPlayersBox, Pos.TOP_RIGHT);
-        rightPlayersBox.setPickOnBounds(false);
-        rightPlayersBox.setMaxWidth(PlayerPanelsRenderer.LR_PANEL_W + 40);
-        rightPlayersBox.setPadding(new Insets(SIDE_PANEL_TOP, 14, 8, 6));
-        int panelInsertIdx = rootStack.getChildren().indexOf(boardGroup) + 1;
-        rootStack.getChildren().add(panelInsertIdx,     topPlayersBox);
-        rootStack.getChildren().add(panelInsertIdx + 1, leftPlayersBox);
-        rootStack.getChildren().add(panelInsertIdx + 2, rightPlayersBox);
-
-        // Fix the hint-row height so changes to its content (arrows vs plain text)
-        // never alter rootPane.prefHeight and thus never cause the board to rescale.
         if (hintLabel != null && hintLabel.getParent() instanceof HBox hintRow) {
             hintRow.setMinHeight(40);
             hintRow.setPrefHeight(40);
             hintRow.setMaxHeight(40);
         }
+    }
 
-        // Header labels stay inside centerBox (part of the scaled board block).
-        // applyBoardScale reserves space for opponent panels via TOP_PANEL_H_RESERVE /
-        // SIDE_PANEL_W_RESERVE so the board is never hidden behind them.
+    private void setupFloatingPanels() {
+        rootPane.setTop(null);
+        rootPane.setLeft(null);
+        rootPane.setRight(null);
+        StackPane.setAlignment(topPlayersBox, Pos.TOP_CENTER);
+        topPlayersBox.setPickOnBounds(false);
 
-        // Only the window (rootStack) drives re-renders. We deliberately do NOT
-        // listen on centerBox size: its height/width change as a *result* of
-        // renderBoard (and of expanding an opponent panel), so listening there
-        // created a feedback loop that re-rendered the board and collapsed any
-        // expanded panel. Board zoom-out is handled by the global ResponsiveScaler.
+        StackPane.setAlignment(leftPlayersBox, Pos.TOP_LEFT);
+        leftPlayersBox.setPickOnBounds(false);
+        leftPlayersBox.setMaxWidth(PlayerPanelsRenderer.LR_PANEL_W + 40);
+        leftPlayersBox.setPadding(new Insets(SIDE_PANEL_TOP, 6, 8, 14));
+
+        StackPane.setAlignment(rightPlayersBox, Pos.TOP_RIGHT);
+        rightPlayersBox.setPickOnBounds(false);
+        rightPlayersBox.setMaxWidth(PlayerPanelsRenderer.LR_PANEL_W + 40);
+        rightPlayersBox.setPadding(new Insets(SIDE_PANEL_TOP, 14, 8, 6));
+
+        int panelInsertIdx = rootStack.getChildren().indexOf(boardGroup) + 1;
+        rootStack.getChildren().add(panelInsertIdx,     topPlayersBox);
+        rootStack.getChildren().add(panelInsertIdx + 1, leftPlayersBox);
+        rootStack.getChildren().add(panelInsertIdx + 2, rightPlayersBox);
+    }
+
+    private void setupListeners() {
         resizeDebounce.setOnFinished(_ -> renderBoard());
         rootStack.widthProperty().addListener((_, _, _) -> resizeDebounce.playFromStart());
         rootStack.heightProperty().addListener((_, _, _) -> resizeDebounce.playFromStart());
+    }
 
+    private void initializeRenderers() {
         eventsOverlay = new EventsOverlay();
         rootStack.getChildren().add(eventsOverlay);
         StackPane.setAlignment(eventsOverlay, Pos.CENTER);
@@ -223,11 +227,6 @@ public class GameScreen extends GUIScreen {
         } else {
             rootStack.getChildren().add(floatingLog.getFloatingNode());
         }
-
-        new RulesOverlay(rootStack);
-        new SummaryCardOverlay(rootStack);
-        resolveMoveCounts();
-        renderBoard();
     }
 
     /**
@@ -450,7 +449,7 @@ public class GameScreen extends GUIScreen {
 
     /**
      * Scales the whole board ({@link #rootPane}) as one block so it fits the
-     * window minus {@link #BOARD_MARGIN}, keeping its aspect ratio. Scales both
+     * window minus {@link org.adsl.client.view.gui.GuiConstants#BOARD_MARGIN}, keeping its aspect ratio. Scales both
      * down AND up (to fill large screens), driven by the tighter of the
      * width/height fits — so every element resizes together and the decks pinned
      * top and bottom are never pushed off-screen. The background fills the window

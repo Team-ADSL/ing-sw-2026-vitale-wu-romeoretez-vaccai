@@ -1,5 +1,7 @@
 package org.adsl.client.view.gui.screens;
 
+import javafx.scene.Parent;
+
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -25,6 +27,7 @@ import java.util.List;
  * an empty DB leaderboard (NoGameDAO fallback) the right pane shows a red
  * alert instead.
  */
+@SuppressWarnings("unused")
 public class EndGameScreen extends GUIScreen {
 
     @FXML private TableView<RankedMatchRow> matchTable;
@@ -42,21 +45,34 @@ public class EndGameScreen extends GUIScreen {
     @FXML private Label noDbAlert;
     @FXML private Label errorLabel;
 
-    private final FloatingLog floatingLog;
+    private FloatingLog floatingLog;
+    private List<MatchResult> results;
+    private List<DBRecord> records;
+    private String message;
 
     public EndGameScreen(AppCoordinator coordinator, String username,
                          List<MatchResult> results, List<DBRecord> records, String message) {
         super(coordinator, username);
+        this.results = results;
+        this.records = records;
+        this.message = message;
+        
+        Parent fxmlRoot;
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/endgame.fxml"));
             loader.setController(this);
-            this.root = loader.load();
+            fxmlRoot = loader.load();
         } catch (IOException e) {
             throw new RuntimeException("Failed to load endgame.fxml", e);
         }
+        applyTheme(fxmlRoot);
+        this.root = fxmlRoot;
+    }
+
+    @FXML
+    public void initialize() {
         wireMatchTable(results);
         wireRecordsTable(records, message);
-        applyTheme(this.root);
 
         floatingLog = new FloatingLog();
         if (this.root instanceof StackPane sp) {

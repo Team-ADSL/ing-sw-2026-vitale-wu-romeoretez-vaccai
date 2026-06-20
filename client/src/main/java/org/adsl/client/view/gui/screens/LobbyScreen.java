@@ -1,5 +1,7 @@
 package org.adsl.client.view.gui.screens;
 
+import javafx.scene.Parent;
+
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -20,6 +22,7 @@ import java.util.List;
  * {@code LobbyUpdateEvent}; transitions to the game screen on the first
  * {@code GameUpdateEvent}.
  */
+@SuppressWarnings("unused")
 public class LobbyScreen extends GUIScreen {
 
     @FXML private Label titleLabel;
@@ -31,7 +34,7 @@ public class LobbyScreen extends GUIScreen {
     private int gameId;
     private List<String> players;
     private final int totalPlayers;
-    private final FloatingLog floatingLog;
+    private FloatingLog floatingLog;
 
     public LobbyScreen(AppCoordinator coordinator,
                        String username,
@@ -42,19 +45,25 @@ public class LobbyScreen extends GUIScreen {
         this.gameId = gameId;
         this.players = players != null ? players : List.of();
         this.totalPlayers = totalPlayers;
+        Parent fxmlRoot;
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/lobby.fxml"));
             loader.setController(this);
-            this.root = loader.load();
+            fxmlRoot = loader.load();
         } catch (IOException e) {
             throw new RuntimeException("Failed to load lobby.fxml", e);
         }
+        applyTheme(fxmlRoot);
+        this.root = fxmlRoot;
+    }
+
+    @FXML
+    public void initialize() {
         refresh();
-
         floatingLog = new FloatingLog();
-        logBox.getChildren().setAll(floatingLog.getFloatingNode());
-
-        applyTheme(this.root);
+        if (logBox != null) {
+            logBox.getChildren().setAll(floatingLog.getFloatingNode());
+        }
     }
 
     private void refresh() {

@@ -1,5 +1,7 @@
 package org.adsl.client.view.gui.screens;
 
+import javafx.scene.Parent;
+
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -22,6 +24,7 @@ import java.io.IOException;
  * server replies with {@code HomeUpdateEvent} (default routing) on success or
  * {@link ErrorEvent} on failure (shown in {@link #errorLabel}).
  */
+@SuppressWarnings("unused")
 public class LoginScreen extends GUIScreen {
 
     /** Intro fade plays only on the first login screen of the process, not on
@@ -36,19 +39,25 @@ public class LoginScreen extends GUIScreen {
 
     public LoginScreen(AppCoordinator coordinator) {
         super(coordinator);
+        Parent fxmlRoot;
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/login.fxml"));
             loader.setController(this);
-            this.root = loader.load();
+            fxmlRoot = loader.load();
         } catch (IOException e) {
             throw new RuntimeException("Failed to load login.fxml", e);
         }
+        applyTheme(fxmlRoot);
+        this.root = fxmlRoot;
+        playIntroFade();
+    }
+
+    @FXML
+    public void initialize() {
         if (logoImage != null) {
             logoImage.setImage(ImageCatalog.load("/assets/general/mesos_logo_white.png"));
         }
-        applyTheme(this.root);
         installKeyboardNav();
-        playIntroFade();
     }
 
     /**

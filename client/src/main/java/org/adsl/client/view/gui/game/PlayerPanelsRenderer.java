@@ -51,7 +51,7 @@ public final class PlayerPanelsRenderer {
      * Alias of {@link org.adsl.client.view.gui.GuiConstants#LR_PANEL_W} kept
      * here so callers using {@code PlayerPanelsRenderer.LR_PANEL_W} still compile.
      */
-    public static final double LR_PANEL_W = GuiConstants.LR_PANEL_W;
+    public static final double LR_PANEL_W = org.adsl.client.view.gui.GuiConstants.LR_PANEL_W;
 
     // All other layout constants are defined in GuiConstants.
 
@@ -453,7 +453,7 @@ public final class PlayerPanelsRenderer {
 
     /** A single rounded card image used in the drill-down view. */
     private Node buildDeckCard(CardDTO card, double w) {
-        double h = w * BoardRenderer.CARD_ASPECT;
+        double h = w * CARD_ASPECT;
         StackPane cell = new StackPane();
         cell.setMinSize(w, h);
         cell.setPrefSize(w, h);
