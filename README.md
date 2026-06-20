@@ -210,7 +210,8 @@ python3 tools/testers/socket_auto_plays.py -p1 Alice -p2 Bob -r 5 -H 192.168.1.1
 ```
 
 > [!WARNING]
-> Make sure the server is running and the players were playing a game (only them) before launching the script.
+> Make sure the server is running and the players were playing a game (only them) and both of them
+> need to execute an action `totem placement` (first p1 and then p2) before launching the script.
 
 ---
 
