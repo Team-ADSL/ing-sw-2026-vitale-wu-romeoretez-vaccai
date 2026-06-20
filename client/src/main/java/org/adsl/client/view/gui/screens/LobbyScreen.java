@@ -22,9 +22,12 @@ import java.util.List;
  * {@code LobbyUpdateEvent}; transitions to the game screen on the first
  * {@code GameUpdateEvent}.
  */
-@SuppressWarnings("unused")
 public class LobbyScreen extends GUIScreen {
 
+    /* Warning Note: IntelliJ may highlight @FXML fields and the initialize() method as "unused" (grey).
+     * This is a false positive caused by setting the controller dynamically at runtime via 
+     * loader.setController(this), rather than statically in the .fxml file. 
+     * FXMLLoader will still correctly assign these fields and call the method. */
     @FXML private Label titleLabel;
     @FXML private Label statusLabel;
     @FXML private Label errorLabel;

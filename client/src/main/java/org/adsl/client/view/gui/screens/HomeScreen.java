@@ -39,9 +39,12 @@ import java.util.Map;
  * (2–5 players) or join an existing one. Updates in-place when
  * {@code HomeUpdateEvent} arrives. A floating log overlay shows server messages.
  */
-@SuppressWarnings("unused")
 public class HomeScreen extends GUIScreen {
 
+    /* Warning Note: IntelliJ may highlight @FXML fields and the initialize() method as "unused" (grey).
+     * This is a false positive caused by setting the controller dynamically at runtime via 
+     * loader.setController(this), rather than statically in the .fxml file. 
+     * FXMLLoader will still correctly assign these fields and call the method. */
     @FXML private StackPane rootStack;
     @FXML private Label welcomeLabel;
     @FXML private Label errorLabel;

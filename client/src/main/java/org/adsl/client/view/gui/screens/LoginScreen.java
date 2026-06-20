@@ -24,13 +24,16 @@ import java.io.IOException;
  * server replies with {@code HomeUpdateEvent} (default routing) on success or
  * {@link ErrorEvent} on failure (shown in {@link #errorLabel}).
  */
-@SuppressWarnings("unused")
 public class LoginScreen extends GUIScreen {
 
     /** Intro fade plays only on the first login screen of the process, not on
      *  every return to it (e.g. after logout/relogin). */
     private static boolean introShown = false;
 
+    /* Warning Note: IntelliJ may highlight @FXML fields and the initialize() method as "unused" (grey).
+     * This is a false positive caused by setting the controller dynamically at runtime via 
+     * loader.setController(this), rather than statically in the .fxml file. 
+     * FXMLLoader will still correctly assign these fields and call the method. */
     @FXML private TextField usernameField;
     @FXML private Label errorLabel;
     @FXML private Button loginButton;

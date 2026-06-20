@@ -63,10 +63,14 @@ import java.util.Set;
  * The game log sits bottom-right, showing only the most recent messages with
  * a fade-up gradient; clicking it opens a full-chat panel.
  */
-@SuppressWarnings("unused")
 public class GameScreen extends GUIScreen {
 
     // Layout constants are defined in GuiConstants.
+
+    /* Warning Note: IntelliJ may highlight @FXML fields and the initialize() method as "unused" (grey).
+     * This is a false positive caused by setting the controller dynamically at runtime via 
+     * loader.setController(this), rather than statically in the .fxml file. 
+     * FXMLLoader will still correctly assign these fields and call the method. */
     private static final double SIDE_PANEL_W_RESERVE = PlayerPanelsRenderer.LR_PANEL_W + 40;
 
     @FXML private StackPane  rootStack;
