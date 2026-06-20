@@ -35,8 +35,8 @@ public class Game implements Serializable {
     private Player currentPlayer;
     private Phase phase;
     private List<String> gameLog;
-
-    private transient boolean isInitialized;
+    private boolean isInitialized;
+    
     private transient List<GameObserver> gameObservers;
     private transient List<EndGameObserver> endGameObservers;
 
@@ -182,7 +182,6 @@ public class Game implements Serializable {
      * every recovered {@link Game} before it is registered with a controller.
      */
     public void setupTransientAttributes(){
-        isInitialized = true;
         if (gameLog == null) gameLog = new ArrayList<>();
         gameObservers = new ArrayList<>();
         endGameObservers = new ArrayList<>();

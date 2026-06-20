@@ -43,7 +43,6 @@ public class SocketServer implements Runnable {
     public void run() {
         try{
             this.serverSocket = new ServerSocket(port);
-            System.out.println("SocketServer active on port: " + port);
 
             while (active) {
                 Socket client = serverSocket.accept();
