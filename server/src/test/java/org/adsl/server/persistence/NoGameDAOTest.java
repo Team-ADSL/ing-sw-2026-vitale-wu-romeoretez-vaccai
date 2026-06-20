@@ -27,10 +27,10 @@ public class NoGameDAOTest {
     }
 
     @Test
-    void testCreateMatch_calledTwice_returnsSameValueBothTimes() throws SQLException {
+    void testCreateMatch_calledTwice_returnDifferentCounterSecondTime() throws SQLException {
         int first = dao.createMatch();
         int second = dao.createMatch();
-        assertEquals(first, second, "NoGameDAO counter is not incremented — same ID returned each time");
+        assertEquals(first + 1, second, "NoGameDAO counter is not incremented — same ID returned each time");
     }
 
     // ──────────────────────────────────────────────

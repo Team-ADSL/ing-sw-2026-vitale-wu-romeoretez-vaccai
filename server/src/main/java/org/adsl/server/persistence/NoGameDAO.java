@@ -27,7 +27,7 @@ public class NoGameDAO implements GameDAO {
      */
     @Override
     public int createMatch() throws SQLException {
-        return actualCounter;
+        return actualCounter++;
     }
 
     /**
