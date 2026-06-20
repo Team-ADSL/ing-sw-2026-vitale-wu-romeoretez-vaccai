@@ -1,5 +1,7 @@
 package org.adsl.client.view.gui;
 
+import static org.adsl.client.view.gui.GuiConstants.*;
+
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.SnapshotParameters;
@@ -44,24 +46,10 @@ import java.util.Map;
  */
 public final class Chip {
 
-    private static final Color FOOD_FILL    = Color.WHITE;
-    private static final Color FOOD_STROKE  = Color.BLACK;
-    private static final Color PP_POS_FILL  = Color.web("#4A1F18");
-    private static final Color PP_NEG_FILL  = Color.web("#F2E2C6");
+    // Colour and layout constants are defined in GuiConstants.
 
-    private static final double FOOD_OFFSET_Y_RATIO = 0.18;
-    private static final double BASE_FONT_RATIO     = 0.5;
-    private static final double STROKE_RATIO        = 0.025;
-    private static final double PP_BASE_MUL         = 0.90;
-    private static final double PP_NEG_SHRINK       = 0.90;
-
-    /** Oversampling factor for the cached snapshot so chips stay crisp when the
-     *  display runs at HiDPI (the ImageView downscales the 2x raster). */
+    /** Oversampling factor for the cached snapshot so chips stay crisp at HiDPI. */
     private static final double SNAPSHOT_SCALE = 2.0;
-
-    // Multiplier on BASE_FONT_RATIO by string length. Index 0 unused;
-    // longer than the array clamps to the last value.
-    private static final double[] LENGTH_SHRINK = { 1.0, 1.0, 0.88, 0.65, 0.50, 0.40 };
 
     /** type+value+width -> pre-rasterised chip image. */
     private static final Map<String, Image> CACHE = new HashMap<>();

@@ -1,5 +1,7 @@
 package org.adsl.client.view.gui.screens;
 
+import javafx.scene.Parent;
+
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -28,6 +30,10 @@ public class LoginScreen extends GUIScreen {
      *  every return to it (e.g. after logout/relogin). */
     private static boolean introShown = false;
 
+    /* Warning Note: IntelliJ may highlight @FXML fields and the initialize() method as "unused" (grey).
+     * This is a false positive caused by setting the controller dynamically at runtime via 
+     * loader.setController(this), rather than statically in the .fxml file. 
+     * FXMLLoader will still correctly assign these fields and call the method. */
     @FXML private TextField usernameField;
     @FXML private Label errorLabel;
     @FXML private Button loginButton;
@@ -36,19 +42,25 @@ public class LoginScreen extends GUIScreen {
 
     public LoginScreen(AppCoordinator coordinator) {
         super(coordinator);
+        Parent fxmlRoot;
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/login.fxml"));
             loader.setController(this);
-            this.root = loader.load();
+            fxmlRoot = loader.load();
         } catch (IOException e) {
             throw new RuntimeException("Failed to load login.fxml", e);
         }
+        applyTheme(fxmlRoot);
+        this.root = fxmlRoot;
+        playIntroFade();
+    }
+
+    @FXML
+    public void initialize() {
         if (logoImage != null) {
             logoImage.setImage(ImageCatalog.load("/assets/general/mesos_logo_white.png"));
         }
-        applyTheme(this.root);
         installKeyboardNav();
-        playIntroFade();
     }
 
     /**

@@ -1,5 +1,7 @@
 package org.adsl.client.view.gui.screens;
 
+import javafx.scene.Parent;
+
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -39,6 +41,10 @@ import java.util.Map;
  */
 public class HomeScreen extends GUIScreen {
 
+    /* Warning Note: IntelliJ may highlight @FXML fields and the initialize() method as "unused" (grey).
+     * This is a false positive caused by setting the controller dynamically at runtime via 
+     * loader.setController(this), rather than statically in the .fxml file. 
+     * FXMLLoader will still correctly assign these fields and call the method. */
     @FXML private StackPane rootStack;
     @FXML private Label welcomeLabel;
     @FXML private Label errorLabel;
@@ -52,7 +58,7 @@ public class HomeScreen extends GUIScreen {
     private List<Integer> activeGames;
     private Map<Integer, List<String>> gamePlayers;
     private Map<Integer, Integer> gameCapacity;
-    private final FloatingLog floatingLog;
+    private FloatingLog floatingLog;
     private List<Image> rulesPages;
     private int rulesPageIndex = 0;
     private StackPane rulesOverlay;
@@ -63,22 +69,30 @@ public class HomeScreen extends GUIScreen {
         this.activeGames = activeGames != null ? new ArrayList<>(activeGames) : new ArrayList<>();
         this.gamePlayers = gamePlayers != null ? gamePlayers : Collections.emptyMap();
         this.gameCapacity = gameCapacity != null ? gameCapacity : Collections.emptyMap();
+        Parent fxmlRoot;
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/home.fxml"));
             loader.setController(this);
-            this.root = loader.load();
+            fxmlRoot = loader.load();
         } catch (IOException e) {
             throw new RuntimeException("Failed to load home.fxml", e);
         }
+        applyTheme(fxmlRoot);
+        this.root = fxmlRoot;
+    }
+
+    @FXML
+    public void initialize() {
         welcomeLabel.setText("Welcome, " + (username != null ? username : "") + "!");
         setupGamesList();
         installListKeyboardNav();
         decorateCreateButtons();
-        applyTheme(this.root);
         setupRulesButton();
 
         floatingLog = new FloatingLog();
-        logBox.getChildren().setAll(floatingLog.getFloatingNode());
+        if (logBox != null) {
+            logBox.getChildren().setAll(floatingLog.getFloatingNode());
+        }
     }
 
     private void setupGamesList() {
