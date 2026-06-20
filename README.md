@@ -112,6 +112,11 @@ java -jar server/target/mesos-server.jar 8080 1099 ./saved
 > java -Djava.rmi.server.hostname=<server-ip> -jar server/target/mesos-server.jar 8080 1099 ./saved
 > ```
 
+> [!NOTE]
+> If you want to launch the application without running any mvn command,
+> you can use the already built jars in the folder `deliverables`. 
+> Make sure to modify the path of the jar files when launching the commands.
+
 ---
 
 ### 2. Start a Client
@@ -146,23 +151,17 @@ java -jar client/target/mesos-client.jar --test-tui
 java -jar client/target/mesos-client.jar --test-gui
 ```
 
+> [!NOTE]
+> If you want to launch the application without running any mvn command,
+> you can use the already built jars in the folder `deliverables`.
+> Make sure to modify the path of the jar files when launching the commands.
+
 ---
 
 ## Python Testers
 
 The testers live in `tools/testers/`. They need only the Python standard
 library — no extra dependencies.
-
-> [!IMPORTANT]
-> **Where to run from — no `cd` needed.**
-> Stay in the **repository root** (the folder that contains `pom.xml` and the
-> `tools/` directory) and type the full path to the script directly:
-> `tools/testers/socket_auto_plays.py`.
-> You do **not** have to `cd` into `tools/testers` first. Python automatically
-> adds the script's own folder to its import path, so the sibling helper module
-> `socket_client_utils.py` is found no matter which directory you launched from.
->
-> Use `python` on Windows and `python3` on macOS / Linux.
 
 ### socket_auto_plays.py — Automated Round Skip
 
@@ -258,13 +257,13 @@ The database connection settings are hardcoded in [DatabaseConfig.java](file:///
 The server features robust connection recovery and crash-resiliency mechanisms.
 
 ### 1. Game Auto-Saving
-The server automatically persists all active game states as serialized `.ser` files in the specified recovery directory (e.g. `./saved` or `./saves`).
+The server automatically persists all active game states as serialized `.ser` files in the specified recovery directory (e.g. `./saved`).
 
 ### 2. Server Crash Recovery
 If the server crashes or restarts:
 1. On startup, it recovers all unfinished games from the serialization folder.
 2. The game enters a `RecoverState` (suspended).
-3. Players can relaunch their clients and attempt to join again using the **exact same nickname**.
+3. Players can relaunch their clients and join again by logging with the **exact same nickname**.
 4. Once all active players of that game have reconnected, the server automatically replays the game transcript, restores each client's state, and resumes the match.
 
 ### 3. Disconnection & Timeout Detection
@@ -344,6 +343,10 @@ Invoke-Item target\reports\apidocs\index.html
 3. In the floating browser toolbar that appears at the top-right of the editor, click the browser icon (Chrome, Firefox, etc.) to open in an external browser, or click the **Built-in preview** icon (magnifying glass) to read it inside IntelliJ.
 
 > **Tip:** If the `target` folder is not visible, enable **Show Excluded Files** via the gear icon (⚙) at the top of the Project panel.
+
+> [!NOTE]
+> If you don't want to build the javadoc, it can be access throw the folder
+> `deliverables` (like jar files).
 
 #### Option B — IntelliJ built-in Javadoc tool
 
