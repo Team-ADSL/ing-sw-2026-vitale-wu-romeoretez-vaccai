@@ -1,5 +1,6 @@
 package org.adsl.client.view.tui;
 
+import org.adsl.client.view.tui.render.TuiColor;
 import org.adsl.shared.enums.CardType;
 import org.adsl.shared.enums.Totem;
 
@@ -118,6 +119,24 @@ public final class CardCatalog {
             case WHITE  -> "WHITE";
             case BLACK  -> "BLACK";
             case YELLOW -> "YELLOW";
+        };
+    }
+
+    /**
+     * Maps a totem to the {@link TuiColor} used to render its player's name,
+     * tiles and panel highlights.
+     *
+     * @param totem the totem, may be {@code null}
+     * @return the matching color, or {@link TuiColor#WHITE} if {@code totem} is {@code null}
+     */
+    public static TuiColor totemColor(Totem totem) {
+        if (totem == null) return TuiColor.WHITE;
+        return switch (totem) {
+            case RED    -> TuiColor.RED;
+            case BLUE   -> TuiColor.CYAN;
+            case WHITE  -> TuiColor.WHITE;
+            case BLACK  -> TuiColor.DARK_PURPLE;
+            case YELLOW -> TuiColor.YELLOW;
         };
     }
 }
