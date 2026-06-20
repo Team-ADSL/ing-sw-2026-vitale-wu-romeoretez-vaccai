@@ -1,5 +1,7 @@
 package org.adsl.client.view.gui;
 
+import static org.adsl.client.view.gui.GuiConstants.*;
+
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -27,9 +29,7 @@ import java.util.List;
  */
 public final class FloatingLog {
 
-    private static final double MAX_W = 420;
-    private static final double VERTICAL_MARGIN = 120;
-    private static final double COLLAPSED_MAX_H = 300;
+    // Panel sizing constants are defined in GuiConstants (LOG_MAX_W, LOG_VERTICAL_MARGIN, LOG_COLLAPSED_MAX_H).
 
     /** Tight inset so the collapsed toggle sits as far into the corner as possible. */
     private static final Insets COLLAPSED_PAD = new Insets(6, 10, 10, 6);
@@ -52,8 +52,8 @@ public final class FloatingLog {
     public FloatingLog() {
         floating = new VBox(2);
         floating.setAlignment(Pos.BOTTOM_RIGHT);
-        floating.setMaxWidth(MAX_W);
-        floating.setMaxHeight(COLLAPSED_MAX_H);
+        floating.setMaxWidth(LOG_MAX_W);
+        floating.setMaxHeight(LOG_COLLAPSED_MAX_H);
         floating.setPickOnBounds(false);
         floating.setMouseTransparent(false);
         floating.setPadding(COLLAPSED_PAD);
@@ -84,7 +84,7 @@ public final class FloatingLog {
         expandedScroll.setFitToWidth(true);
         expandedScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         expandedScroll.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
-        expandedScroll.setMaxWidth(MAX_W);
+        expandedScroll.setMaxWidth(LOG_MAX_W);
 
         Label closeChip = new Label("✕");
         closeChip.setFont(ImageCatalog.robotoFont(12));
@@ -100,7 +100,7 @@ public final class FloatingLog {
 
         expandedBody = new VBox(4, expandedScroll, closeRow);
         expandedBody.setAlignment(Pos.BOTTOM_RIGHT);
-        expandedBody.setMaxWidth(MAX_W);
+        expandedBody.setMaxWidth(LOG_MAX_W);
         VBox.setVgrow(expandedScroll, Priority.ALWAYS);
 
         active = this;
@@ -157,7 +157,7 @@ public final class FloatingLog {
     /** Closes the log. Only ever called from the ✕ chip — clicking elsewhere keeps it open. */
     private void collapse() {
         expanded = false;
-        floating.setMaxHeight(COLLAPSED_MAX_H);
+        floating.setMaxHeight(LOG_COLLAPSED_MAX_H);
         refresh();
         if (onToggleCallback != null) onToggleCallback.run();
     }
@@ -165,7 +165,7 @@ public final class FloatingLog {
     /** Cap scroll viewport to available vertical space so the bar appears only on overflow. */
     private void applyScrollCap() {
         Scene scene = floating.getScene();
-        double available = (scene != null ? scene.getHeight() : 600) - VERTICAL_MARGIN;
+        double available = (scene != null ? scene.getHeight() : 600) - LOG_VERTICAL_MARGIN;
         expandedScroll.setMaxHeight(Math.max(120, available));
     }
 
@@ -193,7 +193,7 @@ public final class FloatingLog {
     private Label card(String text) {
         Label entry = new Label(text);
         entry.setWrapText(true);
-        entry.setMaxWidth(MAX_W - 20);
+        entry.setMaxWidth(LOG_MAX_W - 20);
         entry.setFont(ImageCatalog.robotoFont(13));
         entry.setStyle("-fx-text-fill: #f5deb3; -fx-font-size: 13px;"
                 + " -fx-background-color: rgba(0,0,0,0.40); -fx-padding: 5 12 5 12;"

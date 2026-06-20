@@ -1,5 +1,7 @@
 package org.adsl.client.view.gui.game;
 
+import static org.adsl.client.view.gui.GuiConstants.*;
+
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
@@ -36,22 +38,9 @@ import java.util.Map;
  */
 public final class BoardRenderer {
 
-    /** Card image aspect ratio (height / width); shared with the player panels. */
-    public static final double CARD_ASPECT = 1.484;
-    private static final double CARD_MAX_W = 95.0;
-    private static final double CARD_GAP   = 6.0;
-    private static final double TILE_ASPECT = 1.65;
-    private static final double TILE_MAX_W  = 80.0;
+    // Layout constants are defined in GuiConstants.
 
-    // ── Order tile + 3D totem geometry ───────────────────────────────────────
-    private static final double ORDER_TILE_W = 624.0;
-    private static final double ORDER_TILE_H = 965.0;
-    private static final double TOTEM3D_W    = 220.0;
-    private static final double TOTEM3D_H    = 384.0;
-    private static final double TOTEM_ANCHOR_X = 113.0 / TOTEM3D_W;
-    private static final double TOTEM_ANCHOR_Y = 339.0 / TOTEM3D_H;
-    private static final double ORDER_CELL_X   = 0.5;
-    private static final double ORDER_TOTEM_W_FRAC = 201.0 / ORDER_TILE_W;
+    // Per-player-count cell Y fractions on the order tile (native-pixel / ORDER_TILE_H).
     private static final double[][] ORDER_CELL_Y = {
         { 298.0 / ORDER_TILE_H, 462.0 / ORDER_TILE_H },
         { 257.0 / ORDER_TILE_H, 422.0 / ORDER_TILE_H, 587.0 / ORDER_TILE_H },
@@ -59,10 +48,7 @@ public final class BoardRenderer {
         { 148.0 / ORDER_TILE_H, 314.0 / ORDER_TILE_H, 479.0 / ORDER_TILE_H, 646.0 / ORDER_TILE_H, 811.0 / ORDER_TILE_H },
     };
 
-    // ── Offer tile + 3D totem geometry ───────────────────────────────────────
-    private static final double OFFER_TILE_W = 602.0;
-    private static final double OFFER_TILE_H = 1004.0;
-    private static final double OFFER_TOTEM_W_FRAC = (201.0 / 965.0) * (OFFER_TILE_H / OFFER_TILE_W);
+    // Totem slot centers (fractional x,y of tile size) for each offer-tile sprite.
     private static final Map<String, double[]> OFFER_SLOT = Map.of(
         "offer_tile_a", new double[]{325.0 / OFFER_TILE_W, 280.0 / OFFER_TILE_H},
         "offer_tile_b", new double[]{325.0 / OFFER_TILE_W, 280.0 / OFFER_TILE_H},

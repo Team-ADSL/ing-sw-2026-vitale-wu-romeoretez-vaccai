@@ -1,5 +1,7 @@
 package org.adsl.client.view.gui.screens;
 
+import static org.adsl.client.view.gui.GuiConstants.*;
+
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -63,15 +65,8 @@ import java.util.Set;
  */
 public class GameScreen extends GUIScreen {
 
-    /** Margin (px) kept between the uniformly-scaled board and the window edges. */
-    private static final double BOARD_MARGIN = 24.0;
-    /** Fixed space reserved for opponent panels in applyBoardScale (kept constant
-     *  so the board never rescales when panel content changes). */
-    private static final double TOP_PANEL_H_RESERVE  = 132.0;
+    // Layout constants are defined in GuiConstants.
     private static final double SIDE_PANEL_W_RESERVE = PlayerPanelsRenderer.LR_PANEL_W + 40;
-    /** Top inset pushing the LEFT/RIGHT panels down so their top lines up with the
-     *  central "MESOS — …" header instead of the screen edge. */
-    private static final double SIDE_PANEL_TOP       = 178.0;
 
     @FXML private StackPane  rootStack;
     @FXML private BorderPane rootPane;
@@ -120,10 +115,9 @@ public class GameScreen extends GUIScreen {
     /**
      * Shared debounce timer for resize-driven re-renders. Each resize listener
      * resets it; the actual {@link #renderBoard()} fires only once the window
-     * has been still for {@code RESIZE_DEBOUNCE_MS}, avoiding hundreds of full
-     * board rebuilds per second while dragging the window edge.
+     * has been still for {@code RESIZE_DEBOUNCE_MS} (defined in GuiConstants),
+     * avoiding hundreds of full board rebuilds per second while dragging the window edge.
      */
-    private static final double RESIZE_DEBOUNCE_MS = 90;
     private final PauseTransition resizeDebounce =
             new PauseTransition(Duration.millis(RESIZE_DEBOUNCE_MS));
 

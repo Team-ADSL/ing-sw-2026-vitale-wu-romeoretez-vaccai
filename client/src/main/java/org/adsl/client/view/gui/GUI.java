@@ -1,5 +1,7 @@
 package org.adsl.client.view.gui;
 
+import static org.adsl.client.view.gui.GuiConstants.*;
+
 import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -32,11 +34,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class GUI extends GameUI {
 
-    private static final String WINDOW_TITLE = "MESOS";
-    private static final double WINDOW_W = 1280;
-    private static final double WINDOW_H = 800;
-    private static final double MIN_W = 900;
-    private static final double MIN_H = 620;
+    // Window dimensions and title are defined in GuiConstants.
 
     private AppCoordinator coordinator;
     private Stage stage;

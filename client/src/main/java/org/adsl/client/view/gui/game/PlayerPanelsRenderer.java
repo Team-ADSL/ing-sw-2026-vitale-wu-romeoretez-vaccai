@@ -1,5 +1,7 @@
 package org.adsl.client.view.gui.game;
 
+import static org.adsl.client.view.gui.GuiConstants.*;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -44,36 +46,14 @@ import java.util.Map;
  */
 public final class PlayerPanelsRenderer {
 
-    /** Width cap for the narrow left/right opponent panels (read by the screen's board-scale reservation). */
-    public static final double LR_PANEL_W = 170;
+    /**
+     * Maximum width (px) of the narrow left/right opponent panels.
+     * Alias of {@link org.adsl.client.view.gui.GuiConstants#LR_PANEL_W} kept
+     * here so callers using {@code PlayerPanelsRenderer.LR_PANEL_W} still compile.
+     */
+    public static final double LR_PANEL_W = GuiConstants.LR_PANEL_W;
 
-    private static final double IDENTITY_COL_W = 100;
-    private static final double CHIP_WIDTH     = 50;
-    private static final double CHIP_WIDTH_SM  = 40;
-    private static final double SELF_TOTEM     = 36;
-    private static final double OPP_TOTEM      = 24;
-
-    // ── Deck-summary icons ────────────────────────────────────────────────────
-    private static final double DECK_ICON_W       = 65.0;          // opponent icon width
-    private static final double DECK_ICON_SELF_W  = 92.0;          // self icon width (larger)
-    private static final double DECK_ICON_AR      = 147.0 / 174.0; // native icon height / width
-    private static final double DECK_ICON_GAP     = 6.0;
-    private static final int    DECK_SIDE_COLS    = 2;             // grid columns in narrow L/R panels
-    private static final double BADGE_W           = 29.0;          // extra-info badge width (corner)
-    private static final double BADGE_FONT        = 12.5;
-    private static final double DISCOUNT_FONT     = 10.0;          // smaller, fits "-NN"
-    private static final double DECK_COUNT_FONT   = 14.5;          // xN counts + inventor number
-    private static final double DECK_COUNT_STROKE = 1.1;
-    // Drill-down card widths shown when an icon toggle is open.
-    private static final double DECK_CARD_W_SELF  = 100.0;        // self (large)
-    private static final double DECK_CARD_W_OPP   = 62.0;         // opponents (smaller)
-    private static final Color  BUILDER_INK  = Color.web("#541620");
-    private static final Color  GATHERER_INK = Color.web("#f57a13");
-    private static final Color  SHAMAN_INK   = Color.web("#9a445d");
-    // Extra-info badge native pixel spaces + the centred coord of the dynamic number.
-    private static final double PP_W = 161, PP_H = 137, PP_CX = 82, PP_CY = 50;
-    private static final double FL_W = 188, FL_H = 127, FL_CX = 41, FL_CY = 73;
-    private static final double SS_W = 188, SS_H = 127, SS_CX = 53, SS_CY = 62;
+    // All other layout constants are defined in GuiConstants.
 
     /** The seven hand card types, in the order their icons are laid out. */
     private static final List<CardType> DECK_ORDER = List.of(
