@@ -53,7 +53,7 @@
                 </HBox>
                 <Label fx:id="errorLabel" maxWidth="900" minHeight="44" prefHeight="44"
                        alignment="CENTER" contentDisplay="CENTER" textAlignment="CENTER"
-                       style="-fx-text-fill: #F2B035; -fx-font-size: 10px; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.9), 5, 0.5, 0, 0); -fx-text-alignment: center;" wrapText="true"/>
+                       style="-fx-text-fill: #F2B035; -fx-font-size: 15px; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.9), 5, 0.5, 0, 0); -fx-text-alignment: center;" wrapText="true"/>
             </VBox>
         </center>
 
