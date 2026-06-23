@@ -114,7 +114,7 @@ def wait_for_move_response(player_name, q):
             sys.exit(1)
 
 def main():
-    example_usage = "python3 socket_auto_plays.py -p1 Alice -p2 Bob -r 5"
+    example_usage = "python3 socket_auto_plays.py -p1 Alice -p2 Bob -r 5 [-H 127.0.0.1] [-P 8080]"
     parser = CustomArgumentParser(example_usage, description="Auto-player for 2-player game.")
     
     parser.add_argument("-p1", type=str, required=True, help="Name of Player 1")
