@@ -8,6 +8,7 @@
 
 > [!NOTE]
 > 🇺🇸 The Mesos Board Game and all related artwork is the exclusive property of Cranio Creations.
+
 > 🇮🇹 Il Gioco da tavolo Mesos e tutto il relativo materiale grafico è di esclusiva proprietà di Cranio Creations.
 
 ---
