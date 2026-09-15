@@ -6,6 +6,10 @@
 
 **Team:** Vitale · Wu · Romeo-Retez · Vaccai
 
+> [!NOTE]
+> 🇺🇸 The Mesos Board Game and all related artwork is the exclusive property of Cranio Creations.
+> 🇮🇹 Il Gioco da tavolo Mesos e tutto il relativo materiale grafico è di esclusiva proprietà di Cranio Creations.
+
 ---
 
 ## Table of Contents
@@ -112,11 +116,6 @@ java -jar server/target/mesos-server.jar 8080 1099 ./saved
 > java -Djava.rmi.server.hostname=<server-ip> -jar server/target/mesos-server.jar 8080 1099 ./saved
 > ```
 
-> [!NOTE]
-> If you want to launch the application without running any mvn command,
-> you can use the already built jars in the folder `deliverables`. 
-> Make sure to modify the path of the jar files when launching the commands.
-
 ---
 
 ### 2. Start a Client
@@ -150,11 +149,6 @@ The client jar also supports in-process test modes (no real server required):
 java -jar client/target/mesos-client.jar --test-tui
 java -jar client/target/mesos-client.jar --test-gui
 ```
-
-> [!NOTE]
-> If you want to launch the application without running any mvn command,
-> you can use the already built jars in the folder `deliverables`.
-> Make sure to modify the path of the jar files when launching the commands.
 
 ---
 
@@ -344,10 +338,6 @@ Invoke-Item target\reports\apidocs\index.html
 3. In the floating browser toolbar that appears at the top-right of the editor, click the browser icon (Chrome, Firefox, etc.) to open in an external browser, or click the **Built-in preview** icon (magnifying glass) to read it inside IntelliJ.
 
 > **Tip:** If the `target` folder is not visible, enable **Show Excluded Files** via the gear icon (⚙) at the top of the Project panel.
-
-> [!NOTE]
-> If you don't want to build the javadoc, it can be access throw the folder
-> `deliverables` (like jar files).
 
 #### Option B — IntelliJ built-in Javadoc tool
 

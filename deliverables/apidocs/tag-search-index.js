@@ -1,1 +1,0 @@
-tagSearchIndex = [{"l":"Constant Field Values","h":"","k":"18","u":"constant-values.html"},{"l":"Serialized Form","h":"","k":"18","u":"serialized-form.html"},{"l":"Why chips are rasterised to a cached image","h":"class org.adsl.client.view.gui.Chip","k":"16","u":"org/adsl/client/view/gui/Chip.html#why-chips-are-rasterised-to-a-cached-image-heading"}];updateSearchResults();
